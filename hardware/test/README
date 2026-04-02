@@ -1,0 +1,22 @@
+
+This directory is intended for PlatformIO Test Runner and project tests.
+
+Unit Testing is a software testing method by which individual units of
+source code, sets of one or more MCU program modules together with associated
+control data, usage procedures, and operating procedures, are tested to
+determine whether they are fit for use. Unit testing finds problems early
+in the development cycle.
+
+More information about PlatformIO Unit Testing:
+- https://docs.platformio.org/en/latest/advanced/unit-testing/index.html
+
+The active firmware architecture is package-based and class-based:
+- canonical board control headers live in `hardware/lib/board/*`
+- canonical CAN headers live in `hardware/lib/can/*`
+- canonical driver classes live in `hardware/lib/drivers/runtime/*` and `hardware/lib/drivers/mcp2515/*`
+- canonical handler classes live in `hardware/lib/handlers/runtime/*` and `hardware/lib/handlers/variants/*`
+- test-only helpers live in `hardware/test/support/*`
+- feature packages live in `hardware/lib/packages/*`
+- runtime contracts live in `hardware/lib/packages/runtime/*`
+- nested FSD variant folders live in `hardware/lib/packages/fsd/legacy`, `hardware/lib/packages/fsd/hw3`, and `hardware/lib/packages/fsd/hw4`
+- one package class per header inside each variant folder

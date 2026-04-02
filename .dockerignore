@@ -1,0 +1,17 @@
+.git
+.gitmodules
+.vscode
+.idea
+
+legacy
+
+web/node_modules
+web/dist
+
+hardware/.pio
+hardware/.pio-home
+hardware/.cache
+
+**/node_modules
+**/.DS_Store
+**/Thumbs.db

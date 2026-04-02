@@ -1,0 +1,6 @@
+[submodule "legacy/tesla-open-can-mod-main"]
+	path = legacy/tesla-open-can-mod-main
+	url = https://gitlab.com/Tesla-OPEN-CAN-MOD/tesla-open-can-mod.git
+[submodule "legacy/tesla-can-explorer-main"]
+	path = legacy/tesla-can-explorer-main
+	url = https://github.com/mikegapinski/tesla-can-explorer.git

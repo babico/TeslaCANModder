@@ -1,0 +1,28 @@
+# Editors
+.vscode/
+.idea/
+.cursor/
+
+# OS junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Node / web
+web/node_modules/
+web/dist/
+web/*.log
+web/*.png
+
+# PlatformIO / firmware build
+hardware/.pio/
+hardware/.pio-home/
+hardware/.cache/
+
+# Python
+__pycache__/
+*.pyc
+
+# Generic temp
+*.tmp
+*.temp
