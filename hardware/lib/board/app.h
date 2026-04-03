@@ -17,6 +17,9 @@ static void canISR() { frameReady = true; }
 
 static void configureAppHandler()
 {
+    // Vehicle behavior is runtime-selectable, so the board recreates the
+    // active handler whenever the variant changes and reapplies the shared
+    // board state to the new handler before CAN traffic resumes.
     appHandler = board::createHandler(appState.variant());
     appState.applyTo(*appHandler);
 
@@ -29,6 +32,8 @@ static void configureAppHandler()
 template <typename Driver>
 static void appSetup(Driver &drv, const char *readyMsg)
 {
+    // Give the USB serial bridge a brief moment to settle after reset so the
+    // first boot/status messages are less likely to be lost on host attach.
     delay(1000);
 
     Serial.begin(115200);
@@ -48,6 +53,9 @@ static void appSetup(Driver &drv, const char *readyMsg)
         return;
     }
 
+    // A successful CAN-driver init means the install is electrically ready to
+    // move beyond the bench phase, even if the board has not seen live traffic
+    // yet.
     appState.setInstallReadiness(BoardState::InstallReadiness::InstalledPowerReady);
     configureAppHandler();
 
@@ -62,6 +70,9 @@ static void appSetup(Driver &drv, const char *readyMsg)
 template <typename Driver>
 static void appLoop()
 {
+    // Keep the bridge and handler state synchronized on every pass so status
+    // replies, command effects, and frame handling all read the same board
+    // state.
     appState.syncFrom(*appHandler);
     appBridge.tick(appState);
 

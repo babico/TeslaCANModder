@@ -46,6 +46,9 @@ export function useBoardLink() {
   }, []);
 
   const resetBoardState = useCallback(() => {
+    // Connection state is reset as one unit so reconnects always start from a
+    // clean transport session instead of reusing stale telemetry or package
+    // state from a previous board connection.
     frameBufferRef.current = [];
     messageWindowRef.current = [];
     setIsConnected(false);
@@ -66,6 +69,9 @@ export function useBoardLink() {
   }, []);
 
   const handleMessage = useCallback((message) => {
+    // The browser receives one mixed message stream from the board. This
+    // router keeps boot/status/frame/log handling explicit and normalizes only
+    // the message shapes that the UI renders directly.
     messageWindowRef.current.push(Date.now());
 
     if (message.t === 'boot') {
@@ -97,6 +103,8 @@ export function useBoardLink() {
     if (message.t === 'status') {
       refreshStatusRate((rate) => {
         setTelemetry(normalizeStatusMessage(message, rate));
+        // Packages derive from the canonical board status payload instead of
+        // keeping their own transport subscriptions.
         setPackages(derivePackageState(toolkitPackages, message));
         setDeviceInfo((previous) => ({
           ...(previous || {}),
@@ -149,6 +157,8 @@ export function useBoardLink() {
   }, [appendConsole]);
 
   useEffect(() => {
+    // The SerialBoardClient stays imperative and transport-focused. This hook
+    // owns React state and injects the state update callbacks once.
     client.setCallbacks({
       onOpen: handleClientOpen,
       onMessage: handleMessage,
@@ -181,6 +191,8 @@ export function useBoardLink() {
       await client.send(command);
       appendConsole('tx', command);
 
+      // Streaming is toggled optimistically so the UI reacts immediately; the
+      // following status/ack traffic will keep the hook state honest.
       if (command === BOARD_COMMANDS.streamOn) {
         setIsStreaming(true);
       } else if (command === BOARD_COMMANDS.streamOff) {
