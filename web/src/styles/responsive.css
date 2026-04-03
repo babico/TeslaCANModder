@@ -59,6 +59,8 @@
   .page-shell { padding: 12px; }
   .status-grid { grid-template-columns: 1fr; }
   .package-status-grid { grid-template-columns: 1fr; }
+  .dash-container { padding: 12px; }
+  .explorer-layout { padding: 0 12px 12px; }
   .mobile-frame-detail-grid { grid-template-columns: 1fr; }
   .sg-toolbar { flex-direction: column; }
   .sg-toggle,

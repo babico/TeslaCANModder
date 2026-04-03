@@ -8,6 +8,8 @@
   padding: 20px 20px 36px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  margin: 0 auto;
+  min-width: 0;
 }
 
 .sg-page::-webkit-scrollbar {
@@ -242,6 +244,7 @@
 .sg-complete {
   overflow: visible;
   min-height: auto;
+  min-width: 0;
 }
 
 .sg-overview-icon {

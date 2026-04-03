@@ -39,6 +39,9 @@
   padding: 0 20px 10px;
   min-height: 0;
   overflow: hidden;
+  width: min(1380px, 100%);
+  margin: 0 auto;
+  min-width: 0;
 }
 
 /* ── Panels ─────────────────────────────────────── */
@@ -52,6 +55,7 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  min-width: 0;
 }
 
 .panel-left {
@@ -70,6 +74,11 @@
   align-items: baseline;
   gap: 8px;
   flex-shrink: 0;
+  min-width: 0;
+}
+.panel-head > div {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 .panel-head h2 {
   margin: 0;
