@@ -24,9 +24,15 @@
     gap: 8px;
     padding: 10px 14px;
   }
-  .tab-bar { margin-left: 0; order: 10; width: 100%; }
-  .tab { flex: 1; justify-content: center; }
-  .topbar-actions { margin-left: auto; }
+  .app-nav {
+    margin-left: 0;
+    order: 10;
+    width: 100%;
+  }
+  .app-nav-link {
+    flex: 1;
+    justify-content: center;
+  }
 
   .hw-grid { grid-template-columns: 1fr; }
   .board-grid { grid-template-columns: 1fr 1fr; }
@@ -56,6 +62,12 @@
 
 @media (max-width: 480px) {
   .board-grid { grid-template-columns: 1fr; }
+  .app-nav {
+    flex-wrap: wrap;
+  }
+  .app-nav-link {
+    flex: 1 1 calc(50% - 4px);
+  }
   .page-shell { padding: 12px; }
   .status-grid { grid-template-columns: 1fr; }
   .package-status-grid { grid-template-columns: 1fr; }
