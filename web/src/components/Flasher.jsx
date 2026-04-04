@@ -43,6 +43,7 @@ function CodePanel({ title, code }) {
 export default function Flasher({ board }) {
   const capabilities = board?.capabilities;
   const [firmwareFile, setFirmwareFile] = useState(null);
+  const [recoveryEraseEnabled, setRecoveryEraseEnabled] = useState(false);
   const [flashState, setFlashState] = useState({
     status: 'Ready',
     percent: 0,
@@ -75,7 +76,9 @@ export default function Flasher({ board }) {
     }
   };
 
-  const executeFlash = async (firmwareData) => {
+  const executeFlash = async (firmwareData, options = {}) => {
+    const { fullErase = false } = options;
+
     if (!firmwareData || firmwareData.length === 0) {
       alert('Choose a valid firmware image first.');
       return;
@@ -117,9 +120,14 @@ export default function Flasher({ board }) {
 
       await flasher.enterProgMode();
 
+      if (fullErase) {
+        updateProgress('Erasing Entire Chip...', 20);
+        await flasher.chipErase();
+      }
+
       const totalBytes = firmwareData.length;
       let writtenBytes = 0;
-      updateProgress('Flashing Firmware...', 20);
+      updateProgress('Flashing Firmware...', fullErase ? 28 : 20);
 
       // Optiboot expects writes aligned to the Uno page size.
       for (let offset = 0; offset < totalBytes; offset += 128) {
@@ -131,12 +139,15 @@ export default function Flasher({ board }) {
         await flasher.writePage(chunk);
 
         writtenBytes += chunkLength;
-        updateProgress(`Writing page at 0x${offset.toString(16)}...`, 20 + (writtenBytes / totalBytes) * 75);
+        updateProgress(
+          `Writing page at 0x${offset.toString(16)}...`,
+          (fullErase ? 28 : 20) + (writtenBytes / totalBytes) * (fullErase ? 67 : 75),
+        );
       }
 
       updateProgress('Leaving Programming Mode...', 96);
       await flasher.leaveProgMode();
-      updateProgress('Success! Board restarting.', 100, 'var(--green)');
+      updateProgress(fullErase ? 'Success! Full erase + flash complete.' : 'Success! Board restarting.', 100, 'var(--green)');
     } catch (error) {
       console.error('Flash error', error);
       updateProgress(`Flashing Failed: ${error.message}`, 100, 'var(--danger)');
@@ -165,7 +176,7 @@ export default function Flasher({ board }) {
       const text = await response.text();
       const parsed = parseHex(text);
       updateProgress(`Fetched ${parsed.length} bytes from ${envName}.`, 0);
-      await executeFlash(parsed);
+      await executeFlash(parsed, { fullErase: recoveryEraseEnabled });
     } catch (error) {
       console.error('Direct flash fetch failed:', error);
       alert(error.message);
@@ -239,6 +250,21 @@ export default function Flasher({ board }) {
           ))}
         </div>
 
+        <div className="panel" style={{ padding: '16px', marginBottom: '20px' }}>
+          <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', cursor: flashState.isFlashing ? 'not-allowed' : 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={recoveryEraseEnabled}
+              onChange={(event) => setRecoveryEraseEnabled(event.target.checked)}
+              disabled={flashState.isFlashing}
+              style={{ marginTop: '3px' }}
+            />
+            <span style={{ color: 'var(--text-muted)' }}>
+              <strong style={{ color: 'var(--text)' }}>Recovery mode: fully erase the chip before flashing.</strong> Use this when a normal upload verifies incorrectly, old firmware behaves strangely, or you want the same recovery flow as a manual erase + reflash.
+            </span>
+          </label>
+        </div>
+
         {DIRECT_FLASH_AVAILABLE ? (
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
             {FIRMWARE_OPTIONS.map((option) => (
@@ -249,7 +275,7 @@ export default function Flasher({ board }) {
                 disabled={flashState.isFlashing}
                 style={{ flex: 1, minWidth: '240px', padding: '12px', background: option.buttonColor, border: 'none' }}
               >
-                ⚡ {option.buttonLabel}
+                ⚡ {recoveryEraseEnabled ? `Full Erase + ${option.buttonLabel}` : option.buttonLabel}
               </button>
             ))}
           </div>
@@ -291,11 +317,11 @@ export default function Flasher({ board }) {
             </label>
             <button
               className="btn-primary"
-              onClick={() => executeFlash(firmwareFile)}
+              onClick={() => executeFlash(firmwareFile, { fullErase: recoveryEraseEnabled })}
               disabled={!firmwareFile || flashState.isFlashing}
               style={{ padding: '10px 24px', background: 'var(--red)', border: 'none' }}
             >
-              {flashState.isFlashing ? 'Flashing...' : '⚡ Flash Custom File'}
+              {flashState.isFlashing ? 'Flashing...' : `⚡ ${recoveryEraseEnabled ? 'Full Erase + Flash Custom File' : 'Flash Custom File'}`}
             </button>
           </div>
           <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -304,6 +330,18 @@ export default function Flasher({ board }) {
           <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
             Use <code>hardware/.pio/build/uno/firmware.hex</code> only when HC-05 is physically installed and you want the optional Bluetooth transport enabled in firmware.
           </p>
+          <div
+            className="panel"
+            style={{
+              padding: '14px 16px',
+              border: '1px solid var(--border)',
+              background: 'var(--bg-elevated)',
+            }}
+          >
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              Troubleshoot: if upload verify mismatches or the board behaves like an older build is still present, enable recovery mode and run a full erase + flash once over USB with the Uno connected by itself.
+            </p>
+          </div>
 
           {(flashState.percent > 0 || flashState.status !== 'Ready') && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
@@ -330,7 +368,7 @@ export default function Flasher({ board }) {
       <div className="panel log-panel" style={{ marginTop: '20px', padding: '20px' }}>
         <h3>How it works</h3>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '10px' }}>
-          This tool speaks STK500v1 directly from the browser, toggles the serial control lines to reset the Uno into Optiboot, then writes the firmware a page at a time.
+          This tool speaks STK500v1 directly from the browser, toggles the serial control lines to reset the Uno into Optiboot, and can optionally issue a full chip erase before writing the firmware a page at a time.
         </p>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
           The canonical first image is the shared `hardware` build. Start with `uno_usb` when HC-05 is absent, and only use `uno` after the HC-05 hardware is really part of the install. After flashing, choose `HW4`, `HW3`, or `Legacy` from the dashboard instead of flashing a separate per-variant build.

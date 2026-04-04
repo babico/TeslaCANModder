@@ -103,6 +103,11 @@ export class STK500 {
     await this.sendCommand([0x50, 0x20], 2);
   }
 
+  async chipErase(delayMs = 1200) {
+    await this.sendCommand([0x52, 0x20], 2);
+    await this.sleep(delayMs);
+  }
+
   async leaveProgMode() {
     await this.sendCommand([0x51, 0x20], 2);
   }
