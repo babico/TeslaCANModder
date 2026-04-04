@@ -4,11 +4,14 @@ This directory contains the PlatformIO firmware project for the Arduino Uno buil
 
 ## Build Targets
 
-The active firmware target is:
+The active firmware targets are:
 
 - `uno`
+  USB + optional HC-05 support
+- `uno_usb`
+  USB-only firmware for installs where HC-05 is not physically present
 
-That single image contains all supported vehicle handlers and switches the active variant at runtime. The board does not need separate `hw3`, `hw4`, or `legacy` firmware builds anymore.
+Both images contain all supported vehicle handlers and switch the active variant at runtime. The board does not need separate `hw3`, `hw4`, or `legacy` firmware builds anymore.
 
 ## Build And Test
 
@@ -16,6 +19,7 @@ Build the firmware:
 
 ```powershell
 .\pio.ps1 run -e uno
+.\pio.ps1 run -e uno_usb
 ```
 
 Run native tests:
@@ -28,6 +32,32 @@ The canonical first-flash artifact is:
 
 ```text
 .pio/build/uno/firmware.hex
+.pio/build/uno_usb/firmware.hex
+```
+
+## Docker Build
+
+`hardware/Dockerfile` now builds both AVR firmware variants by default:
+
+- `uno`
+- `uno_usb`
+
+Build the image:
+
+```powershell
+docker build -f hardware/Dockerfile -t tesla-can-hardware .
+```
+
+Run the container build:
+
+```powershell
+docker run --rm -v ${PWD}/hardware/.pio:/app/hardware/.pio tesla-can-hardware
+```
+
+If you only want one PlatformIO environment, override `PLATFORMIO_BUILD_ENVS`:
+
+```powershell
+docker run --rm -e PLATFORMIO_BUILD_ENVS=uno_usb -v ${PWD}/hardware/.pio:/app/hardware/.pio tesla-can-hardware
 ```
 
 ## Why `pio.ps1` Exists

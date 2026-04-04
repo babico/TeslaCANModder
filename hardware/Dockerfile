@@ -2,7 +2,8 @@ FROM python:3.11-slim
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PLATFORMIO_BUILD_ENVS=uno,uno_usb
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git ca-certificates build-essential \
@@ -17,4 +18,4 @@ COPY hardware/src ./src
 COPY hardware/lib ./lib
 COPY hardware/test ./test
 
-CMD ["platformio", "run", "-e", "uno"]
+CMD ["sh", "-lc", "set -e; for env in $(printf '%s' \"$PLATFORMIO_BUILD_ENVS\" | tr ',' ' '); do echo \"Building PlatformIO env: $env\"; platformio run -e \"$env\"; done"]
