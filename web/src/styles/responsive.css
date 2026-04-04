@@ -41,6 +41,10 @@
   .speed-row > .speed-cell:nth-child(3) { display: none; }
   .status-grid { grid-template-columns: 1fr 1fr; }
   .connection-banner { flex-direction: column; text-align: center; }
+  .conn-right { width: 100%; }
+  .conn-right .btn-primary,
+  .conn-right .btn-danger,
+  .conn-right .btn-ghost { width: 100%; justify-content: center; }
   .dashboard-panel-tabs { display: flex; }
   .dashboard-sticky-grid { grid-template-columns: 1fr; }
   .dashboard-health-grid { grid-template-columns: 1fr; }

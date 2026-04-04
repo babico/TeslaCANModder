@@ -77,14 +77,14 @@ export function getDecoderDatasetLabel(datasetKey) {
   return DATASET_OPTIONS[datasetKey]?.label || datasetKey;
 }
 
-export async function loadDecoderDataset(datasetKey) {
+export async function loadDecoderDataset(datasetKey, signal) {
   const key = DATASET_OPTIONS[datasetKey] ? datasetKey : DEFAULT_CAN_DECODER_DATASET;
 
   if (datasetCache.has(key)) {
     return datasetCache.get(key);
   }
 
-  const response = await fetch(`/can-decoder/${key}.json`);
+  const response = await fetch(`/can-decoder/${key}.json`, signal ? { signal } : undefined);
   if (!response.ok) {
     throw new Error(`Failed to load decoder dataset ${key}: HTTP ${response.status}`);
   }

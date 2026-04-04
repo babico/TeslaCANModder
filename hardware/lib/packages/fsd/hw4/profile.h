@@ -6,25 +6,25 @@
 namespace packages::fsd::hw4
 {
 
-class Profile final : public Package
-{
-public:
-    bool tryHandle(Frame &frame, Context &context) const override
+    class Profile final : public Package
     {
-        if (frame.id != 1021 || readMuxID(frame) != 2)
+    public:
+        bool tryHandle(Frame &frame, Context &context) const override
         {
-            return false;
-        }
+            if (frame.id != 1021 || readMuxID(frame) != 2)
+            {
+                return false;
+            }
 
-        if (!hasFrameBytes(frame, 8))
-        {
+            if (!hasFrameBytes(frame, 8))
+            {
+                return true;
+            }
+
+            writeHW4SpeedProfile(frame, context.speedProfile);
+            context.driver.send(frame);
             return true;
         }
-
-        writeHW4SpeedProfile(frame, context.speedProfile);
-        context.driver.send(frame);
-        return true;
-    }
-};
+    };
 
 } // namespace packages::fsd::hw4

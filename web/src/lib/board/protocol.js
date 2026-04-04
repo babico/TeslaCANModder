@@ -35,6 +35,7 @@ export function createFrameMonitorState() {
     totalReceived: 0,
     trimmedCount: 0,
     parseErrors: 0,
+    _seq: 0,
   };
 }
 
@@ -205,6 +206,7 @@ export function ingestFrameMonitorBatch(previousState, messages = [], parseError
 
   let nextParseErrors = previousState.parseErrors + parseErrorCount;
   let acceptedFrames = 0;
+  let nextSeq = previousState._seq;
 
   messages.forEach((message) => {
     const frame = normalizeFrameMessage(message);
@@ -212,6 +214,11 @@ export function ingestFrameMonitorBatch(previousState, messages = [], parseError
       nextParseErrors += 1;
       return;
     }
+
+    // Assign a stable monotonic key — avoids React key collisions when
+    // multiple frames arrive within the same millisecond.
+    frame.key = nextSeq;
+    nextSeq += 1;
 
     if (frame.dir === 'tx') {
       const referenceFrame = latestRxByKey.get(frameGroupKey(frame));
@@ -238,5 +245,6 @@ export function ingestFrameMonitorBatch(previousState, messages = [], parseError
     totalReceived: previousState.totalReceived + acceptedFrames,
     trimmedCount,
     parseErrors: nextParseErrors,
+    _seq: nextSeq,
   };
 }

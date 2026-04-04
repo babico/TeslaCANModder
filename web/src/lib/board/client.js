@@ -1,6 +1,95 @@
 import { BoardCommands } from './commands';
 
 const NOOP = () => {};
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+
+function sanitizeSerialLine(rawLine = '') {
+  return String(rawLine)
+    .replace(/\r/g, '')
+    .replace(CONTROL_CHARACTER_PATTERN, '')
+    .trim();
+}
+
+function extractJsonObjects(text = '') {
+  const objects = [];
+  let depth = 0;
+  let startIndex = -1;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+
+    if (character === '{') {
+      if (depth === 0) {
+        startIndex = index;
+      }
+      depth += 1;
+      continue;
+    }
+
+    if (character === '}' && depth > 0) {
+      depth -= 1;
+      if (depth === 0 && startIndex >= 0) {
+        objects.push(text.slice(startIndex, index + 1));
+        startIndex = -1;
+      }
+    }
+  }
+
+  return objects;
+}
+
+function looksLikeBoardJsonFragment(text = '') {
+  return text.startsWith('{')
+    || text.includes('{"t"')
+    || text.includes('{"variant"')
+    || text.includes('{"stream"')
+    || text.includes('{"rawCan"');
+}
+
+function looksLikeTextLog(text = '') {
+  return /^[A-Za-z][A-Za-z0-9 _.:,+()[\]/\\-]{0,240}$/.test(text);
+}
+
+export function parseSerialLine(rawLine = '') {
+  const line = sanitizeSerialLine(rawLine);
+  if (!line) {
+    return [];
+  }
+
+  const jsonObjects = extractJsonObjects(line);
+  if (jsonObjects.length > 0) {
+    return jsonObjects.map((candidate) => {
+      try {
+        return { type: 'message', message: JSON.parse(candidate) };
+      } catch {
+        return { type: 'parse-error', line: candidate };
+      }
+    });
+  }
+
+  if (looksLikeTextLog(line)) {
+    return [{ type: 'text', line }];
+  }
+
+  if (looksLikeBoardJsonFragment(line)) {
+    return [{ type: 'parse-error', line }];
+  }
+
+  return [{ type: 'ignore', line }];
+}
+
+export function parseSerialChunk(buffer = '', chunk = '') {
+  const combined = `${buffer}${chunk ?? ''}`.replace(/\r/g, '');
+  const lines = combined.split('\n');
+  const remainder = lines.pop() || '';
+  const events = [];
+
+  lines.forEach((rawLine) => {
+    events.push(...parseSerialLine(rawLine));
+  });
+
+  return { remainder, events };
+}
 
 export class SerialBoardClient {
   constructor(callbacks = {}) {
@@ -154,21 +243,22 @@ export class SerialBoardClient {
           continue;
         }
 
-        buffer += value;
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+        const parsedChunk = parseSerialChunk(buffer, value);
+        buffer = parsedChunk.remainder;
 
-        for (const rawLine of lines) {
-          const line = rawLine.trim();
-          if (!line) {
+        for (const event of parsedChunk.events) {
+          if (event.type === 'message') {
+            this.callbacks.onMessage(event.message);
             continue;
           }
 
-          try {
-            this.callbacks.onMessage(JSON.parse(line));
-          } catch {
-            this.callbacks.onParseError(line);
-            this.callbacks.onText(line);
+          if (event.type === 'text') {
+            this.callbacks.onText(event.line);
+            continue;
+          }
+
+          if (event.type === 'parse-error') {
+            this.callbacks.onParseError(event.line);
           }
         }
       } catch (error) {

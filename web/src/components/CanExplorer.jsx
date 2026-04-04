@@ -104,30 +104,29 @@ export default function CanExplorer({ board }) {
   const [decoderLoading, setDecoderLoading] = useState(true);
 
   useEffect(() => {
-    let active = true;
+    const ac = new AbortController();
+    setDecoderLoading(true);
+    setDecoderError(null);
 
-    loadDecoderDataset(datasetKey)
+    loadDecoderDataset(datasetKey, ac.signal)
       .then((index) => {
-        if (!active) {
+        if (ac.signal.aborted) {
           return;
         }
         setDecoderIndex(index);
+        setDecoderLoading(false);
       })
       .catch((error) => {
-        if (!active) {
+        if (ac.signal.aborted) {
           return;
         }
         setDecoderError(error.message || String(error));
         setDecoderIndex(null);
-      })
-      .finally(() => {
-        if (active) {
-          setDecoderLoading(false);
-        }
+        setDecoderLoading(false);
       });
 
     return () => {
-      active = false;
+      ac.abort();
     };
   }, [datasetKey]);
 

@@ -11,7 +11,7 @@ class FsdMux0 final : public Package
 public:
     bool tryHandle(Frame &frame, Context &context) const override
     {
-        if (frame.id != 1006 || readMuxID(frame) != 0)
+        if (frame.id != can::ids::kLegacyFsdMux || readMuxID(frame) != 0)
         {
             return false;
         }

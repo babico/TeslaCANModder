@@ -6,30 +6,30 @@
 namespace packages::fsd::hw3
 {
 
-class SpeedOffset final : public Package
-{
-public:
-    bool tryHandle(Frame &frame, Context &context) const override
+    class SpeedOffset final : public Package
     {
-        if (frame.id != 1021 || readMuxID(frame) != 2)
+    public:
+        bool tryHandle(Frame &frame, Context &context) const override
         {
-            return false;
-        }
+            if (frame.id != 1021 || readMuxID(frame) != 2)
+            {
+                return false;
+            }
 
-        if (!hasFrameBytes(frame, 2))
-        {
+            if (!hasFrameBytes(frame, 2))
+            {
+                return true;
+            }
+
+            if (!context.fsdEnabled || context.speedOffset == nullptr)
+            {
+                return true;
+            }
+
+            writeHW3SpeedOffset(frame, *context.speedOffset);
+            context.driver.send(frame);
             return true;
         }
-
-        if (!context.fsdEnabled || context.speedOffset == nullptr)
-        {
-            return true;
-        }
-
-        writeHW3SpeedOffset(frame, *context.speedOffset);
-        context.driver.send(frame);
-        return true;
-    }
-};
+    };
 
 } // namespace packages::fsd::hw3

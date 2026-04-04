@@ -100,6 +100,16 @@
   font-weight: 600;
 }
 
+.badge--warn {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.badge--error {
+  color: var(--danger);
+  background: rgba(248, 113, 113, 0.1);
+}
+
 /* ── Controls ───────────────────────────────────── */
 .controls {
   padding: 10px 12px;

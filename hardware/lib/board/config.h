@@ -56,6 +56,10 @@
 #define BOARD_HW4_ENABLE_EMERGENCY_BIT59 0
 #endif
 
+#ifndef BOARD_STATUS_POLL_INTERVAL_MS
+#define BOARD_STATUS_POLL_INTERVAL_MS 500
+#endif
+
 namespace board
 {
 

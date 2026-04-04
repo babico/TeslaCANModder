@@ -1,5 +1,6 @@
 #pragma once
 
+#include "can/helpers.h"
 #include "handlers/runtime/stack.h"
 
 class Legacy : public Stack<Legacy, LegacyState>
@@ -11,7 +12,10 @@ public:
 
     const uint32_t *filterIdsArray() const
     {
-        static const uint32_t kFilterIds[] = {69, 1006};
+        static const uint32_t kFilterIds[] = {
+            can::ids::kLegacyStalk,
+            can::ids::kLegacyFsdMux,
+        };
         return kFilterIds;
     }
 

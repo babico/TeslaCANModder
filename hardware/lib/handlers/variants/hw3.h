@@ -1,5 +1,6 @@
 #pragma once
 
+#include "can/helpers.h"
 #include "handlers/runtime/stack.h"
 
 class Hw3 : public Stack<Hw3, Hw3State>
@@ -27,7 +28,10 @@ public:
 
     const uint32_t *filterIdsArray() const
     {
-        static const uint32_t kFilterIds[] = {1016, 1021};
+        static const uint32_t kFilterIds[] = {
+            can::ids::kFsdFollowDist,
+            can::ids::kFsdMux,
+        };
         return kFilterIds;
     }
 

@@ -6,28 +6,28 @@
 namespace packages::fsd::hw3
 {
 
-class FollowDistance final : public Package
-{
-public:
-    bool tryHandle(Frame &frame, Context &context) const override
+    class FollowDistance final : public Package
     {
-        if (frame.id != 1016)
+    public:
+        bool tryHandle(Frame &frame, Context &context) const override
         {
-            return false;
-        }
+            if (frame.id != can::ids::kFsdFollowDist)
+            {
+                return false;
+            }
 
-        if (!hasFrameBytes(frame, 6))
-        {
+            if (!hasFrameBytes(frame, 6))
+            {
+                return true;
+            }
+
+            const int mappedProfile = mapHW3FollowDistanceToSpeedProfile(readFollowDistance(frame));
+            if (mappedProfile >= 0)
+            {
+                context.speedProfile = mappedProfile;
+            }
             return true;
         }
-
-        const int mappedProfile = mapHW3FollowDistanceToSpeedProfile(readFollowDistance(frame));
-        if (mappedProfile >= 0)
-        {
-            context.speedProfile = mappedProfile;
-        }
-        return true;
-    }
-};
+    };
 
 } // namespace packages::fsd::hw3

@@ -113,21 +113,20 @@ function MobilePanelTabs({ activePanel, onChange }) {
 function FrameList({ frames }) {
   const [selectedKey, setSelectedKey] = useState(null);
 
-  const selectedFrame = frames.find((frame) => `${frame.seenAt}-${frame.id}` === selectedKey) || frames[0] || null;
+  const selectedFrame = frames.find((frame) => frame.key === selectedKey) || frames[0] || null;
 
   return (
     <div className="mobile-frame-viewer">
       <div className="mobile-frame-list">
-        {frames.map((frame, index) => {
-          const key = `${frame.seenAt}-${frame.id}-${index}`;
-          const isActive = selectedFrame && selectedFrame.seenAt === frame.seenAt && selectedFrame.id === frame.id;
+        {frames.map((frame) => {
+          const isActive = selectedFrame && selectedFrame.key === frame.key;
 
           return (
             <button
-              key={key}
+              key={frame.key}
               type="button"
               className={`mobile-frame-row ${isActive ? 'active' : ''}`}
-              onClick={() => setSelectedKey(`${frame.seenAt}-${frame.id}`)}
+              onClick={() => setSelectedKey(frame.key)}
             >
               <div className="mobile-frame-row-top">
                 <strong>0x{frame.id.toString(16).toUpperCase()}</strong>
@@ -526,7 +525,13 @@ export default function Dashboard({ board }) {
   } = board;
 
   const [commandInput, setCommandInput] = useState('');
-  const [mobilePanel, setMobilePanel] = useState('control');
+  const [mobilePanel, setMobilePanel] = useState(() => {
+    try {
+      return window.localStorage.getItem('tesla-can-modder.mobile-tab') || 'control';
+    } catch {
+      return 'control';
+    }
+  });
   const [layoutOrder, setLayoutOrder] = useState(() => readSavedDashboardLayout().order);
   const [hiddenTileIds, setHiddenTileIds] = useState(() => readSavedDashboardLayout().hidden);
   const [tileSizes, setTileSizes] = useState(() => readSavedDashboardLayout().sizes);
@@ -555,6 +560,13 @@ export default function Dashboard({ board }) {
       forceFsd: false,
     }
   ), [deviceInfo?.features, telemetry.features]);
+
+  const handleMobilePanelChange = useCallback((panel) => {
+    setMobilePanel(panel);
+    try {
+      window.localStorage.setItem('tesla-can-modder.mobile-tab', panel);
+    } catch { /* storage unavailable */ }
+  }, []);
 
   const handleSend = useCallback(() => {
     const nextCommand = commandInput.trim();
@@ -707,8 +719,14 @@ export default function Dashboard({ board }) {
                 </button>
                 <button className="btn-sm btn-ghost" onClick={clearFrames}>Clear</button>
                 <span className="badge">{frameCount} frames received</span>
-                <span className="badge mono">{monitor.trimmedCount} trimmed</span>
-                <span className="badge mono">{monitor.parseErrors} parse errors</span>
+                {monitor.trimmedCount > 0 && (
+                  <span className="badge mono badge--warn" title="Buffer full — oldest frames were discarded">
+                    {monitor.trimmedCount} trimmed
+                  </span>
+                )}
+                {monitor.parseErrors > 0 && (
+                  <span className="badge mono badge--error">{monitor.parseErrors} parse errors</span>
+                )}
               </div>
             </div>
 
@@ -739,8 +757,8 @@ export default function Dashboard({ board }) {
                     <span className="col-data">Data</span>
                   </div>
                   <div className="frame-table-body">
-                    {visibleFrames.map((frame, index) => (
-                      <div className={`frame-row ${frame.changedByteIndexes?.length ? 'has-diff' : ''}`} key={`${frame.seenAt}-${frame.id}-${index}`}>
+                    {visibleFrames.map((frame) => (
+                      <div className={`frame-row ${frame.changedByteIndexes?.length ? 'has-diff' : ''}`} key={frame.key}>
                         <span className="col-time">{frame.ts}</span>
                         <span className="col-dir" style={{ color: frame.dir === 'tx' ? 'var(--amber)' : 'var(--blue)' }}>
                           {frame.dir.toUpperCase()}
@@ -753,7 +771,7 @@ export default function Dashboard({ board }) {
                             {frame.bytes.length > 0
                               ? frame.bytes.map((byte, byteIndex) => (
                                 <span
-                                  key={`${frame.seenAt}-${frame.id}-${byteIndex}`}
+                                  key={byteIndex}
                                   className={frame.changedByteIndexes?.includes(byteIndex) ? 'frame-byte-diff' : ''}
                                 >
                                   {byte.toString(16).padStart(2, '0').toUpperCase()}
@@ -1125,7 +1143,7 @@ export default function Dashboard({ board }) {
         </div>
       </div>
 
-      {isCompact ? <MobilePanelTabs activePanel={mobilePanel} onChange={setMobilePanel} /> : null}
+      {isCompact ? <MobilePanelTabs activePanel={mobilePanel} onChange={handleMobilePanelChange} /> : null}
 
       {!capabilities.supportsRuntimeControl && (
         <div className="panel dashboard-compat-panel">

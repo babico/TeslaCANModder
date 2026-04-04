@@ -2,6 +2,20 @@
 
 #include "can/frame.h"
 
+// ── Known Tesla CAN frame IDs ────────────────────────────────────────────────
+namespace can
+{
+    namespace ids
+    {
+        constexpr uint32_t kLegacyStalk = 69u;     // 0x045 — Legacy stalk-speed frame
+        constexpr uint32_t kSpeedSrc = 921u;       // 0x399 — Speed source (HW4 filter)
+        constexpr uint32_t kLegacyFsdMux = 1006u;  // 0x3EE — Legacy FSD mux control
+        constexpr uint32_t kFsdFollowDist = 1016u; // 0x3F8 — HW3/HW4 follow-distance
+        constexpr uint32_t kFsdMux = 1021u;        // 0x3FD — HW3/HW4 FSD mux control
+    } // namespace ids
+} // namespace can
+// ────────────────────────────────────────────────────────────────────────────
+
 inline uint8_t readMuxID(const Frame &frame)
 {
     if (frame.dlc < 1)

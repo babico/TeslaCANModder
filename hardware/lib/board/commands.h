@@ -16,7 +16,7 @@ public:
     void update(Transport &transport, BoardState &state)
     {
         const unsigned long now = millis();
-        if (now - lastStatusMs_ >= 500)
+        if (now - lastStatusMs_ >= BOARD_STATUS_POLL_INTERVAL_MS)
         {
             sendStatus(transport, state, now);
         }

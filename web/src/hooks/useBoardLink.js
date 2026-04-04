@@ -14,6 +14,22 @@ import {
 import { buildInitialPackageState, derivePackageState } from '../lib/can/core/packages';
 import { toolkitPackages } from '../packages';
 
+// Commands debounced at 150ms to protect slow HC-05 links (9600 baud).
+// Instant commands (ping, status, stream, variant) bypass the queue.
+const DEBOUNCED_COMMAND_SET = new Set([
+  BOARD_COMMANDS.fsdOn,
+  BOARD_COMMANDS.fsdOff,
+  BOARD_COMMANDS.fsdToggle,
+  BOARD_COMMANDS.isaChimeOn,
+  BOARD_COMMANDS.isaChimeOff,
+]);
+const DEBOUNCED_PREFIXES = ['profile:', 'offset:', 'isa-chime:'];
+
+function isCommandDebounced(command) {
+  if (DEBOUNCED_COMMAND_SET.has(command)) return true;
+  return DEBOUNCED_PREFIXES.some((prefix) => command.startsWith(prefix));
+}
+
 export function useBoardLink() {
   const MONITOR_FLUSH_INTERVAL_MS = 120;
   const MONITOR_FLUSH_FRAME_THRESHOLD = 24;
@@ -32,6 +48,7 @@ export function useBoardLink() {
   const messageWindowRef = useRef([]);
   const pendingMonitorRef = useRef({ frames: [], parseErrors: 0 });
   const monitorFlushTimerRef = useRef(null);
+  const commandDebounceRef = useRef(null);
 
   const appendConsole = useCallback((type, text) => {
     const line = {
@@ -56,6 +73,10 @@ export function useBoardLink() {
       window.clearTimeout(monitorFlushTimerRef.current);
     }
     monitorFlushTimerRef.current = null;
+    if (commandDebounceRef.current !== null) {
+      clearTimeout(commandDebounceRef.current);
+      commandDebounceRef.current = null;
+    }
     pendingMonitorRef.current = { frames: [], parseErrors: 0 };
     messageWindowRef.current = [];
     setIsConnected(false);
@@ -254,20 +275,35 @@ export function useBoardLink() {
       return;
     }
 
-    try {
-      await client.send(command);
-      appendConsole('tx', command);
+    const doSend = async () => {
+      try {
+        await client.send(command);
+        appendConsole('tx', command);
 
-      // Streaming is toggled optimistically so the UI reacts immediately; the
-      // following status/ack traffic will keep the hook state honest.
-      if (command === BOARD_COMMANDS.streamOn) {
-        setIsStreaming(true);
-      } else if (command === BOARD_COMMANDS.streamOff) {
-        setIsStreaming(false);
+        // Streaming is toggled optimistically so the UI reacts immediately; the
+        // following status/ack traffic will keep the hook state honest.
+        if (command === BOARD_COMMANDS.streamOn) {
+          setIsStreaming(true);
+        } else if (command === BOARD_COMMANDS.streamOff) {
+          setIsStreaming(false);
+        }
+      } catch (error) {
+        appendConsole('error', `Command failed: ${error.message}`);
       }
-    } catch (error) {
-      appendConsole('error', `Command failed: ${error.message}`);
+    };
+
+    if (isCommandDebounced(command)) {
+      if (commandDebounceRef.current !== null) {
+        clearTimeout(commandDebounceRef.current);
+      }
+      commandDebounceRef.current = setTimeout(() => {
+        commandDebounceRef.current = null;
+        void doSend();
+      }, 150);
+      return;
     }
+
+    void doSend();
   }, [appendConsole, client]);
 
   const clearFrames = useCallback(() => {

@@ -11,7 +11,7 @@ class FollowDistance final : public Package
 public:
     bool tryHandle(Frame &frame, Context &context) const override
     {
-        if (frame.id != 1016)
+        if (frame.id != can::ids::kFsdFollowDist)
         {
             return false;
         }
