@@ -8,6 +8,9 @@ COPY web/package.json web/package-lock.json ./
 RUN npm ci
 
 FROM base AS dev
+COPY web/docker-entrypoint.sh /usr/local/bin/web-dev-entrypoint
+RUN chmod +x /usr/local/bin/web-dev-entrypoint
+ENTRYPOINT ["web-dev-entrypoint"]
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "4173", "--strictPort"]
 
 FROM base AS build

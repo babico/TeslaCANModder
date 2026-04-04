@@ -216,6 +216,10 @@ Run the web app in dev mode:
 docker compose up web
 ```
 
+The `web` service bind-mounts the repo into the container. On first start, the dev
+entrypoint may run `npm ci` inside `web/` before launching Vite so the mounted
+workspace has the dependencies that the image layer would otherwise have provided.
+
 Run the production web container:
 
 ```bash

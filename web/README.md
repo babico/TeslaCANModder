@@ -155,6 +155,10 @@ Start the dev server through Docker:
 docker compose up web
 ```
 
+Because the repo is bind-mounted into the container, that first start may run `npm ci`
+inside `/app/web` before Vite launches. That is expected: the bind mount hides the
+image-baked `node_modules`, so the dev entrypoint reinstalls dependencies when needed.
+
 That serves the app at:
 
 ```text
