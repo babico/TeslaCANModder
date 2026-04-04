@@ -84,6 +84,9 @@ Important status metadata:
 - `fsd`
 - `sp`
 - `up`
+- `offset`
+- `isaChime`
+- `features`
 
 The UI uses that metadata to distinguish:
 
@@ -102,9 +105,19 @@ The dashboard is built around one board link and two usage modes:
 
 The tile layout is user-adjustable. Tile order, visibility, and size are saved in local browser storage so the dashboard reopens in the same shape.
 
+The control model is simple-first:
+
+- always-visible essentials:
+  connect, disconnect, ping, status, stream, runtime variant, FSD, profile
+- expert controls only when supported by the selected variant:
+  HW3 speed offset
+  HW4 ISA speed-chime suppression
+
+The dashboard now reads `status.features` from the board and hides unsupported controls instead of assuming every variant has the same surface.
+
 ## Setup Guide Model
 
-The guide is intentionally staged:
+The guide is intentionally staged, but it is now wizard-first:
 
 1. ordered hardware summary
 2. preflight and safety
@@ -116,7 +129,7 @@ The guide is intentionally staged:
 8. first vehicle validation
 9. troubleshooting by symptom
 
-Mermaid diagrams are used for the wiring and process views so the diagrams stay versionable in the repo.
+The long-form guide still exists as full-reference mode below the wizard. Mermaid diagrams are used for the wiring and process views so the diagrams stay versionable in the repo.
 
 ## Development
 
@@ -206,3 +219,9 @@ During local development, the Vite middleware can also expose that built hex dir
 - X179-powered install using the purchased converter
 
 The guide and dashboard intentionally treat USB as the first bring-up path and HC-05 as a later optional transport.
+
+## Related Docs
+
+- repo overview: `../README.md`
+- Wi-Fi board comparative audit: `../docs/WIFI_BOARD_COMPARATIVE_AUDIT.md`
+- Wi-Fi migration guide: `../docs/WIFI_BOARD_GUIDE.md`

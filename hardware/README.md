@@ -113,6 +113,8 @@ Common inbound commands:
 - `fsd:on`
 - `fsd:off`
 - `profile:<0-4>`
+- `offset:<0-100>` on `hw3`
+- `isa-chime:on|off|toggle` on `hw4`
 
 Common outbound message types:
 
@@ -135,6 +137,18 @@ The board reports a coarse install-readiness state so the web UI can explain whe
 - `runtime-ready`
   live CAN traffic is flowing
 
+## Variant Feature Surface
+
+The shared Uno image always contains all handlers, but the exposed runtime controls change with the selected variant:
+
+| Variant | Base controls | Expert controls |
+|---|---|---|
+| `legacy` | `fsd`, `profile`, `variant`, `stream`, `status` | none |
+| `hw3` | `fsd`, `profile`, `variant`, `stream`, `status` | `offset` |
+| `hw4` | `fsd`, `profile`, `variant`, `stream`, `status` | `isa-chime` |
+
+The board now reports that support matrix through `status.features` so the web UI can hide unsupported controls instead of rendering dead buttons.
+
 ## Hardware Assumptions
 
 The current defaults assume:
@@ -155,3 +169,10 @@ Important electrical constraints:
 The native tests are host-side logic tests. They exercise command handling, board state, helper logic, and handler behavior without needing a real Uno connected.
 
 The `uno` target is for the firmware build, not for those native tests.
+
+## Related Docs
+
+- repo overview: `../README.md`
+- Wi-Fi board comparative audit: `../docs/WIFI_BOARD_COMPARATIVE_AUDIT.md`
+- Wi-Fi migration guide: `../docs/WIFI_BOARD_GUIDE.md`
+- CAN control review checklist: `../docs/CAN_CONTROL_REVIEW_CHECKLIST.md`

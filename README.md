@@ -140,6 +140,27 @@ The board accepts the same commands over USB and HC-05:
 - `fsd:on`
 - `fsd:off`
 - `profile:<0-4>`
+- `offset:<0-100>` on `hw3`
+- `isa-chime:on|off|toggle` on `hw4`
+
+## Variant Feature Matrix
+
+| Variant | FSD | Profiles | Nag Suppression | HW3 Offset | HW4 ISA Chime |
+|---|---|---|---|---|---|
+| `legacy` | Yes | Yes | Yes | No | No |
+| `hw3` | Yes | Yes | Yes | Yes | No |
+| `hw4` | Yes | Yes | Yes | No | Yes |
+
+## Legacy Mapping
+
+This repo now intentionally ports the Uno-safe open-can-mod subset instead of trying to mirror the full legacy multi-board project:
+
+- carried over:
+  FSD activation, profile control, nag suppression, HW3 speed offset, HW4 ISA chime suppression
+- intentionally not carried over:
+  RP2040, Feather M4, ESP32, and the broader multi-board docs-site structure
+- kept expert-only:
+  variant-specific controls that are only valid on one runtime handler
 
 ## Development
 
@@ -214,6 +235,21 @@ Heartbeat endpoints:
 
 The UI detects `navigator.serial` and degrades to a compatibility-first experience when live serial control is not available.
 
+## Setup Flow
+
+The setup guide in the web UI is now wizard-first:
+
+1. confirm supported hardware
+2. bench flash over USB
+3. validate the board on USB in the dashboard
+4. build the X179 installed power path
+5. connect CAN
+6. optionally add HC-05
+7. run the first live check
+8. troubleshoot by symptom if needed
+
+The older long-form setup content still exists as a full-reference mode under the wizard.
+
 ## Legacy References
 
 The `legacy/` directory contains external reference projects as Git submodules. They are not the active codebase, but they are useful when comparing behavior or checking historical implementation details.
@@ -222,3 +258,5 @@ The `legacy/` directory contains external reference projects as Git submodules. 
 
 - firmware details: `hardware/README.md`
 - web app details: `web/README.md`
+- Wi-Fi board audit: `docs/WIFI_BOARD_COMPARATIVE_AUDIT.md`
+- Wi-Fi migration guide: `docs/WIFI_BOARD_GUIDE.md`
