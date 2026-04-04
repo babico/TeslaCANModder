@@ -20,3 +20,8 @@ The active firmware architecture is package-based and class-based:
 - runtime contracts live in `hardware/lib/packages/runtime/*`
 - nested FSD variant folders live in `hardware/lib/packages/fsd/legacy`, `hardware/lib/packages/fsd/hw3`, and `hardware/lib/packages/fsd/hw4`
 - one package class per header inside each variant folder
+
+When a change touches CAN-mutating logic, the minimum expected review bar is:
+- exact bit-level regression coverage for the changed field
+- short-frame/no-send coverage for every touched mutation path
+- cross-check against `docs/CAN_CONTROL_REVIEW_CHECKLIST.md`

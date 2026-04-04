@@ -105,6 +105,8 @@ class StubHandler : public Handler
 public:
     int speed = 1;
     bool fsd = false;
+    int offset = 0;
+    bool isaChime = true;
 
     int &speedProfile() override
     {
@@ -114,6 +116,26 @@ public:
     bool &fsdEnabled() override
     {
         return fsd;
+    }
+
+    int *speedOffset() override
+    {
+        return &offset;
+    }
+
+    const int *speedOffset() const override
+    {
+        return &offset;
+    }
+
+    bool *isaSpeedChimeSuppress() override
+    {
+        return &isaChime;
+    }
+
+    const bool *isaSpeedChimeSuppress() const override
+    {
+        return &isaChime;
     }
 
     void handleMessage(Frame & /*frame*/, Driver & /*driver*/) override
@@ -149,8 +171,12 @@ void test_board_state_defaults()
 {
     BoardState state;
     TEST_ASSERT_EQUAL_INT(1, state.speedProfile());
+    TEST_ASSERT_EQUAL_INT(0, state.speedOffset());
     TEST_ASSERT_FALSE(state.fsdEnabled());
+    TEST_ASSERT_TRUE(state.isaSpeedChimeSuppress());
     TEST_ASSERT_EQUAL_STRING("hw4", state.variantName());
+    TEST_ASSERT_FALSE(state.features().speedOffset);
+    TEST_ASSERT_FALSE(state.features().isaSpeedChime);
     TEST_ASSERT_FALSE(state.consumeVariantChange());
 }
 
@@ -160,18 +186,28 @@ void test_board_state_apply_and_sync_roundtrip()
     StubHandler handler;
 
     state.setSpeedProfile(4);
+    state.setSpeedOffset(30);
     state.setFsdEnabled(true);
+    state.setIsaSpeedChimeSuppress(false);
     state.applyTo(handler);
 
     TEST_ASSERT_EQUAL_INT(4, handler.speedProfile());
+    TEST_ASSERT_EQUAL_INT(30, handler.offset);
     TEST_ASSERT_TRUE(handler.fsdEnabled());
+    TEST_ASSERT_FALSE(handler.isaChime);
 
     handler.speedProfile() = 2;
+    handler.offset = 55;
     handler.fsdEnabled() = false;
+    handler.isaChime = true;
     state.syncFrom(handler);
 
     TEST_ASSERT_EQUAL_INT(2, state.speedProfile());
+    TEST_ASSERT_EQUAL_INT(55, state.speedOffset());
     TEST_ASSERT_FALSE(state.fsdEnabled());
+    TEST_ASSERT_TRUE(state.isaSpeedChimeSuppress());
+    TEST_ASSERT_TRUE(state.features().speedOffset);
+    TEST_ASSERT_TRUE(state.features().isaSpeedChime);
 }
 
 void test_variant_parse_and_create_handler()
@@ -231,9 +267,13 @@ void test_command_stream_on_and_off_toggle_router_state()
     TEST_ASSERT_FALSE(router.isFrameStreamingEnabled());
 
     const std::vector<std::string> lines = transport.lines();
-    TEST_ASSERT_EQUAL_UINT32(2, static_cast<uint32_t>(lines.size()));
+    TEST_ASSERT_EQUAL_UINT32(4, static_cast<uint32_t>(lines.size()));
     TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"stream:on\"}", lines[0].c_str());
-    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"stream:off\"}", lines[1].c_str());
+    assertLineContains(lines[1], "\"t\":\"status\"");
+    assertLineContains(lines[1], "\"stream\":{\"on\":1");
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"stream:off\"}", lines[2].c_str());
+    assertLineContains(lines[3], "\"t\":\"status\"");
+    assertLineContains(lines[3], "\"stream\":{\"on\":0");
 }
 
 void test_command_fsd_and_profile_update_state_and_emit_status()
@@ -256,10 +296,43 @@ void test_command_fsd_and_profile_update_state_and_emit_status()
     assertLineContains(lines[1], "\"cap\":\"usb\"");
     assertLineContains(lines[1], "\"ready\":\"bench-ready\"");
     assertLineContains(lines[1], "\"bt\":0");
+    assertLineContains(lines[1], "\"stream\":{\"on\":0,\"emitted\":0}");
     assertLineContains(lines[1], "\"fsd\":1");
+    assertLineContains(lines[1], "\"features\":{");
     assertLineContains(lines[3], "\"sp\":4");
     assertLineContains(lines[5], "\"sp\":2");
     assertLineContains(lines[7], "\"fsd\":0");
+}
+
+void test_variant_specific_commands_require_supported_features()
+{
+    BoardCommandRouter router;
+    BoardState state;
+    FakeTransport transport;
+
+    router.runCommand(transport, state, "offset:25", 800);
+    router.runCommand(transport, state, "isa-chime:off", 801);
+    router.runCommand(transport, state, "variant:hw3", 802);
+    state.refreshFeatures(*board::createHandler(state.variant()));
+    router.runCommand(transport, state, "offset:25", 803);
+    router.runCommand(transport, state, "variant:hw4", 804);
+    state.refreshFeatures(*board::createHandler(state.variant()));
+    router.runCommand(transport, state, "isa-chime:off", 805);
+
+    TEST_ASSERT_EQUAL_INT(25, state.speedOffset());
+    TEST_ASSERT_FALSE(state.isaSpeedChimeSuppress());
+
+    const std::vector<std::string> lines = transport.lines();
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"error\",\"msg\":\"Offset control is not supported for this variant\"}", lines[0].c_str());
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"error\",\"msg\":\"ISA chime control is not supported for this variant\"}", lines[1].c_str());
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"variant:hw3\"}", lines[2].c_str());
+    assertLineContains(lines[3], "\"features\":{\"fsd\":1,\"profile\":1,\"nag\":1,\"speedOffset\":1,\"isaSpeedChime\":0,\"forceFsd\":0}");
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"offset:25\"}", lines[4].c_str());
+    assertLineContains(lines[5], "\"offset\":25");
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"variant:hw4\"}", lines[6].c_str());
+    assertLineContains(lines[7], "\"features\":{\"fsd\":1,\"profile\":1,\"nag\":1,\"speedOffset\":0,\"isaSpeedChime\":1,\"forceFsd\":0}");
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"isa-chime:off\"}", lines[8].c_str());
+    assertLineContains(lines[9], "\"isaChime\":0");
 }
 
 void test_command_variant_and_invalid_commands()
@@ -300,13 +373,17 @@ void test_update_reads_usb_and_bluetooth_buffers_and_periodic_status()
     TEST_ASSERT_TRUE(state.fsdEnabled());
 
     const std::vector<std::string> lines = transport.lines();
-    TEST_ASSERT_EQUAL_UINT32(5, static_cast<uint32_t>(lines.size()));
+    TEST_ASSERT_EQUAL_UINT32(6, static_cast<uint32_t>(lines.size()));
     assertLineContains(lines[0], "\"t\":\"status\"");
     assertLineContains(lines[0], "\"cap\":\"usb\"");
+    assertLineContains(lines[0], "\"stream\":{\"on\":0,\"emitted\":0}");
+    assertLineContains(lines[0], "\"features\":{");
     TEST_ASSERT_EQUAL_STRING("{\"t\":\"pong\",\"v\":1}", lines[1].c_str());
     TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"stream:on\"}", lines[2].c_str());
-    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"fsd:on\"}", lines[3].c_str());
-    assertLineContains(lines[4], "\"fsd\":1");
+    assertLineContains(lines[3], "\"t\":\"status\"");
+    assertLineContains(lines[3], "\"stream\":{\"on\":1");
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"fsd:on\"}", lines[4].c_str());
+    assertLineContains(lines[5], "\"fsd\":1");
 }
 
 void test_invalid_partial_bluetooth_command_does_not_corrupt_usb_command()
@@ -345,6 +422,7 @@ int main()
     RUN_TEST(test_command_ping_returns_pong);
     RUN_TEST(test_command_stream_on_and_off_toggle_router_state);
     RUN_TEST(test_command_fsd_and_profile_update_state_and_emit_status);
+    RUN_TEST(test_variant_specific_commands_require_supported_features);
     RUN_TEST(test_command_variant_and_invalid_commands);
     RUN_TEST(test_update_reads_usb_and_bluetooth_buffers_and_periodic_status);
     RUN_TEST(test_invalid_partial_bluetooth_command_does_not_corrupt_usb_command);

@@ -6,6 +6,16 @@
 class BoardState
 {
 public:
+    struct Features
+    {
+        bool fsd = true;
+        bool profile = true;
+        bool nag = true;
+        bool speedOffset = false;
+        bool isaSpeedChime = false;
+        bool forceFsd = false;
+    };
+
     enum class InstallReadiness
     {
         BenchReady,
@@ -21,6 +31,16 @@ public:
     void setSpeedProfile(int speedProfile)
     {
         speedProfile_ = speedProfile;
+    }
+
+    int speedOffset() const
+    {
+        return speedOffset_;
+    }
+
+    void setSpeedOffset(int speedOffset)
+    {
+        speedOffset_ = speedOffset;
     }
 
     bool fsdEnabled() const
@@ -94,22 +114,74 @@ public:
         installReadiness_ = installReadiness;
     }
 
+    bool isaSpeedChimeSuppress() const
+    {
+        return isaSpeedChimeSuppress_;
+    }
+
+    void setIsaSpeedChimeSuppress(bool enabled)
+    {
+        isaSpeedChimeSuppress_ = enabled;
+    }
+
+    const Features &features() const
+    {
+        return features_;
+    }
+
+    void refreshFeatures(const Handler &handler)
+    {
+        features_.fsd = true;
+        features_.profile = true;
+        features_.nag = handler.supportsNagSuppression();
+        features_.speedOffset = handler.speedOffset() != nullptr;
+        features_.isaSpeedChime = handler.isaSpeedChimeSuppress() != nullptr;
+        features_.forceFsd = false;
+    }
+
     void syncFrom(Handler &handler)
     {
         speedProfile_ = handler.speedProfile();
         fsdEnabled_ = handler.fsdEnabled();
+
+        if (int *speedOffset = handler.speedOffset())
+        {
+            speedOffset_ = *speedOffset;
+        }
+
+        if (bool *isaSpeedChimeSuppress = handler.isaSpeedChimeSuppress())
+        {
+            isaSpeedChimeSuppress_ = *isaSpeedChimeSuppress;
+        }
+
+        refreshFeatures(handler);
     }
 
     void applyTo(Handler &handler)
     {
         handler.speedProfile() = speedProfile_;
         handler.fsdEnabled() = fsdEnabled_;
+
+        if (int *speedOffset = handler.speedOffset())
+        {
+            *speedOffset = speedOffset_;
+        }
+
+        if (bool *isaSpeedChimeSuppress = handler.isaSpeedChimeSuppress())
+        {
+            *isaSpeedChimeSuppress = isaSpeedChimeSuppress_;
+        }
+
+        refreshFeatures(handler);
     }
 
 private:
     int speedProfile_ = 1;
+    int speedOffset_ = 0;
     bool fsdEnabled_ = false;
+    bool isaSpeedChimeSuppress_ = true;
     board::Variant variant_ = board::defaultVariant();
     bool variantDirty_ = false;
     InstallReadiness installReadiness_ = InstallReadiness::BenchReady;
+    Features features_{};
 };

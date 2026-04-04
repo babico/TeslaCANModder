@@ -16,6 +16,11 @@ public:
             return false;
         }
 
+        if (!hasFrameBytes(frame, 8))
+        {
+            return true;
+        }
+
         // This package claims frame 921 entirely. When the feature toggle is off
         // we still consume the frame so no other package touches it accidentally.
         if (context.isaSpeedChimeSuppress == nullptr || !(*context.isaSpeedChimeSuppress))

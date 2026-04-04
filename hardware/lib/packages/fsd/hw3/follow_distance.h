@@ -16,6 +16,11 @@ public:
             return false;
         }
 
+        if (!hasFrameBytes(frame, 6))
+        {
+            return true;
+        }
+
         const int mappedProfile = mapHW3FollowDistanceToSpeedProfile(readFollowDistance(frame));
         if (mappedProfile >= 0)
         {

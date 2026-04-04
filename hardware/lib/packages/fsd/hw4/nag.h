@@ -16,6 +16,11 @@ public:
             return false;
         }
 
+        if (!hasFrameBytes(frame, 6))
+        {
+            return true;
+        }
+
         suppressNagBit(frame);
         setBit(frame, 47, true);
         context.driver.send(frame);

@@ -52,6 +52,10 @@
 #define BOARD_BT_NAME "HC-05"
 #endif
 
+#ifndef BOARD_HW4_ENABLE_EMERGENCY_BIT59
+#define BOARD_HW4_ENABLE_EMERGENCY_BIT59 0
+#endif
+
 namespace board
 {
 

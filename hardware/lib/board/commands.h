@@ -38,6 +38,16 @@ public:
         return streamFrames_;
     }
 
+    unsigned long streamedFrameCount() const
+    {
+        return streamedFrameCount_;
+    }
+
+    void recordFrameEmitted()
+    {
+        ++streamedFrameCount_;
+    }
+
     template <typename Transport>
     void runCommand(Transport &transport, BoardState &state, const char *command, unsigned long now)
     {
@@ -48,6 +58,7 @@ public:
     void sendStatus(Transport &transport, BoardState &state, unsigned long now)
     {
         lastStatusMs_ = now;
+        const BoardState::Features &features = state.features();
 
         transport.print("{\"t\":\"status\",\"hw\":\"");
         transport.print(BOARD_HW_NAME);
@@ -75,6 +86,30 @@ public:
         transport.print(state.fsdEnabled() ? "1" : "0");
         transport.print(",\"sp\":");
         transport.printNumber(state.speedProfile());
+        transport.print(",\"offset\":");
+        transport.printNumber(state.speedOffset());
+        transport.print(",\"isaChime\":");
+        transport.print(state.isaSpeedChimeSuppress() ? "1" : "0");
+        transport.print(",\"features\":{");
+        transport.print("\"fsd\":");
+        transport.print(features.fsd ? "1" : "0");
+        transport.print(",\"profile\":");
+        transport.print(features.profile ? "1" : "0");
+        transport.print(",\"nag\":");
+        transport.print(features.nag ? "1" : "0");
+        transport.print(",\"speedOffset\":");
+        transport.print(features.speedOffset ? "1" : "0");
+        transport.print(",\"isaSpeedChime\":");
+        transport.print(features.isaSpeedChime ? "1" : "0");
+        transport.print(",\"forceFsd\":");
+        transport.print(features.forceFsd ? "1" : "0");
+        transport.print("}");
+        transport.print(",\"stream\":{");
+        transport.print("\"on\":");
+        transport.print(streamFrames_ ? "1" : "0");
+        transport.print(",\"emitted\":");
+        transport.printNumber(static_cast<long>(streamedFrameCount_));
+        transport.print("}");
         transport.print(",\"up\":");
         transport.printNumber(now);
         transport.print("}");
@@ -84,6 +119,7 @@ public:
 private:
     unsigned long lastStatusMs_ = 0;
     bool streamFrames_ = false;
+    unsigned long streamedFrameCount_ = 0;
 
     char usbBuffer_[32] = {};
     uint8_t usbLength_ = 0;
@@ -163,12 +199,89 @@ private:
     }
 
     template <typename Transport>
+    bool applyOffsetCommand(Transport &transport, BoardState &state, const char *command, unsigned long now)
+    {
+        if (strncmp(command, "offset:", 7) != 0)
+        {
+            return false;
+        }
+
+        if (!state.features().speedOffset)
+        {
+            sendError(transport, "Offset control is not supported for this variant");
+            return true;
+        }
+
+        char *endPtr = nullptr;
+        const long parsed = strtol(command + 7, &endPtr, 10);
+        if (endPtr == command + 7 || *endPtr != '\0' || parsed < 0 || parsed > 100)
+        {
+            sendError(transport, "Invalid speed offset");
+            return true;
+        }
+
+        state.setSpeedOffset(static_cast<int>(parsed));
+        sendAck(transport, command);
+        sendStatus(transport, state, now);
+        return true;
+    }
+
+    template <typename Transport>
+    bool applyIsaChimeCommand(Transport &transport, BoardState &state, const char *command, unsigned long now)
+    {
+        if (strcmp(command, "isa-chime:on") == 0)
+        {
+            if (!state.features().isaSpeedChime)
+            {
+                sendError(transport, "ISA chime control is not supported for this variant");
+                return true;
+            }
+
+            state.setIsaSpeedChimeSuppress(true);
+            sendAck(transport, command);
+            sendStatus(transport, state, now);
+            return true;
+        }
+
+        if (strcmp(command, "isa-chime:off") == 0)
+        {
+            if (!state.features().isaSpeedChime)
+            {
+                sendError(transport, "ISA chime control is not supported for this variant");
+                return true;
+            }
+
+            state.setIsaSpeedChimeSuppress(false);
+            sendAck(transport, command);
+            sendStatus(transport, state, now);
+            return true;
+        }
+
+        if (strcmp(command, "isa-chime:toggle") == 0)
+        {
+            if (!state.features().isaSpeedChime)
+            {
+                sendError(transport, "ISA chime control is not supported for this variant");
+                return true;
+            }
+
+            state.setIsaSpeedChimeSuppress(!state.isaSpeedChimeSuppress());
+            sendAck(transport, command);
+            sendStatus(transport, state, now);
+            return true;
+        }
+
+        return false;
+    }
+
+    template <typename Transport>
     void executeCommand(Transport &transport, BoardState &state, const char *command, unsigned long now)
     {
         if (strcmp(command, "stream:on") == 0)
         {
             streamFrames_ = true;
             sendAck(transport, "stream:on");
+            sendStatus(transport, state, now);
             return;
         }
 
@@ -176,6 +289,7 @@ private:
         {
             streamFrames_ = false;
             sendAck(transport, "stream:off");
+            sendStatus(transport, state, now);
             return;
         }
 
@@ -221,6 +335,16 @@ private:
             return;
         }
 
+        if (applyOffsetCommand(transport, state, command, now))
+        {
+            return;
+        }
+
+        if (applyIsaChimeCommand(transport, state, command, now))
+        {
+            return;
+        }
+
         if (strncmp(command, "variant:", 8) == 0)
         {
             if (!state.setVariantByName(command + 8))
@@ -229,6 +353,7 @@ private:
                 return;
             }
 
+            state.refreshFeatures(*board::createHandler(state.variant()));
             sendAck(transport, command);
             sendStatus(transport, state, now);
             return;

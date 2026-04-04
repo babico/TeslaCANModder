@@ -16,6 +16,11 @@ public:
             return false;
         }
 
+        if (!hasFrameBytes(frame, 8))
+        {
+            return true;
+        }
+
         writeHW4SpeedProfile(frame, context.speedProfile);
         context.driver.send(frame);
         return true;

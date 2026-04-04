@@ -7,13 +7,55 @@
 #include "handlers/index.h"
 
 static Driver *appDriver = nullptr;
-static Handler *appHandler = nullptr;
 static BoardBridge appBridge;
 static BoardState appState;
+static Driver *appHardwareDriver = nullptr;
+static Handler *appHandler = nullptr;
 static bool appDriverReady = false;
 
 static volatile bool frameReady = true;
 static void canISR() { frameReady = true; }
+
+class BridgeDriver final : public Driver
+{
+public:
+    bool init() override
+    {
+        return appHardwareDriver != nullptr && appHardwareDriver->init();
+    }
+
+    void setFilters(const uint32_t *ids, uint8_t count) override
+    {
+        if (appHardwareDriver != nullptr)
+        {
+            appHardwareDriver->setFilters(ids, count);
+        }
+    }
+
+    bool enableInterrupt(void (*onReady)()) override
+    {
+        return appHardwareDriver != nullptr && appHardwareDriver->enableInterrupt(onReady);
+    }
+
+    bool read(Frame &frame) override
+    {
+        return appHardwareDriver != nullptr && appHardwareDriver->read(frame);
+    }
+
+    void send(const Frame &frame) override
+    {
+        if (appHardwareDriver == nullptr)
+        {
+            return;
+        }
+
+        appHardwareDriver->send(frame);
+        appBridge.sendFrame(frame, "tx", millis());
+    }
+};
+
+static BridgeDriver appBridgeDriver;
+static Driver *appObservedDriver = &appBridgeDriver;
 
 static void configureAppHandler()
 {
@@ -25,7 +67,7 @@ static void configureAppHandler()
 
     if (appDriverReady)
     {
-        appDriver->setFilters(appHandler->filterIds(), appHandler->filterIdCount());
+        appObservedDriver->setFilters(appHandler->filterIds(), appHandler->filterIdCount());
     }
 }
 
@@ -45,8 +87,9 @@ static void appSetup(Driver &drv, const char *readyMsg)
     appState.setInstallReadiness(BoardState::InstallReadiness::BenchReady);
     appBridge.begin(appState);
 
-    appDriver = &drv;
-    appDriverReady = appDriver->init();
+    appHardwareDriver = &drv;
+    appDriver = appObservedDriver;
+    appDriverReady = appObservedDriver->init();
     if (!appDriverReady)
     {
         appBridge.sendLog("ERROR: CAN initialization failed. Check shield wiring, oscillator and SPI pins.");
@@ -107,7 +150,7 @@ static void appLoop()
         // bench bring-up and into a usable runtime state.
         appState.setInstallReadiness(BoardState::InstallReadiness::RuntimeReady);
         digitalWrite(PIN_LED, LOW);
-        appBridge.sendFrame(frame, "rx");
+        appBridge.sendFrame(frame, "rx", millis());
         appHandler->handleMessage(frame, *appDriver);
     }
     digitalWrite(PIN_LED, HIGH);

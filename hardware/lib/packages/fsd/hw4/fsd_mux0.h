@@ -1,5 +1,6 @@
 #pragma once
 
+#include "board/config.h"
 #include "can/helpers.h"
 #include "packages/runtime/index.h"
 
@@ -16,6 +17,11 @@ public:
             return false;
         }
 
+        if (!hasFrameBytes(frame, 8))
+        {
+            return true;
+        }
+
         context.fsdEnabled = isFSDSelectedInUI(frame);
         if (!context.fsdEnabled)
         {
@@ -24,7 +30,9 @@ public:
 
         setBit(frame, 46, true);
         setBit(frame, 60, true);
+#if BOARD_HW4_ENABLE_EMERGENCY_BIT59
         setBit(frame, 59, true);
+#endif
         context.driver.send(frame);
         return true;
     }

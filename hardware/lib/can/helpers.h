@@ -4,22 +4,43 @@
 
 inline uint8_t readMuxID(const Frame &frame)
 {
+    if (frame.dlc < 1)
+    {
+        return 0;
+    }
     return frame.data[0] & 0x07;
 }
 
 inline uint8_t readLegacyStalkPosition(const Frame &frame)
 {
+    if (frame.dlc < 2)
+    {
+        return 0;
+    }
     return frame.data[1] >> 5;
 }
 
 inline uint8_t readFollowDistance(const Frame &frame)
 {
+    if (frame.dlc < 6)
+    {
+        return 0;
+    }
     return (frame.data[5] & 0b11100000) >> 5;
 }
 
 inline bool isFSDSelectedInUI(const Frame &frame)
 {
+    if (frame.dlc < 5)
+    {
+        return false;
+    }
     return (frame.data[4] >> 6) & 0x01;
+}
+
+inline bool hasFrameBytes(const Frame &frame, uint8_t requiredDlc)
+{
+    return frame.dlc >= requiredDlc;
 }
 
 inline int mapLegacyStalkToSpeedProfile(uint8_t stalkPosition)
@@ -105,13 +126,28 @@ inline int mapHW3UiOffsetToSpeedProfile(int uiOffsetSteps)
 
 inline void setSpeedProfileV12V13(Frame &frame, int profile)
 {
+    if (!hasFrameBytes(frame, 7))
+    {
+        return;
+    }
+
     frame.data[6] &= ~0x06;
     frame.data[6] |= (profile << 1);
 }
 
 inline void setBit(Frame &frame, int bit, bool value)
 {
+    if (bit < 0 || bit >= 64)
+    {
+        return;
+    }
+
     const int byteIndex = bit / 8;
+    if (frame.dlc <= byteIndex)
+    {
+        return;
+    }
+
     const int bitIndex = bit % 8;
     const uint8_t mask = static_cast<uint8_t>(1U << bitIndex);
     if (value)
@@ -131,6 +167,11 @@ inline void suppressNagBit(Frame &frame)
 
 inline void writeHW3SpeedOffset(Frame &frame, int speedOffset)
 {
+    if (!hasFrameBytes(frame, 2))
+    {
+        return;
+    }
+
     frame.data[0] &= ~(0b11000000);
     frame.data[1] &= ~(0b00111111);
     frame.data[0] |= static_cast<uint8_t>((speedOffset & 0x03) << 6);
@@ -139,12 +180,22 @@ inline void writeHW3SpeedOffset(Frame &frame, int speedOffset)
 
 inline void writeHW4SpeedProfile(Frame &frame, int speedProfile)
 {
+    if (!hasFrameBytes(frame, 8))
+    {
+        return;
+    }
+
     frame.data[7] &= ~(0x07 << 4);
     frame.data[7] |= static_cast<uint8_t>((speedProfile & 0x07) << 4);
 }
 
 inline uint8_t computeHW4IsaChecksum(const Frame &frame)
 {
+    if (!hasFrameBytes(frame, 8))
+    {
+        return 0;
+    }
+
     uint8_t sum = 0;
     for (int index = 0; index < 7; index++)
     {

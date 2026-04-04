@@ -19,6 +19,7 @@ void tearDown() {}
 void test_legacy_stalk_pos0_sets_profile_2() {
     Frame f = {};
     f.id = 69;
+    f.dlc = 8;
     f.data[1] = 0x00; // pos = 0 >> 5 = 0
     handler.handleMessage(f, mock);
     TEST_ASSERT_EQUAL_INT(2, handler.speedProfile());
@@ -28,6 +29,7 @@ void test_legacy_stalk_pos0_sets_profile_2() {
 void test_legacy_stalk_pos1_sets_profile_2() {
     Frame f = {};
     f.id = 69;
+    f.dlc = 8;
     f.data[1] = 0x21; // pos = 0x21 >> 5 = 1
     handler.handleMessage(f, mock);
     TEST_ASSERT_EQUAL_INT(2, handler.speedProfile());
@@ -36,6 +38,7 @@ void test_legacy_stalk_pos1_sets_profile_2() {
 void test_legacy_stalk_pos2_sets_profile_1() {
     Frame f = {};
     f.id = 69;
+    f.dlc = 8;
     f.data[1] = 0x42; // pos = 0x42 >> 5 = 2
     handler.handleMessage(f, mock);
     TEST_ASSERT_EQUAL_INT(1, handler.speedProfile());
@@ -44,6 +47,7 @@ void test_legacy_stalk_pos2_sets_profile_1() {
 void test_legacy_stalk_pos3_sets_profile_0() {
     Frame f = {};
     f.id = 69;
+    f.dlc = 8;
     f.data[1] = 0x64; // pos = 0x64 >> 5 = 3
     handler.handleMessage(f, mock);
     TEST_ASSERT_EQUAL_INT(0, handler.speedProfile());
@@ -54,6 +58,7 @@ void test_legacy_stalk_pos3_sets_profile_0() {
 void test_legacy_fsd_enabled_on_mux0() {
     Frame f = {};
     f.id = 1006;
+    f.dlc = 8;
     f.data[0] = 0x00; // mux 0
     f.data[4] = 0x40; // FSD bit set
     handler.handleMessage(f, mock);
@@ -64,6 +69,7 @@ void test_legacy_fsd_enabled_on_mux0() {
 void test_legacy_no_send_when_fsd_disabled() {
     Frame f = {};
     f.id = 1006;
+    f.dlc = 8;
     f.data[0] = 0x00; // mux 0
     f.data[4] = 0x00; // FSD bit NOT set
     handler.handleMessage(f, mock);
@@ -74,6 +80,7 @@ void test_legacy_no_send_when_fsd_disabled() {
 void test_legacy_fsd_sets_bit46() {
     Frame f = {};
     f.id = 1006;
+    f.dlc = 8;
     f.data[0] = 0x00;
     f.data[4] = 0x40;
     handler.handleMessage(f, mock);
@@ -81,10 +88,22 @@ void test_legacy_fsd_sets_bit46() {
     TEST_ASSERT_EQUAL_HEX8(0x40, mock.sent[0].data[5] & 0x40);
 }
 
+void test_legacy_mux0_short_frame_is_consumed_without_send() {
+    Frame f = {};
+    f.id = 1006;
+    f.dlc = 6;
+    f.data[0] = 0x00;
+    f.data[4] = 0x40;
+    handler.handleMessage(f, mock);
+    TEST_ASSERT_FALSE(handler.fsdEnabled());
+    TEST_ASSERT_EQUAL(0, mock.sent.size());
+}
+
 void test_legacy_fsd_sets_speed_profile_in_frame() {
     handler.speedProfile() = 2;
     Frame f = {};
     f.id = 1006;
+    f.dlc = 8;
     f.data[0] = 0x00;
     f.data[4] = 0x40;
     handler.handleMessage(f, mock);
@@ -96,6 +115,7 @@ void test_legacy_fsd_sets_speed_profile_in_frame() {
 void test_legacy_nag_suppression_clears_bit19_on_mux1() {
     Frame f = {};
     f.id = 1006;
+    f.dlc = 8;
     f.data[0] = 0x01; // mux 1
     setBit(f, 19, true); // pre-set nag bit
     handler.handleMessage(f, mock);
@@ -103,11 +123,22 @@ void test_legacy_nag_suppression_clears_bit19_on_mux1() {
     TEST_ASSERT_FALSE((mock.sent[0].data[2] >> 3) & 0x01);
 }
 
+void test_legacy_mux1_short_frame_is_consumed_without_send() {
+    Frame f = {};
+    f.id = 1006;
+    f.dlc = 2;
+    f.data[0] = 0x01;
+    setBit(f, 19, true);
+    handler.handleMessage(f, mock);
+    TEST_ASSERT_EQUAL(0, mock.sent.size());
+}
+
 // --- No sends on unrelated CAN IDs ---
 
 void test_legacy_ignores_unrelated_can_id() {
     Frame f = {};
     f.id = 999;
+    f.dlc = 8;
     handler.handleMessage(f, mock);
     TEST_ASSERT_EQUAL(0, mock.sent.size());
 }
@@ -138,9 +169,11 @@ int main() {
     RUN_TEST(test_legacy_fsd_enabled_on_mux0);
     RUN_TEST(test_legacy_no_send_when_fsd_disabled);
     RUN_TEST(test_legacy_fsd_sets_bit46);
+    RUN_TEST(test_legacy_mux0_short_frame_is_consumed_without_send);
     RUN_TEST(test_legacy_fsd_sets_speed_profile_in_frame);
 
     RUN_TEST(test_legacy_nag_suppression_clears_bit19_on_mux1);
+    RUN_TEST(test_legacy_mux1_short_frame_is_consumed_without_send);
     RUN_TEST(test_legacy_ignores_unrelated_can_id);
 
     return UNITY_END();

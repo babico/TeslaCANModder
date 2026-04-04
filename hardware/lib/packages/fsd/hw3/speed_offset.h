@@ -16,6 +16,11 @@ public:
             return false;
         }
 
+        if (!hasFrameBytes(frame, 2))
+        {
+            return true;
+        }
+
         if (!context.fsdEnabled || context.speedOffset == nullptr)
         {
             return true;

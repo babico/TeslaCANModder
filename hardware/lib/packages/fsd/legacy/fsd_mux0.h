@@ -16,6 +16,11 @@ public:
             return false;
         }
 
+        if (!hasFrameBytes(frame, 7))
+        {
+            return true;
+        }
+
         context.fsdEnabled = isFSDSelectedInUI(frame);
         if (!context.fsdEnabled)
         {

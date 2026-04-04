@@ -16,6 +16,11 @@ public:
             return false;
         }
 
+        if (!hasFrameBytes(frame, 2))
+        {
+            return true;
+        }
+
         context.speedProfile = mapLegacyStalkToSpeedProfile(readLegacyStalkPosition(frame));
         return true;
     }

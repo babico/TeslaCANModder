@@ -10,9 +10,19 @@ public:
     packages::fsd::hw3::Nag nag;
     packages::fsd::hw3::SpeedOffset speedOffsetUnit;
 
-    int &speedOffset()
+    int &speedOffsetValue()
     {
         return state().speedOffset;
+    }
+
+    int *speedOffset() override
+    {
+        return &state().speedOffset;
+    }
+
+    const int *speedOffset() const override
+    {
+        return &state().speedOffset;
     }
 
     const uint32_t *filterIdsArray() const

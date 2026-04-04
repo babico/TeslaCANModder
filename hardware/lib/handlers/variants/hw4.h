@@ -11,9 +11,19 @@ public:
     packages::fsd::hw4::Nag nag;
     packages::fsd::hw4::Profile profile;
 
-    bool &isaSpeedChimeSuppress()
+    bool &isaSpeedChimeSuppressValue()
     {
         return state().isaSpeedChimeSuppress;
+    }
+
+    bool *isaSpeedChimeSuppress() override
+    {
+        return &state().isaSpeedChimeSuppress;
+    }
+
+    const bool *isaSpeedChimeSuppress() const override
+    {
+        return &state().isaSpeedChimeSuppress;
     }
 
     const uint32_t *filterIdsArray() const

@@ -1,15 +1,61 @@
 #pragma once
 
+#if defined(ARDUINO)
 #include <Arduino.h>
 #include "board/config.h"
 
 #if BOARD_ENABLE_BT
 #include <SoftwareSerial.h>
 #endif
+#else
+#include <stdint.h>
+#include "board/config.h"
+#endif
 
 class BoardTransport
 {
 public:
+#if !defined(ARDUINO)
+    void begin()
+    {
+    }
+
+    bool bluetoothEnabled() const
+    {
+        return false;
+    }
+
+    bool readUsbChar(char &character)
+    {
+        (void)character;
+        return false;
+    }
+
+    bool readBluetoothChar(char &character)
+    {
+        (void)character;
+        return false;
+    }
+
+    void print(const char *text)
+    {
+        (void)text;
+    }
+
+    void printNumber(long number)
+    {
+        (void)number;
+    }
+
+    void printHexByte(uint8_t value)
+    {
+        (void)value;
+    }
+
+    void println()
+    {
+    }
+#else
 #if BOARD_ENABLE_BT
     BoardTransport() : bluetoothSerial_(BOARD_BT_RX_PIN, BOARD_BT_TX_PIN) {}
 #else
@@ -95,5 +141,6 @@ public:
 private:
 #if BOARD_ENABLE_BT
     SoftwareSerial bluetoothSerial_;
+#endif
 #endif
 };
