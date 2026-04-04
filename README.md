@@ -220,6 +220,13 @@ The `web` service bind-mounts the repo into the container. On first start, the d
 entrypoint may run `npm ci` inside `web/` before launching Vite so the mounted
 workspace has the dependencies that the image layer would otherwise have provided.
 
+The Vite dev server defaults to local-only hostnames. To allow an external hostname,
+set `VITE_ALLOWED_HOSTS` when starting the `web` service:
+
+```bash
+VITE_ALLOWED_HOSTS=teslacan.arm.oracle.cloud.babico.tr docker compose up web
+```
+
 Run the production web container:
 
 ```bash

@@ -6,6 +6,16 @@ import react from '@vitejs/plugin-react';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const hardwareBuildRoot = path.resolve(currentDir, '../hardware/.pio/build');
+const defaultAllowedHosts = ['localhost', '127.0.0.1', '::1'];
+const allowedHosts = [
+  ...new Set([
+    ...defaultAllowedHosts,
+    ...(globalThis.process?.env?.VITE_ALLOWED_HOSTS || '')
+      .split(',')
+      .map((host) => host.trim())
+      .filter(Boolean),
+  ]),
+];
 const heartbeatPayload = JSON.stringify({
   ok: true,
   service: 'TeslaCANModder-web',
@@ -54,5 +64,8 @@ function serveHardwareBuilds() {
 }
 
 export default defineConfig({
+  server: {
+    allowedHosts,
+  },
   plugins: [react(), serveHeartbeat(), serveHardwareBuilds()],
 });

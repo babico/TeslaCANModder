@@ -159,6 +159,18 @@ Because the repo is bind-mounted into the container, that first start may run `n
 inside `/app/web` before Vite launches. That is expected: the bind mount hides the
 image-baked `node_modules`, so the dev entrypoint reinstalls dependencies when needed.
 
+By default, the Vite dev server only allows local hosts:
+
+```text
+localhost, 127.0.0.1, ::1
+```
+
+To allow an external hostname, pass it through `VITE_ALLOWED_HOSTS`:
+
+```bash
+VITE_ALLOWED_HOSTS=teslacan.arm.oracle.cloud.babico.tr docker compose up web
+```
+
 That serves the app at:
 
 ```text

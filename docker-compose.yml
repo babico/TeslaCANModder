@@ -12,6 +12,8 @@ services:
       context: .
       dockerfile: web/Dockerfile
       target: dev
+    environment:
+      VITE_ALLOWED_HOSTS: ${VITE_ALLOWED_HOSTS:-}
     ports:
       - "4173:4173"
     volumes:
