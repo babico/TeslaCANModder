@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import { SerialBoardClient } from '../lib/board/client';
 import { BoardCommands, BOARD_COMMANDS } from '../lib/board/commands';
 import { getBoardBrowserCapabilities } from '../lib/board/capabilities';
@@ -7,7 +7,7 @@ import {
   createBaseTelemetry,
   createFrameMonitorState,
   formatClockTime,
-  ingestFrameMonitorMessage,
+  ingestFrameMonitorBatch,
   normalizeStatusMessage,
   trimList,
 } from '../lib/board/protocol';
@@ -15,6 +15,8 @@ import { buildInitialPackageState, derivePackageState } from '../lib/can/core/pa
 import { toolkitPackages } from '../packages';
 
 export function useBoardLink() {
+  const MONITOR_FLUSH_INTERVAL_MS = 120;
+  const MONITOR_FLUSH_FRAME_THRESHOLD = 24;
   const [capabilities] = useState(() => getBoardBrowserCapabilities());
   const [isConnected, setIsConnected] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -28,6 +30,8 @@ export function useBoardLink() {
   const [client] = useState(() => new SerialBoardClient());
 
   const messageWindowRef = useRef([]);
+  const pendingMonitorRef = useRef({ frames: [], parseErrors: 0 });
+  const monitorFlushTimerRef = useRef(null);
 
   const appendConsole = useCallback((type, text) => {
     const line = {
@@ -48,6 +52,11 @@ export function useBoardLink() {
     // Connection state is reset as one unit so reconnects always start from a
     // clean transport session instead of reusing stale telemetry or package
     // state from a previous board connection.
+    if (typeof window !== 'undefined' && monitorFlushTimerRef.current !== null) {
+      window.clearTimeout(monitorFlushTimerRef.current);
+    }
+    monitorFlushTimerRef.current = null;
+    pendingMonitorRef.current = { frames: [], parseErrors: 0 };
     messageWindowRef.current = [];
     setIsConnected(false);
     setIsStreaming(false);
@@ -65,6 +74,54 @@ export function useBoardLink() {
     const rate = Math.round(messageWindowRef.current.length / 2);
     updater(rate);
   }, []);
+
+  const flushPendingMonitor = useCallback(() => {
+    const pending = pendingMonitorRef.current;
+    if (!pending.frames.length && !pending.parseErrors) {
+      monitorFlushTimerRef.current = null;
+      return;
+    }
+
+    pendingMonitorRef.current = { frames: [], parseErrors: 0 };
+    monitorFlushTimerRef.current = null;
+
+    startTransition(() => {
+      setMonitor((previous) => ingestFrameMonitorBatch(previous, pending.frames, pending.parseErrors));
+    });
+  }, []);
+
+  const schedulePendingMonitorFlush = useCallback(() => {
+    if (monitorFlushTimerRef.current !== null) {
+      return;
+    }
+
+    if (typeof window === 'undefined') {
+      flushPendingMonitor();
+      return;
+    }
+
+    monitorFlushTimerRef.current = window.setTimeout(flushPendingMonitor, MONITOR_FLUSH_INTERVAL_MS);
+  }, [flushPendingMonitor, MONITOR_FLUSH_INTERVAL_MS]);
+
+  const enqueueMonitorFrame = useCallback((message) => {
+    pendingMonitorRef.current.frames.push(message);
+
+    if (pendingMonitorRef.current.frames.length >= MONITOR_FLUSH_FRAME_THRESHOLD) {
+      if (typeof window !== 'undefined' && monitorFlushTimerRef.current !== null) {
+        window.clearTimeout(monitorFlushTimerRef.current);
+      }
+      monitorFlushTimerRef.current = null;
+      flushPendingMonitor();
+      return;
+    }
+
+    schedulePendingMonitorFlush();
+  }, [flushPendingMonitor, schedulePendingMonitorFlush, MONITOR_FLUSH_FRAME_THRESHOLD]);
+
+  const enqueueMonitorParseError = useCallback(() => {
+    pendingMonitorRef.current.parseErrors += 1;
+    schedulePendingMonitorFlush();
+  }, [schedulePendingMonitorFlush]);
 
   const handleMessage = useCallback((message) => {
     // The browser receives one mixed message stream from the board. This
@@ -126,12 +183,12 @@ export function useBoardLink() {
     }
 
     if (message.t === 'frame') {
-      setMonitor((previous) => ingestFrameMonitorMessage(previous, message));
+      enqueueMonitorFrame(message);
       return;
     }
 
     appendConsole('rx', JSON.stringify(message));
-  }, [appendConsole, refreshStatusRate]);
+  }, [appendConsole, enqueueMonitorFrame, refreshStatusRate]);
 
   const handleClientOpen = useCallback((kind) => {
     messageWindowRef.current = [];
@@ -141,6 +198,7 @@ export function useBoardLink() {
     setIsStreaming(false);
     setActiveTransport(kind);
     setStatus(kind === 'bluetooth' ? 'Online via HC-05' : 'Online via USB');
+    pendingMonitorRef.current = { frames: [], parseErrors: 0 };
     setMonitor(createFrameMonitorState());
   }, []);
 
@@ -164,15 +222,18 @@ export function useBoardLink() {
       onMessage: handleMessage,
       onText: (line) => appendConsole('rx', line),
       onParseError: () => {
-        setMonitor((previous) => ({
-          ...previous,
-          parseErrors: previous.parseErrors + 1,
-        }));
+        enqueueMonitorParseError();
       },
       onError: handleClientError,
       onClose: handleClientClose,
     });
-  }, [appendConsole, client, handleClientClose, handleClientError, handleClientOpen, handleMessage]);
+    return () => {
+      if (typeof window !== 'undefined' && monitorFlushTimerRef.current !== null) {
+        window.clearTimeout(monitorFlushTimerRef.current);
+      }
+      monitorFlushTimerRef.current = null;
+    };
+  }, [appendConsole, client, enqueueMonitorParseError, handleClientClose, handleClientError, handleClientOpen, handleMessage]);
 
   const connect = useCallback(async (kind = 'usb') => {
     try {
@@ -210,6 +271,11 @@ export function useBoardLink() {
   }, [appendConsole, client]);
 
   const clearFrames = useCallback(() => {
+    if (typeof window !== 'undefined' && monitorFlushTimerRef.current !== null) {
+      window.clearTimeout(monitorFlushTimerRef.current);
+    }
+    monitorFlushTimerRef.current = null;
+    pendingMonitorRef.current = { frames: [], parseErrors: 0 };
     setMonitor(createFrameMonitorState());
   }, []);
 

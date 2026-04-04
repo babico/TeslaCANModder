@@ -26,8 +26,11 @@ const ORDERED_KIT = {
 };
 
 const FIRST_FLASH_BUILD_COMMAND = `cd hardware
+pio run -e uno_usb`;
+const FIRST_FLASH_HEX_PATH = 'hardware/.pio/build/uno_usb/firmware.hex';
+const FIRST_FLASH_BT_BUILD_COMMAND = `cd hardware
 pio run -e uno`;
-const FIRST_FLASH_HEX_PATH = 'hardware/.pio/build/uno/firmware.hex';
+const FIRST_FLASH_BT_HEX_PATH = 'hardware/.pio/build/uno/firmware.hex';
 
 const PHASE_CARDS = [
   {
@@ -605,12 +608,18 @@ function FirstFlashPanel() {
           </div>
           <div className="sg-bullet-item">
             <span className="sg-bullet-dot sg-bullet-dot-ok" />
-            <span>Build the shared Uno image once, flash it over USB, then change `HW4`, `HW3`, or `Legacy` later from the dashboard at runtime.</span>
+            <span>If HC-05 is not physically installed, build `uno_usb` and flash that USB-only image first.</span>
+          </div>
+          <div className="sg-bullet-item">
+            <span className="sg-bullet-dot sg-bullet-dot-ok" />
+            <span>Use the Bluetooth-enabled `uno` image only when HC-05 is really wired, powered from 3.3V, and intentionally part of the install.</span>
           </div>
         </div>
       </div>
-      <SourceBlock title="Build firmware from hardware/" code={FIRST_FLASH_BUILD_COMMAND} />
-      <SourceBlock title="First flash HEX path" code={FIRST_FLASH_HEX_PATH} />
+      <SourceBlock title="Recommended first flash build (no HC-05 installed)" code={FIRST_FLASH_BUILD_COMMAND} />
+      <SourceBlock title="Recommended first flash HEX path" code={FIRST_FLASH_HEX_PATH} />
+      <SourceBlock title="Optional Bluetooth-enabled build (HC-05 installed only)" code={FIRST_FLASH_BT_BUILD_COMMAND} />
+      <SourceBlock title="Bluetooth-enabled HEX path" code={FIRST_FLASH_BT_HEX_PATH} />
     </div>
   );
 }
@@ -824,7 +833,7 @@ const getWiringSteps = (includeBluetooth) => {
     items: [
       { id: 'u1', text: 'Connect the Uno to the PC with USB and let the CH340 serial port appear in the OS first.' },
       { id: 'u2', text: 'Keep X179 disconnected during the first flash and first dashboard session.' },
-      { id: 'u3', text: 'Build the firmware from `hardware` and flash `hardware/.pio/build/uno/firmware.hex` while the Uno is powered only from USB.' },
+      { id: 'u3', text: 'Build the firmware from `hardware` and flash `hardware/.pio/build/uno_usb/firmware.hex` while the Uno is powered only from USB unless the HC-05 is already installed.' },
       { id: 'u4', text: 'Open the dashboard over USB and confirm the board answers status requests before moving on.' },
       { id: 'u5', text: 'Set the runtime vehicle variant you want to test so the board behavior is known before the vehicle install.' },
     ],
@@ -1263,7 +1272,7 @@ export default function SetupGuide({ board }) {
         'Do not reflash per vehicle type. The firmware switches variants at runtime.',
       ],
       checks: [
-        'Built firmware from hardware/.pio/build/uno/firmware.hex',
+        'Built firmware from hardware/.pio/build/uno_usb/firmware.hex, or hardware/.pio/build/uno/firmware.hex only if HC-05 is installed',
         'Board powers on from PC USB',
         'CH340 serial port appears in the OS',
       ],
@@ -1531,6 +1540,10 @@ export default function SetupGuide({ board }) {
             <ShieldAlert size={18} />
             <p>The ordered Uno clone uses a CH340 USB bridge, so Windows 7 and older macOS installs may need a driver while Linux and modern Windows usually work immediately. Use that USB link for firmware flashing and first validation before closing up the installation.</p>
           </div>
+          <div className="sg-alert" style={{ marginTop: '12px' }}>
+            <ShieldAlert size={18} />
+            <p>If the HC-05 is not physically installed, leave the HC-05 path disabled in this guide and flash <code>uno_usb</code>. Do not install the Bluetooth-enabled firmware just because the optional wiring exists in the docs.</p>
+          </div>
 
           <div className="sg-toolbar">
             <button
@@ -1627,7 +1640,7 @@ export default function SetupGuide({ board }) {
               </div>
               <div className="sg-key-row">
                 <span className="sg-key-label">Bluetooth role</span>
-                <span className="sg-key-value">{includeBluetooth ? 'HC-05 stays optional and should only be added after the USB bench phase and the X179-powered install are already stable.' : 'HC-05 is currently disabled in this view. The wired install path remains the same.'}</span>
+                <span className="sg-key-value">{includeBluetooth ? 'HC-05 stays optional and should only be added after the USB bench phase and the X179-powered install are already stable. Flash the Bluetooth-enabled firmware only when the module is physically installed.' : 'HC-05 is currently disabled in this view. Keep the wired install path and flash `uno_usb` while the module is absent.'}</span>
               </div>
             </div>
           </div>
@@ -1656,7 +1669,7 @@ export default function SetupGuide({ board }) {
           <div>
             <span className="sg-box-label">Control path</span>
             <strong>{includeBluetooth ? 'USB first, HC-05 optional after install' : 'USB first, then X179 installed power'}</strong>
-            <p>Use USB for the first flash and first diagnostics, then keep USB as the service link or move later to the paired HC-05 COM port.</p>
+            <p>Use USB for the first flash and first diagnostics, then keep USB as the service link or move later to the paired HC-05 COM port. If HC-05 is absent, stay on the `uno_usb` firmware path.</p>
           </div>
         </div>
         <div className="panel sg-overview-card">

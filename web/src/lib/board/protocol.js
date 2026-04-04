@@ -186,12 +186,12 @@ export function normalizeFrameMessage(message) {
 }
 
 export function ingestFrameMonitorMessage(previousState, message) {
-  const frame = normalizeFrameMessage(message);
-  if (!frame) {
-    return {
-      ...previousState,
-      parseErrors: previousState.parseErrors + 1,
-    };
+  return ingestFrameMonitorBatch(previousState, [message]);
+}
+
+export function ingestFrameMonitorBatch(previousState, messages = [], parseErrorCount = 0) {
+  if (!messages.length && !parseErrorCount) {
+    return previousState;
   }
 
   const frames = [...previousState.frames];
@@ -203,12 +203,28 @@ export function ingestFrameMonitorMessage(previousState, message) {
     }
   });
 
-  if (frame.dir === 'tx') {
-    const referenceFrame = latestRxByKey.get(frameGroupKey(frame));
-    frame.changedByteIndexes = computeByteDiff(referenceFrame?.bytes || [], frame.bytes);
-  }
+  let nextParseErrors = previousState.parseErrors + parseErrorCount;
+  let acceptedFrames = 0;
 
-  frames.unshift(frame);
+  messages.forEach((message) => {
+    const frame = normalizeFrameMessage(message);
+    if (!frame) {
+      nextParseErrors += 1;
+      return;
+    }
+
+    if (frame.dir === 'tx') {
+      const referenceFrame = latestRxByKey.get(frameGroupKey(frame));
+      frame.changedByteIndexes = computeByteDiff(referenceFrame?.bytes || [], frame.bytes);
+    }
+
+    if (frame.dir === 'rx') {
+      latestRxByKey.set(frameGroupKey(frame), frame);
+    }
+
+    frames.unshift(frame);
+    acceptedFrames += 1;
+  });
 
   let trimmedCount = previousState.trimmedCount;
   if (frames.length > MAX_FRAME_BUFFER) {
@@ -219,8 +235,8 @@ export function ingestFrameMonitorMessage(previousState, message) {
   return {
     frames,
     groups: buildFrameGroups(frames),
-    totalReceived: previousState.totalReceived + 1,
+    totalReceived: previousState.totalReceived + acceptedFrames,
     trimmedCount,
-    parseErrors: previousState.parseErrors,
+    parseErrors: nextParseErrors,
   };
 }
