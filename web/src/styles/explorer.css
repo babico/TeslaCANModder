@@ -109,6 +109,13 @@
   flex-shrink: 0;
 }
 
+.explorer-dataset-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .inline-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -238,6 +245,59 @@ input:disabled, select:disabled {
   font-size: 0.72rem;
 }
 .chip code { font-family: var(--font-mono); font-weight: 600; }
+
+.explorer-meaning-panel {
+  min-width: 0;
+}
+
+.explorer-meaning-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.explorer-meaning-card,
+.explorer-signal-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  padding: 12px;
+  min-width: 0;
+}
+
+.explorer-meaning-head,
+.explorer-signal-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.explorer-meaning-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.explorer-signal-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.explorer-signal-values {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.explorer-meaning-empty,
+.explorer-signal-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
 
 /* ── Signal table ───────────────────────────────── */
 .signal-controls {

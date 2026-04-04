@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BoardCommands } from '../lib/board/commands';
+import {
+  CAN_DECODER_DATASETS,
+  DEFAULT_CAN_DECODER_DATASET,
+  describeDecodedFrame,
+  getDecoderDatasetLabel,
+  loadDecoderDataset,
+} from '../lib/can/decoder';
 
-function buildFrameSummary(frames) {
+function buildFrameSummary(frames, decoderIndex) {
   const grouped = new Map();
 
   for (const frame of frames) {
@@ -21,6 +28,7 @@ function buildFrameSummary(frames) {
       key,
       id: frame.id,
       dir: frame.dir,
+      meaning: describeDecodedFrame(decoderIndex, frame.id),
       count: 1,
       lastSeen: frame.seenAt,
       latest: frame,
@@ -34,23 +42,99 @@ function byteToBits(byteValue) {
   return byteValue.toString(2).padStart(8, '0').split('');
 }
 
+function MeaningSection({ entries }) {
+  if (!entries.length) {
+    return (
+      <div className="explorer-meaning-empty">
+        No known frame meaning was found in the selected legacy dataset for this CAN ID.
+      </div>
+    );
+  }
+
+  return (
+    <div className="explorer-meaning-grid">
+      {entries.map((entry, index) => (
+        <div key={`${entry.frameName}-${entry.busName}-${entry.busId}-${index}`} className="explorer-meaning-card">
+          <div className="explorer-meaning-head">
+            <strong>{entry.frameName}</strong>
+            <span className="badge mono">{entry.hex}</span>
+          </div>
+          <div className="explorer-meaning-meta">
+            <span className="meta-pill">{entry.busName} ({entry.busId})</span>
+            <span className="meta-pill">{entry.signalCount} signals</span>
+          </div>
+          <div className="explorer-signal-list">
+            {entry.signals.length === 0 ? (
+              <div className="explorer-signal-empty">No reduced signal metadata stored for this frame.</div>
+            ) : (
+              entry.signals.map((signal) => (
+                <div key={`${entry.frameName}-${signal.name}`} className="explorer-signal-card">
+                  <div className="explorer-signal-title">
+                    <strong>{signal.name}</strong>
+                    {signal.enumMap ? <span className="badge mono">{signal.enumMap}</span> : null}
+                  </div>
+                  {signal.values.length > 0 ? (
+                    <div className="explorer-signal-values">
+                      {signal.values.map((value) => (
+                        <span key={`${signal.name}-${value.valueHex}-${value.label}`} className="chip">
+                          <code>{value.valueHex || value.valueDec}</code> {value.label}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="status-note">{signal.note || 'No enumerated values in the legacy dataset for this signal.'}</p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function CanExplorer({ board }) {
-  const { isConnected, isStreaming, getFrames, sendCommand } = board;
+  const { isConnected, isStreaming, monitor, sendCommand } = board;
   const [search, setSearch] = useState('');
-  const [summaries, setSummaries] = useState([]);
+  const [datasetKey, setDatasetKey] = useState(DEFAULT_CAN_DECODER_DATASET);
   const [selectedKey, setSelectedKey] = useState(null);
+  const [decoderIndex, setDecoderIndex] = useState(null);
+  const [decoderError, setDecoderError] = useState(null);
+  const [decoderLoading, setDecoderLoading] = useState(true);
 
   useEffect(() => {
-    if (!isConnected) {
-      return undefined;
-    }
+    let active = true;
 
-    const interval = setInterval(() => {
-      setSummaries(buildFrameSummary(getFrames()));
-    }, 180);
+    loadDecoderDataset(datasetKey)
+      .then((index) => {
+        if (!active) {
+          return;
+        }
+        setDecoderIndex(index);
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+        setDecoderError(error.message || String(error));
+        setDecoderIndex(null);
+      })
+      .finally(() => {
+        if (active) {
+          setDecoderLoading(false);
+        }
+      });
 
-    return () => clearInterval(interval);
-  }, [getFrames, isConnected]);
+    return () => {
+      active = false;
+    };
+  }, [datasetKey]);
+
+  const summaries = useMemo(
+    () => buildFrameSummary(monitor.frames, decoderIndex),
+    [decoderIndex, monitor.frames],
+  );
 
   const visibleSummaries = useMemo(() => {
     if (!isConnected) {
@@ -68,6 +152,7 @@ export default function CanExplorer({ board }) {
         summary.dir,
         summary.id.toString(),
         summary.id.toString(16),
+        summary.meaning.map((entry) => `${entry.frameName} ${entry.busName} ${entry.hex}`).join(' '),
         frame.dataHex,
         frame.bytes.map((byte) => byte.toString(16).padStart(2, '0')).join(' '),
       ].some((value) => value.toLowerCase().includes(query));
@@ -101,6 +186,26 @@ export default function CanExplorer({ board }) {
               disabled={!isConnected}
             />
           </label>
+          <label className="field">
+            <span>Meaning Dataset</span>
+            <select
+              value={datasetKey}
+              onChange={(event) => {
+                setDatasetKey(event.target.value);
+                setDecoderLoading(true);
+                setDecoderError(null);
+              }}
+            >
+              {CAN_DECODER_DATASETS.map((dataset) => (
+                <option key={dataset.key} value={dataset.key}>{dataset.label}</option>
+              ))}
+            </select>
+          </label>
+          <div className="explorer-dataset-status">
+            <span className="badge mono">{getDecoderDatasetLabel(datasetKey)}</span>
+            {decoderLoading ? <span className="status-note">Loading meaning dataset…</span> : null}
+            {decoderError ? <span className="status-note warn">{decoderError}</span> : null}
+          </div>
         </div>
 
         {!isConnected ? (
@@ -142,11 +247,14 @@ export default function CanExplorer({ board }) {
                   <strong style={{ color: 'var(--blue)' }}>0x{summary.id.toString(16).toUpperCase()}</strong>
                   <span className="badge mono">{summary.dir.toUpperCase()}</span>
                 </div>
+                <div className="frame-name">
+                  {summary.meaning[0]?.frameName || 'Unknown frame'}
+                </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text)' }}>
                   {summary.count} recent frame{summary.count === 1 ? '' : 's'}
                 </div>
                 <div style={{ marginTop: '4px', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                  Last payload: {summary.latest.dataHex || '—'}
+                  {summary.meaning[0] ? `${summary.meaning[0].busName} · ` : ''}Last payload: {summary.latest.dataHex || '—'}
                 </div>
               </button>
             ))}
@@ -179,6 +287,17 @@ export default function CanExplorer({ board }) {
                     <div className="mono">{selectedFrame.latest.dataHex || '—'}</div>
                   </div>
                 </div>
+              </div>
+
+              <div className="panel explorer-meaning-panel" style={{ padding: '16px', marginBottom: '16px' }}>
+                <div className="panel-head" style={{ padding: 0, borderBottom: 0, marginBottom: '12px' }}>
+                  <div>
+                    <h2>Known Meaning</h2>
+                    <p>Frame names and signal hints from the selected legacy Tesla CAN Explorer dataset.</p>
+                  </div>
+                  <span className="badge mono">{selectedFrame.meaning.length} matches</span>
+                </div>
+                <MeaningSection entries={selectedFrame.meaning} />
               </div>
 
               <div className="signal-table-wrap">

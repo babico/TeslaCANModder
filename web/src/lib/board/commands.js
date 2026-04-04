@@ -29,6 +29,18 @@ export class BoardCommands {
     return `profile:${profile}`;
   }
 
+  static offset(offset) {
+    return `offset:${offset}`;
+  }
+
+  static isaChime(nextEnabled) {
+    return nextEnabled ? 'isa-chime:on' : 'isa-chime:off';
+  }
+
+  static toggleIsaChime() {
+    return 'isa-chime:toggle';
+  }
+
   static variant(variant) {
     return `variant:${variant}`;
   }
@@ -42,6 +54,8 @@ export const BOARD_COMMANDS = {
   fsdOn: BoardCommands.fsd(true),
   fsdOff: BoardCommands.fsd(false),
   fsdToggle: BoardCommands.toggleFsd(),
+  isaChimeOn: BoardCommands.isaChime(true),
+  isaChimeOff: BoardCommands.isaChime(false),
   variantHw4: BoardCommands.variant('hw4'),
   variantHw3: BoardCommands.variant('hw3'),
   variantLegacy: BoardCommands.variant('legacy'),

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { FSD_COMMANDS, FSD_PROFILE_OPTIONS } from './package';
 
 export default function FsdPackagePanel({ packageState, board }) {
   const { isConnected, sendCommand } = board;
+  const [expertOpen, setExpertOpen] = useState(false);
 
   const handleCommand = (command) => {
     if (!isConnected) {
@@ -32,6 +34,18 @@ export default function FsdPackagePanel({ packageState, board }) {
           <div className="package-stat-card">
             <span className="package-stat-label">Speed Profile</span>
             <strong className="package-stat-value">{packageState.speedProfileLabel}</strong>
+          </div>
+          <div className="package-stat-card">
+            <span className="package-stat-label">HW3 Speed Offset</span>
+            <strong className="package-stat-value">
+              {packageState.features.speedOffset ? `${packageState.speedOffset}` : 'N/A'}
+            </strong>
+          </div>
+          <div className="package-stat-card">
+            <span className="package-stat-label">HW4 ISA Chime</span>
+            <strong className={`package-stat-value ${packageState.isaChimeEnabled ? 'val-on' : 'val-off'}`}>
+              {packageState.features.isaSpeedChime ? (packageState.isaChimeEnabled ? 'SUPPRESSED' : 'ORIGINAL') : 'N/A'}
+            </strong>
           </div>
         </div>
 
@@ -94,12 +108,71 @@ export default function FsdPackagePanel({ packageState, board }) {
 
         <div className="panel package-note">
           <p>
-            Package commands: <code>fsd:on</code>, <code>fsd:off</code>, <code>profile:&lt;0-4&gt;</code>, <code>status</code>
+            Package commands: <code>fsd:on</code>, <code>fsd:off</code>, <code>profile:&lt;0-4&gt;</code>, <code>offset:&lt;0-100&gt;</code>, <code>isa-chime:on|off</code>, <code>status</code>
           </p>
           <p>
             These overrides are session-scoped runtime values. Rebooting the board resets them back to firmware defaults.
           </p>
         </div>
+
+        {(packageState.features.speedOffset || packageState.features.isaSpeedChime) ? (
+          <details className="dashboard-collapsible" open={expertOpen} onToggle={(event) => setExpertOpen(event.currentTarget.open)}>
+            <summary>Expert Controls</summary>
+            <div className="package-body" style={{ paddingTop: 0 }}>
+              {packageState.features.speedOffset ? (
+                <div className="page-section">
+                  <div className="section-header">
+                    <span className="step-number">3</span>
+                    <div>
+                      <h3>HW3 Speed Offset</h3>
+                      <p>Use this only on the HW3 runtime variant. The offset is injected on the mux 2 autopilot frame.</p>
+                    </div>
+                  </div>
+                  <div className="preset-grid">
+                    {[0, 10, 20, 30, 40, 50].map((offset) => (
+                      <button
+                        key={offset}
+                        className={`preset-button ${packageState.speedOffset === offset ? 'active' : ''}`}
+                        disabled={!isConnected}
+                        onClick={() => handleCommand(FSD_COMMANDS.setOffset(offset))}
+                      >
+                        {offset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {packageState.features.isaSpeedChime ? (
+                <div className="page-section">
+                  <div className="section-header">
+                    <span className="step-number">{packageState.features.speedOffset ? '4' : '3'}</span>
+                    <div>
+                      <h3>HW4 ISA Speed-Chime</h3>
+                      <p>HW4 can suppress the speed warning chime on the dedicated DAS status frame.</p>
+                    </div>
+                  </div>
+                  <div className="package-action-row">
+                    <button
+                      className={`preset-button ${packageState.isaChimeEnabled ? 'active' : ''}`}
+                      disabled={!isConnected}
+                      onClick={() => handleCommand(FSD_COMMANDS.setIsaChime(true))}
+                    >
+                      Suppress Chime
+                    </button>
+                    <button
+                      className={`preset-button ${!packageState.isaChimeEnabled ? 'active' : ''}`}
+                      disabled={!isConnected}
+                      onClick={() => handleCommand(FSD_COMMANDS.setIsaChime(false))}
+                    >
+                      Keep Original
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </details>
+        ) : null}
       </div>
     </section>
   );

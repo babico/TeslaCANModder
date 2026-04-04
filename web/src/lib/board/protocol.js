@@ -12,7 +12,29 @@ export function createBaseTelemetry() {
     installReadiness: null,
     transportCapability: null,
     bluetoothEnabled: false,
+    speedOffset: 0,
+    isaChimeEnabled: false,
+    streamEnabled: false,
+    streamedFrameCount: 0,
+    features: {
+      fsd: true,
+      profile: true,
+      nag: true,
+      speedOffset: false,
+      isaSpeedChime: false,
+      forceFsd: false,
+    },
     rawStatus: null,
+  };
+}
+
+export function createFrameMonitorState() {
+  return {
+    frames: [],
+    groups: [],
+    totalReceived: 0,
+    trimmedCount: 0,
+    parseErrors: 0,
   };
 }
 
@@ -44,7 +66,66 @@ export function trimList(list, limit) {
   }
 }
 
+function frameGroupKey(frame) {
+  return `${frame.extended ? 'ext' : 'std'}:${frame.id}`;
+}
+
+export function computeByteDiff(previousBytes = [], nextBytes = []) {
+  const limit = Math.max(previousBytes.length, nextBytes.length);
+  const changedIndexes = [];
+
+  for (let index = 0; index < limit; index += 1) {
+    if ((previousBytes[index] ?? null) !== (nextBytes[index] ?? null)) {
+      changedIndexes.push(index);
+    }
+  }
+
+  return changedIndexes;
+}
+
+export function buildFrameGroups(frames) {
+  const groups = new Map();
+
+  frames.forEach((frame) => {
+    const key = frameGroupKey(frame);
+    const existing = groups.get(key);
+
+    if (existing) {
+      existing.count += 1;
+      if (frame.boardMs >= existing.lastBoardMs) {
+        existing.lastBoardMs = frame.boardMs;
+        existing.lastSequence = frame.sequence;
+        existing.lastDir = frame.dir;
+        existing.lastDataHex = frame.dataHex;
+        existing.dlc = frame.dlc;
+        existing.ts = frame.ts;
+      }
+      return;
+    }
+
+    groups.set(key, {
+      key,
+      id: frame.id,
+      extended: frame.extended,
+      count: 1,
+      dlc: frame.dlc,
+      lastDir: frame.dir,
+      lastDataHex: frame.dataHex,
+      lastBoardMs: frame.boardMs,
+      lastSequence: frame.sequence,
+      ts: frame.ts,
+    });
+  });
+
+  return [...groups.values()].sort((left, right) => (
+    right.lastBoardMs - left.lastBoardMs || right.count - left.count || right.id - left.id
+  ));
+}
+
 export function normalizeStatusMessage(message, rate) {
+  const rawFeatures = message.features && typeof message.features === 'object' ? message.features : {};
+  const rawStream = message.stream && typeof message.stream === 'object' ? message.stream : {};
+
   return {
     uptimeMs: Number(message.up) || 0,
     rate,
@@ -55,6 +136,18 @@ export function normalizeStatusMessage(message, rate) {
     installReadiness: message.ready || null,
     transportCapability: message.cap || null,
     bluetoothEnabled: Boolean(Number(message.bt)),
+    speedOffset: Number(message.offset) || 0,
+    isaChimeEnabled: Boolean(Number(message.isaChime)),
+    streamEnabled: Number(rawStream.on ?? 0) === 1,
+    streamedFrameCount: Number(rawStream.emitted ?? 0) || 0,
+    features: {
+      fsd: Number(rawFeatures.fsd ?? 1) === 1,
+      profile: Number(rawFeatures.profile ?? 1) === 1,
+      nag: Number(rawFeatures.nag ?? 1) === 1,
+      speedOffset: Number(rawFeatures.speedOffset ?? 0) === 1,
+      isaSpeedChime: Number(rawFeatures.isaSpeedChime ?? 0) === 1,
+      forceFsd: Number(rawFeatures.forceFsd ?? 0) === 1,
+    },
     rawStatus: message,
   };
 }
@@ -63,14 +156,71 @@ export function normalizeFrameMessage(message) {
   const timestamp = new Date();
   const dataHex = String(message.d || '').toUpperCase();
   const bytes = parseFrameBytes(dataHex);
+  const boardMs = Number(message.ms);
+  const sequence = Number(message.seq);
+  const frameId = Number(message.id);
+  const parsedDlc = Number(message.dlc);
+
+  if (!Number.isFinite(frameId)) {
+    return null;
+  }
+
+  if (dataHex && bytes.length === 0) {
+    return null;
+  }
 
   return {
-    id: Number(message.id),
-    dlc: Number(message.dlc) || bytes.length || 8,
+    id: frameId,
+    dlc: Number.isFinite(parsedDlc) ? parsedDlc : bytes.length || 8,
     dir: message.dir || 'rx',
-    ts: formatClockTime(timestamp),
+    ts: Number.isFinite(boardMs) ? `${boardMs} ms` : formatClockTime(timestamp),
     seenAt: timestamp.getTime(),
+    boardMs: Number.isFinite(boardMs) ? boardMs : timestamp.getTime(),
+    receivedAt: timestamp.getTime(),
+    sequence: Number.isFinite(sequence) ? sequence : null,
+    extended: Number(message.ext) === 1,
     dataHex,
     bytes,
+    changedByteIndexes: [],
+  };
+}
+
+export function ingestFrameMonitorMessage(previousState, message) {
+  const frame = normalizeFrameMessage(message);
+  if (!frame) {
+    return {
+      ...previousState,
+      parseErrors: previousState.parseErrors + 1,
+    };
+  }
+
+  const frames = [...previousState.frames];
+  const latestRxByKey = new Map();
+
+  frames.forEach((existingFrame) => {
+    if (existingFrame.dir === 'rx') {
+      latestRxByKey.set(frameGroupKey(existingFrame), existingFrame);
+    }
+  });
+
+  if (frame.dir === 'tx') {
+    const referenceFrame = latestRxByKey.get(frameGroupKey(frame));
+    frame.changedByteIndexes = computeByteDiff(referenceFrame?.bytes || [], frame.bytes);
+  }
+
+  frames.unshift(frame);
+
+  let trimmedCount = previousState.trimmedCount;
+  if (frames.length > MAX_FRAME_BUFFER) {
+    trimmedCount += frames.length - MAX_FRAME_BUFFER;
+    trimList(frames, MAX_FRAME_BUFFER);
+  }
+
+  return {
+    frames,
+    groups: buildFrameGroups(frames),
+    totalReceived: previousState.totalReceived + 1,
+    trimmedCount,
+    parseErrors: previousState.parseErrors,
   };
 }

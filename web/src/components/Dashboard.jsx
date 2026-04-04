@@ -81,6 +81,10 @@ function getInstallLabel(readiness) {
   return INSTALL_LABELS[readiness] || '—';
 }
 
+function getFeatureAvailabilityLabel(enabled) {
+  return enabled ? 'Available' : 'Not exposed';
+}
+
 function VisibilityIcon({ hidden }) {
   return <i className={`fa-solid ${hidden ? 'fa-eye' : 'fa-eye-slash'}`} aria-hidden="true" />;
 }
@@ -164,6 +168,43 @@ function FrameList({ frames }) {
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function FrameByteDiff({ changedByteIndexes }) {
+  if (!changedByteIndexes?.length) {
+    return null;
+  }
+
+  return <span className="badge mono">Diff: {changedByteIndexes.join(', ')}</span>;
+}
+
+function FrameGroupsTable({ groups }) {
+  if (!groups.length) {
+    return <div className="empty-state">Frame groups will appear after streaming starts.</div>;
+  }
+
+  return (
+    <div className="dashboard-group-table">
+      <div className="dashboard-group-head">
+        <span>ID</span>
+        <span>Mode</span>
+        <span>Count</span>
+        <span>Dir</span>
+        <span>Last Data</span>
+      </div>
+      <div className="dashboard-group-body">
+        {groups.map((group) => (
+          <div key={group.key} className="dashboard-group-row">
+            <span className="mono">0x{group.id.toString(16).toUpperCase()}</span>
+            <span>{group.extended ? 'EXT' : 'STD'}</span>
+            <span>{group.count}</span>
+            <span>{group.lastDir.toUpperCase()}</span>
+            <span className="mono">{group.lastDataHex || '—'}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -260,6 +301,34 @@ function HealthPanel({ activeTransport, installReadiness }) {
   );
 }
 
+function VariantCapabilitiesPanel({ activeVariantLabel, features }) {
+  const rows = [
+    { label: 'FSD toggle', enabled: features.fsd },
+    { label: 'Speed profiles', enabled: features.profile },
+    { label: 'Nag suppression', enabled: features.nag },
+    { label: 'HW3 speed offset', enabled: features.speedOffset },
+    { label: 'HW4 ISA chime', enabled: features.isaSpeedChime },
+  ];
+
+  return (
+    <div className="panel dashboard-capability-panel">
+      <div className="panel-head">
+        <h2>Variant Capabilities</h2>
+        <span className="badge mono">{activeVariantLabel}</span>
+      </div>
+      <div className="dashboard-health-grid">
+        {rows.map((row) => (
+          <div key={row.label} className="dashboard-health-card">
+            <span>{row.label}</span>
+            <strong>{getFeatureAvailabilityLabel(row.enabled)}</strong>
+            <p>{row.enabled ? 'This control is surfaced by the current runtime handler.' : 'This control is intentionally hidden for the selected variant.'}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function AdvancedConsole({
   isCompact,
   consoleLines,
@@ -295,7 +364,7 @@ function AdvancedConsole({
       <div className="console-input">
         <input
           type="text"
-          placeholder="Type command: ping, status, stream:on, fsd:on, profile:2, variant:hw4"
+          placeholder="Type command: ping, status, stream:on, fsd:on, profile:2, offset:20, isa-chime:on, variant:hw4"
           value={commandInput}
           onChange={(event) => onCommandInputChange(event.target.value)}
           disabled={!isConnected}
@@ -447,7 +516,7 @@ export default function Dashboard({ board }) {
     telemetry,
     packages,
     frameCount,
-    getFrames,
+    monitor,
     clearFrames,
     consoleLines,
     clearConsole,
@@ -457,7 +526,6 @@ export default function Dashboard({ board }) {
   } = board;
 
   const [commandInput, setCommandInput] = useState('');
-  const [frames, setFrames] = useState([]);
   const [mobilePanel, setMobilePanel] = useState('control');
   const [layoutOrder, setLayoutOrder] = useState(() => readSavedDashboardLayout().order);
   const [hiddenTileIds, setHiddenTileIds] = useState(() => readSavedDashboardLayout().hidden);
@@ -468,26 +536,25 @@ export default function Dashboard({ board }) {
   const [tileMeasurements, setTileMeasurements] = useState({});
   const tileFrameRefs = useRef(new Map());
 
-  useEffect(() => {
-    if (!isConnected) {
-      return undefined;
-    }
-
-    const interval = setInterval(() => {
-      setFrames([...getFrames()]);
-    }, 120);
-
-    return () => clearInterval(interval);
-  }, [getFrames, isConnected]);
-
   const isCompact = capabilities.isMobile;
-  const visibleFrames = useMemo(() => (isConnected ? frames : []), [frames, isConnected]);
+  const visibleFrames = useMemo(() => (isConnected ? monitor.frames : []), [isConnected, monitor.frames]);
+  const frameGroups = useMemo(() => (isConnected ? monitor.groups : []), [isConnected, monitor.groups]);
   const activeVariant = telemetry.variant || deviceInfo?.variant || null;
   const activeVariantLabel = activeVariant ? (VARIANT_LABELS[activeVariant] || activeVariant.toUpperCase()) : '—';
   const activeDriver = telemetry.driver || deviceInfo?.drv || '—';
   const activeHardware = telemetry.hardware || deviceInfo?.hw || '—';
   const installReadiness = telemetry.installReadiness || deviceInfo?.ready || null;
   const transportCapability = telemetry.transportCapability || deviceInfo?.cap || null;
+  const activeFeatures = useMemo(() => (
+    telemetry.features || deviceInfo?.features || {
+      fsd: true,
+      profile: true,
+      nag: true,
+      speedOffset: false,
+      isaSpeedChime: false,
+      forceFsd: false,
+    }
+  ), [deviceInfo?.features, telemetry.features]);
 
   const handleSend = useCallback(() => {
     const nextCommand = commandInput.trim();
@@ -640,6 +707,21 @@ export default function Dashboard({ board }) {
                 </button>
                 <button className="btn-sm btn-ghost" onClick={clearFrames}>Clear</button>
                 <span className="badge">{frameCount} frames received</span>
+                <span className="badge mono">{monitor.trimmedCount} trimmed</span>
+                <span className="badge mono">{monitor.parseErrors} parse errors</span>
+              </div>
+            </div>
+
+            <div className="dashboard-monitor-stats">
+              <div className="dashboard-monitor-card">
+                <span>Board stream</span>
+                <strong>{telemetry.streamEnabled ? 'ON' : 'OFF'}</strong>
+                <p>{telemetry.streamedFrameCount} frames emitted by the board.</p>
+              </div>
+              <div className="dashboard-monitor-card">
+                <span>Recent IDs</span>
+                <strong>{frameGroups.length}</strong>
+                <p>Grouped from the active recent-frame window.</p>
               </div>
             </div>
 
@@ -649,34 +731,50 @@ export default function Dashboard({ board }) {
               ) : (
                 <>
                   <div className="frame-table-header">
-                    <span className="col-time">Time</span>
+                    <span className="col-time">Board</span>
                     <span className="col-dir">Dir</span>
                     <span className="col-id">ID</span>
-                    <span className="col-hex">Hex</span>
+                    <span className="col-hex">Seq</span>
                     <span className="col-dlc">DLC</span>
                     <span className="col-data">Data</span>
                   </div>
                   <div className="frame-table-body">
                     {visibleFrames.map((frame, index) => (
-                      <div className="frame-row" key={`${frame.seenAt}-${frame.id}-${index}`}>
+                      <div className={`frame-row ${frame.changedByteIndexes?.length ? 'has-diff' : ''}`} key={`${frame.seenAt}-${frame.id}-${index}`}>
                         <span className="col-time">{frame.ts}</span>
                         <span className="col-dir" style={{ color: frame.dir === 'tx' ? 'var(--amber)' : 'var(--blue)' }}>
                           {frame.dir.toUpperCase()}
                         </span>
                         <span className="col-id">{frame.id}</span>
-                        <span className="col-hex">0x{frame.id.toString(16).toUpperCase()}</span>
+                        <span className="col-hex">{frame.sequence ?? '—'}{frame.extended ? ' · EXT' : ''}</span>
                         <span className="col-dlc">{frame.dlc}</span>
-                        <span className="col-data mono">
-                          {frame.bytes.length > 0
-                            ? frame.bytes.map((byte) => byte.toString(16).padStart(2, '0').toUpperCase()).join(' ')
-                            : '—'}
-                        </span>
+                        <div className="col-data mono">
+                          <span>
+                            {frame.bytes.length > 0
+                              ? frame.bytes.map((byte, byteIndex) => (
+                                <span
+                                  key={`${frame.seenAt}-${frame.id}-${byteIndex}`}
+                                  className={frame.changedByteIndexes?.includes(byteIndex) ? 'frame-byte-diff' : ''}
+                                >
+                                  {byte.toString(16).padStart(2, '0').toUpperCase()}
+                                  {byteIndex < frame.bytes.length - 1 ? ' ' : ''}
+                                </span>
+                              ))
+                              : '—'}
+                          </span>
+                          {frame.dir === 'tx' ? <FrameByteDiff changedByteIndexes={frame.changedByteIndexes} /> : null}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </>
               )}
             </div>
+
+            <details className="dashboard-collapsible dashboard-monitor-analyze">
+              <summary>Analyze Recent Frame IDs</summary>
+              <FrameGroupsTable groups={frameGroups.slice(0, 24)} />
+            </details>
           </div>
         ),
       },
@@ -698,6 +796,12 @@ export default function Dashboard({ board }) {
         label: 'Connection Health',
         defaultSize: { cols: 4 },
         node: <HealthPanel activeTransport={activeTransport} installReadiness={installReadiness} />,
+      },
+      {
+        id: 'capabilities',
+        label: 'Variant Capabilities',
+        defaultSize: { cols: 8 },
+        node: <VariantCapabilitiesPanel activeVariantLabel={activeVariantLabel} features={activeFeatures} />,
       },
       {
         id: 'console',
@@ -733,6 +837,7 @@ export default function Dashboard({ board }) {
     return [...baseTiles, ...packageTiles];
   }, [
     activeDriver,
+    activeFeatures,
     activeHardware,
     activeTransport,
     activeVariant,
@@ -743,10 +848,13 @@ export default function Dashboard({ board }) {
     commandInput,
     consoleLines,
     frameCount,
+    frameGroups,
     handleSend,
     installReadiness,
     isConnected,
     isStreaming,
+    monitor.parseErrors,
+    monitor.trimmedCount,
     packages,
     quickActions,
     sendCommand,
@@ -1139,6 +1247,8 @@ export default function Dashboard({ board }) {
                 sendCommand={sendCommand}
               />
 
+              <VariantCapabilitiesPanel activeVariantLabel={activeVariantLabel} features={activeFeatures} />
+
               <PackagePanels board={board} packages={packages} isCompact />
             </>
           )}
@@ -1167,6 +1277,11 @@ export default function Dashboard({ board }) {
                   ) : (
                     <FrameList frames={visibleFrames.slice(0, 24)} />
                   )}
+                </div>
+                <div className="dashboard-mobile-monitor-meta">
+                  <span className="badge">{frameCount} frames</span>
+                  <span className="badge mono">{monitor.trimmedCount} trimmed</span>
+                  <span className="badge mono">{monitor.parseErrors} parse errors</span>
                 </div>
               </div>
 

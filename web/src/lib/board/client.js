@@ -20,6 +20,7 @@ export class SerialBoardClient {
       onOpen: callbacks.onOpen || NOOP,
       onMessage: callbacks.onMessage || NOOP,
       onText: callbacks.onText || NOOP,
+      onParseError: callbacks.onParseError || NOOP,
       onError: callbacks.onError || NOOP,
       onClose: callbacks.onClose || NOOP,
     };
@@ -166,6 +167,7 @@ export class SerialBoardClient {
           try {
             this.callbacks.onMessage(JSON.parse(line));
           } catch {
+            this.callbacks.onParseError(line);
             this.callbacks.onText(line);
           }
         }

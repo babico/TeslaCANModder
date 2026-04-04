@@ -670,6 +670,24 @@ const BluetoothDiagram = () => (
   />
 );
 
+const CANDiagram = () => (
+  <GuideMermaidPanel
+    title="Uno to MCP2515 SPI Wiring"
+    subtitle="This is the board-side wiring map before the module reaches the vehicle CAN pair."
+    code={CAN_MERMAID}
+    minHeight={360}
+  />
+);
+
+const X179Diagram = () => (
+  <GuideMermaidPanel
+    title="X179 Power and CAN Pins"
+    subtitle="These four pins are the installed power and CAN references used by this Uno build."
+    code={X179_MERMAID}
+    minHeight={340}
+  />
+);
+
 const BluetoothSchemaPanel = () => (
   <div className="sg-mermaid-stack">
     <div className="sg-detail-grid">
@@ -1165,6 +1183,7 @@ const getNextPendingItem = (activeSteps, completedSteps) => {
 export default function SetupGuide({ board }) {
   const [completedSteps, setCompletedSteps] = useState({});
   const [includeBluetooth, setIncludeBluetooth] = useState(true);
+  const [wizardStepIndex, setWizardStepIndex] = useState(0);
   const capabilities = board?.capabilities || getBoardBrowserCapabilities();
 
   const activeSteps = getWiringSteps(includeBluetooth);
@@ -1210,8 +1229,299 @@ export default function SetupGuide({ board }) {
     },
   ];
 
+  const wizardSteps = [
+    {
+      id: 'supported-hardware',
+      title: 'Confirm Supported Hardware',
+      purpose: 'Start by confirming the exact hardware this repo supports so the later wiring and controls actually match your build.',
+      diagram: <InstallFlowDiagram includeBluetooth={includeBluetooth} />,
+      rows: quickReferenceRows.slice(0, includeBluetooth ? 10 : 8),
+      avoid: [
+        'Do not start if your board is not the Uno CH340 + MCP2515 8 MHz path this repo targets.',
+        'Do not assume every feature from the legacy open-can-mod repo exists on this Uno build.',
+      ],
+      checks: [
+        `Board: ${ORDERED_KIT.board}`,
+        `CAN module: ${ORDERED_KIT.can}`,
+        'Converter available for X179 installed power',
+        includeBluetooth ? 'HC-05, regulator, and divider parts available if you want the optional wireless link' : 'HC-05 path intentionally skipped for now',
+      ],
+      next: 'Move to the bench flash while the board is still powered only from PC USB.',
+    },
+    {
+      id: 'bench-flash',
+      title: 'Bench Flash Over USB',
+      purpose: 'Flash the shared Uno image before any vehicle wiring exists. USB is the first power source and the first serial path.',
+      diagram: <BenchPowerDiagram />,
+      rows: [
+        quickReferenceRows[0],
+        quickReferenceRows[6],
+        quickReferenceRows[7],
+      ],
+      avoid: [
+        'Do not flash for the first time from vehicle-installed power.',
+        'Do not reflash per vehicle type. The firmware switches variants at runtime.',
+      ],
+      checks: [
+        'Built firmware from hardware/.pio/build/uno/firmware.hex',
+        'Board powers on from PC USB',
+        'CH340 serial port appears in the OS',
+      ],
+      next: 'Open the dashboard over USB and validate the board before moving power to X179.',
+    },
+    {
+      id: 'usb-validate',
+      title: 'Validate the Board on USB',
+      purpose: 'Use the dashboard while the board is still on the bench to verify the serial path, status replies, and runtime variant switching.',
+      diagram: <FirstFlashPanel />,
+      rows: browserRows,
+      avoid: [
+        'Do not close up the install before ping, status, stream, and variant switching all work over USB.',
+      ],
+      checks: [
+        'Board boot message appears',
+        'ping works',
+        'status works',
+        'stream:on and stream:off work',
+        'variant:hw4 / hw3 / legacy switches without reflashing',
+      ],
+      next: 'Build the permanent installed power branch only after the bench USB path is proven.',
+    },
+    {
+      id: 'installed-power',
+      title: 'Build the Installed Power Path',
+      purpose: 'Move from bench USB power to X179-fed regulated power, then keep the Uno powered through its USB port.',
+      diagram: <PowerDiagram includeBluetooth={includeBluetooth} />,
+      referenceImages: [
+        {
+          src: '/reference/Tesla_X179_Pinout.png',
+          alt: 'Tesla X179 connector pinout reference for installed power wiring',
+          caption: 'Use this X179 reference while locating pin 1 and pin 20 for the installed power branch.',
+        },
+      ],
+      rows: [
+        quickReferenceRows[1],
+        quickReferenceRows[2],
+        quickReferenceRows[3],
+      ],
+      avoid: [
+        'Never feed X179 directly into the Uno 5V pin.',
+        'Do not use loose jumper wires as the final X179 or converter-input harness.',
+      ],
+      checks: [
+        'X179 pin 1 goes to converter VIN+',
+        'X179 pin 20 goes to converter VIN-',
+        'Converter output was measured before reconnecting the Uno',
+        'Uno now boots from converter USB output',
+      ],
+      next: 'Once installed power is stable, connect CAN last.',
+    },
+    {
+      id: 'connect-can',
+      title: 'Connect Vehicle CAN',
+      purpose: 'After power is stable, connect the live vehicle bus to the MCP2515 and confirm the module wiring matches the Uno pin map.',
+      diagram: (
+        <div className="sg-mermaid-stack">
+          <CANDiagram />
+          <X179Diagram />
+        </div>
+      ),
+      referenceImages: [
+        {
+          src: '/reference/Tesla_X179_Pinout.png',
+          alt: 'Tesla X179 connector pinout reference for CAN wiring',
+          caption: 'Use this X179 reference while confirming pin 13 and pin 14 before landing CAN-H and CAN-L.',
+        },
+      ],
+      rows: [
+        quickReferenceRows[4],
+        quickReferenceRows[5],
+        quickReferenceRows[6],
+        quickReferenceRows[7],
+      ],
+      avoid: [
+        'Do not leave the MCP2515 termination resistor enabled on the live vehicle bus.',
+        'Do not swap CAN-H and CAN-L.',
+      ],
+      checks: [
+        'X179 pin 13 -> MCP2515 CAN-H',
+        'X179 pin 14 -> MCP2515 CAN-L',
+        'MCP2515 termination disabled',
+        'SPI pins D10/D11/D12/D13 and INT on D2 are correct',
+      ],
+      next: 'Reconnect to the dashboard and confirm live frames appear.',
+    },
+    ...(includeBluetooth ? [{
+      id: 'optional-hc05',
+      title: 'Optional HC-05 Wireless Link',
+      purpose: 'Add HC-05 only after the wired USB and X179 paths are already stable.',
+      diagram: <BluetoothDiagram />,
+      rows: quickReferenceRows.slice(-2),
+      avoid: [
+        'Do not power the ordered HC-05 like a raw 5V module.',
+        'Do not connect Uno D5 directly to HC-05 RX without the divider.',
+      ],
+      checks: [
+        'HC-05 TXD -> Uno D4',
+        'Uno D5 -> 1k/2k divider -> HC-05 RXD',
+        'HC-05 on a dedicated 3.3V regulator',
+        'OS pairing creates a serial COM port',
+      ],
+      next: 'Use the paired serial COM port from Web Serial. The app does not use Web Bluetooth.',
+    }] : []),
+    {
+      id: 'live-check',
+      title: 'First Live Runtime Check',
+      purpose: 'With installed power and CAN connected, confirm that the selected variant exposes the right runtime behavior.',
+      diagram: <InstallFlowDiagram includeBluetooth={includeBluetooth} />,
+      rows: [
+        browserRows[0],
+        browserRows[1],
+      ],
+      avoid: [
+        'Do not assume every variant shows the same expert controls.',
+      ],
+      checks: [
+        'Live frames appear',
+        'Selected runtime variant matches the car target',
+        'Expected controls appear for that variant',
+        'Unsupported controls stay hidden',
+      ],
+      next: 'If something is wrong, use the troubleshooting step instead of rewiring blindly.',
+    },
+    {
+      id: 'troubleshooting',
+      title: 'Troubleshooting',
+      purpose: 'Use symptoms first so you do not mix power, serial, and CAN issues together.',
+      diagram: null,
+      rows: troubleshooting.map((tip) => ({
+        role: tip.title,
+        source: 'Symptom',
+        destination: 'Check',
+        note: tip.detail,
+      })),
+      avoid: [
+        'Do not change multiple wiring branches at once while debugging.',
+      ],
+      checks: [
+        'USB issues: check CH340 driver, cable, and COM port first',
+        'Installed power issues: measure the converter output first',
+        'No CAN traffic: check termination and X179 CAN polarity',
+      ],
+      next: 'When the symptom is resolved, return to the previous wizard step and continue in order.',
+    },
+  ];
+
+  const currentWizardStep = wizardSteps[wizardStepIndex];
+
   return (
     <div className="page-shell sg-page">
+      <div className="panel sg-wizard-panel">
+        <div className="sg-summary-head">
+          <ListChecks size={18} />
+          <h2>Simple Install Wizard</h2>
+        </div>
+        <p className="sg-table-intro">Follow these steps in order. The long-form guide is still available below as full reference mode, but this wizard is the intended install path.</p>
+
+        <div className="sg-wizard-progress">
+          {wizardSteps.map((step, index) => (
+            <button
+              key={step.id}
+              type="button"
+              className={`sg-wizard-step ${index === wizardStepIndex ? 'active' : ''} ${index < wizardStepIndex ? 'done' : ''}`}
+              onClick={() => setWizardStepIndex(index)}
+            >
+              <span>{index + 1}</span>
+              <strong>{step.title}</strong>
+            </button>
+          ))}
+        </div>
+
+        <div className="sg-wizard-card">
+          <div className="sg-card-head">
+            <div className="sg-card-icon color-blue">
+              <ListChecks size={24} />
+            </div>
+            <div className="sg-card-title">
+              <div className="sg-card-title-row">
+                <h2>{currentWizardStep.title}</h2>
+                <span className="sg-step-badge">Step {wizardStepIndex + 1} / {wizardSteps.length}</span>
+              </div>
+              <p>{currentWizardStep.purpose}</p>
+            </div>
+          </div>
+
+          <div className="sg-card-body">
+            {currentWizardStep.diagram}
+            <SectionConnectionTable title="Exact Connections" rows={currentWizardStep.rows} />
+            {currentWizardStep.referenceImages ? <ReferenceGallery images={currentWizardStep.referenceImages} /> : null}
+
+            <div className="sg-detail-grid">
+              <div className="sg-detail-card">
+                <div className="sg-detail-head">
+                  <CheckCheck size={16} />
+                  <strong>Success Check</strong>
+                </div>
+                <div className="sg-bullet-list">
+                  {currentWizardStep.checks.map((check) => (
+                    <div key={check} className="sg-bullet-item">
+                      <span className="sg-bullet-dot sg-bullet-dot-ok" />
+                      <span>{check}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="sg-detail-card sg-detail-card-warn">
+                <div className="sg-detail-head">
+                  <ShieldAlert size={16} />
+                  <strong>Do Not Do This</strong>
+                </div>
+                <div className="sg-bullet-list">
+                  {currentWizardStep.avoid.map((item) => (
+                    <div key={item} className="sg-bullet-item">
+                      <span className="sg-bullet-dot sg-bullet-dot-warn" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="sg-next-box">
+              <span className="sg-box-label">Next action</span>
+              <strong>{currentWizardStep.next}</strong>
+              <p>{wizardStepIndex === wizardSteps.length - 1 ? 'Go back to the failed step after fixing the issue.' : 'Use Next to continue only after this step is already proven.'}</p>
+            </div>
+
+            <div className="sg-wizard-actions">
+              <button
+                type="button"
+                className="sg-reset"
+                disabled={wizardStepIndex === 0}
+                onClick={() => setWizardStepIndex((current) => Math.max(0, current - 1))}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="sg-toggle"
+                disabled={wizardStepIndex === wizardSteps.length - 1}
+                onClick={() => setWizardStepIndex((current) => Math.min(wizardSteps.length - 1, current + 1))}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <details className="sg-reference-mode">
+        <summary className="sg-source-summary">
+          <span>Open Full Reference Guide</span>
+          <span className="sg-source-summary-note">Long-form wiring, Mermaid source, photos, and full checklists</span>
+        </summary>
+        <div className="sg-reference-body">
       <div className="panel sg-header-box">
         <div className="sg-title">
           <h1>USB-First, X179-Second Install Guide</h1>
@@ -1586,6 +1896,8 @@ export default function SetupGuide({ board }) {
           </div>
         </div>
       )}
+        </div>
+      </details>
     </div>
   );
 }
