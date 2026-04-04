@@ -110,6 +110,8 @@ public:
         transport.print(",\"emitted\":");
         transport.printNumber(static_cast<long>(streamedFrameCount_));
         transport.print("}");
+        transport.print(",\"rawCan\":");
+        transport.print(state.rawCanListen() ? "1" : "0");
         transport.print(",\"up\":");
         transport.printNumber(now);
         transport.print("}");
@@ -160,10 +162,31 @@ private:
             return;
         }
 
+        if (character == '\r')
+        {
+            return;
+        }
+
+        if (!isAllowedCommandCharacter(character))
+        {
+            length = 0;
+            return;
+        }
+
         if (character != '\r')
         {
             buffer[length++] = character;
         }
+    }
+
+    static bool isAllowedCommandCharacter(char character)
+    {
+        return (character >= 'a' && character <= 'z') ||
+               (character >= 'A' && character <= 'Z') ||
+               (character >= '0' && character <= '9') ||
+               character == ':' ||
+               character == '-' ||
+               character == '_';
     }
 
     template <typename Transport>
@@ -289,6 +312,22 @@ private:
         {
             streamFrames_ = false;
             sendAck(transport, "stream:off");
+            sendStatus(transport, state, now);
+            return;
+        }
+
+        if (strcmp(command, "can:raw:on") == 0)
+        {
+            state.setRawCanListen(true);
+            sendAck(transport, "can:raw:on");
+            sendStatus(transport, state, now);
+            return;
+        }
+
+        if (strcmp(command, "can:raw:off") == 0)
+        {
+            state.setRawCanListen(false);
+            sendAck(transport, "can:raw:off");
             sendStatus(transport, state, now);
             return;
         }

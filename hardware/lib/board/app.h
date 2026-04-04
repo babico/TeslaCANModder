@@ -67,7 +67,14 @@ static void configureAppHandler()
 
     if (appDriverReady)
     {
-        appObservedDriver->setFilters(appHandler->filterIds(), appHandler->filterIdCount());
+        if (appState.rawCanListen())
+        {
+            appObservedDriver->setFilters(nullptr, 0);
+        }
+        else
+        {
+            appObservedDriver->setFilters(appHandler->filterIds(), appHandler->filterIdCount());
+        }
     }
 }
 
@@ -120,6 +127,10 @@ static void appLoop()
     appBridge.tick(appState);
 
     if (appState.consumeVariantChange())
+    {
+        configureAppHandler();
+    }
+    else if (appState.consumeRawCanListenChange())
     {
         configureAppHandler();
     }

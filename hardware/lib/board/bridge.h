@@ -71,6 +71,8 @@ public:
         transport.print("}");
         transport.print(",\"stream\":{");
         transport.print("\"on\":0,\"emitted\":0}");
+        transport.print(",\"rawCan\":");
+        transport.print(state.rawCanListen() ? "1" : "0");
         if (transport.bluetoothEnabled())
         {
             transport.print(",\"bt\":\"");

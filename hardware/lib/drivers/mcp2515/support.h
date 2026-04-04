@@ -28,6 +28,15 @@ namespace drivers::mcp2515
 
         if (count == 0 || ids == nullptr)
         {
+            controller.setFilterMask(MCP2515::MASK0, false, 0x000);
+            controller.setFilter(MCP2515::RXF0, false, 0x000);
+            controller.setFilter(MCP2515::RXF1, false, 0x000);
+
+            controller.setFilterMask(MCP2515::MASK1, false, 0x000);
+            controller.setFilter(MCP2515::RXF2, false, 0x000);
+            controller.setFilter(MCP2515::RXF3, false, 0x000);
+            controller.setFilter(MCP2515::RXF4, false, 0x000);
+            controller.setFilter(MCP2515::RXF5, false, 0x000);
             controller.setNormalMode();
             return;
         }

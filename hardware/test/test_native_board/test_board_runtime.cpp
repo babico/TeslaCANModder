@@ -276,6 +276,28 @@ void test_command_stream_on_and_off_toggle_router_state()
     assertLineContains(lines[3], "\"stream\":{\"on\":0");
 }
 
+void test_command_raw_can_on_and_off_toggle_state_and_emit_status()
+{
+    BoardCommandRouter router;
+    BoardState state;
+    FakeTransport transport;
+
+    router.runCommand(transport, state, "can:raw:on", 130);
+    TEST_ASSERT_TRUE(state.rawCanListen());
+    TEST_ASSERT_TRUE(state.consumeRawCanListenChange());
+
+    router.runCommand(transport, state, "can:raw:off", 131);
+    TEST_ASSERT_FALSE(state.rawCanListen());
+    TEST_ASSERT_TRUE(state.consumeRawCanListenChange());
+
+    const std::vector<std::string> lines = transport.lines();
+    TEST_ASSERT_EQUAL_UINT32(4, static_cast<uint32_t>(lines.size()));
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"can:raw:on\"}", lines[0].c_str());
+    assertLineContains(lines[1], "\"rawCan\":1");
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"ack\",\"cmd\":\"can:raw:off\"}", lines[2].c_str());
+    assertLineContains(lines[3], "\"rawCan\":0");
+}
+
 void test_command_fsd_and_profile_update_state_and_emit_status()
 {
     BoardCommandRouter router;
@@ -411,6 +433,23 @@ void test_invalid_partial_bluetooth_command_does_not_corrupt_usb_command()
     TEST_ASSERT_EQUAL_STRING("{\"t\":\"error\",\"msg\":\"Invalid variant\"}", secondPass[2].c_str());
 }
 
+void test_invalid_non_command_characters_are_ignored()
+{
+    BoardCommandRouter router;
+    BoardState state;
+    FakeTransport transport;
+
+    transport.bluetoothInput = std::string("\x01\x02\x7F") + "ping\n";
+
+    fakeMillisValue = 500;
+    router.update(transport, state);
+
+    const std::vector<std::string> lines = transport.lines();
+    TEST_ASSERT_EQUAL_UINT32(2, static_cast<uint32_t>(lines.size()));
+    assertLineContains(lines[0], "\"t\":\"status\"");
+    TEST_ASSERT_EQUAL_STRING("{\"t\":\"pong\",\"v\":1}", lines[1].c_str());
+}
+
 int main()
 {
     UNITY_BEGIN();
@@ -421,11 +460,13 @@ int main()
     RUN_TEST(test_board_state_variant_dirty_tracking);
     RUN_TEST(test_command_ping_returns_pong);
     RUN_TEST(test_command_stream_on_and_off_toggle_router_state);
+    RUN_TEST(test_command_raw_can_on_and_off_toggle_state_and_emit_status);
     RUN_TEST(test_command_fsd_and_profile_update_state_and_emit_status);
     RUN_TEST(test_variant_specific_commands_require_supported_features);
     RUN_TEST(test_command_variant_and_invalid_commands);
     RUN_TEST(test_update_reads_usb_and_bluetooth_buffers_and_periodic_status);
     RUN_TEST(test_invalid_partial_bluetooth_command_does_not_corrupt_usb_command);
+    RUN_TEST(test_invalid_non_command_characters_are_ignored);
 
     return UNITY_END();
 }

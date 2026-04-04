@@ -119,6 +119,25 @@ public:
         return isaSpeedChimeSuppress_;
     }
 
+    bool rawCanListen() const
+    {
+        return rawCanListen_;
+    }
+
+    void setRawCanListen(bool enabled)
+    {
+        const bool changed = rawCanListen_ != enabled;
+        rawCanListen_ = enabled;
+        rawCanListenDirty_ = rawCanListenDirty_ || changed;
+    }
+
+    bool consumeRawCanListenChange()
+    {
+        const bool changed = rawCanListenDirty_;
+        rawCanListenDirty_ = false;
+        return changed;
+    }
+
     void setIsaSpeedChimeSuppress(bool enabled)
     {
         isaSpeedChimeSuppress_ = enabled;
@@ -180,6 +199,8 @@ private:
     int speedOffset_ = 0;
     bool fsdEnabled_ = false;
     bool isaSpeedChimeSuppress_ = true;
+    bool rawCanListen_ = false;
+    bool rawCanListenDirty_ = false;
     board::Variant variant_ = board::defaultVariant();
     bool variantDirty_ = false;
     InstallReadiness installReadiness_ = InstallReadiness::BenchReady;
