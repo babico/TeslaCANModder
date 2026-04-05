@@ -7,6 +7,10 @@ function fakePort() {
   const sp = new EventEmitter();
   sp.write = jest.fn((data, cb) => cb?.());
   sp.close = jest.fn((cb) => cb?.());
+  // readline.createInterface requires a readable stream with resume/pause
+  sp.resume = jest.fn();
+  sp.pause = jest.fn();
+  sp.setEncoding = jest.fn();
   return sp;
 }
 
