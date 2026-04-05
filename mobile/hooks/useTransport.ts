@@ -23,6 +23,7 @@ export function useTransport() {
       if (!deviceId) throw new Error('Device ID required for BLE connection');
       transport = new BleTransport(deviceId);
     } else {
+      if (Platform.OS !== 'web') throw new Error('Serial transport is only available on web');
       const { SerialTransport } = await import('../lib/transport/serial');
       transport = new SerialTransport();
     }

@@ -1,14 +1,18 @@
 import { Tabs } from 'expo-router';
 import { Platform, StatusBar } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../styles/theme';
+
+const isWeb = Platform.OS === 'web';
 
 export default function RootLayout() {
   return (
-    <>
-      <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
-      <Tabs
-        screenOptions={{
-          headerShown: false,
+    <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
+        <Tabs
+          screenOptions={{
+            headerShown: false,
           tabBarStyle: {
             backgroundColor: colors.surface,
             borderTopColor: colors.border,
@@ -35,13 +39,16 @@ export default function RootLayout() {
           name="docs"
           options={{ title: 'Docs', tabBarLabel: 'Docs' }}
         />
-        {Platform.OS === 'web' && (
-          <Tabs.Screen
-            name="flasher"
-            options={{ title: 'Flasher', tabBarLabel: 'Flasher' }}
-          />
-        )}
+        <Tabs.Screen
+          name="flasher"
+          options={{
+            title: 'Flasher',
+            tabBarLabel: 'Flasher',
+            href: isWeb ? '/flasher' : null,
+          }}
+        />
       </Tabs>
-    </>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }

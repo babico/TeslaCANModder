@@ -1,18 +1,83 @@
+import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { Asset } from 'expo-asset';
 import { colors, spacing, radius } from '../styles/theme';
 
+const DOC_MAP: Record<string, { labelEn: string; labelTr: string }> = {
+  'setup': { labelEn: 'Setup Guide', labelTr: 'Kurulum Rehberi' },
+  'wiring': { labelEn: 'Wiring', labelTr: 'Kablolama' },
+  'commands': { labelEn: 'Commands', labelTr: 'Komutlar' },
+  'can-protocol': { labelEn: 'CAN Protocol', labelTr: 'CAN Protokolü' },
+  'troubleshooting': { labelEn: 'Troubleshooting', labelTr: 'Sorun Giderme' },
+  'hardware-variants': { labelEn: 'Hardware Variants', labelTr: 'Donanım Varyantları' },
+  'firmware-flashing': { labelEn: 'Firmware Flashing', labelTr: 'Firmware Yükleme' },
+};
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+const docAssets: Record<string, Record<string, number>> = {
+  en: {
+    'setup': require('../assets/docs/en/setup-guide.md'),
+    'wiring': require('../assets/docs/en/wiring.md'),
+    'commands': require('../assets/docs/en/commands.md'),
+    'can-protocol': require('../assets/docs/en/can-protocol.md'),
+    'troubleshooting': require('../assets/docs/en/troubleshooting.md'),
+    'hardware-variants': require('../assets/docs/en/hardware-variants.md'),
+    'firmware-flashing': require('../assets/docs/en/firmware-flashing.md'),
+  },
+  tr: {
+    'setup': require('../assets/docs/tr/setup-guide.md'),
+    'wiring': require('../assets/docs/tr/wiring.md'),
+    'commands': require('../assets/docs/tr/commands.md'),
+    'can-protocol': require('../assets/docs/tr/can-protocol.md'),
+    'troubleshooting': require('../assets/docs/tr/troubleshooting.md'),
+    'hardware-variants': require('../assets/docs/tr/hardware-variants.md'),
+    'firmware-flashing': require('../assets/docs/tr/firmware-flashing.md'),
+  },
+};
+/* eslint-enable @typescript-eslint/no-require-imports */
+
+async function loadDoc(lang: string, section: string): Promise<{ text: string; label: string }> {
+  const map = DOC_MAP[section];
+  const label = lang === 'tr' ? map?.labelTr : map?.labelEn || section;
+  try {
+    const assetId = docAssets[lang]?.[section];
+    if (assetId == null) return { text: `No content found for ${section}.`, label };
+    const [asset] = await Asset.loadAsync(assetId);
+    const uri = asset.localUri || asset.uri;
+    const res = await fetch(uri);
+    return { text: await res.text(), label };
+  } catch {
+    return { text: `Failed to load ${section}.`, label };
+  }
+}
+
 interface Props {
-  content: string;
-  title: string;
+  content?: string;
+  title?: string;
+  section?: string;
+  lang?: 'en' | 'tr';
 }
 
 /** Simple markdown-to-text viewer for documentation. Renders headings, paragraphs, lists, and code blocks. */
-export default function DocViewer({ content, title }: Props) {
-  const blocks = parseMarkdown(content);
+export default function DocViewer({ content, title, section, lang }: Props) {
+  const [resolved, setResolved] = React.useState(content || '');
+  const [resolvedTitle, setResolvedTitle] = React.useState(title || '');
+
+  React.useEffect(() => {
+    if (content) { setResolved(content); return; }
+    if (!section) return;
+    const l = lang || 'en';
+    loadDoc(l, section).then(({ text, label }) => {
+      setResolved(text);
+      if (!title) setResolvedTitle(label);
+    });
+  }, [content, section, lang, title]);
+
+  const blocks = parseMarkdown(resolved);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title}>{resolvedTitle || title}</Text>
       {blocks.map((block, i) => {
         switch (block.type) {
           case 'h1': return <Text key={i} style={styles.h1}>{block.text}</Text>;
