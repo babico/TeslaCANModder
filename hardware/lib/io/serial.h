@@ -5,6 +5,7 @@
 
 // Forward declarations for logging (used by handlers included below)
 void sendLog(const char* msg);
+void sendLog(const __FlashStringHelper* msg);
 
 #include "command/system.h"
 #include "command/fsd.h"
@@ -22,12 +23,21 @@ void sendLog(const char* msg);
 
 static char usbBuf[32];
 static uint8_t usbLen = 0;
+#if BOARD_ENABLE_BT
 static char btBuf[32];
 static uint8_t btLen = 0;
+#endif
 static unsigned long lastStatusMs = 0;
 
 // ── Output Helpers ───────────────────────────────────────────────────────────
 void printStr(const char* s) {
+  Serial.print(s);
+#if BOARD_ENABLE_BT
+  btSerial.print(s);
+#endif
+}
+
+void printStr(const __FlashStringHelper* s) {
   Serial.print(s);
 #if BOARD_ENABLE_BT
   btSerial.print(s);
@@ -59,163 +69,177 @@ void printLn() {
 // ── JSON Messages ────────────────────────────────────────────────────────────
 void sendBoot(State& s) {
   Features f = s.features();
-  printStr("{\"t\":\"boot\",\"hw\":\"");
-  printStr(BOARD_HW_NAME);
-  printStr("\",\"can\":\"");
-  printStr(BOARD_CAN_NAME);
-  printStr("\",\"drv\":\"");
-  printStr(BOARD_DRIVER_NAME);
-  printStr("\",\"variant\":\"");
+  printStr(F("{\"t\":\"boot\",\"hw\":\""));
+  printStr(F(BOARD_HW_NAME));
+  printStr(F("\",\"can\":\""));
+  printStr(F(BOARD_CAN_NAME));
+  printStr(F("\",\"drv\":\""));
+  printStr(F(BOARD_DRIVER_NAME));
+  printStr(F("\",\"variant\":\""));
   printStr(variantName(s.variant));
-  printStr("\",\"cap\":\"");
+  printStr(F("\",\"cap\":\""));
 #if BOARD_ENABLE_BT
-  printStr("usb+bluetooth");
+  printStr(F("usb+bluetooth"));
 #else
-  printStr("usb");
+  printStr(F("usb"));
 #endif
-  printStr("\",\"ready\":\"runtime-ready\",\"btEnabled\":");
+  printStr(F("\",\"ready\":\"runtime-ready\",\"btEnabled\":"));
 #if BOARD_ENABLE_BT
-  printStr("1");
+  printStr(F("1"));
 #else
-  printStr("0");
+  printStr(F("0"));
 #endif
-  printStr(",\"fsd\":");
+  printStr(F(",\"fsd\":"));
   printNum(s.fsdEnabled ? 1 : 0);
-  printStr(",\"nag\":");
+  printStr(F(",\"nag\":"));
   printNum(s.nagSuppress ? 1 : 0);
-  printStr(",\"sp\":");
+  printStr(F(",\"sp\":"));
   printNum(s.speedProfile);
-  printStr(",\"spPin\":");
+  printStr(F(",\"spPin\":"));
   printNum(s.profileOverride ? 1 : 0);
-  printStr(",\"offset\":");
+  printStr(F(",\"offset\":"));
   printNum(s.speedOffset);
-  printStr(",\"offsetPin\":");
+  printStr(F(",\"offsetPin\":"));
   printNum(s.offsetOverride ? 1 : 0);
-  printStr(",\"isaChime\":");
+  printStr(F(",\"isaChime\":"));
   printNum(s.isaChimeSuppress ? 1 : 0);
-  printStr(",\"features\":{\"fsd\":");
+  printStr(F(",\"features\":{\"fsd\":"));
   printNum(f.fsd ? 1 : 0);
-  printStr(",\"profile\":");
+  printStr(F(",\"profile\":"));
   printNum(f.profile ? 1 : 0);
-  printStr(",\"nag\":");
+  printStr(F(",\"nag\":"));
   printNum(f.nag ? 1 : 0);
-  printStr(",\"speedOffset\":");
+  printStr(F(",\"speedOffset\":"));
   printNum(f.speedOffset ? 1 : 0);
-  printStr(",\"isaSpeedChime\":");
+  printStr(F(",\"isaSpeedChime\":"));
   printNum(f.isaChime ? 1 : 0);
-  printStr(",\"summon\":");
+  printStr(F(",\"summon\":"));
   printNum(f.summon ? 1 : 0);
-  printStr(",\"forceFsd\":0},\"stream\":{\"on\":0,\"emitted\":0},\"rawCan\":");
+  printStr(F(",\"forceFsd\":0},\"stream\":{\"on\":0,\"emitted\":0},\"rawCan\":"));
   printNum(s.rawCanListen ? 1 : 0);
-  printStr(",\"bus2\":");
+  printStr(F(",\"bus2\":"));
 #if BOARD_ENABLE_MCP2515_2
   extern bool bus2Available;
   printNum(bus2Available ? 1 : 0);
 #else
-  printStr("0");
+  printStr(F("0"));
 #endif
-  printStr(",\"canOnline\":");
+  printStr(F(",\"canOnline\":"));
   printNum(s.canOnline ? 1 : 0);
-  printStr(",\"standby\":");
+  printStr(F(",\"standby\":"));
   printNum(s.standby ? 1 : 0);
 #if BOARD_ENABLE_BT
-  printStr(",\"bt\":\"");
-  printStr(BOARD_BT_NAME);
-  printStr("\"");
+  printStr(F(",\"bt\":\""));
+  printStr(F(BOARD_BT_NAME));
+  printStr(F("\""));
 #endif
-  printStr("}");
+  printStr(F("}"));
   printLn();
 }
 
 void sendStatus(State& s, unsigned long now) {
   Features f = s.features();
-  printStr("{\"t\":\"status\",\"hw\":\"");
-  printStr(BOARD_HW_NAME);
-  printStr("\",\"can\":\"");
-  printStr(BOARD_CAN_NAME);
-  printStr("\",\"drv\":\"");
-  printStr(BOARD_DRIVER_NAME);
-  printStr("\",\"variant\":\"");
+  printStr(F("{\"t\":\"status\",\"hw\":\""));
+  printStr(F(BOARD_HW_NAME));
+  printStr(F("\",\"can\":\""));
+  printStr(F(BOARD_CAN_NAME));
+  printStr(F("\",\"drv\":\""));
+  printStr(F(BOARD_DRIVER_NAME));
+  printStr(F("\",\"variant\":\""));
   printStr(variantName(s.variant));
-  printStr("\",\"cap\":\"");
+  printStr(F("\",\"cap\":\""));
 #if BOARD_ENABLE_BT
-  printStr("usb+bluetooth");
+  printStr(F("usb+bluetooth"));
 #else
-  printStr("usb");
+  printStr(F("usb"));
 #endif
-  printStr("\",\"ready\":\"runtime-ready\",\"bt\":");
+  printStr(F("\",\"ready\":\"runtime-ready\",\"bt\":"));
 #if BOARD_ENABLE_BT
-  printStr("1");
+  printStr(F("1"));
 #else
-  printStr("0");
+  printStr(F("0"));
 #endif
-  printStr(",\"fsd\":");
+  printStr(F(",\"fsd\":"));
   printNum(s.fsdEnabled ? 1 : 0);
-  printStr(",\"sp\":");
+  printStr(F(",\"sp\":"));
   printNum(s.speedProfile);
-  printStr(",\"spPin\":");
+  printStr(F(",\"spPin\":"));
   printNum(s.profileOverride ? 1 : 0);
-  printStr(",\"offset\":");
+  printStr(F(",\"offset\":"));
   printNum(s.speedOffset);
-  printStr(",\"offsetPin\":");
+  printStr(F(",\"offsetPin\":"));
   printNum(s.offsetOverride ? 1 : 0);
-  printStr(",\"isaChime\":");
+  printStr(F(",\"isaChime\":"));
   printNum(s.isaChimeSuppress ? 1 : 0);
-  printStr(",\"nag\":");
+  printStr(F(",\"nag\":"));
   printNum(s.nagSuppress ? 1 : 0);
-  printStr(",\"features\":{\"fsd\":");
+  printStr(F(",\"features\":{\"fsd\":"));
   printNum(f.fsd ? 1 : 0);
-  printStr(",\"profile\":");
+  printStr(F(",\"profile\":"));
   printNum(f.profile ? 1 : 0);
-  printStr(",\"nag\":");
+  printStr(F(",\"nag\":"));
   printNum(f.nag ? 1 : 0);
-  printStr(",\"speedOffset\":");
+  printStr(F(",\"speedOffset\":"));
   printNum(f.speedOffset ? 1 : 0);
-  printStr(",\"isaSpeedChime\":");
+  printStr(F(",\"isaSpeedChime\":"));
   printNum(f.isaChime ? 1 : 0);
-  printStr(",\"summon\":");
+  printStr(F(",\"summon\":"));
   printNum(f.summon ? 1 : 0);
-  printStr(",\"forceFsd\":0},\"stream\":{\"on\":");
+  printStr(F(",\"forceFsd\":0},\"stream\":{\"on\":"));
   printNum(s.streamEnabled ? 1 : 0);
-  printStr(",\"emitted\":");
+  printStr(F(",\"emitted\":"));
   printNum(s.streamCount);
-  printStr("},\"rawCan\":");
+  printStr(F("},\"rawCan\":"));
   printNum(s.rawCanListen ? 1 : 0);
-  printStr(",\"bus2\":");
+  printStr(F(",\"bus2\":"));
 #if BOARD_ENABLE_MCP2515_2
   extern bool bus2Available;
   printNum(bus2Available ? 1 : 0);
 #else
-  printStr("0");
+  printStr(F("0"));
 #endif
-  printStr(",\"canOnline\":");
+  printStr(F(",\"canOnline\":"));
   printNum(s.canOnline ? 1 : 0);
-  printStr(",\"standby\":");
+  printStr(F(",\"standby\":"));
   printNum(s.standby ? 1 : 0);
-  printStr(",\"up\":");
+  printStr(F(",\"up\":"));
   printNum(now);
-  printStr("}");
+  printStr(F("}"));
   printLn();
 }
 
 void sendAck(const char* cmd) {
-  printStr("{\"t\":\"ack\",\"cmd\":\"");
+  printStr(F("{\"t\":\"ack\",\"cmd\":\""));
   printStr(cmd);
-  printStr("\"}");
+  printStr(F("\"}"));
   printLn();
 }
 
 void sendError(const char* msg) {
-  printStr("{\"t\":\"error\",\"msg\":\"");
+  printStr(F("{\"t\":\"error\",\"msg\":\""));
   printStr(msg);
-  printStr("\"}");
+  printStr(F("\"}"));
+  printLn();
+}
+
+void sendError(const __FlashStringHelper* msg) {
+  printStr(F("{\"t\":\"error\",\"msg\":\""));
+  printStr(msg);
+  printStr(F("\"}"));
   printLn();
 }
 
 void sendLog(const char* msg) {
-  printStr("{\"t\":\"log\",\"msg\":\"");
+  printStr(F("{\"t\":\"log\",\"msg\":\""));
   printStr(msg);
-  printStr("\"}");
+  printStr(F("\"}"));
+  printLn();
+}
+
+void sendLog(const __FlashStringHelper* msg) {
+  printStr(F("{\"t\":\"log\",\"msg\":\""));
+  printStr(msg);
+  printStr(F("\"}"));
   printLn();
 }
 
@@ -223,21 +247,21 @@ void sendFrame(const Frame& f, const char* dir, uint8_t bus, unsigned long ms, S
   if (!s.streamEnabled) return;
   s.streamCount++;
 
-  printStr("{\"t\":\"frame\",\"dir\":\"");
+  printStr(F("{\"t\":\"frame\",\"dir\":\""));
   printStr(dir);
-  printStr("\",\"bus\":");
+  printStr(F("\",\"bus\":"));
   printNum(bus);
-  printStr(",\"id\":");
+  printStr(F(",\"id\":"));
   printNum(f.id);
-  printStr(",\"seq\":");
+  printStr(F(",\"seq\":"));
   printNum(s.streamCount);
-  printStr(",\"ms\":");
+  printStr(F(",\"ms\":"));
   printNum(ms);
-  printStr(",\"ext\":0,\"dlc\":");
+  printStr(F(",\"ext\":0,\"dlc\":"));
   printNum(f.dlc);
-  printStr(",\"d\":\"");
+  printStr(F(",\"d\":\""));
   for (uint8_t i = 0; i < f.dlc; i++) printHex(f.data[i]);
-  printStr("\"}");
+  printStr(F("\"}"));
   printLn();
 }
 
@@ -245,7 +269,7 @@ void sendFrame(const Frame& f, const char* dir, uint8_t bus, unsigned long ms, S
 void executeCommand(const char* cmd, State& s, unsigned long now) {
   // System commands
   if (strcmp(cmd, "ping") == 0) {
-    printStr("{\"t\":\"pong\",\"v\":1}"); printLn();
+    printStr(F("{\"t\":\"pong\",\"v\":1}")); printLn();
     return;
   }
   
@@ -256,49 +280,49 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
   
   if (executeStreamCmd(cmd, s)) {
     sendAck(cmd);
-    sendLog(s.streamEnabled ? "Stream started" : "Stream stopped");
+    sendLog(s.streamEnabled ? F("Stream started") : F("Stream stopped"));
     sendStatus(s, now);
     return;
   }
   
   if (executeCanRawCmd(cmd, s)) {
     sendAck(cmd);
-    sendLog(s.rawCanListen ? "Raw CAN mode enabled" : "Filtered CAN mode");
+    sendLog(s.rawCanListen ? F("Raw CAN mode enabled") : F("Filtered CAN mode"));
     sendStatus(s, now);
     return;
   }
 
   if (executeFsdCmd(cmd, s)) {
     sendAck(cmd);
-    sendLog(s.fsdEnabled ? "FSD enabled - saved to EEPROM" : "FSD disabled - saved to EEPROM");
+    sendLog(s.fsdEnabled ? F("FSD enabled - saved to EEPROM") : F("FSD disabled - saved to EEPROM"));
     sendStatus(s, now);
     return;
   }
   
   if (executeNagCmd(cmd, s)) {
     sendAck(cmd);
-    sendLog(s.nagSuppress ? "Nag suppress ON - saved" : "Nag suppress OFF - saved");
+    sendLog(s.nagSuppress ? F("Nag suppress ON - saved") : F("Nag suppress OFF - saved"));
     sendStatus(s, now);
     return;
   }
   
   if (executeProfileCmd(cmd, s)) {
     sendAck(cmd);
-    sendLog(s.profileOverride ? "Profile pinned - saved" : "Profile set to auto");
+    sendLog(s.profileOverride ? F("Profile pinned - saved") : F("Profile set to auto"));
     sendStatus(s, now);
     return;
   }
   
   if (executeOffsetCmd(cmd, s)) {
     sendAck(cmd);
-    sendLog(s.offsetOverride ? "Offset pinned - saved" : "Offset set to auto");
+    sendLog(s.offsetOverride ? F("Offset pinned - saved") : F("Offset set to auto"));
     sendStatus(s, now);
     return;
   }
   
   if (executeIsaChimeCmd(cmd, s)) {
     sendAck(cmd);
-    sendLog(s.isaChimeSuppress ? "ISA chime suppressed - saved" : "ISA chime original - saved");
+    sendLog(s.isaChimeSuppress ? F("ISA chime suppressed - saved") : F("ISA chime original - saved"));
     sendStatus(s, now);
     return;
   }
@@ -306,16 +330,16 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
   if (executeSummonCmd(cmd, s)) {
     sendAck(cmd);
     if (s.summonRemaining > 0)
-      sendLog("Summon burst started (30 frames)");
+      sendLog(F("Summon burst started (30 frames)"));
     else
-      sendLog("Summon stopped");
+      sendLog(F("Summon stopped"));
     sendStatus(s, now);
     return;
   }
   
   if (executeVariantCmd(cmd, s)) {
     sendAck(cmd);
-    sendLog("Variant changed - filters updated");
+    sendLog(F("Variant changed - filters updated"));
     sendStatus(s, now);
     return;
   }
@@ -333,7 +357,7 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
   }
   
   if (!s.hasCtrl) {
-    sendError("Waiting for 0x273 frame");
+    sendError(F("Waiting for 0x273 frame"));
     return;
   }
   
@@ -342,7 +366,7 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
     sendLog(cmd);
     sendStatus(s, now);
   } else {
-    sendError("Unknown command");
+    sendError(F("Unknown command"));
   }
 }
 
@@ -378,7 +402,7 @@ void serialInit(State& s) {
   delay(1000);
   Serial.begin(115200);
   while (!Serial && millis() < 2000) {}
-  sendLog(BOARD_READY_MSG);
+  sendLog(F(BOARD_READY_MSG));
   sendBoot(s);
 }
 

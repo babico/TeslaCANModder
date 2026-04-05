@@ -1,10 +1,11 @@
 #pragma once
 #include "protocol/can.h"
 #include "protocol/fsd.h"
-#include "driver.h"
+#include "core/driver.h"
 
 // Forward declaration
 void sendLog(const char* msg);
+void sendLog(const __FlashStringHelper* msg);
 
 static bool hw3LoggedFSD = false;
 static bool hw3LoggedNag = false;
@@ -35,23 +36,22 @@ void handleHW3(Frame& f, State& s) {
       setBit(f, 46, true);
       setSpeedProfileV12V13(f, s.speedProfile);
       driverSend(f);
-      if (!hw3LoggedFSD) { sendLog("HW3: FSD mod active on CAN"); hw3LoggedFSD = true; }
+      if (!hw3LoggedFSD) { sendLog(F("HW3: FSD mod active on CAN")); hw3LoggedFSD = true; }
       return;
     } else if (mux == 0) { hw3LoggedFSD = false; }
     
     if (mux == 1 && s.nagSuppress) {
       setBit(f, 19, false);
       driverSend(f);
-      if (!hw3LoggedNag) { sendLog("HW3: Nag suppressed on CAN"); hw3LoggedNag = true; }
+      if (!hw3LoggedNag) { sendLog(F("HW3: Nag suppressed on CAN")); hw3LoggedNag = true; }
       return;
     } else if (mux == 1) { hw3LoggedNag = false; }
     
     if (mux == 2 && s.fsdEnabled && fsdUI) {
       writeHW3SpeedOffset(f, s.speedOffset);
       driverSend(f);
-      if (!hw3LoggedOffset) { sendLog("HW3: Speed offset applied"); hw3LoggedOffset = true; }
+      if (!hw3LoggedOffset) { sendLog(F("HW3: Speed offset applied")); hw3LoggedOffset = true; }
       return;
     } else if (mux == 2) { hw3LoggedOffset = false; }
-    }
   }
 }

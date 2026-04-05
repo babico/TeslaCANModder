@@ -4,7 +4,7 @@
 #include "handler/hw4.h"
 #include "handler/hw3.h"
 #include "handler/legacy.h"
-#include "driver.h"
+#include "core/driver.h"
 
 // ── Filter Setup ─────────────────────────────────────────────────────────────
 void applyFilters(State& s) {
@@ -61,7 +61,7 @@ void summonTick(State& s) {
   driverSend(f);
 #endif
   s.summonRemaining--;
-  if (s.summonRemaining == 0) sendLog("Summon burst complete");
+  if (s.summonRemaining == 0) sendLog(F("Summon burst complete"));
 }
 
 // ── Message Dispatch ─────────────────────────────────────────────────────────

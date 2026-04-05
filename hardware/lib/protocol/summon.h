@@ -1,16 +1,8 @@
 #pragma once
-#include "types.h"
+#include "core/types.h"
 
 // ── ASS (Autopark Summon System) Commands ────────────────────────────────────
-enum SummonDirection {
-  SUMMON_FORWARD = 0,
-  SUMMON_REVERSE = 1
-};
-
-enum SummonMode {
-  SUMMON_STOP = 0,
-  SUMMON_START = 1
-};
+// SummonDirection and SummonMode enums are defined in types.h
 
 // ── ASS Summon Control (0x273 UI_vehicleControl) ─────────────────────────────
 inline void setSummonActive(Frame& f, bool active) {

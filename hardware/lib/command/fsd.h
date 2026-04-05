@@ -1,17 +1,11 @@
 #pragma once
 #include "core/types.h"
-#include "core/eeprom.h"
+#include "core/persist.h"
 #include "handler/dispatch.h"
 
 // ── FSD Command Execution ────────────────────────────────────────────────────
 // Handles all FSD-related commands: fsd, nag, profile, offset, isa-chime, summon
-
-static bool parseBoolCmd(const char* suffix, bool current, bool& out) {
-  if (strcmp(suffix, "on") == 0)     { out = true;     return true; }
-  if (strcmp(suffix, "off") == 0)    { out = false;    return true; }
-  if (strcmp(suffix, "toggle") == 0) { out = !current; return true; }
-  return false;
-}
+// parseBoolCmd is defined in command/system.h
 
 bool executeFsdCmd(const char* cmd, State& s) {
   if (strncmp(cmd, "fsd:", 4) == 0) {

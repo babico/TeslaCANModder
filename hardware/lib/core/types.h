@@ -49,6 +49,17 @@ inline Features getFeatures(Variant v) {
 #define CAN_REINIT_INTERVAL  5000   // Re-try MCP2515 init every 5s in standby
 #define LED_STANDBY_INTERVAL 2000   // Slow LED blink period in standby
 
+// ── Summon Enums ─────────────────────────────────────────────────────────────
+enum SummonDirection {
+  SUMMON_FORWARD = 0,
+  SUMMON_REVERSE = 1
+};
+
+enum SummonMode {
+  SUMMON_STOP = 0,
+  SUMMON_START = 1
+};
+
 // ── State ────────────────────────────────────────────────────────────────────
 struct State {
   Variant variant;

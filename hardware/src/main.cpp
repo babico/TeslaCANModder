@@ -7,9 +7,11 @@
  */
 
 #include <Arduino.h>
+#include <EEPROM.h>
+#include <SPI.h>
 #include "core/config.h"
 #include "core/types.h"
-#include "core/eeprom.h"
+#include "core/persist.h"
 #include "core/driver.h"
 #include "handler/dispatch.h"
 #include "io/serial.h"
@@ -32,23 +34,23 @@ void setup() {
   // Initialize MCP2515 CAN driver
   driverReady = driverInit();
   if (!driverReady) {
-    sendLog("ERROR: CAN init failed. Check wiring and crystal.");
+    sendLog(F("ERROR: CAN init failed. Check wiring and crystal."));
     return;
   }
 
   // Apply CAN filters for current variant
   applyFilters(state);
-  sendLog("CAN driver ready");
-  sendLog(settingsLoaded ? "Settings loaded from EEPROM" : "EEPROM empty - using defaults");
+  sendLog(F("CAN driver ready"));
+  sendLog(settingsLoaded ? F("Settings loaded from EEPROM") : F("EEPROM empty - using defaults"));
 #if BOARD_ENABLE_MCP2515_2
   extern bool bus2Available;
   if (bus2Available) {
-    sendLog("Dual CAN: both buses online");
+    sendLog(F("Dual CAN: both buses online"));
   } else {
-    sendLog("Dual CAN: bus2 init FAILED - single bus fallback");
+    sendLog(F("Dual CAN: bus2 init FAILED - single bus fallback"));
   }
 #else
-  sendLog("Single CAN bus mode");
+  sendLog(F("Single CAN bus mode"));
 #endif
 }
 
@@ -75,7 +77,7 @@ void loop() {
     state.hasCharge = false;
     state.hasDrive = false;
     state.summonRemaining = 0;
-    sendLog("CAN bus silent - entering standby");
+    sendLog(F("CAN bus silent - entering standby"));
   }
 
   // ── Standby Mode ───────────────────────────────────────────────────────
@@ -98,7 +100,7 @@ void loop() {
       state.standby = false;
       state.canOnline = true;
       state.lastFrameMs = now;
-      sendLog("CAN bus active - resuming operation");
+      sendLog(F("CAN bus active - resuming operation"));
       // Re-init to ensure clean state
       driverReinit();
       applyFilters(state);
@@ -120,7 +122,7 @@ void loop() {
     state.lastFrameMs = now;
     if (!state.canOnline) {
       state.canOnline = true;
-      sendLog("CAN bus online");
+      sendLog(F("CAN bus online"));
     }
     digitalWrite(PIN_LED, LOW);
     sendFrame(frame, "rx", bus, now, state);

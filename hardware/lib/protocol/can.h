@@ -1,5 +1,5 @@
 #pragma once
-#include "types.h"
+#include "core/types.h"
 
 // ── Tesla CAN IDs ────────────────────────────────────────────────────────────
 #define CAN_ID_LEGACY_STALK   69

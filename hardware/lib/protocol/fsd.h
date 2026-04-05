@@ -1,5 +1,5 @@
 #pragma once
-#include "types.h"
+#include "core/types.h"
 
 // ── Profile Encoding ─────────────────────────────────────────────────────────
 inline void setSpeedProfileV12V13(Frame& f, int profile) {

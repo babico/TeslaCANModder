@@ -1,10 +1,11 @@
 #pragma once
 #include "protocol/can.h"
 #include "protocol/fsd.h"
-#include "driver.h"
+#include "core/driver.h"
 
 // Forward declaration
 void sendLog(const char* msg);
+void sendLog(const __FlashStringHelper* msg);
 
 static bool hw4LoggedFSD = false;
 static bool hw4LoggedNag = false;
@@ -18,7 +19,7 @@ void handleHW4(Frame& f, State& s) {
       f.data[1] |= 0x20;
       f.data[7] = computeHW4IsaChecksum(f);
       driverSend(f);
-      if (!hw4LoggedISA) { sendLog("HW4: ISA chime suppressed"); hw4LoggedISA = true; }
+      if (!hw4LoggedISA) { sendLog(F("HW4: ISA chime suppressed")); hw4LoggedISA = true; }
       return;
     }
     return;
@@ -42,7 +43,7 @@ void handleHW4(Frame& f, State& s) {
       setBit(f, 46, true);
       setBit(f, 60, true);
       driverSend(f);
-      if (!hw4LoggedFSD) { sendLog("HW4: FSD mod active on CAN"); hw4LoggedFSD = true; }
+      if (!hw4LoggedFSD) { sendLog(F("HW4: FSD mod active on CAN")); hw4LoggedFSD = true; }
       return;
     } else if (mux == 0) { hw4LoggedFSD = false; }
     
@@ -50,7 +51,7 @@ void handleHW4(Frame& f, State& s) {
       setBit(f, 19, false);
       setBit(f, 47, true);
       driverSend(f);
-      if (!hw4LoggedNag) { sendLog("HW4: Nag suppressed on CAN"); hw4LoggedNag = true; }
+      if (!hw4LoggedNag) { sendLog(F("HW4: Nag suppressed on CAN")); hw4LoggedNag = true; }
       return;
     } else if (mux == 1) { hw4LoggedNag = false; }
     

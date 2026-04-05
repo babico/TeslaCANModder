@@ -1,10 +1,11 @@
 #pragma once
 #include "protocol/can.h"
 #include "protocol/fsd.h"
-#include "driver.h"
+#include "core/driver.h"
 
 // Forward declaration
 void sendLog(const char* msg);
+void sendLog(const __FlashStringHelper* msg);
 
 static bool legacyLoggedFSD = false;
 static bool legacyLoggedNag = false;
@@ -33,16 +34,15 @@ void handleLegacy(Frame& f, State& s) {
       setBit(f, 46, true);
       setSpeedProfileV12V13(f, s.speedProfile);
       driverSend(f);
-      if (!legacyLoggedFSD) { sendLog("Legacy: FSD mod active on CAN"); legacyLoggedFSD = true; }
+      if (!legacyLoggedFSD) { sendLog(F("Legacy: FSD mod active on CAN")); legacyLoggedFSD = true; }
       return;
     } else if (mux == 0) { legacyLoggedFSD = false; }
     
     if (mux == 1 && s.nagSuppress) {
       setBit(f, 19, false);
       driverSend(f);
-      if (!legacyLoggedNag) { sendLog("Legacy: Nag suppressed on CAN"); legacyLoggedNag = true; }
+      if (!legacyLoggedNag) { sendLog(F("Legacy: Nag suppressed on CAN")); legacyLoggedNag = true; }
       return;
     } else if (mux == 1) { legacyLoggedNag = false; }
-    }
   }
 }
