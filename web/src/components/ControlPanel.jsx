@@ -2,7 +2,7 @@ import { commands } from '../utils/commands';
 import { useState } from 'react';
 
 export default function ControlPanel({ state, connected, onCommand }) {
-  const { hardware, driver, uptime, variant, fsd, nag, profile, profilePinned, offset, offsetPinned, isaChime, features, canOnline, standby, bus2 } = state;
+  const { hardware, driver, uptime, variant, fsd, nag, profile, profilePinned, offset, offsetPinned, isaChime, features, canOnline, standby, bus2, summonActive } = state;
   const [customOffset, setCustomOffset] = useState('');
 
   const formatUptime = (ms) => {
@@ -67,7 +67,10 @@ export default function ControlPanel({ state, connected, onCommand }) {
                 <div><span className="text-muted">Offset:</span> <strong>{offset}% {offsetPinned ? '(pinned)' : '(auto)'}</strong></div>
               )}
               {features.isaSpeedChime && (
-                <div><span className="text-muted">ISA:</span> <strong className={isaChime ? 'text-success' : 'text-muted'}>{isaChime ? 'SUP' : 'ORI'}</strong></div>
+                <div><span className="text-muted">ISA:</span> <strong className={isaChime ? 'text-success' : 'text-muted'}>{isaChime ? 'Suppress' : 'Original'}</strong></div>
+              )}
+              {features.summon && (
+                <div><span className="text-muted">Summon:</span> <strong>{summonActive ? 'Active' : 'Ready'}</strong></div>
               )}
             </div>
           </div>
@@ -102,7 +105,7 @@ export default function ControlPanel({ state, connected, onCommand }) {
           <div className="ctrl-feature-card">
             <div className="ctrl-feature-top">
               <span className="ctrl-feature-name">ISA Chime</span>
-              <span className={`feature-status ${isaChime ? 'status-on' : 'status-off'}`}>{isaChime ? 'SUP' : 'ORI'}</span>
+              <span className={`feature-status ${isaChime ? 'status-on' : 'status-off'}`}>{isaChime ? 'Suppress' : 'Original'}</span>
             </div>
             <div className="ctrl-feature-btns">
               <button className={`btn btn-sm ${isaChime ? 'btn-primary' : ''}`} disabled={!connected} onClick={() => onCommand(commands.isaChime(true))}>Suppress</button>
@@ -115,6 +118,7 @@ export default function ControlPanel({ state, connected, onCommand }) {
           <div className="ctrl-feature-card">
             <div className="ctrl-feature-top">
               <span className="ctrl-feature-name">Summon</span>
+              <span className={`feature-status ${summonActive ? 'status-on' : 'status-off'}`}>{summonActive ? 'Active' : 'Idle'}</span>
             </div>
             <div className="ctrl-feature-btns">
               <button className="btn btn-sm" disabled={!connected} onClick={() => onCommand(commands.summonForward())}>Fwd</button>

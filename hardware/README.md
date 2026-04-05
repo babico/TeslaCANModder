@@ -224,8 +224,7 @@ hardware/
 │   ├── command/
 │   │   ├── system.h       - System commands
 │   │   ├── fsd.h          - FSD commands
-│   │   ├── vehicle.h      - Vehicle control commands
-│   │   └── safe.h         - Safe mode commands
+│   │   └── vehicle.h      - Vehicle control commands
 │   └── io/
 │       └── serial.h       - Serial/BT I/O, JSON, command router
 ├── src/
@@ -256,7 +255,6 @@ hardware/
 - **system.h** - System command execution (streaming, raw CAN)
 - **fsd.h** - FSD command execution (fsd/nag/profile/offset/isa-chime/summon/variant)
 - **vehicle.h** - Vehicle control command execution (mirrors/locks/lights/wipers/seats/display/power)
-- **safe.h** - Safe mode command execution
 
 **I/O Layer (io/):**
 - **serial.h** - Serial/Bluetooth communication, JSON serialization, command routing
@@ -264,7 +262,6 @@ hardware/
 ## Default State
 
 - Variant: HW4
-- **Safe Mode: ON (blocks all CAN modifications)**
 - FSD: OFF
 - Nag Suppression: OFF
 - Speed Profile: 1 (Standard)
@@ -272,12 +269,6 @@ hardware/
 - ISA Chime Suppression: OFF
 - Frame Streaming: OFF
 - Raw CAN Listen: OFF
-
-**Safe mode must be explicitly disabled to enable features.**
-
-> Note: Safe mode CLI tooling exists, but the current firmware does not expose `safe:*` serial commands.
-
-See `tools/README.md` for full documentation.
 
 ## License
 

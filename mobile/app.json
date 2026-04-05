@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "TeslaCANModder",
+    "slug": "teslacanmodder",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "teslacanmodder",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "platforms": ["ios", "android", "web"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.teslacanmodder.app",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "TeslaCANModder uses Bluetooth to communicate with the HC-05 module connected to Arduino.",
+        "NSBluetoothPeripheralUsageDescription": "TeslaCANModder uses Bluetooth to communicate with the HC-05 module."
+      }
+    },
+    "android": {
+      "package": "com.teslacanmodder.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0c10"
+      },
+      "permissions": [
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "modes": ["peripheral", "central"]
+        }
+      ]
+    ]
+  }
+}

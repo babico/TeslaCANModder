@@ -193,5 +193,5 @@
 | 12.4 | Send unknown command | Error: "Unknown command" |
 | 12.5 | USB cable disconnects mid-session | Dashboard shows "Not Connected" |
 | 12.6 | Rapid button clicking (spam) | Board processes sequentially, no crash |
-| 12.7 | EEPROM corrupted/empty | Board uses safe defaults |
+| 12.7 | EEPROM corrupted/empty | Board uses factory defaults |
 | 12.8 | MCP2515 crystal mismatch | Init tries 8MHz then 16MHz |
