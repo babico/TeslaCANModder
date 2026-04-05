@@ -1,243 +1,91 @@
-# TeslaCANModder Web
+# TeslaCANModder Web UI
 
-This app is the browser UI for TeslaCANModder. It handles setup guidance, serial connection, runtime board control, CAN monitoring, package-specific controls, and first-flash UX.
+Simple, usable web interface for Tesla CAN bus modification control.
 
-## Main Responsibilities
+## Features
 
-- detect whether the current browser can use Web Serial
-- connect to the board over USB or a paired HC-05 serial port
-- normalize boot, status, log, ack, error, and frame messages
-- show runtime vehicle and transport state
-- expose package-specific controls such as FSD/profile actions
-- guide the user through the USB-first and X179-second installation flow
+- **USB & Bluetooth Serial** - Connect via Web Serial API
+- **Runtime Variant Switching** - HW4, HW3, Legacy
+- **Live CAN Monitoring** - Real-time frame streaming
+- **Feature Control** - FSD, nag, profile, offset, ISA chime
+- **Mobile Responsive** - Works on desktop and Android Chrome
 
-## App Structure
-
-### Core runtime
-
-- `src/lib/board/commands.js`
-  board command constants and helpers
-- `src/lib/board/protocol.js`
-  message normalization, telemetry shaping, and list trimming helpers
-- `src/lib/board/client.js`
-  serial client wrapper around the browser connection flow
-- `src/lib/board/capabilities.js`
-  browser and device capability detection used by the UI
-- `src/hooks/useBoardLink.js`
-  main stateful hook that the UI uses to connect, send commands, and consume board messages
-
-### UI
-
-- `src/components/Dashboard.jsx`
-  main runtime control and monitor surface
-- `src/components/SetupGuide.jsx`
-  installation guide, Mermaid diagrams, and staged validation workflow
-- `src/components/Flasher.jsx`
-  first-flash and firmware-selection UX
-- `src/components/CanExplorer.jsx`
-  frame inspection surface
-
-### Packages
-
-- `src/packages/*`
-  package registry and package-specific UI
-- `src/packages/fsd/*`
-  FSD package adapter and panel
-
-### Styling
-
-Styles are split under `src/styles/` by app area:
-
-- `base.css`
-- `app-shell.css`
-- `dashboard.css`
-- `setup-guide.css`
-- `explorer.css`
-- `shared-pages.css`
-- `responsive.css`
-
-`src/index.css` only imports those files.
-
-## Board Protocol Expectations
-
-The UI expects the firmware to use the line-based JSON protocol implemented by `hardware/lib/board/bridge.h`.
-
-Important message types:
-
-- `boot`
-- `status`
-- `frame`
-- `log`
-- `ack`
-- `error`
-- `pong`
-
-Important status metadata:
-
-- `hw`
-- `can`
-- `drv`
-- `variant`
-- `bt`
-- `cap`
-- `ready`
-- `fsd`
-- `sp`
-- `up`
-- `offset`
-- `isaChime`
-- `features`
-
-The UI uses that metadata to distinguish:
-
-- board identity
-- transport capability
-- current runtime variant
-- whether Bluetooth is compiled in
-- whether the install is still bench-only or already seeing live CAN traffic
-
-## Dashboard Model
-
-The dashboard is built around one board link and two usage modes:
-
-- desktop: full tile-based layout with control, monitoring, and advanced console
-- mobile: simpler one-column flow split into setup, control, monitor, and advanced sections
-
-The tile layout is user-adjustable. Tile order, visibility, and size are saved in local browser storage so the dashboard reopens in the same shape.
-
-The control model is simple-first:
-
-- always-visible essentials:
-  connect, disconnect, ping, status, stream, runtime variant, FSD, profile
-- expert controls only when supported by the selected variant:
-  HW3 speed offset
-  HW4 ISA speed-chime suppression
-
-The dashboard now reads `status.features` from the board and hides unsupported controls instead of assuming every variant has the same surface.
-
-## Setup Guide Model
-
-The guide is intentionally staged, but it is now wizard-first:
-
-1. ordered hardware summary
-2. preflight and safety
-3. bench flash over USB
-4. dashboard validation on the bench
-5. move power to X179 through the converter
-6. connect CAN
-7. optional HC-05 wiring and pairing
-8. first vehicle validation
-9. troubleshooting by symptom
-
-The long-form guide still exists as full-reference mode below the wizard. Mermaid diagrams are used for the wiring and process views so the diagrams stay versionable in the repo.
-
-## Development
-
-Install and run the app locally:
+## Quick Start
 
 ```bash
+cd web
 npm install
 npm run dev
 ```
 
-Checks:
+Open http://localhost:5173
+
+## Build
 
 ```bash
-npm run lint
 npm run build
 ```
 
-## Docker
+Output: `dist/`
 
-Start the dev server through Docker:
+## Protocol Compatibility
 
-```bash
-docker compose up web
+The web UI is 100% compatible with the new simplified hardware firmware. Both use the same JSON protocol:
+
+### Messages
+- `boot` - Board initialization
+- `status` - State updates (every 500ms)
+- `frame` - CAN frames (when streaming)
+- `ack` - Command acknowledgment
+- `error` - Error messages
+- `pong` - Ping response
+
+### Commands
+- `ping`, `status`
+- `variant:hw4`, `variant:hw3`, `variant:legacy`
+- `fsd:on`, `fsd:off`, `fsd:toggle`
+- `nag:on`, `nag:off`, `nag:toggle`
+- `profile:0-4` or `sp:0-4`
+- `offset:0-100` (HW3)
+- `isa-chime:on`, `isa-chime:off`, `isa-chime:toggle` (HW4)
+- `stream:on`, `stream:off`
+- `can:raw:on`, `can:raw:off`
+
+## Browser Support
+
+- ✅ Desktop Chrome/Edge - Full support (flashing + control)
+- ✅ Android Chrome - Runtime control via Bluetooth
+- ⚠️ Other browsers - Guide mode only
+
+## Structure
+
+```
+web/
+├── src/
+│   ├── components/     - Dashboard, Explorer, Setup, Flasher
+│   ├── hooks/          - useBoardLink (main board hook)
+│   ├── lib/board/      - Serial client, protocol, commands
+│   ├── packages/       - Feature packages (FSD, etc.)
+│   └── styles/         - CSS modules
+├── public/             - Static assets
+└── index.html          - Entry point
 ```
 
-Because the repo is bind-mounted into the container, that first start may run `npm ci`
-inside `/app/web` before Vite launches. That is expected: the bind mount hides the
-image-baked `node_modules`, so the dev entrypoint reinstalls dependencies when needed.
+## Development
 
-By default, the Vite dev server only allows local hosts:
+The web UI automatically detects browser capabilities and adapts:
+- Desktop: Full dashboard with drag-drop tiles
+- Mobile: Tabbed interface (Control/Monitor/Advanced)
+- No serial: Guide-only mode
 
-```text
-localhost, 127.0.0.1, ::1
-```
+## Testing Hardware Compatibility
 
-To allow an external hostname, pass it through `VITE_ALLOWED_HOSTS`:
+1. Build and flash firmware: `cd hardware && .\pio.ps1 run -e uno -t upload`
+2. Start web UI: `cd web && npm run dev`
+3. Open http://localhost:5173
+4. Click "Connect USB"
+5. Select Arduino port
+6. Verify boot message appears
+7. Test commands: `ping`, `status`, `variant:hw4`, `fsd:on`, `stream:on`
 
-```bash
-VITE_ALLOWED_HOSTS=teslacan.arm.oracle.cloud.babico.tr docker compose up web
-```
-
-That serves the app at:
-
-```text
-http://localhost:4173
-```
-
-Dev heartbeat:
-
-```text
-http://localhost:4173/heartbeat.json
-```
-
-Run the production container:
-
-```bash
-docker compose up web-prod
-```
-
-That serves the built app at:
-
-```text
-http://localhost:8080
-```
-
-Production heartbeat:
-
-```text
-http://localhost:8080/heartbeat.json
-```
-
-## First Flash
-
-The first flash still depends on the firmware build from `hardware`:
-
-```powershell
-cd hardware
-.\pio.ps1 run -e uno
-```
-
-The canonical file is:
-
-```text
-hardware/.pio/build/uno/firmware.hex
-```
-
-During local development, the Vite middleware can also expose that built hex directly for the flasher UI.
-
-## Supported Usage Model
-
-- Desktop Chrome or Edge:
-  full flashing, control, and recovery path
-- Android Chrome:
-  target phone runtime-control path
-- unsupported browsers:
-  guide and compatibility fallback, not guaranteed live serial control
-
-## Ordered Hardware Assumptions
-
-- Uno CH340 clone
-- MCP2515 + TJA1050 board with `8 MHz` crystal
-- HC-05 wired to `D4` and `D5` with a divider on `D5 -> RX`
-- X179-powered install using the purchased converter
-
-The guide and dashboard intentionally treat USB as the first bring-up path and HC-05 as a later optional transport.
-
-## Related Docs
-
-- repo overview: `../README.md`
-- Wi-Fi board comparative audit: `../docs/WIFI_BOARD_COMPARATIVE_AUDIT.md`
-- Wi-Fi migration guide: `../docs/WIFI_BOARD_GUIDE.md`
+All commands should work identically to the old firmware.

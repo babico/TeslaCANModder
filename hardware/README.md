@@ -1,208 +1,284 @@
-# TeslaCANModder Firmware
+# TeslaCANModder Hardware Firmware
 
-This directory contains the PlatformIO firmware project for the Arduino Uno build used by TeslaCANModder.
+Simplified Arduino Uno firmware for Tesla CAN bus modification. Supports runtime variant switching (HW4/HW3/Legacy) with full web UI control.
 
-## Build Targets
+## Hardware Requirements
 
-The active firmware targets are:
+- Arduino Uno R3 (CH340 or ATmega16U2)
+- MCP2515 CAN module with TJA1050 transceiver (8 MHz crystal)
+- HC-05 Bluetooth module (optional)
+- 9V-36V to 5V/3A USB converter
+- Tesla X179 connector
 
-- `uno`
-  USB + optional HC-05 support
-- `uno_usb`
-  USB-only firmware for installs where HC-05 is not physically present
+## Wiring
 
-Both images contain all supported vehicle handlers and switch the active variant at runtime. The board does not need separate `hw3`, `hw4`, or `legacy` firmware builds anymore.
+### MCP2515
+- VCC → 5V
+- GND → GND
+- CS → D10
+- INT → D2
+- SCK/MISO/MOSI → SPI pins
 
-## Build And Test
+### HC-05 (Optional)
+- RX → D4
+- TX → D5 (via 1kΩ + 2kΩ voltage divider)
+- VCC → 3.3V regulator
+- GND → GND
 
-Build the firmware:
+### X179 Power & CAN
+- Pin 1 → Converter VIN+
+- Pin 20 → Converter VIN-
+- Converter USB → Arduino USB
+- Pin 13 → MCP2515 CAN-H
+- Pin 14 → MCP2515 CAN-L
+
+## Build
 
 ```powershell
+# USB + Bluetooth
 .\pio.ps1 run -e uno
+
+# USB only
 .\pio.ps1 run -e uno_usb
+
+# Upload
+.\pio.ps1 run -e uno -t upload
 ```
 
-Run native tests:
+## Memory Usage
 
-```powershell
-.\pio.ps1 test -e native
+| Build | RAM | Flash |
+|-------|-----|-------|
+| USB + Bluetooth | 1558 bytes (76%) | 11150 bytes (35%) |
+| USB only | 1378 bytes (67%) | 9668 bytes (30%) |
+
+## Features
+
+### Variants
+- `hw4` - HW4 (2026.2.3+) with ISA chime control
+- `hw3` - HW3 with speed offset control
+- `legacy` - Pre-HW3 vehicles
+
+### Controls (All OFF by default)
+- FSD enable/disable
+- Nag suppression
+- Speed profile (0-4)
+- Speed offset (HW3: 0-100%)
+- ISA chime suppression (HW4)
+- CAN frame streaming
+- Raw CAN listen mode
+
+## Commands
+
+All commands are newline-terminated ASCII over USB or Bluetooth.
+
+### System
+- `ping` - Health check
+- `status` - Full state dump
+- `stream:on` / `stream:off` - Enable or disable CAN frame streaming
+- `can:raw:on` / `can:raw:off` - Enable or disable raw CAN listen mode
+
+### Variant
+- `variant:hw4` / `variant:hw3` / `variant:legacy`
+
+### FSD / Feature Controls
+- `fsd:on` / `fsd:off` / `fsd:toggle`
+- `nag:on` / `nag:off` / `nag:toggle`
+- `profile:0` to `profile:4` (or `sp:0` to `sp:4`)
+- `profile:auto` - Track stalk input instead of user override
+- `offset:auto` - Track HW3 UI speed offset instead of user override
+- `offset:0` to `offset:100` (HW3 only)
+- `isa-chime:on` / `isa-chime:off` / `isa-chime:toggle` (HW4 only)
+
+### Summon
+- `summon` - Start summon using the last known direction
+- `summon:forward` / `summon:fwd`
+- `summon:reverse` / `summon:rev`
+- `summon:stop`
+
+### Mirrors
+- `mirror:fold`
+- `mirror:unfold`
+- `mirror:heat`
+- `mirror:autofold`
+- `mirror:dip`
+
+### Locks
+- `lock`
+- `unlock`
+- `lock:child`
+- `horn`
+
+### Trunk / Frunk
+- `frunk:open` / `frunk`
+- `frunk:close`
+- `trunk:open` / `trunk`
+- `trunk:close`
+- `glovebox`
+
+### Lighting
+- `light:fog:front`
+- `light:fog:rear`
+- `light:highbeam:auto`
+- `light:ambient`
+- `light:home`
+- `light:dome:off`
+- `light:dome:on`
+- `light:dome:auto`
+
+### Wipers
+- `wiper:off`
+- `wiper:1`
+- `wiper:2`
+- `wiper:3`
+
+### Seats
+- `seat:fl:0` to `seat:fl:3`
+- `seat:fr:0` to `seat:fr:3`
+- `seat:rl:0` to `seat:rl:3`
+- `seat:rr:0` to `seat:rr:3`
+- `seat:rc:0` to `seat:rc:3`
+
+### Display
+- `maindisplay:0` to `maindisplay:127`
+
+### Power
+- `power:acc:on`
+- `power:acc:off`
+- `power:off`
+- `power:ready`
+
+### Windows
+- `vent:open`
+- `vent:close`
+
+### Sentry
+- `sentry:on`
+- `sentry:off`
+
+### Climate
+- `climate:keep`
+- `climate:off`
+
+### Charge
+- `charge:start`
+- `charge:stop`
+- `charge:port` / `chargeport`
+
+### Drive Configuration
+- `pedal:standard` / `pedal:std`
+- `pedal:chill`
+- `pedal:sport`
+- `regen:off`
+- `regen:low`
+- `regen:standard` / `regen:std`
+- `regen:max`
+- `stop:creep`
+- `stop:roll`
+- `stop:hold`
+
+## Protocol
+
+JSON messages over serial (115200 baud):
+
+### Boot
+```json
+{"t":"boot","hw":"ArduinoUnoR3CH340","variant":"hw4","cap":"usb+bluetooth",...}
 ```
 
-The canonical first-flash artifact is:
-
-```text
-.pio/build/uno/firmware.hex
-.pio/build/uno_usb/firmware.hex
+### Status (every 500ms)
+```json
+{"t":"status","variant":"hw4","fsd":0,"sp":1,"offset":0,"isaChime":0,"nag":0,...}
 ```
 
-## Docker Build
-
-`hardware/Dockerfile` now builds both AVR firmware variants by default:
-
-- `uno`
-- `uno_usb`
-
-Build the image:
-
-```powershell
-docker build -f hardware/Dockerfile -t tesla-can-hardware .
+### Frame (when streaming)
+```json
+{"t":"frame","dir":"rx","id":1021,"dlc":8,"d":"0102030405060708",...}
 ```
 
-Run the container build:
-
-```powershell
-docker run --rm -v ${PWD}/hardware/.pio:/app/hardware/.pio tesla-can-hardware
+### Ack/Error
+```json
+{"t":"ack","cmd":"fsd:on"}
+{"t":"error","msg":"Invalid variant"}
 ```
 
-If you only want one PlatformIO environment, override `PLATFORMIO_BUILD_ENVS`:
+## Code Structure
 
-```powershell
-docker run --rm -e PLATFORMIO_BUILD_ENVS=uno_usb -v ${PWD}/hardware/.pio:/app/hardware/.pio tesla-can-hardware
+```
+hardware/
+├── lib/
+│   ├── core/
+│   │   ├── config.h       - Pin definitions, build flags
+│   │   ├── types.h        - Frame, State, Features, Variant
+│   │   └── driver.h       - MCP2515 hardware interface
+│   ├── protocol/
+│   │   ├── can.h          - CAN IDs, basic frame helpers
+│   │   ├── fsd.h          - FSD frame manipulation
+│   │   ├── summon.h       - ASS summon control
+│   │   └── vehicle.h      - 0x273 vehicle control
+│   ├── handler/
+│   │   ├── hw4.h          - HW4 message handler
+│   │   ├── hw3.h          - HW3 message handler
+│   │   ├── legacy.h       - Legacy message handler
+│   │   └── dispatch.h     - Message routing and filters
+│   ├── command/
+│   │   ├── system.h       - System commands
+│   │   ├── fsd.h          - FSD commands
+│   │   ├── vehicle.h      - Vehicle control commands
+│   │   └── safe.h         - Safe mode commands
+│   └── io/
+│       └── serial.h       - Serial/BT I/O, JSON, command router
+├── src/
+│   └── main.cpp           - setup() + loop()
+└── platformio.ini         - Build configuration
 ```
 
-## Why `pio.ps1` Exists
+### Module Responsibilities
 
-`pio.ps1` wraps PlatformIO so the project can use a repo-local `.pio-home` instead of depending on a healthy global PlatformIO install. On Windows it also works around Unicode path issues by using an ASCII drive mapping when needed.
+**Core Infrastructure (core/):**
+- **config.h** - Hardware configuration and compile-time flags
+- **types.h** - Core data structures (Frame, State, Features, Variant)
+- **driver.h** - Low-level MCP2515 SPI communication
 
-## Directory Layout
+**Protocol Layer (protocol/):**
+- **can.h** - CAN ID definitions and basic frame helpers
+- **fsd.h** - FSD-specific frame encoding/decoding
+- **summon.h** - ASS summon frame manipulation
+- **vehicle.h** - 0x273 vehicle control frame manipulation
 
-- `src/main.cpp`
-  Arduino entry point
-- `lib/board/*`
-  board runtime, protocol bridge, state, commands, and transport metadata
-- `lib/can/*`
-  CAN frame types and helpers
-- `lib/drivers/*`
-  driver contracts and hardware driver implementations
-- `lib/handlers/*`
-  generic handler interface and runtime variant handlers
-- `lib/packages/*`
-  reusable feature packages used by the handlers
-- `test/*`
-  native host-side tests
+**Handler Layer (handler/):**
+- **hw4.h** - HW4-specific CAN message processing
+- **hw3.h** - HW3-specific CAN message processing
+- **legacy.h** - Legacy vehicle CAN message processing
+- **dispatch.h** - Routes messages to variant handlers, manages filters
 
-## Firmware Runtime Model
+**Command Layer (command/):**
+- **system.h** - System command execution (streaming, raw CAN)
+- **fsd.h** - FSD command execution (fsd/nag/profile/offset/isa-chime/summon/variant)
+- **vehicle.h** - Vehicle control command execution (mirrors/locks/lights/wipers/seats/display/power)
+- **safe.h** - Safe mode command execution
 
-### Board layer
+**I/O Layer (io/):**
+- **serial.h** - Serial/Bluetooth communication, JSON serialization, command routing
 
-The board layer owns:
+## Default State
 
-- boot and ready messages
-- serial command parsing
-- JSON message emission
-- transport metadata
-- board state such as variant, stream state, install readiness, and Bluetooth capability
+- Variant: HW4
+- **Safe Mode: ON (blocks all CAN modifications)**
+- FSD: OFF
+- Nag Suppression: OFF
+- Speed Profile: 1 (Standard)
+- Speed Offset: 0
+- ISA Chime Suppression: OFF
+- Frame Streaming: OFF
+- Raw CAN Listen: OFF
 
-Important files:
+**Safe mode must be explicitly disabled to enable features.**
 
-- `lib/board/app.h`
-- `lib/board/bridge.h`
-- `lib/board/commands.h`
-- `lib/board/state.h`
-- `lib/board/transport.h`
+> Note: Safe mode CLI tooling exists, but the current firmware does not expose `safe:*` serial commands.
 
-### Driver layer
+See `tools/README.md` for full documentation.
 
-The driver layer hides the physical CAN controller details from the rest of the firmware.
+## License
 
-Important files:
-
-- `lib/drivers/runtime/driver.h`
-- `lib/drivers/mcp2515/arduino_mcp2515.h`
-
-### Handler layer
-
-Handlers map incoming CAN traffic to variant-specific behavior.
-
-Important files:
-
-- `lib/handlers/runtime/handler.h`
-- `lib/handlers/runtime/stack.h`
-- `lib/handlers/runtime/state.h`
-- `lib/handlers/variants/hw3.h`
-- `lib/handlers/variants/hw4.h`
-- `lib/handlers/variants/legacy.h`
-
-### Package layer
-
-Packages hold smaller, reusable slices of behavior used by the variant handlers. The FSD-related packages are grouped by variant under `lib/packages/fsd/`.
-
-## Serial Protocol
-
-The firmware uses one line-based JSON protocol over both USB and HC-05. The transport changes, but the message format does not.
-
-Common inbound commands:
-
-- `ping`
-- `status`
-- `stream:on`
-- `stream:off`
-- `variant:hw4`
-- `variant:hw3`
-- `variant:legacy`
-- `fsd:on`
-- `fsd:off`
-- `profile:<0-4>`
-- `offset:<0-100>` on `hw3`
-- `isa-chime:on|off|toggle` on `hw4`
-
-Common outbound message types:
-
-- `boot`
-- `status`
-- `frame`
-- `log`
-- `ack`
-- `error`
-- `pong`
-
-## Install Readiness
-
-The board reports a coarse install-readiness state so the web UI can explain where the current setup is in the bring-up process:
-
-- `bench-ready`
-  board is alive and responding on the bench
-- `installed-power-ready`
-  board driver initialized and the wired install can move to vehicle power
-- `runtime-ready`
-  live CAN traffic is flowing
-
-## Variant Feature Surface
-
-The shared Uno image always contains all handlers, but the exposed runtime controls change with the selected variant:
-
-| Variant | Base controls | Expert controls |
-|---|---|---|
-| `legacy` | `fsd`, `profile`, `variant`, `stream`, `status` | none |
-| `hw3` | `fsd`, `profile`, `variant`, `stream`, `status` | `offset` |
-| `hw4` | `fsd`, `profile`, `variant`, `stream`, `status` | `isa-chime` |
-
-The board now reports that support matrix through `status.features` so the web UI can hide unsupported controls instead of rendering dead buttons.
-
-## Hardware Assumptions
-
-The current defaults assume:
-
-- Uno-compatible AVR board
-- MCP2515 with `8 MHz` crystal
-- optional HC-05 on `D4` and `D5`
-- X179-powered install through the purchased converter
-
-Important electrical constraints:
-
-- do not drive HC-05 RX directly from the Uno without a divider
-- do not feed X179 `12V` directly into the Uno `5V` pin
-- disable MCP2515 termination on the live vehicle bus
-
-## Tests
-
-The native tests are host-side logic tests. They exercise command handling, board state, helper logic, and handler behavior without needing a real Uno connected.
-
-The `uno` target is for the firmware build, not for those native tests.
-
-## Related Docs
-
-- repo overview: `../README.md`
-- Wi-Fi board comparative audit: `../docs/WIFI_BOARD_COMPARATIVE_AUDIT.md`
-- Wi-Fi migration guide: `../docs/WIFI_BOARD_GUIDE.md`
-- CAN control review checklist: `../docs/CAN_CONTROL_REVIEW_CHECKLIST.md`
+GPL-3.0 - See legacy reference projects for original implementations.

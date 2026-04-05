@@ -14,6 +14,7 @@
  *   smoke   Protocol health-check  (default when no command given)
  *   watch   Live frame / state monitor
  *   test    FSD / profile functional round-trip test
+ *   flash   Flash firmware to board
  *
  * Global options:
  *   --port    <path>   Serial port path (required)  e.g. COM3 /dev/ttyUSB0
@@ -30,11 +31,17 @@
  *   --duration <ms>    How long to watch             [default: 10000]
  *   --watch-fsd        Print FSD state changes
  *   --watch-profile    Print profile state changes
+ *   --bit-diff         Track and display bit changes in TX frames
  *
  * `test` extras:
  *   --test-fsd         Run FSD on → verify → off round-trip
  *   --test-profile <n> Run profile:N → verify round-trip (0–4)
+ *   --test-fsd-listen  Activate FSD, listen for 5 seconds, no restore
  *   --restore          Restore original FSD / profile after test
+ *
+ * `flash` extras:
+ *   --hex <path>       Path to firmware.hex file to flash
+ *   --erase            Erase chip before flashing
  *
  * Examples:
  *   node tools/debug.js smoke --port COM3
@@ -90,12 +97,16 @@ const WATCH_DUR_MS  = Number(args.duration) || 10000;
 const WATCH_RAW     = Boolean(args.raw);
 const WATCH_FSd     = Boolean(args['watch-fsd']);
 const WATCH_PROFILE = Boolean(args['watch-profile']);
+const BIT_DIFF      = Boolean(args['bit-diff']);
 const FILTER_IDS    = (args.filter ? String(args.filter) : '')
   .split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n > 0);
 
 const TEST_FSd      = Boolean(args['test-fsd']);
 const TEST_PROFILE  = args['test-profile'] !== undefined ? Number(args['test-profile']) : -1;
 const RESTORE       = Boolean(args.restore);
+const TEST_FSD_LISTEN = Boolean(args['test-fsd-listen']);
+const FLASH_HEX     = args.hex ? String(args.hex) : null;
+const ERASE_CHIP    = Boolean(args.erase);
 
 // ── ANSI colour ──────────────────────────────────────────────────────────────
 
@@ -465,8 +476,38 @@ async function runSmoke(session) {
 
 // ── WATCH command ─────────────────────────────────────────────────────────────
 
+function compareBits(prev, curr) {
+  const changes = [];
+  for (let byteIdx = 0; byteIdx < Math.max(prev.length, curr.length); byteIdx++) {
+    const prevByte = prev[byteIdx] ?? 0;
+    const currByte = curr[byteIdx] ?? 0;
+    if (prevByte !== currByte) {
+      const changedBits = [];
+      for (let bit = 0; bit < 8; bit++) {
+        const prevBit = (prevByte >> bit) & 1;
+        const currBit = (currByte >> bit) & 1;
+        if (prevBit !== currBit) {
+          changedBits.push({ bit, from: prevBit, to: currBit });
+        }
+      }
+      changes.push({ byteIdx, prevByte, currByte, changedBits });
+    }
+  }
+  return changes;
+}
+
+function parseHexData(hexStr) {
+  const clean = String(hexStr || '').replace(/\s+/g, '').toUpperCase();
+  const bytes = [];
+  for (let i = 0; i < clean.length; i += 2) {
+    bytes.push(parseInt(clean.slice(i, i + 2), 16));
+  }
+  return bytes;
+}
+
 async function runWatch(session) {
   let watchState = { fsd: null, profile: null, ready: null, rawCan: null, streamOn: null };
+  const frameHistory = new Map(); // id -> { lastRxBytes, lastTxBytes }
 
   if (WATCH_RAW) {
     session.send('can:raw:on');
@@ -499,7 +540,36 @@ async function runWatch(session) {
       const idHex  = `0x${id.toString(16).toUpperCase().padStart(3, '0')}`;
       const dir    = msg.dir === 'tx' ? `${C.yellow}TX${C.reset}` : `${C.green}RX${C.reset}`;
       const data   = String(msg.d || '').toUpperCase();
-      console.log(`[${ts()}] ${dir} id=${C.cyan}${idHex}${C.reset} dlc=${msg.dlc} seq=${msg.seq ?? '-'} ms=${msg.ms ?? '-'}  ${data}`);
+      
+      if (BIT_DIFF) {
+        const currentBytes = parseHexData(msg.d);
+        const history = frameHistory.get(id) || { lastRxBytes: [], lastTxBytes: [] };
+        
+        if (msg.dir === 'tx') {
+          const refBytes = history.lastRxBytes.length > 0 ? history.lastRxBytes : history.lastTxBytes;
+          const changes = compareBits(refBytes, currentBytes);
+          
+          if (changes.length > 0) {
+            console.log(`[${ts()}] ${dir} id=${C.cyan}${idHex}${C.reset} dlc=${msg.dlc}  ${data}`);
+            changes.forEach(({ byteIdx, prevByte, currByte, changedBits }) => {
+              const prevHex = prevByte.toString(16).toUpperCase().padStart(2, '0');
+              const currHex = currByte.toString(16).toUpperCase().padStart(2, '0');
+              console.log(`    ${C.bold}Byte ${byteIdx}${C.reset}: 0x${prevHex} → 0x${currHex}`);
+              changedBits.forEach(({ bit, from, to }) => {
+                console.log(`      ${C.yellow}bit ${bit}${C.reset}: ${from} → ${to}`);
+              });
+            });
+          }
+          
+          history.lastTxBytes = currentBytes;
+        } else {
+          history.lastRxBytes = currentBytes;
+        }
+        
+        frameHistory.set(id, history);
+      } else {
+        console.log(`[${ts()}] ${dir} id=${C.cyan}${idHex}${C.reset} dlc=${msg.dlc} seq=${msg.seq ?? '-'} ms=${msg.ms ?? '-'}  ${data}`);
+      }
       continue;
     }
 
@@ -566,6 +636,104 @@ async function runWatch(session) {
   }
 
   console.log(`\nWatch ended.`);
+}
+
+// ── FLASH command ────────────────────────────────────────────────────────────
+
+async function runFlash() {
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const execFileAsync = promisify(execFile);
+  const path = await import('node:path');
+  const fs = await import('node:fs');
+
+  if (!FLASH_HEX) {
+    console.error(`${C.red}ERROR${C.reset}: --hex <path> is required for flash command`);
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(FLASH_HEX)) {
+    console.error(`${C.red}ERROR${C.reset}: Hex file not found: ${FLASH_HEX}`);
+    process.exit(1);
+  }
+
+  section('Flash firmware to board');
+  info(`Hex file: ${FLASH_HEX}`);
+  info(`Port: ${PORT}`);
+  if (ERASE_CHIP) {
+    info('Chip erase: enabled');
+  }
+
+  // Find avrdude
+  const avrdudeSearchPaths = [
+    path.join(process.cwd(), 'hardware', '.pio-home', 'packages', 'tool-avrdude', 'avrdude.exe'),
+    path.join(process.env.USERPROFILE || '', '.platformio', 'packages', 'tool-avrdude', 'avrdude.exe'),
+    'avrdude', // system PATH
+  ];
+
+  let avrdudePath = null;
+  let avrdudeConf = null;
+
+  for (const searchPath of avrdudeSearchPaths) {
+    if (fs.existsSync(searchPath)) {
+      avrdudePath = searchPath;
+      const confPath = path.join(path.dirname(searchPath), 'avrdude.conf');
+      if (fs.existsSync(confPath)) {
+        avrdudeConf = confPath;
+      }
+      break;
+    }
+  }
+
+  if (!avrdudePath) {
+    console.error(`${C.red}ERROR${C.reset}: avrdude not found. Install PlatformIO or add avrdude to PATH`);
+    process.exit(1);
+  }
+
+  info(`Using avrdude: ${avrdudePath}`);
+
+  const avrdudeArgs = [
+    '-v',
+    '-p', 'atmega328p',
+    '-c', 'arduino',
+    '-P', PORT,
+    '-b', '115200',
+  ];
+
+  if (avrdudeConf) {
+    avrdudeArgs.unshift('-C', avrdudeConf);
+  }
+
+  if (ERASE_CHIP) {
+    avrdudeArgs.push('-e');
+  } else {
+    avrdudeArgs.push('-D');
+  }
+
+  avrdudeArgs.push('-U', `flash:w:${FLASH_HEX}:i`);
+
+  try {
+    info('Flashing...');
+    const { stdout, stderr } = await execFileAsync(avrdudePath, avrdudeArgs);
+    
+    if (stderr.includes('bytes of flash verified')) {
+      pass('Firmware flashed successfully');
+    } else if (stdout.includes('bytes of flash verified')) {
+      pass('Firmware flashed successfully');
+    } else {
+      warn('Flash completed but verification unclear');
+    }
+
+    if (stderr) {
+      console.log(`\n${C.dim}${stderr}${C.reset}`);
+    }
+  } catch (err) {
+    fail('Flash failed', err.message);
+    if (err.stderr) {
+      console.log(`\n${C.red}${err.stderr}${C.reset}`);
+    }
+    process.exit(1);
+  }
 }
 
 // ── TEST command ──────────────────────────────────────────────────────────────
@@ -652,8 +820,85 @@ async function runTest(session) {
     }
   }
 
-  if (!TEST_FSd && TEST_PROFILE < 0) {
-    info('No test specified. Use --test-fsd and/or --test-profile <n>');
+  // ── FSD listen test (activate + listen, no restore) ────────────────────
+  if (TEST_FSD_LISTEN) {
+    const listenDuration = Number(args.duration) || 3000;
+    section(`FSD activate + listen (${listenDuration}ms, no restore)`);
+
+    session.send('fsd:on');
+    const onAck = await session.waitForAck('fsd:on', TIMEOUT_MS);
+    onAck ? pass('fsd:on acknowledged') : fail('fsd:on', 'no ack');
+
+    await delay(600);
+    session.send('status');
+    const afterOn = await session.waitForType('status', TIMEOUT_MS);
+    if (afterOn) {
+      Number(afterOn.msg.fsd) === 1
+        ? pass('FSD enabled in status', `fsd=${afterOn.msg.fsd}`)
+        : fail('FSD activation', `fsd=${afterOn.msg.fsd} (expected 1)`);
+    } else {
+      fail('FSD activation', 'no status after fsd:on');
+    }
+
+    info(`Listening for ${listenDuration}ms with bit-diff tracking...`);
+    session.send('stream:on');
+    await delay(200);
+
+    const listenStart = Date.now();
+    const listenEnd = listenStart + listenDuration;
+    let frameCount = 0;
+    const frameHistory = new Map();
+
+    while (Date.now() < listenEnd) {
+      const remaining = Math.max(100, listenEnd - Date.now());
+      const entry = await session.waitFor(() => true, remaining);
+      if (!entry) break;
+
+      if (entry.msg?.t === 'frame') {
+        frameCount++;
+        const id = Number(entry.msg.id);
+        const idHex = `0x${id.toString(16).toUpperCase().padStart(3, '0')}`;
+        const dir = entry.msg.dir === 'tx' ? 'TX' : 'RX';
+        const currentBytes = parseHexData(entry.msg.d);
+        
+        if (dir === 'TX') {
+          const history = frameHistory.get(id) || { lastRxBytes: [], lastTxBytes: [] };
+          const refBytes = history.lastRxBytes.length > 0 ? history.lastRxBytes : history.lastTxBytes;
+          const changes = compareBits(refBytes, currentBytes);
+          
+          if (changes.length > 0) {
+            observation('TX-DIFF', `id=${idHex} dlc=${entry.msg.dlc} d=${entry.msg.d || ''}`);
+            changes.forEach(({ byteIdx, prevByte, currByte, changedBits }) => {
+              const prevHex = prevByte.toString(16).toUpperCase().padStart(2, '0');
+              const currHex = currByte.toString(16).toUpperCase().padStart(2, '0');
+              console.log(`    Byte ${byteIdx}: 0x${prevHex} → 0x${currHex}`);
+              changedBits.forEach(({ bit, from, to }) => {
+                console.log(`      bit ${bit}: ${from} → ${to}`);
+              });
+            });
+          }
+          
+          history.lastTxBytes = currentBytes;
+          frameHistory.set(id, history);
+        } else {
+          const history = frameHistory.get(id) || { lastRxBytes: [], lastTxBytes: [] };
+          history.lastRxBytes = currentBytes;
+          frameHistory.set(id, history);
+        }
+      } else if (entry.msg?.t === 'status') {
+        observation('status', `fsd=${entry.msg.fsd} sp=${entry.msg.sp} ready=${entry.msg.ready}`);
+      }
+    }
+
+    session.send('stream:off');
+    await delay(200);
+
+    pass(`Listened for ${listenDuration}ms`, `${frameCount} frames observed`);
+    info('FSD state NOT restored (as requested)');
+  }
+
+  if (!TEST_FSd && TEST_PROFILE < 0 && !TEST_FSD_LISTEN) {
+    info('No test specified. Use --test-fsd, --test-profile <n>, or --test-fsd-listen');
   }
 }
 
@@ -662,9 +907,15 @@ async function runTest(session) {
 async function main() {
   console.log(`${C.bold}TeslaCANModder Board Debug${C.reset}  ${C.dim}command=${COMMAND} port=${PORT} baud=${BAUD}${C.reset}`);
 
-  if (!['smoke', 'watch', 'test'].includes(COMMAND)) {
-    console.error(`Unknown command "${COMMAND}". Use: smoke | watch | test`);
+  if (!['smoke', 'watch', 'test', 'flash'].includes(COMMAND)) {
+    console.error(`Unknown command "${COMMAND}". Use: smoke | watch | test | flash`);
     process.exit(1);
+  }
+
+  // Flash command doesn't need serial connection
+  if (COMMAND === 'flash') {
+    await runFlash();
+    process.exit(0);
   }
 
   let sp;

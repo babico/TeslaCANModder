@@ -28,3 +28,4 @@ __pycache__/
 *.temp
 
 .claude
+node_modules/

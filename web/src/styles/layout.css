@@ -1,0 +1,321 @@
+/* App Shell */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  min-height: var(--touch-min);
+}
+
+.app-logo {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.app-nav-links {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.app-nav-links button {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  transition: all var(--transition);
+  color: var(--text-muted);
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+}
+
+.app-nav-links button:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.app-nav-links button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.app-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Dashboard Layout */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.connection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.status-dot.online {
+  background: var(--success);
+  box-shadow: 0 0 8px var(--success);
+}
+
+.status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status-text strong {
+  font-size: 14px;
+}
+
+.status-text span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.connection-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* CAN bus health status inline */
+.can-status {
+  font-weight: 600;
+  font-size: 11px;
+}
+.can-status-online { color: var(--success); }
+.can-status-standby { color: var(--warning); }
+.can-status-waiting { color: var(--text-dim); }
+
+/* Dashboard Tabs */
+.dashboard-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 var(--space-lg);
+}
+
+.dashboard-tab {
+  padding: var(--space-md) var(--space-lg);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+}
+
+.dashboard-tab:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.dashboard-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Dashboard Body */
+.dashboard-body {
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboard-controls {
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.dashboard-vehicle {
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-lg);
+}
+
+.dashboard-monitor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dashboard-monitor-frames {
+  overflow: hidden;
+  padding: var(--space-lg);
+  border-right: 1px solid var(--border);
+}
+
+.dashboard-monitor-console {
+  overflow: hidden;
+  padding: var(--space-lg);
+}
+
+/* Page Layout */
+.page {
+  height: 100%;
+  overflow: auto;
+  padding: var(--space-xl);
+}
+
+.page-header {
+  margin-bottom: var(--space-xl);
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.page-header p {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+/* Responsive — Tablet */
+@media (max-width: 768px) {
+  .dashboard-monitor {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .dashboard-monitor-frames {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dashboard-controls {
+    padding: var(--space-md);
+  }
+
+  .dashboard-vehicle {
+    padding: var(--space-md);
+  }
+
+  .vehicle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .connection-bar {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .dashboard-tabs {
+    padding: 0 var(--space-sm);
+  }
+
+  .dashboard-tab {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 13px;
+    min-height: var(--touch-min);
+  }
+
+  .page {
+    padding: var(--space-md);
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .page-header p {
+    font-size: 14px;
+  }
+}
+
+/* Responsive — Mobile */
+@media (max-width: 480px) {
+  .app-nav {
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .app-logo {
+    font-size: 16px;
+  }
+
+  .app-nav-links button {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .connection-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  .connection-actions {
+    justify-content: center;
+  }
+
+  .dashboard-tabs {
+    justify-content: stretch;
+  }
+
+  .dashboard-tab {
+    flex: 1;
+    text-align: center;
+    padding: var(--space-sm);
+    font-size: 13px;
+  }
+
+  .dashboard-controls,
+  .dashboard-vehicle {
+    padding: var(--space-sm);
+  }
+
+  .dashboard-monitor {
+    grid-template-rows: 1fr 200px;
+  }
+
+  .dashboard-monitor-frames,
+  .dashboard-monitor-console {
+    padding: var(--space-sm);
+  }
+
+  .page {
+    padding: var(--space-sm);
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+  }
+}
