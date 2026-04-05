@@ -1,6 +1,21 @@
-[submodule "legacy/tesla-open-can-mod-main"]
-	path = legacy/tesla-open-can-mod-main
+[submodule "legacy/jvanakker-tesla-fsd-can-mod"]
+	path = legacy/jvanakker-tesla-fsd-can-mod
+	url = https://github.com/jvanakker/tesla-fsd-can-mod
+[submodule "legacy/juamiso-tesla-fsd-can-enabler"]
+	path = legacy/juamiso-tesla-fsd-can-enabler
+	url = https://github.com/juamiso/tesla-fsd-can-enabler
+[submodule "legacy/herrfrei-tesla-fsd-canbus-esp32"]
+	path = legacy/herrfrei-tesla-fsd-canbus-esp32
+	url = https://github.com/herrfrei/tesla-fsd-canbus-esp32
+[submodule "legacy/1-v-1-tesla-open-can-mod"]
+	path = legacy/1-v-1-tesla-open-can-mod
+	url = https://github.com/1-v-1/tesla-open-can-mod
+[submodule "legacy/nicholasyangyang-my-tt"]
+	path = legacy/nicholasyangyang-my-tt
+	url = https://github.com/nicholasyangyang/my-tt
+[submodule "legacy/Tesla-OPEN-CAN-MOD-tesla-open-can-mod"]
+	path = legacy/Tesla-OPEN-CAN-MOD-tesla-open-can-mod
 	url = https://gitlab.com/Tesla-OPEN-CAN-MOD/tesla-open-can-mod.git
-[submodule "legacy/tesla-can-explorer-main"]
-	path = legacy/tesla-can-explorer-main
+[submodule "legacy/mikegapinski-tesla-can-explorer"]
+	path = legacy/mikegapinski-tesla-can-explorer
 	url = https://github.com/mikegapinski/tesla-can-explorer.git
