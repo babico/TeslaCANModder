@@ -48,4 +48,4 @@
 #endif
 
 // ── Timing ───────────────────────────────────────────────────────────────────
-#define STATUS_INTERVAL_MS 500
+#define STATUS_INTERVAL_MS 2000

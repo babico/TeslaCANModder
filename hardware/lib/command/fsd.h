@@ -10,6 +10,7 @@
 bool executeFsdCmd(const char* cmd, State& s) {
   if (strncmp(cmd, "fsd:", 4) == 0) {
     if (!parseBoolCmd(cmd + 4, s.fsdEnabled, s.fsdEnabled)) return false;
+    resetHandlerLogFlags();
     saveSettings(s);
     return true;
   }
@@ -19,6 +20,7 @@ bool executeFsdCmd(const char* cmd, State& s) {
 bool executeNagCmd(const char* cmd, State& s) {
   if (strncmp(cmd, "nag:", 4) == 0) {
     if (!parseBoolCmd(cmd + 4, s.nagSuppress, s.nagSuppress)) return false;
+    resetHandlerLogFlags();
     saveSettings(s);
     return true;
   }
@@ -33,6 +35,7 @@ bool executeProfileCmd(const char* cmd, State& s) {
 
   if (strcmp(arg, "auto") == 0) {
     s.profileOverride = false;
+    resetHandlerLogFlags();
     saveSettings(s);
     return true;
   }
@@ -40,6 +43,7 @@ bool executeProfileCmd(const char* cmd, State& s) {
   if (p < 0 || p > 4) return false;
   s.speedProfile = p;
   s.profileOverride = true;
+  resetHandlerLogFlags();
   saveSettings(s);
   return true;
 }
@@ -51,6 +55,7 @@ bool executeOffsetCmd(const char* cmd, State& s) {
 
   if (strcmp(arg, "auto") == 0) {
     s.offsetOverride = false;
+    resetHandlerLogFlags();
     saveSettings(s);
     return true;
   }
@@ -58,6 +63,7 @@ bool executeOffsetCmd(const char* cmd, State& s) {
   if (o < 0 || o > 100) return false;
   s.speedOffset = o;
   s.offsetOverride = true;
+  resetHandlerLogFlags();
   saveSettings(s);
   return true;
 }
@@ -66,6 +72,7 @@ bool executeIsaChimeCmd(const char* cmd, State& s) {
   if (strncmp(cmd, "isa-chime:", 10) == 0) {
     if (!s.features().isaChime) return false;
     if (!parseBoolCmd(cmd + 10, s.isaChimeSuppress, s.isaChimeSuppress)) return false;
+    resetHandlerLogFlags();
     saveSettings(s);
     return true;
   }

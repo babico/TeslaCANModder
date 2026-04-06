@@ -11,6 +11,8 @@ static bool hw3LoggedFSD = false;
 static bool hw3LoggedNag = false;
 static bool hw3LoggedOffset = false;
 
+void resetHW3LogFlags() { hw3LoggedFSD = false; hw3LoggedNag = false; hw3LoggedOffset = false; }
+
 // ── HW3 Handler ──────────────────────────────────────────────────────────────
 void handleHW3(Frame& f, State& s) {
   // Follow distance → profile mapping (auto-track from stalk unless pinned)
@@ -38,20 +40,20 @@ void handleHW3(Frame& f, State& s) {
       driverSend(f);
       if (!hw3LoggedFSD) { sendLog(F("HW3: FSD mod active on CAN")); hw3LoggedFSD = true; }
       return;
-    } else if (mux == 0) { hw3LoggedFSD = false; }
+    }
     
     if (mux == 1 && s.nagSuppress) {
       setBit(f, 19, false);
       driverSend(f);
       if (!hw3LoggedNag) { sendLog(F("HW3: Nag suppressed on CAN")); hw3LoggedNag = true; }
       return;
-    } else if (mux == 1) { hw3LoggedNag = false; }
+    }
     
     if (mux == 2 && s.fsdEnabled && fsdUI) {
       writeHW3SpeedOffset(f, s.speedOffset);
       driverSend(f);
       if (!hw3LoggedOffset) { sendLog(F("HW3: Speed offset applied")); hw3LoggedOffset = true; }
       return;
-    } else if (mux == 2) { hw3LoggedOffset = false; }
+    }
   }
 }

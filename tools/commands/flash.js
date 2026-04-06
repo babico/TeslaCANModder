@@ -1,5 +1,8 @@
 /** flash command — Flash firmware to board via avrdude. */
 
+import { setTimeout as delay } from 'node:timers/promises';
+import { openSerial, BoardSession } from '../lib/session.js';
+
 export async function runFlash(opts, out, C) {
   const { execFile } = await import('node:child_process');
   const { promisify } = await import('node:util');
@@ -20,7 +23,7 @@ export async function runFlash(opts, out, C) {
   out.section('Flash firmware to board');
   out.info(`Hex file: ${opts.flashHex}`);
   out.info(`Port: ${opts.port}`);
-  if (opts.eraseChip) out.info('Chip erase: enabled');
+  if (opts.eraseChip) out.info('Chip erase: enabled — EEPROM will be wiped (factory reset)');
 
   const avrdudeSearchPaths = [
     path.join(process.cwd(), 'hardware', '.pio-home', 'packages', 'tool-avrdude', 'avrdude.exe'),
@@ -60,5 +63,36 @@ export async function runFlash(opts, out, C) {
     out.fail('Flash failed', err.message);
     if (err.stderr) console.log(`\n${C.red}${err.stderr}${C.reset}`);
     process.exit(1);
+  }
+
+  // Verify board boots by reading serial output
+  out.info('Verifying board boot...');
+  let sp;
+  try {
+    await delay(1500);
+    sp = await openSerial(opts.port, opts.baud);
+    const session = new BoardSession(sp, opts.timeoutMs);
+    await delay(2500);
+
+    const logs = session.drainType('log');
+    const status = session.drainType('status');
+
+    if (logs.length > 0 || status.length > 0) {
+      out.pass('Board is responding');
+      for (const e of logs) {
+        out.info(`Board: ${e.msg?.msg || JSON.stringify(e.msg)}`);
+      }
+      if (status.length > 0) {
+        const s = status[status.length - 1].msg;
+        out.info(`Variant: ${s?.variant || '?'}  FSD: ${s?.fsd ?? '?'}  Nag: ${s?.nag ?? '?'}  Profile: ${s?.profile ?? '?'}`);
+      }
+    } else {
+      out.warn('No serial output received — check board manually');
+    }
+
+    session.close();
+  } catch (err) {
+    out.warn(`Could not verify: ${err.message}`);
+    if (sp && sp.isOpen) sp.close();
   }
 }

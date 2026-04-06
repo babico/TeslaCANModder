@@ -4,7 +4,9 @@ export function parseArgs(argv) {
   const result = { _: [] };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg.startsWith('--')) {
+    if (arg === '-c') {
+      result.erase = true;
+    } else if (arg.startsWith('--')) {
       const key = arg.slice(2);
       const next = argv[i + 1];
       if (next !== undefined && !next.startsWith('--')) {

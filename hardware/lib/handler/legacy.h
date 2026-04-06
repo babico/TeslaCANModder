@@ -10,6 +10,8 @@ void sendLog(const __FlashStringHelper* msg);
 static bool legacyLoggedFSD = false;
 static bool legacyLoggedNag = false;
 
+void resetLegacyLogFlags() { legacyLoggedFSD = false; legacyLoggedNag = false; }
+
 // ── Legacy Handler ───────────────────────────────────────────────────────────
 void handleLegacy(Frame& f, State& s) {
   // Legacy stalk position → profile mapping (auto-track unless pinned)
@@ -36,13 +38,13 @@ void handleLegacy(Frame& f, State& s) {
       driverSend(f);
       if (!legacyLoggedFSD) { sendLog(F("Legacy: FSD mod active on CAN")); legacyLoggedFSD = true; }
       return;
-    } else if (mux == 0) { legacyLoggedFSD = false; }
+    }
     
     if (mux == 1 && s.nagSuppress) {
       setBit(f, 19, false);
       driverSend(f);
       if (!legacyLoggedNag) { sendLog(F("Legacy: Nag suppressed on CAN")); legacyLoggedNag = true; }
       return;
-    } else if (mux == 1) { legacyLoggedNag = false; }
+    }
   }
 }

@@ -8,7 +8,7 @@
  *   smoke      Protocol health-check (default)
  *   watch      Live frame / state monitor
  *   test       FSD / profile round-trip test
- *   flash      Flash firmware to board
+ *   flash      Flash firmware to board (-c to chip erase + clear EEPROM)
  *   scan       Discover CAN IDs on the bus
  *   dump       Record CAN frames to file
  *   replay     Replay recorded CAN frames

@@ -101,9 +101,8 @@ void loop() {
       state.canOnline = true;
       state.lastFrameMs = now;
       sendLog(F("CAN bus active - resuming operation"));
-      // Re-init to ensure clean state
-      driverReinit();
-      applyFilters(state);
+      // Don't reinit — the successful read proves driver is healthy.
+      // Reinit would cause a ~20ms blind spot that risks immediate re-standby.
       // Process the frame that woke us
       sendFrame(frame, "rx", bus, now, state);
       handleMessage(frame, bus, state);

@@ -11,6 +11,8 @@ static bool hw4LoggedFSD = false;
 static bool hw4LoggedNag = false;
 static bool hw4LoggedISA = false;
 
+void resetHW4LogFlags() { hw4LoggedFSD = false; hw4LoggedNag = false; hw4LoggedISA = false; }
+
 // ── HW4 Handler ──────────────────────────────────────────────────────────────
 void handleHW4(Frame& f, State& s) {
   // ISA speed chime suppression
@@ -23,7 +25,7 @@ void handleHW4(Frame& f, State& s) {
       return;
     }
     return;
-  } else { hw4LoggedISA = false; }
+  }
   
   // Follow distance → profile mapping (auto-track from stalk unless pinned)
   if (f.id == CAN_ID_FOLLOW_DIST) {
@@ -45,7 +47,7 @@ void handleHW4(Frame& f, State& s) {
       driverSend(f);
       if (!hw4LoggedFSD) { sendLog(F("HW4: FSD mod active on CAN")); hw4LoggedFSD = true; }
       return;
-    } else if (mux == 0) { hw4LoggedFSD = false; }
+    }
     
     if (mux == 1 && s.nagSuppress) {
       setBit(f, 19, false);
@@ -53,7 +55,7 @@ void handleHW4(Frame& f, State& s) {
       driverSend(f);
       if (!hw4LoggedNag) { sendLog(F("HW4: Nag suppressed on CAN")); hw4LoggedNag = true; }
       return;
-    } else if (mux == 1) { hw4LoggedNag = false; }
+    }
     
     if (mux == 2 && s.fsdEnabled) {
       writeHW4SpeedProfile(f, s.speedProfile);

@@ -6,6 +6,13 @@
 #include "handler/legacy.h"
 #include "core/driver.h"
 
+// Reset all handler log-once flags (call when user changes a setting)
+void resetHandlerLogFlags() {
+  resetHW4LogFlags();
+  resetHW3LogFlags();
+  resetLegacyLogFlags();
+}
+
 // ── Filter Setup ─────────────────────────────────────────────────────────────
 void applyFilters(State& s) {
 #if BOARD_ENABLE_MCP2515_2
