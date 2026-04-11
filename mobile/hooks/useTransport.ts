@@ -6,7 +6,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
-import type { Transport, TransportEvents } from '../lib/transport/types';
+import type { Transport, TransportEvents } from '@teslacanmodder/protocol';
 
 export function useTransport() {
   const [connected, setConnected] = useState(false);

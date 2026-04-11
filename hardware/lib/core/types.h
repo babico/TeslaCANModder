@@ -70,6 +70,7 @@ struct State {
   int speedOffset;
   bool offsetOverride;    // true = user-pinned, false = track CAN (HW3 UI)
   bool isaChimeSuppress;
+  bool summonInject;      // true = summon injection allowed
   bool streamEnabled;
   unsigned long streamCount;
   bool rawCanListen;
@@ -95,22 +96,15 @@ struct State {
   bool hasCharge;
   uint8_t lastDrive[8];
   bool hasDrive;
-  
-#if BOARD_ENABLE_MCP2515_2
-  uint8_t ctrlBus;
-#endif
 
   State() : variant(HW4), fsdEnabled(false), nagSuppress(false),
             speedProfile(1), profileOverride(false),
-            speedOffset(0), offsetOverride(false), isaChimeSuppress(false),
+            speedOffset(0), offsetOverride(false), isaChimeSuppress(false), summonInject(false),
             streamEnabled(false), streamCount(0), rawCanListen(false),
             lastFrameMs(0), canOnline(false), standby(false), lastReinitMs(0),
             summonRemaining(0), summonLastMs(0), hasCtrl(false),
             summonDirection(SUMMON_FORWARD), summonMode(SUMMON_STOP),
             hasClimate(false), hasCharge(false), hasDrive(false)
-#if BOARD_ENABLE_MCP2515_2
-            , ctrlBus(0)
-#endif
   {
     for (uint8_t i = 0; i < 8; i++) lastCtrl[i] = 0;
     for (uint8_t i = 0; i < 5; i++) lastClimate[i] = 0;

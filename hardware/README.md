@@ -1,13 +1,20 @@
 # TeslaCANModder Hardware Firmware
 
-Simplified Arduino Uno firmware for Tesla CAN bus modification. Supports runtime variant switching (HW4/HW3/Legacy) with full web UI control.
+Firmware for Tesla CAN bus modification supporting Arduino Uno and ESP32-S DevKit. Supports runtime variant switching (HW4/HW3/Legacy) with full web UI control.
 
 ## Hardware Requirements
 
+### Arduino Uno
 - Arduino Uno R3 (CH340 or ATmega16U2)
-- MCP2515 CAN module with TJA1050 transceiver (8 MHz crystal)
+- MCP2515 CAN module with TJA1050 transceiver (8 MHz crystal) × 1–3
 - HC-05 Bluetooth module (optional)
 - 9V-36V to 5V/3A USB converter
+- Tesla X179 connector
+
+### ESP32-S DevKit
+- ESP32-S DevKit (30-pin or 38-pin) — Built-in WiFi + BLE
+- MCP2515 CAN module with TJA1050 transceiver (8 MHz crystal) × 1–3
+- 9V-36V to 5V/3A Buck converter
 - Tesla X179 connector
 
 ## Wiring
@@ -35,11 +42,19 @@ Simplified Arduino Uno firmware for Tesla CAN bus modification. Supports runtime
 ## Build
 
 ```powershell
-# USB + Bluetooth
-.\pio.ps1 run -e uno
+# Arduino Uno
+.\.pio.ps1 run -e uno           # Serial only
+.\.pio.ps1 run -e uno_bt        # Serial + HC-05 Bluetooth
 
-# USB only
-.\pio.ps1 run -e uno_usb
+# ESP32
+.\.pio.ps1 run -e esp32         # Serial only
+.\.pio.ps1 run -e esp32_wifi    # WiFi REST API
+.\.pio.ps1 run -e esp32_ble     # BLE
+.\.pio.ps1 run -e esp32_wifi_ble # WiFi + BLE
+
+# Enable extra CAN buses (FSD is always on)
+$env:PLATFORMIO_BUILD_FLAGS = "-DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
+.\.pio.ps1 run -e esp32_wifi
 
 # Upload
 .\pio.ps1 run -e uno -t upload

@@ -1,0 +1,290 @@
+// ── HW4 Handler Tests ────────────────────────────────────────────────────────
+// Tests handleHW4() CAN frame processing: FSD activation, ISA chime, nag, profile.
+// Stubs driverSend/sendLog to capture output without hardware.
+
+#include <unity.h>
+#include <cstring>
+
+class __FlashStringHelper;
+#define F(s) (reinterpret_cast<const __FlashStringHelper*>(s))
+
+#define BUS_FSD_ACTIVE 1
+#define BUS_VEHICLE_ACTIVE 1
+#define BUS_BODY_ACTIVE 1
+#define BOARD_CAN_CLOCK_MHZ 8
+#define BOARD_ENABLE_BLE 0
+#define BOARD_ENABLE_WIFI 0
+
+#include "core/types.h"
+#include "protocol/can.h"
+#include "protocol/profile.h"
+#include "protocol/isa.h"
+#include "protocol/follow.h"
+
+// ── Stubs ────────────────────────────────────────────────────────────────────
+struct SendCall { Frame f; uint8_t bus; };
+static SendCall stub_sends[16];
+static uint8_t stub_send_count = 0;
+
+void driverSend(const Frame& f, uint8_t bus) {
+  if (stub_send_count < 16) {
+    stub_sends[stub_send_count].f = f;
+    stub_sends[stub_send_count].bus = bus;
+    stub_send_count++;
+  }
+}
+
+void sendLog(const char*) {}
+void sendLog(const __FlashStringHelper*) {}
+
+// Include handler (uses our stubs)
+#include "handler/hw4.h"
+
+static State makeState() {
+  State s = {};
+  s.variant = HW4;
+  s.speedProfile = 1;
+  s.fsdEnabled = true;
+  s.nagSuppress = true;
+  s.isaChimeSuppress = false;
+  return s;
+}
+
+static Frame makeFrame(uint32_t id, uint8_t dlc = 8) {
+  Frame f = {};
+  f.id = id;
+  f.dlc = dlc;
+  return f;
+}
+
+void setUp() {
+  stub_send_count = 0;
+  resetHW4LogFlags();
+}
+void tearDown() {}
+
+// ── ISA Speed Chime ──────────────────────────────────────────────────────────
+
+void test_hw4_isa_suppress_disabled_ignores_921() {
+  State s = makeState();
+  s.isaChimeSuppress = false;
+  Frame f = makeFrame(CAN_ID_ISA_SPEED);
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw4_isa_suppress_enabled_sets_bit5_of_data1() {
+  State s = makeState();
+  s.isaChimeSuppress = true;
+  Frame f = makeFrame(CAN_ID_ISA_SPEED);
+  f.data[1] = 0x00;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(1, stub_send_count);
+  TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[1] & 0x20);
+}
+
+void test_hw4_isa_suppress_short_frame_ignored() {
+  State s = makeState();
+  s.isaChimeSuppress = true;
+  Frame f = makeFrame(CAN_ID_ISA_SPEED, 7);
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw4_isa_suppress_preserves_existing_bits() {
+  State s = makeState();
+  s.isaChimeSuppress = true;
+  Frame f = makeFrame(CAN_ID_ISA_SPEED);
+  f.data[1] = 0xC3;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL_HEX8(0xE3, stub_sends[0].f.data[1]);
+}
+
+void test_hw4_isa_suppress_checksum() {
+  State s = makeState();
+  s.isaChimeSuppress = true;
+  Frame f = makeFrame(CAN_ID_ISA_SPEED);
+  f.data[0] = 0x10; f.data[1] = 0x05;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL_HEX8(0xD1, stub_sends[0].f.data[7]);
+}
+
+// ── Follow Distance → Profile ────────────────────────────────────────────────
+
+void test_hw4_follow_distance_1_sets_profile_3() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b00100000;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL_INT(3, s.speedProfile);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw4_follow_distance_2_sets_profile_2() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b01000000;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
+}
+
+void test_hw4_follow_distance_3_sets_profile_1() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b01100000;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
+}
+
+void test_hw4_follow_distance_4_sets_profile_0() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b10000000;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL_INT(0, s.speedProfile);
+}
+
+void test_hw4_follow_distance_5_sets_profile_4() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b10100000;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL_INT(4, s.speedProfile);
+}
+
+void test_hw4_follow_dist_pinned_unchanged() {
+  State s = makeState();
+  s.profileOverride = true;
+  s.speedProfile = 3;
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b01000000;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL_INT(3, s.speedProfile);
+}
+
+// ── FSD Mux 0 ────────────────────────────────────────────────────────────────
+
+void test_hw4_fsd_mux0_sets_bits_46_and_60() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x00;
+  f.data[4] = 0x40;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(1, stub_send_count);
+  TEST_ASSERT_EQUAL_HEX8(0x40, stub_sends[0].f.data[5] & 0x40);
+  TEST_ASSERT_EQUAL_HEX8(0x10, stub_sends[0].f.data[7] & 0x10);
+}
+
+void test_hw4_fsd_mux0_no_send_when_disabled() {
+  State s = makeState();
+  s.fsdEnabled = false;
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x00;
+  f.data[4] = 0x40;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw4_fsd_mux0_no_send_when_ui_not_selected() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x00;
+  f.data[4] = 0x00;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+// ── Nag Mux 1 ────────────────────────────────────────────────────────────────
+
+void test_hw4_nag_mux1_clears_bit19_sets_bit47() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x01;
+  setBit(f, 19, true);
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(1, stub_send_count);
+  TEST_ASSERT_FALSE((stub_sends[0].f.data[2] >> 3) & 0x01);
+  TEST_ASSERT_EQUAL_HEX8(0x80, stub_sends[0].f.data[5] & 0x80);
+}
+
+void test_hw4_nag_mux1_no_send_when_disabled() {
+  State s = makeState();
+  s.nagSuppress = false;
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x01;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+// ── Speed Profile Mux 2 ─────────────────────────────────────────────────────
+
+void test_hw4_mux2_injects_speed_profile() {
+  State s = makeState();
+  s.speedProfile = 3;
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x02;
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(1, stub_send_count);
+  uint8_t injected = (stub_sends[0].f.data[7] >> 4) & 0x07;
+  TEST_ASSERT_EQUAL_UINT8(3, injected);
+}
+
+void test_hw4_mux2_clears_old_profile_bits() {
+  State s = makeState();
+  s.speedProfile = 0;
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x02;
+  f.data[7] = 0x70;
+  handleHW4(f, s);
+  uint8_t injected = (stub_sends[0].f.data[7] >> 4) & 0x07;
+  TEST_ASSERT_EQUAL_UINT8(0, injected);
+}
+
+// ── Misc ─────────────────────────────────────────────────────────────────────
+
+void test_hw4_ignores_unrelated_id() {
+  State s = makeState();
+  Frame f = makeFrame(999);
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw4_sends_on_bus_0() {
+  State s = makeState();
+  s.isaChimeSuppress = true;
+  Frame f = makeFrame(CAN_ID_ISA_SPEED);
+  handleHW4(f, s);
+  TEST_ASSERT_EQUAL(BUS_FSD, stub_sends[0].bus);
+}
+
+int main() {
+  UNITY_BEGIN();
+
+  RUN_TEST(test_hw4_isa_suppress_disabled_ignores_921);
+  RUN_TEST(test_hw4_isa_suppress_enabled_sets_bit5_of_data1);
+  RUN_TEST(test_hw4_isa_suppress_short_frame_ignored);
+  RUN_TEST(test_hw4_isa_suppress_preserves_existing_bits);
+  RUN_TEST(test_hw4_isa_suppress_checksum);
+
+  RUN_TEST(test_hw4_follow_distance_1_sets_profile_3);
+  RUN_TEST(test_hw4_follow_distance_2_sets_profile_2);
+  RUN_TEST(test_hw4_follow_distance_3_sets_profile_1);
+  RUN_TEST(test_hw4_follow_distance_4_sets_profile_0);
+  RUN_TEST(test_hw4_follow_distance_5_sets_profile_4);
+  RUN_TEST(test_hw4_follow_dist_pinned_unchanged);
+
+  RUN_TEST(test_hw4_fsd_mux0_sets_bits_46_and_60);
+  RUN_TEST(test_hw4_fsd_mux0_no_send_when_disabled);
+  RUN_TEST(test_hw4_fsd_mux0_no_send_when_ui_not_selected);
+
+  RUN_TEST(test_hw4_nag_mux1_clears_bit19_sets_bit47);
+  RUN_TEST(test_hw4_nag_mux1_no_send_when_disabled);
+
+  RUN_TEST(test_hw4_mux2_injects_speed_profile);
+  RUN_TEST(test_hw4_mux2_clears_old_profile_bits);
+
+  RUN_TEST(test_hw4_ignores_unrelated_id);
+  RUN_TEST(test_hw4_sends_on_bus_0);
+
+  return UNITY_END();
+}

@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-#include "core/driver.h"
+void driverSend(const Frame& f, uint8_t bus = 0);
 
 // ── Sentry Mode Control (0x284) ──────────────────────────────────────────────
 
@@ -16,7 +16,7 @@ static void controlSentry(bool enable, State& s) {
   f.data[4] = 0x00;
   
   for (uint8_t i = 0; i < 30; i++) {
-    driverSend(f);
+    driverSend(f, BUS_BODY);
     delay(20);
   }
 }

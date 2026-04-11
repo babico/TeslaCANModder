@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
-import { colors, spacing, radius } from '../styles/theme';
+import { View, Text, TextInput, FlatList, StyleSheet } from 'react-native';
+import { colors, spacing, radius, shadows } from '../styles/theme';
+import { Button, Badge } from './ui';
 
 interface LogMsg { id: string; ts: string; text: string; type: string; }
 
@@ -10,6 +11,13 @@ interface Props {
   onCommand: (cmd: string) => void;
   onClear: () => void;
 }
+
+const TYPE_COLORS: Record<string, string> = {
+  error: colors.error,
+  log: colors.textMuted,
+  ack: colors.success,
+  warn: colors.warning,
+};
 
 export default function Console({ messages, connected, onCommand, onClear }: Props) {
   const [input, setInput] = useState('');
@@ -25,18 +33,14 @@ export default function Console({ messages, connected, onCommand, onClear }: Pro
     setInput('');
   };
 
-  const typeColor = (t: string) => {
-    if (t === 'error') return colors.error;
-    if (t === 'log') return colors.textMuted;
-    if (t === 'ack') return colors.success;
-    return colors.text;
-  };
-
   return (
     <View style={styles.panel}>
       <View style={styles.header}>
-        <Text style={styles.title}>Console</Text>
-        <TouchableOpacity onPress={onClear}><Text style={styles.clearBtn}>Clear</Text></TouchableOpacity>
+        <View style={styles.headerLeft}>
+          <Text style={styles.title}>Console</Text>
+          <Badge label={connected ? 'Online' : 'Offline'} variant={connected ? 'success' : 'default'} />
+        </View>
+        <Button label="Clear" variant="ghost" compact onPress={onClear} />
       </View>
 
       <FlatList
@@ -47,7 +51,7 @@ export default function Console({ messages, connected, onCommand, onClear }: Pro
         renderItem={({ item }) => (
           <View style={styles.line}>
             <Text style={styles.ts}>{item.ts}</Text>
-            <Text style={[styles.text, { color: typeColor(item.type) }]}>{item.text}</Text>
+            <Text style={[styles.text, { color: TYPE_COLORS[item.type] ?? colors.text }]}>{item.text}</Text>
           </View>
         )}
         ListEmptyComponent={<Text style={styles.empty}>Board messages will appear here</Text>}
@@ -56,7 +60,7 @@ export default function Console({ messages, connected, onCommand, onClear }: Pro
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
-          placeholder="Type command..."
+          placeholder={connected ? 'Type command...' : 'Connect to send commands'}
           placeholderTextColor={colors.textDim}
           value={input}
           onChangeText={setInput}
@@ -64,26 +68,44 @@ export default function Console({ messages, connected, onCommand, onClear }: Pro
           editable={connected}
           returnKeyType="send"
         />
-        <TouchableOpacity style={styles.sendBtn} onPress={handleSend} disabled={!connected}>
-          <Text style={styles.sendText}>Send</Text>
-        </TouchableOpacity>
+        <Button label="Send" variant="primary" compact onPress={handleSend} disabled={!connected || !input.trim()} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, overflow: 'hidden' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
+  panel: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    overflow: 'hidden',
+    ...shadows.sm,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   title: { color: colors.text, fontWeight: '600', fontSize: 14 },
-  clearBtn: { color: colors.textMuted, fontSize: 12 },
   body: { flex: 1, padding: spacing.sm },
   line: { flexDirection: 'row', gap: spacing.sm, paddingVertical: 2 },
   ts: { color: colors.textDim, fontSize: 11, fontFamily: 'monospace', width: 65 },
   text: { fontSize: 12, fontFamily: 'monospace', flex: 1 },
   empty: { color: colors.textDim, fontSize: 13, textAlign: 'center', marginTop: spacing.lg },
-  inputRow: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: colors.border },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    paddingRight: spacing.xs,
+  },
   input: { flex: 1, padding: spacing.sm, color: colors.text, fontSize: 13, fontFamily: 'monospace' },
-  sendBtn: { padding: spacing.sm, justifyContent: 'center' },
-  sendText: { color: colors.accent, fontWeight: '600', fontSize: 13 },
 });

@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from '../styles/theme';
+import { colors, shadows } from '../styles/theme';
 
 const isWeb = Platform.OS === 'web';
 
@@ -15,12 +15,13 @@ export default function RootLayout() {
             headerShown: false,
           tabBarStyle: {
             backgroundColor: colors.surface,
-            borderTopColor: colors.border,
+            borderTopColor: colors.borderLight,
             borderTopWidth: 1,
+            ...shadows.sm,
           },
           tabBarActiveTintColor: colors.accent,
           tabBarInactiveTintColor: colors.textMuted,
-          tabBarLabelStyle: { fontSize: 12 },
+          tabBarLabelStyle: { fontSize: 12, fontWeight: '500' },
         }}
       >
         <Tabs.Screen

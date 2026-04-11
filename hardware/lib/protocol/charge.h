@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-#include "core/driver.h"
+void driverSend(const Frame& f, uint8_t bus = 0);
 
 // ── Charge Control (0x333) ───────────────────────────────────────────────────
 
@@ -31,11 +31,7 @@ static void controlCharge(ChargeAction action, const uint8_t* lastCharge, State&
   
   // Send 20 times over 400ms
   for (uint8_t i = 0; i < 20; i++) {
-#if BOARD_ENABLE_MCP2515_2
-    driverSend(f, s.ctrlBus);
-#else
-    driverSend(f);
-#endif
+    driverSend(f, BUS_VEHICLE);
     delay(20);
   }
 }

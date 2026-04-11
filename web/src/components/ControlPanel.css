@@ -1,0 +1,87 @@
+/* ── Control Panel ─────────────────────────────────────────────────────────── */
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.ctrl-top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.ctrl-panel-half {
+  margin-bottom: 0;
+}
+
+.ctrl-features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.ctrl-feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+}
+
+.ctrl-feature-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.ctrl-feature-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ctrl-feature-btns {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.ctrl-feature-btns .btn {
+  flex: 1;
+}
+
+/* Settings Grid (Saved Settings panel) */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  font-size: 13px;
+}
+
+.settings-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .ctrl-top-row {
+    grid-template-columns: 1fr;
+  }
+  .ctrl-features-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .ctrl-top-row,
+  .ctrl-features-grid {
+    grid-template-columns: 1fr;
+  }
+}

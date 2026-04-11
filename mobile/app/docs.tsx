@@ -1,4 +1,4 @@
-/** Docs tab — bilingual documentation viewer (EN/TR). */
+/** Docs tab — documentation viewer loading markdown from root docs/ folder. */
 
 import { useState } from 'react';
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from 'react-native';
@@ -6,37 +6,22 @@ import DocViewer from '../components/DocViewer';
 import { colors, spacing, radius } from '../styles/theme';
 
 const DOC_SECTIONS = [
-  { id: 'setup', labelEn: 'Setup Guide', labelTr: 'Kurulum Rehberi' },
-  { id: 'wiring', labelEn: 'Wiring', labelTr: 'Kablolama' },
-  { id: 'commands', labelEn: 'Commands', labelTr: 'Komutlar' },
-  { id: 'can-protocol', labelEn: 'CAN Protocol', labelTr: 'CAN Protokolü' },
-  { id: 'troubleshooting', labelEn: 'Troubleshooting', labelTr: 'Sorun Giderme' },
-  { id: 'hardware-variants', labelEn: 'Hardware Variants', labelTr: 'Donanım Varyantları' },
-  { id: 'firmware-flashing', labelEn: 'Firmware Flashing', labelTr: 'Firmware Yükleme' },
+  { id: 'getting-started', label: 'Getting Started' },
+  { id: 'hardware-setup', label: 'Hardware Setup' },
+  { id: 'commands', label: 'Commands' },
+  { id: 'can-protocol', label: 'CAN Protocol' },
+  { id: 'firmware-variants', label: 'Firmware Variants' },
+  { id: 'ble', label: 'Bluetooth (BLE)' },
+  { id: 'wifi-api', label: 'WiFi API' },
+  { id: 'vehicle-features', label: 'Vehicle Features' },
+  { id: 'troubleshooting', label: 'Troubleshooting' },
 ];
 
 export default function DocsScreen() {
-  const [lang, setLang] = useState<'en' | 'tr'>('en');
-  const [activeDoc, setActiveDoc] = useState('setup');
+  const [activeDoc, setActiveDoc] = useState('getting-started');
 
   return (
     <View style={styles.container}>
-      {/* Language toggle */}
-      <View style={styles.langBar}>
-        <TouchableOpacity
-          style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
-          onPress={() => setLang('en')}
-        >
-          <Text style={[styles.langText, lang === 'en' && styles.langTextActive]}>English</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.langBtn, lang === 'tr' && styles.langBtnActive]}
-          onPress={() => setLang('tr')}
-        >
-          <Text style={[styles.langText, lang === 'tr' && styles.langTextActive]}>Türkçe</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Section tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar}>
         {DOC_SECTIONS.map((sec) => (
@@ -46,7 +31,7 @@ export default function DocsScreen() {
             onPress={() => setActiveDoc(sec.id)}
           >
             <Text style={[styles.tabText, activeDoc === sec.id && styles.tabTextActive]}>
-              {lang === 'en' ? sec.labelEn : sec.labelTr}
+              {sec.label}
             </Text>
           </TouchableOpacity>
         ))}
@@ -54,7 +39,7 @@ export default function DocsScreen() {
 
       {/* Content */}
       <ScrollView style={styles.content}>
-        <DocViewer section={activeDoc} lang={lang} />
+        <DocViewer section={activeDoc} />
       </ScrollView>
     </View>
   );
@@ -62,11 +47,6 @@ export default function DocsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  langBar: { flexDirection: 'row', padding: spacing.sm, gap: spacing.xs, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
-  langBtn: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.md },
-  langBtnActive: { backgroundColor: colors.accentSoft },
-  langText: { color: colors.textMuted, fontSize: 14 },
-  langTextActive: { color: colors.accent },
   tabBar: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, maxHeight: 48 },
   tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, justifyContent: 'center' },
   tabActive: { borderBottomWidth: 2, borderBottomColor: colors.accent },

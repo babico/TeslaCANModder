@@ -1,0 +1,223 @@
+// ── HW3 Handler Tests ────────────────────────────────────────────────────────
+// Tests handleHW3() CAN frame processing: FSD, nag suppress, speed offset, profile.
+
+#include <unity.h>
+#include <cstring>
+
+class __FlashStringHelper;
+#define F(s) (reinterpret_cast<const __FlashStringHelper*>(s))
+
+#define BUS_FSD_ACTIVE 1
+#define BUS_VEHICLE_ACTIVE 1
+#define BUS_BODY_ACTIVE 1
+#define BOARD_CAN_CLOCK_MHZ 8
+#define BOARD_ENABLE_BLE 0
+#define BOARD_ENABLE_WIFI 0
+
+#include "core/types.h"
+#include "protocol/can.h"
+#include "protocol/profile.h"
+#include "protocol/offset.h"
+#include "protocol/follow.h"
+
+// ── Stubs ────────────────────────────────────────────────────────────────────
+struct SendCall { Frame f; uint8_t bus; };
+static SendCall stub_sends[16];
+static uint8_t stub_send_count = 0;
+
+void driverSend(const Frame& f, uint8_t bus) {
+  if (stub_send_count < 16) {
+    stub_sends[stub_send_count].f = f;
+    stub_sends[stub_send_count].bus = bus;
+    stub_send_count++;
+  }
+}
+
+void sendLog(const char*) {}
+void sendLog(const __FlashStringHelper*) {}
+
+#include "handler/hw3.h"
+
+static State makeState() {
+  State s = {};
+  s.variant = HW3;
+  s.speedProfile = 1;
+  s.fsdEnabled = true;
+  s.nagSuppress = true;
+  return s;
+}
+
+static Frame makeFrame(uint32_t id, uint8_t dlc = 8) {
+  Frame f = {};
+  f.id = id;
+  f.dlc = dlc;
+  return f;
+}
+
+void setUp() {
+  stub_send_count = 0;
+  resetHW3LogFlags();
+}
+void tearDown() {}
+
+// ── Follow Distance → Profile ────────────────────────────────────────────────
+
+void test_hw3_follow_distance_1_sets_profile_2() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b00100000; // fd=1
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw3_follow_distance_2_sets_profile_1() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b01000000;
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
+}
+
+void test_hw3_follow_distance_3_sets_profile_0() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b01100000;
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL_INT(0, s.speedProfile);
+}
+
+void test_hw3_follow_distance_0_keeps_default() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0x00; // fd=0 → maps to -1 (no change)
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
+}
+
+void test_hw3_follow_dist_pinned_unchanged() {
+  State s = makeState();
+  s.profileOverride = true;
+  s.speedProfile = 2;
+  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+  f.data[5] = 0b01100000;
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
+}
+
+// ── FSD Mux 0 ────────────────────────────────────────────────────────────────
+
+void test_hw3_fsd_mux0_sends_with_bit46() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x00;
+  f.data[4] = 0x40;
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL(1, stub_send_count);
+  TEST_ASSERT_EQUAL_HEX8(0x40, stub_sends[0].f.data[5] & 0x40);
+}
+
+void test_hw3_fsd_mux0_no_send_when_disabled() {
+  State s = makeState();
+  s.fsdEnabled = false;
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x00;
+  f.data[4] = 0x40;
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw3_fsd_mux0_no_send_when_ui_not_selected() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x00;
+  f.data[4] = 0x00;
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+// ── Nag Mux 1 ────────────────────────────────────────────────────────────────
+
+void test_hw3_nag_mux1_clears_bit19() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x01;
+  setBit(f, 19, true);
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL(1, stub_send_count);
+  TEST_ASSERT_FALSE((stub_sends[0].f.data[2] >> 3) & 0x01);
+}
+
+void test_hw3_nag_mux1_no_send_when_disabled() {
+  State s = makeState();
+  s.nagSuppress = false;
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x01;
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+// ── Speed Offset Mux 2 ──────────────────────────────────────────────────────
+
+void test_hw3_mux2_sends_when_fsd_enabled() {
+  State s = makeState();
+  s.speedOffset = 25;
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x02;
+  f.data[4] = 0x40; // FSD selected
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL(1, stub_send_count);
+}
+
+void test_hw3_mux2_no_send_when_fsd_disabled() {
+  State s = makeState();
+  s.fsdEnabled = false;
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x02;
+  f.data[4] = 0x00;
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+// ── Misc ─────────────────────────────────────────────────────────────────────
+
+void test_hw3_ignores_unrelated_id() {
+  State s = makeState();
+  Frame f = makeFrame(999);
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw3_sends_on_bus_0() {
+  State s = makeState();
+  Frame f = makeFrame(CAN_ID_FSD_MUX);
+  f.data[0] = 0x00;
+  f.data[4] = 0x40;
+  handleHW3(f, s);
+  TEST_ASSERT_EQUAL(BUS_FSD, stub_sends[0].bus);
+}
+
+int main() {
+  UNITY_BEGIN();
+
+  RUN_TEST(test_hw3_follow_distance_1_sets_profile_2);
+  RUN_TEST(test_hw3_follow_distance_2_sets_profile_1);
+  RUN_TEST(test_hw3_follow_distance_3_sets_profile_0);
+  RUN_TEST(test_hw3_follow_distance_0_keeps_default);
+  RUN_TEST(test_hw3_follow_dist_pinned_unchanged);
+
+  RUN_TEST(test_hw3_fsd_mux0_sends_with_bit46);
+  RUN_TEST(test_hw3_fsd_mux0_no_send_when_disabled);
+  RUN_TEST(test_hw3_fsd_mux0_no_send_when_ui_not_selected);
+
+  RUN_TEST(test_hw3_nag_mux1_clears_bit19);
+  RUN_TEST(test_hw3_nag_mux1_no_send_when_disabled);
+
+  RUN_TEST(test_hw3_mux2_sends_when_fsd_enabled);
+  RUN_TEST(test_hw3_mux2_no_send_when_fsd_disabled);
+
+  RUN_TEST(test_hw3_ignores_unrelated_id);
+  RUN_TEST(test_hw3_sends_on_bus_0);
+
+  return UNITY_END();
+}

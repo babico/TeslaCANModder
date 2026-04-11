@@ -5,10 +5,8 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from '
 import { colors, spacing, radius } from '../styles/theme';
 
 const VARIANTS = [
-  { id: 'uno_usb', name: 'USB Only', bt: false, dual: false, desc: 'Lightest firmware. USB serial control only.', flags: 'BOARD_ENABLE_BT=0, BOARD_ENABLE_MCP2515_2=0' },
-  { id: 'uno_usb_bt', name: 'USB + Bluetooth', bt: true, dual: false, desc: 'Adds HC-05 Bluetooth support.', flags: 'BOARD_ENABLE_BT=1, BOARD_ENABLE_MCP2515_2=0' },
-  { id: 'uno_usb_mcp2', name: 'USB + Dual CAN', bt: false, dual: true, desc: 'Second MCP2515 for dual bus.', flags: 'BOARD_ENABLE_BT=0, BOARD_ENABLE_MCP2515_2=1' },
-  { id: 'uno_full', name: 'Full (USB + BT + Dual CAN)', bt: true, dual: true, desc: 'Everything enabled.', flags: 'BOARD_ENABLE_BT=1, BOARD_ENABLE_MCP2515_2=1' },
+  { id: 'uno', name: 'Serial Only', bt: false, desc: 'Lightest firmware. USB serial control only.', flags: 'BUS_FSD_ACTIVE=1' },
+  { id: 'uno_bt', name: 'Serial + Bluetooth', bt: true, desc: 'Adds HC-05 Bluetooth support.', flags: 'BOARD_ENABLE_BT=1' },
 ];
 
 export default function FlasherScreen() {

@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>TeslaCANModder</title>
+		<style>
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			:root {
+				--bg: #0f172a;
+				--sur: #1e293b;
+				--bor: #334155;
+				--acc: #10b981;
+				--red: #ef4444;
+				--tx: #f1f5f9;
+				--mu: #94a3b8;
+			}
+			body {
+				background: var(--bg);
+				color: var(--tx);
+				font-family: -apple-system, sans-serif;
+				padding: 16px;
+			}
+			.w {
+				max-width: 460px;
+				margin: 0 auto;
+			}
+			h1 {
+				font-size: 20px;
+				font-weight: 300;
+				margin-bottom: 4px;
+			}
+			h1 span {
+				color: var(--acc);
+				font-weight: 500;
+			}
+			.sub {
+				font-size: 11px;
+				color: var(--mu);
+				margin-bottom: 16px;
+			}
+			.dot {
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: var(--acc);
+				display: inline-block;
+				margin-right: 5px;
+				animation: p 2s infinite;
+			}
+			@keyframes p {
+				0%,
+				100% {
+					opacity: 1;
+				}
+				50% {
+					opacity: 0.3;
+				}
+			}
+			.card {
+				background: var(--sur);
+				border: 1px solid var(--bor);
+				border-radius: 12px;
+				padding: 16px;
+				margin: 10px 0;
+			}
+			.ct {
+				font-size: 13px;
+				font-weight: 500;
+				margin-bottom: 8px;
+			}
+			.st {
+				font-family: monospace;
+				font-size: 11px;
+				line-height: 2;
+				color: var(--mu);
+			}
+			.st b {
+				color: var(--acc);
+			}
+			.seg {
+				display: flex;
+				gap: 4px;
+				flex-wrap: wrap;
+			}
+			.seg button {
+				flex: 1;
+				min-width: 60px;
+				padding: 10px 6px;
+				border-radius: 8px;
+				border: 1px solid var(--bor);
+				background: transparent;
+				color: var(--mu);
+				font-size: 12px;
+				cursor: pointer;
+				transition: 0.2s;
+				font-family: inherit;
+			}
+			.seg button:hover {
+				border-color: var(--acc);
+				color: var(--acc);
+			}
+			.seg button.on {
+				background: #10b98120;
+				border-color: var(--acc);
+				color: var(--acc);
+				font-weight: 600;
+			}
+			.tr {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin: 6px 0;
+			}
+			.tg {
+				position: relative;
+				width: 40px;
+				height: 24px;
+			}
+			.tg input {
+				opacity: 0;
+				width: 0;
+				height: 0;
+			}
+			.sl {
+				position: absolute;
+				inset: 0;
+				border-radius: 12px;
+				background: #334155;
+				cursor: pointer;
+				transition: 0.2s;
+			}
+			.sl:before {
+				content: "";
+				position: absolute;
+				width: 16px;
+				height: 16px;
+				left: 4px;
+				top: 4px;
+				border-radius: 50%;
+				background: var(--mu);
+				transition: 0.2s;
+			}
+			input:checked + .sl {
+				background: #10b98130;
+			}
+			input:checked + .sl:before {
+				transform: translateX(16px);
+				background: var(--acc);
+			}
+			.btn {
+				padding: 10px 14px;
+				border-radius: 8px;
+				border: 1px solid var(--bor);
+				background: transparent;
+				color: var(--mu);
+				font-size: 12px;
+				cursor: pointer;
+				font-family: inherit;
+				transition: 0.15s;
+			}
+			.btn:hover {
+				border-color: var(--acc);
+				color: var(--acc);
+			}
+			.inp {
+				width: 100%;
+				padding: 8px 10px;
+				border-radius: 8px;
+				border: 1px solid var(--bor);
+				background: var(--bg);
+				color: var(--tx);
+				font-size: 12px;
+				font-family: inherit;
+				margin: 4px 0;
+			}
+			.inp:focus {
+				outline: none;
+				border-color: var(--acc);
+			}
+			.inp::placeholder {
+				color: var(--mu);
+			}
+			.lbl {
+				font-size: 11px;
+				color: var(--mu);
+				margin-top: 8px;
+				display: block;
+			}
+			.wifi-st {
+				font-family: monospace;
+				font-size: 11px;
+				line-height: 1.8;
+				color: var(--mu);
+				margin-bottom: 8px;
+			}
+			.wifi-st b {
+				color: var(--acc);
+			}
+			.rssi-bar {
+				display: inline-block;
+				width: 40px;
+				height: 10px;
+				background: var(--bor);
+				border-radius: 4px;
+				overflow: hidden;
+				vertical-align: middle;
+				margin-left: 6px;
+			}
+			.rssi-fill {
+				height: 100%;
+				background: var(--acc);
+				border-radius: 4px;
+				transition: 0.3s;
+			}
+			.toast {
+				position: fixed;
+				bottom: 20px;
+				left: 50%;
+				transform: translateX(-50%) translateY(60px);
+				background: var(--acc);
+				color: #000;
+				padding: 8px 18px;
+				border-radius: 8px;
+				font-size: 12px;
+				font-weight: 500;
+				transition: 0.3s;
+				opacity: 0;
+				pointer-events: none;
+				z-index: 99;
+			}
+			.toast.show {
+				transform: translateX(-50%) translateY(0);
+				opacity: 1;
+			}
+			.log {
+				font-family: monospace;
+				font-size: 10px;
+				background: #0f172a;
+				border: 1px solid var(--bor);
+				border-radius: 8px;
+				padding: 8px;
+				height: 100px;
+				overflow-y: auto;
+				line-height: 1.8;
+				color: var(--mu);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="w">
+			<h1><span>TeslaCANModder</span></h1>
+			<div class="sub"><span class="dot"></span>CAN Bridge Dashboard</div>
+
+			<div class="card">
+				<div class="ct">Status</div>
+				<div class="st" id="st">Loading...</div>
+			</div>
+
+			<!-- WiFi Settings -->
+			<div class="card">
+				<div class="ct">WiFi Settings</div>
+				<div class="wifi-st" id="wifiSt">Loading...</div>
+				<div class="ct" style="margin-top: 8px">Mode</div>
+				<div class="seg" id="wifiModeSeg">
+					<button onclick="setWifiMode('ap')">AP</button>
+					<button onclick="setWifiMode('sta')">STA</button>
+				</div>
+				<div id="staFields" style="display: none">
+					<label class="lbl">Station SSID</label>
+					<input type="text" class="inp" id="staSSID" placeholder="WiFi network name" maxlength="32" />
+					<label class="lbl">Station Password</label>
+					<input type="password" class="inp" id="staPW" placeholder="WiFi password" maxlength="63" />
+					<div style="margin-top: 8px">
+						<button class="btn" onclick="connectSTA()">Connect</button>
+					</div>
+				</div>
+				<div id="apFields" style="display: none">
+					<label class="lbl">AP SSID</label>
+					<input type="text" class="inp" id="apSSID" placeholder="Access point name" maxlength="32" />
+					<label class="lbl">AP Password</label>
+					<input type="password" class="inp" id="apPW" placeholder="AP password (min 8 chars)" maxlength="63" />
+					<div style="margin-top: 8px">
+						<button class="btn" onclick="saveAP()">Save AP Config</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- BLE Settings -->
+			<div class="card" id="bleCard">
+				<div class="ct">BLE Settings</div>
+				<div class="wifi-st" id="bleSt">Loading...</div>
+				<div class="tr">
+					<span>BLE Enabled</span>
+					<label class="tg"><input type="checkbox" id="bleTg" onchange="toggleBle()" /><span class="sl"></span></label>
+				</div>
+			</div>
+
+			<div class="card">
+				<div class="ct">Hardware Variant</div>
+				<div class="seg" id="hwSeg">
+					<button onclick="setVariant('hw4')">HW4</button>
+					<button onclick="setVariant('hw3')">HW3</button>
+					<button onclick="setVariant('legacy')">Legacy</button>
+				</div>
+			</div>
+
+			<div class="card">
+				<div class="ct">FSD Controls</div>
+				<div class="tr">
+					<span>FSD Enabled</span><label class="tg"><input type="checkbox" id="fsdTg" onchange="toggleFsd()" /><span class="sl"></span></label>
+				</div>
+				<div class="tr">
+					<span>Nag Suppress</span><label class="tg"><input type="checkbox" id="nagTg" onchange="toggleNag()" /><span class="sl"></span></label>
+				</div>
+				<div class="tr">
+					<span>ISA Chime Suppress</span><label class="tg"><input type="checkbox" id="isaTg" onchange="toggleIsa()" /><span class="sl"></span></label>
+				</div>
+				<div class="ct" style="margin-top: 12px">Speed Profile</div>
+				<div class="seg" id="spSeg">
+					<button onclick="setProfile(0)">Chill</button>
+					<button onclick="setProfile(1)">Normal</button>
+					<button onclick="setProfile(2)">Hurry</button>
+					<button onclick="setProfile(3)">Max</button>
+					<button onclick="setProfile(4)">Sloth</button>
+					<button onclick="cmd('profile:auto')">Auto</button>
+				</div>
+			</div>
+
+			<div class="card" id="vehCard">
+				<div class="ct">Vehicle Commands</div>
+				<div class="seg">
+					<button onclick="cmd('lock')">Lock</button>
+					<button onclick="cmd('unlock')">Unlock</button>
+					<button onclick="cmd('horn')">Horn</button>
+					<button onclick="cmd('frunk')">Frunk</button>
+				</div>
+				<div class="seg" style="margin-top: 6px">
+					<button onclick="cmd('trunk:open')">Trunk</button>
+					<button onclick="cmd('vent:open')">Vent</button>
+					<button onclick="cmd('vent:close')">Vent Close</button>
+					<button onclick="cmd('sentry:on')">Sentry</button>
+				</div>
+				<div class="seg" style="margin-top: 6px">
+					<button onclick="cmd('mirror:fold')">Fold</button>
+					<button onclick="cmd('mirror:unfold')">Unfold</button>
+					<button onclick="cmd('climate:keep')">Climate</button>
+					<button onclick="cmd('climate:off')">Clim Off</button>
+				</div>
+				<div class="seg" style="margin-top: 6px">
+					<button onclick="cmd('summon:fwd')">Summon Fwd</button>
+					<button onclick="cmd('summon:rev')">Summon Rev</button>
+					<button onclick="cmd('summon:stop')">Summon Stop</button>
+				</div>
+			</div>
+
+			<div class="card">
+				<div class="ct">System Log</div>
+				<div class="log" id="logBox"></div>
+			</div>
+		</div>
+		<div class="toast" id="toast"></div>
+		<script>
+			let S = {},
+				W = {},
+				B = {};
+			function $(id) {
+				return document.getElementById(id);
+			}
+			function toast(m) {
+				let t = $("toast");
+				t.textContent = m;
+				t.classList.add("show");
+				setTimeout(() => t.classList.remove("show"), 1500);
+			}
+			function cmd(c) {
+				fetch("/api/command", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cmd: c }) })
+					.then((r) => r.json())
+					.then((d) => {
+						S = d;
+						render();
+						toast(c);
+					})
+					.catch(() => toast("Error"));
+			}
+			function toggleFsd() {
+				cmd(S.fsd ? "fsd:off" : "fsd:on");
+			}
+			function toggleNag() {
+				cmd(S.nag ? "nag:off" : "nag:on");
+			}
+			function toggleIsa() {
+				cmd(S.isaChime ? "isa-chime:off" : "isa-chime:on");
+			}
+			function setVariant(v) {
+				cmd("variant:" + v);
+			}
+			function setProfile(p) {
+				cmd("profile:" + p);
+			}
+
+			// WiFi functions
+			function setWifiMode(m) {
+				if (m === "sta") {
+					$("staFields").style.display = "block";
+					$("apFields").style.display = "none";
+				} else {
+					$("staFields").style.display = "none";
+					$("apFields").style.display = "block";
+				}
+				document.querySelectorAll("#wifiModeSeg button").forEach((b) => b.classList.toggle("on", b.textContent.toLowerCase() === m));
+			}
+			function connectSTA() {
+				let ssid = $("staSSID").value.trim();
+				let pw = $("staPW").value;
+				if (!ssid) {
+					toast("Enter SSID");
+					return;
+				}
+				fetch("/api/wifi/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "sta", ssid: ssid, password: pw }) })
+					.then((r) => r.json())
+					.then((d) => {
+						W = d;
+						renderWifi();
+						toast("Connecting to " + ssid + "...");
+					})
+					.catch(() => toast("Error"));
+			}
+			function saveAP() {
+				let ssid = $("apSSID").value.trim();
+				let pw = $("apPW").value;
+				if (!ssid) {
+					toast("Enter AP SSID");
+					return;
+				}
+				if (pw.length > 0 && pw.length < 8) {
+					toast("AP password must be 8+ chars");
+					return;
+				}
+				fetch("/api/wifi/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "ap", ssid: ssid, password: pw }) })
+					.then((r) => r.json())
+					.then((d) => {
+						W = d;
+						renderWifi();
+						toast("AP config saved");
+					})
+					.catch(() => toast("Error"));
+			}
+			function rssiPct(r) {
+				if (r >= -50) return 100;
+				if (r <= -100) return 0;
+				return Math.round((r + 100) * 2);
+			}
+			function renderWifi() {
+				let h = "<b>Mode:</b> " + (W.mode || "?").toUpperCase();
+				h += " &nbsp; <b>IP:</b> " + (W.ip || "N/A");
+				if (W.mode === "sta") {
+					h += "<br><b>SSID:</b> " + (W.ssid || "N/A");
+					h += " &nbsp; <b>RSSI:</b> " + (W.rssi || "?") + " dBm";
+					let pct = rssiPct(W.rssi || 0);
+					h += ' <span class="rssi-bar"><span class="rssi-fill" style="width:' + pct + '%"></span></span>';
+					h += "<br><b>Status:</b> " + (W.connected ? "Connected" : "Disconnected");
+				} else {
+					h += "<br><b>SSID:</b> " + (W.ssid || "N/A");
+					h += " &nbsp; <b>Clients:</b> " + (W.clients || 0);
+					h += "<br><b>Channel:</b> " + (W.channel || "?");
+				}
+				$("wifiSt").innerHTML = h;
+				document.querySelectorAll("#wifiModeSeg button").forEach((b) => b.classList.toggle("on", b.textContent.toLowerCase() === W.mode));
+				if (W.mode === "sta") {
+					$("staFields").style.display = "block";
+					$("apFields").style.display = "none";
+					if (W.ssid) $("staSSID").placeholder = W.ssid;
+				} else {
+					$("staFields").style.display = "none";
+					$("apFields").style.display = "block";
+					if (W.ssid) $("apSSID").placeholder = W.ssid;
+				}
+			}
+
+			// BLE functions
+			function toggleBle() {
+				let en = $("bleTg").checked;
+				fetch("/api/ble/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: en }) })
+					.then((r) => r.json())
+					.then((d) => {
+						B = d;
+						renderBle();
+						toast(en ? "BLE enabled" : "BLE disabled");
+					})
+					.catch(() => toast("Error"));
+			}
+			function renderBle() {
+				let h = "<b>Status:</b> " + (B.enabled ? "Enabled" : "Disabled");
+				h += " &nbsp; <b>Connected:</b> " + (B.connected ? "Yes" : "No");
+				if (B.deviceName) h += "<br><b>Device:</b> " + B.deviceName;
+				$("bleSt").innerHTML = h;
+				$("bleTg").checked = B.enabled;
+			}
+
+			function render() {
+				let h = "<b>Variant:</b> " + (S.variant || "?") + " &nbsp; <b>CAN:</b> " + (S.canOnline ? "Online" : "Offline");
+				h += "<br><b>FSD:</b> " + (S.fsd ? "ON" : "OFF") + " &nbsp; <b>Nag:</b> " + (S.nag ? "ON" : "OFF");
+				var pn = ["Chill","Normal","Hurry","Max","Sloth"][S.profile] || S.profile;
+				h += "<br><b>Profile:</b> " + pn + (S.profilePin ? " (pinned)" : " (auto)") + " &nbsp; <b>ISA:</b> " + (S.isaChime ? "Suppressed" : "Normal");
+				h += "<br><b>Uptime:</b> " + Math.floor((S.uptime || 0) / 1000) + "s";
+				if (S.hardware) {
+					var b = [];
+					if (S.hardware.busFsd) b.push("FSD");
+					if (S.hardware.busVehicle) b.push("Vehicle");
+					if (S.hardware.busBody) b.push("Body");
+					h += " &nbsp; <b>Buses:</b> " + (b.length ? b.join(" + ") : "none");
+				}
+				$("st").innerHTML = h;
+				$("fsdTg").checked = S.fsd;
+				$("nagTg").checked = S.nag;
+				$("isaTg").checked = S.isaChime;
+				document.querySelectorAll("#hwSeg button").forEach((b) => b.classList.toggle("on", b.textContent.toLowerCase() === S.variant));
+				document.querySelectorAll("#spSeg button").forEach((b, i) => {
+					if (i < 5) b.classList.toggle("on", S.profilePin && S.profile === i);
+					if (i === 5) b.classList.toggle("on", !S.profilePin);
+				});
+			}
+			function poll() {
+				fetch("/api/status")
+					.then((r) => r.json())
+					.then((d) => {
+						S = d;
+						render();
+					})
+					.catch(() => {});
+				fetch("/api/wifi/status")
+					.then((r) => r.json())
+					.then((d) => {
+						W = d;
+						renderWifi();
+					})
+					.catch(() => {});
+				fetch("/api/ble/status")
+					.then((r) => r.json())
+					.then((d) => {
+						B = d;
+						renderBle();
+					})
+					.catch(() => {});
+			}
+			setInterval(poll, 2000);
+			poll();
+		</script>
+	</body>
+</html>

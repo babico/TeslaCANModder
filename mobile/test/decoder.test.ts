@@ -4,7 +4,7 @@ import {
   getCanIdLabel,
   KNOWN_CAN_IDS,
   type DecoderDataset,
-} from '../lib/protocol/decoder';
+} from '@teslacanmodder/protocol';
 
 const sampleDataset: DecoderDataset = {
   dataset_source: { vehicle: 'Model 3' },

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import { parseSerialChunk, parseSerialLine } from '../src/lib/board/client.js';
+import { parseSerialChunk, parseSerialLine } from '../src/lib/board/client.ts';
 
 function run(name, callback) {
   try {

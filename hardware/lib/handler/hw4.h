@@ -1,9 +1,11 @@
 #pragma once
 #include "protocol/can.h"
-#include "protocol/fsd.h"
-#include "core/driver.h"
+#include "protocol/profile.h"
+#include "protocol/isa.h"
+#include "protocol/follow.h"
 
-// Forward declaration
+// Forward declarations (defined by platform-specific driver & serial)
+void driverSend(const Frame& f, uint8_t bus = 0);
 void sendLog(const char* msg);
 void sendLog(const __FlashStringHelper* msg);
 

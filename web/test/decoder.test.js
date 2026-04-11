@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import { buildDecoderIndex, describeDecodedFrame } from '../src/lib/can/decoder.js';
+import { buildDecoderIndex, describeDecodedFrame } from '../src/lib/can/decoder.ts';
 
 function run(name, callback) {
   try {

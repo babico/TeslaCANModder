@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-#include "core/driver.h"
+void driverSend(const Frame& f, uint8_t bus = 0);
 
 // ── Window Vent Control (0x119) ──────────────────────────────────────────────
 // Controls window vent position
@@ -19,7 +19,7 @@ static void controlWindowVent(WindowVentPosition pos, State& s) {
   f.data[1] = (uint8_t)pos;
   
   for (uint8_t i = 0; i < 30; i++) {
-    driverSend(f);
+    driverSend(f, BUS_BODY);
     delay(20);
   }
 }

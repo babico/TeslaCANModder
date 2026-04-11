@@ -69,7 +69,7 @@ Common issues and solutions for TeslaCANModder.
 ### Flash failed
 - Ensure correct firmware variant is selected
 - Close any other serial monitor connected to the port
-- Try the PlatformIO CLI method: `cd hardware && pio run -e uno_usb -t upload`
+- Try the PlatformIO CLI method: `cd hardware && pio run -e uno -t upload`
 - If using CH340, install latest drivers
 
 ### Board not responding after flash
@@ -81,7 +81,7 @@ Common issues and solutions for TeslaCANModder.
 
 ### MCP2515 #2 not detected
 - Check CS pin (D9) and INT pin (D3) wiring
-- Ensure using a dual-CAN firmware variant
+- Ensure firmware was built with `BUS_VEHICLE_ACTIVE=1`
 - Check boot message — it should report `bus2: true`
 
 ### Buck converter running hot

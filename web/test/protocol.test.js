@@ -5,7 +5,7 @@ import {
   createFrameMonitorState,
   ingestFrameMonitorMessage,
   normalizeStatusMessage,
-} from '../src/lib/board/protocol.js';
+} from '../src/lib/board/protocol.ts';
 
 function run(name, callback) {
   try {

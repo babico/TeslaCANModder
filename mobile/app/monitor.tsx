@@ -20,12 +20,8 @@ export default function MonitorScreen() {
           frames={board.state.frames}
           frameCount={board.state.frameCount}
           onClear={board.clearFrames}
-          historyEnabled={history.config.enabled}
           recording={history.recording}
-          onToggleHistory={(on) => history.toggleEnabled(on)}
-          onStartRecording={history.start}
-          onStopRecording={history.stop}
-          recordingFrameCount={history.currentFrameCount}
+          onToggleRecord={() => history.recording ? history.stop() : history.start()}
         />
       </View>
       <View style={styles.consoleSection}>
@@ -43,5 +39,5 @@ export default function MonitorScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   framesSection: { flex: 1, padding: spacing.md },
-  consoleSection: { height: 250, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
+  consoleSection: { height: 250, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.borderLight },
 });

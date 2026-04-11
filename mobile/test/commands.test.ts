@@ -1,4 +1,4 @@
-import { commands } from '../lib/protocol/commands';
+import { commands } from '@teslacanmodder/protocol';
 
 describe('commands', () => {
   describe('system', () => {

@@ -14,10 +14,8 @@ Firmware yüklemenin en kolay yolu uygulamanın Flasher sekmesidir.
 ### Adımlar
 1. Uygulamayı açın ve **Flasher** sekmesine gidin
 2. Firmware varyantınızı seçin:
-   - **Sadece USB** — en hafif, BT veya çift CAN yok
-   - **USB + Bluetooth** — HC-05 desteği ekler
-   - **USB + Çift CAN** — ikinci MCP2515 ekler
-   - **Tam** — her şey etkin
+   - **Uno** — temel, Bluetooth yok
+   - **Uno + Bluetooth** — HC-05 desteği ekler
 3. **USB ile Yükle**'ye tıklayın
 4. İstendiğinde Arduino seri portunu seçin
 5. "Başarıyla yüklendi" mesajını bekleyin
@@ -41,22 +39,19 @@ pip install platformio
 ```bash
 cd hardware
 
-# Sadece USB
-pio run -e uno_usb -t upload
+# Temel (BT yok)
+pio run -e uno -t upload
 
-# USB + Bluetooth
-pio run -e uno_usb_bt -t upload
+# Bluetooth destekli
+pio run -e uno_bt -t upload
 
-# USB + Çift CAN
-pio run -e uno_usb_mcp2 -t upload
-
-# Tam (USB + BT + Çift CAN)
-pio run -e uno_full -t upload
+# Vehicle + Body bus etkinleştirme
+PLATFORMIO_BUILD_FLAGS="-DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1" pio run -e uno -t upload
 ```
 
 ### Yüklemeden Derleme
 ```bash
-pio run -e uno_usb
+pio run -e uno
 ```
 
 ### Seri Çıkışı İzleme
@@ -71,7 +66,9 @@ Her firmware varyantı `platformio.ini` içindeki derleme bayrakları ile kontro
 | Bayrak | Varsayılan | Açıklama |
 |--------|-----------|----------|
 | BOARD_ENABLE_BT | 0 | HC-05 Bluetooth'u etkinleştir |
-| BOARD_ENABLE_MCP2515_2 | 0 | İkinci MCP2515'i etkinleştir |
+| BUS_FSD_ACTIVE | 1 | FSD bus (her zaman açık) |
+| BUS_VEHICLE_ACTIVE | 0 | Vehicle bus'ı etkinleştir |
+| BUS_BODY_ACTIVE | 0 | Body bus'ı etkinleştir |
 
 ## Firmware Güncelleme Süreci
 

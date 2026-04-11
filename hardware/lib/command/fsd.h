@@ -1,123 +1,14 @@
 #pragma once
-#include "core/types.h"
-#include "core/persist.h"
-#include "handler/dispatch.h"
 
-// ── FSD Command Execution ────────────────────────────────────────────────────
-// Handles all FSD-related commands: fsd, nag, profile, offset, isa-chime, summon
-// parseBoolCmd is defined in command/system.h
+// ── FSD Commands — umbrella include ──────────────────────────────────────────
+// Split into focused headers; this file remains for backward compatibility.
+// parseBoolCmd is defined in command/system.h (must be included before this).
 
-bool executeFsdCmd(const char* cmd, State& s) {
-  if (strncmp(cmd, "fsd:", 4) == 0) {
-    if (!parseBoolCmd(cmd + 4, s.fsdEnabled, s.fsdEnabled)) return false;
-    resetHandlerLogFlags();
-    saveSettings(s);
-    return true;
-  }
-  return false;
-}
-
-bool executeNagCmd(const char* cmd, State& s) {
-  if (strncmp(cmd, "nag:", 4) == 0) {
-    if (!parseBoolCmd(cmd + 4, s.nagSuppress, s.nagSuppress)) return false;
-    resetHandlerLogFlags();
-    saveSettings(s);
-    return true;
-  }
-  return false;
-}
-
-bool executeProfileCmd(const char* cmd, State& s) {
-  const char* arg = nullptr;
-  if (strncmp(cmd, "profile:", 8) == 0) arg = cmd + 8;
-  else if (strncmp(cmd, "sp:", 3) == 0) arg = cmd + 3;
-  else return false;
-
-  if (strcmp(arg, "auto") == 0) {
-    s.profileOverride = false;
-    resetHandlerLogFlags();
-    saveSettings(s);
-    return true;
-  }
-  int p = atoi(arg);
-  if (p < 0 || p > 4) return false;
-  s.speedProfile = p;
-  s.profileOverride = true;
-  resetHandlerLogFlags();
-  saveSettings(s);
-  return true;
-}
-
-bool executeOffsetCmd(const char* cmd, State& s) {
-  if (strncmp(cmd, "offset:", 7) != 0) return false;
-  if (!s.features().speedOffset) return false;
-  const char* arg = cmd + 7;
-
-  if (strcmp(arg, "auto") == 0) {
-    s.offsetOverride = false;
-    resetHandlerLogFlags();
-    saveSettings(s);
-    return true;
-  }
-  int o = atoi(arg);
-  if (o < 0 || o > 100) return false;
-  s.speedOffset = o;
-  s.offsetOverride = true;
-  resetHandlerLogFlags();
-  saveSettings(s);
-  return true;
-}
-
-bool executeIsaChimeCmd(const char* cmd, State& s) {
-  if (strncmp(cmd, "isa-chime:", 10) == 0) {
-    if (!s.features().isaChime) return false;
-    if (!parseBoolCmd(cmd + 10, s.isaChimeSuppress, s.isaChimeSuppress)) return false;
-    resetHandlerLogFlags();
-    saveSettings(s);
-    return true;
-  }
-  return false;
-}
-
-bool executeSummonCmd(const char* cmd, State& s) {
-  if (strcmp(cmd, "summon") == 0 || strncmp(cmd, "summon:", 7) == 0) {
-    if (!s.features().summon) return false;
-    if (!s.hasCtrl) return false;
-    
-    if (strncmp(cmd, "summon:", 7) == 0) {
-      const char* dir = cmd + 7;
-      if (strcmp(dir, "forward") == 0 || strcmp(dir, "fwd") == 0) {
-        s.summonDirection = SUMMON_FORWARD;
-      } else if (strcmp(dir, "reverse") == 0 || strcmp(dir, "rev") == 0) {
-        s.summonDirection = SUMMON_REVERSE;
-      } else {
-        return false;
-      }
-    }
-    
-    s.summonMode = SUMMON_START;
-    s.summonRemaining = 30;
-    return true;
-  }
-  
-  if (strcmp(cmd, "summon:stop") == 0) {
-    if (!s.features().summon) return false;
-    s.summonMode = SUMMON_STOP;
-    s.summonRemaining = 0;
-    return true;
-  }
-  
-  return false;
-}
-
-bool executeVariantCmd(const char* cmd, State& s) {
-  if (strncmp(cmd, "variant:", 8) == 0) {
-    Variant v;
-    if (!parseVariant(cmd + 8, v)) return false;
-    s.variant = v;
-    saveSettings(s);
-    applyFilters(s);
-    return true;
-  }
-  return false;
-}
+#include "command/fsd_toggle.h"
+#include "command/nag.h"
+#include "command/profile.h"
+#include "command/offset.h"
+#include "command/isa_chime.h"
+#include "command/summon_inject.h"
+#include "command/summon_cmd.h"
+#include "command/variant.h"

@@ -26,12 +26,7 @@ export default function DashboardScreen() {
         connected={transport.connected}
         transportType={transport.transportType}
         deviceName={transport.deviceName}
-        variant={board.state.variant}
-        rate={board.state.rate}
-        streaming={board.state.streaming}
-        canOnline={board.state.canOnline}
-        standby={board.state.standby}
-        bus2={board.state.bus2}
+        state={board.state}
         canUseBle={transport.canUseBle}
         canUseSerial={transport.canUseSerial}
         onConnect={transport.connect}

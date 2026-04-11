@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
-import { colors, spacing, radius } from '../styles/theme';
-import type { CanFrame } from '../hooks/useBoardState';
+import { colors, spacing, radius, shadows } from '../styles/theme';
+import { Badge } from './ui';
+import type { CanFrame } from '@teslacanmodder/protocol';
 
 interface Props {
   frames: CanFrame[];
@@ -26,7 +27,7 @@ export default function FrameTable({ frames, frameCount, onClear, recording, onT
           <TouchableOpacity onPress={onClear}>
             <Text style={styles.actionBtn}>Clear</Text>
           </TouchableOpacity>
-          <Text style={styles.badge}>{frameCount} frames</Text>
+          <Badge label={`${frameCount} frames`} />
         </View>
       </View>
 
@@ -63,17 +64,45 @@ export default function FrameTable({ frames, frameCount, onClear, recording, onT
 }
 
 const styles = StyleSheet.create({
-  panel: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, overflow: 'hidden' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
+  panel: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    overflow: 'hidden',
+    ...shadows.sm,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
   title: { color: colors.text, fontWeight: '600', fontSize: 14 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   actionBtn: { color: colors.textMuted, fontSize: 12 },
   recordActive: { color: colors.error },
-  badge: { color: colors.textDim, fontSize: 11, backgroundColor: colors.bgTertiary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.sm, overflow: 'hidden' },
-  headerRow: { flexDirection: 'row', paddingHorizontal: spacing.sm, paddingVertical: 4, backgroundColor: colors.bgSecondary, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    backgroundColor: colors.bgTertiary,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
   hCell: { color: colors.textDim, fontSize: 11, fontWeight: '600' },
   body: { flex: 1 },
-  row: { flexDirection: 'row', paddingHorizontal: spacing.sm, paddingVertical: 3, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  row: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderLight,
+  },
   cell: { fontSize: 11, color: colors.text },
   mono: { fontFamily: 'monospace' },
   colTime: { width: 55 },

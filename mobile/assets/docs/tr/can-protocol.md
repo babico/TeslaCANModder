@@ -56,11 +56,11 @@ Firmware tarafından alınan her CAN frame, seri/BT arayüzüne JSON olarak ilet
 - **SPI Saat:** 8 MHz (Arduino SPI varsayılan)
 - **Kesme Modu:** INT pininde düşen kenar
 
-## Çift CAN Bus
+## Çoklu CAN Bus
 
 İkinci MCP2515 bağlandığında:
-- Bus 0 (birincil): CS=D10, INT=D2 — VehicleBus
-- Bus 1 (ikincil): CS=D9, INT=D3 — Herhangi bir ikincil bus
+- Bus 0 (FSD): CS=D10, INT=D2 — FSD Bus
+- Bus 1 (Vehicle): CS=D9, INT=D3 — Vehicle Bus
 - Her iki bus bağımsız olarak 500 kbps'de çalışır
 - Frame JSON'daki `bus` alanı kaynağı belirtir
 

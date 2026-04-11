@@ -69,7 +69,7 @@ TeslaCANModder için yaygın sorunlar ve çözümleri.
 ### Yükleme başarısız
 - Doğru firmware varyantının seçildiğinden emin olun
 - Porta bağlı diğer seri monitörleri kapatın
-- PlatformIO CLI yöntemini deneyin: `cd hardware && pio run -e uno_usb -t upload`
+- PlatformIO CLI yöntemini deneyin: `cd hardware && pio run -e uno -t upload`
 - CH340 kullanıyorsanız en son sürücüleri kurun
 
 ### Yüklemeden sonra kart yanıt vermiyor
@@ -81,7 +81,7 @@ TeslaCANModder için yaygın sorunlar ve çözümleri.
 
 ### MCP2515 #2 algılanmıyor
 - CS pini (D9) ve INT pini (D3) kablolamasını kontrol edin
-- Çift CAN firmware varyantı kullandığınızdan emin olun
+- `BUS_VEHICLE_ACTIVE=1` ile derlediğinizden emin olun
 - Boot mesajını kontrol edin — `bus2: true` bildirmeli
 
 ### Buck dönüştürücü aşırı ısınıyor

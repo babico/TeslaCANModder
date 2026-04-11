@@ -5,6 +5,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const rootDocsDir = path.resolve(currentDir, '../docs');
 const hardwareBuildRoot = path.resolve(currentDir, '../hardware/.pio/build');
 const defaultAllowedHosts = ['localhost', '127.0.0.1', '::1'];
 const allowedHosts = [
@@ -32,6 +33,42 @@ function serveHeartbeat() {
         res.setHeader('Cache-Control', 'no-store');
         res.end(heartbeatPayload);
       });
+    },
+  };
+}
+
+function serveRootDocs() {
+  return {
+    name: 'serve-root-docs',
+    configureServer(server) {
+      server.middlewares.use('/docs', (req, res, next) => {
+        const requestPath = decodeURIComponent((req.url || '').split('?')[0]);
+        const normalizedPath = path.normalize(requestPath).replace(/^([/\\])+/, '');
+        const filePath = path.resolve(rootDocsDir, normalizedPath);
+
+        if (!filePath.startsWith(rootDocsDir) || !filePath.endsWith('.md')) {
+          next();
+          return;
+        }
+
+        if (!fs.existsSync(filePath)) {
+          next();
+          return;
+        }
+
+        res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-store');
+        res.end(fs.readFileSync(filePath, 'utf-8'));
+      });
+    },
+    closeBundle() {
+      const outDir = path.resolve(currentDir, 'dist/docs');
+      fs.mkdirSync(outDir, { recursive: true });
+      for (const file of fs.readdirSync(rootDocsDir)) {
+        if (file.endsWith('.md')) {
+          fs.copyFileSync(path.join(rootDocsDir, file), path.join(outDir, file));
+        }
+      }
     },
   };
 }
@@ -64,8 +101,21 @@ function serveHardwareBuilds() {
 }
 
 export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./test/setup.ts'],
+    css: true,
+  },
   server: {
     allowedHosts,
+    proxy: {
+      '/api/build': {
+        target: 'http://localhost:8100',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/build/, '/build'),
+      },
+    },
   },
-  plugins: [react(), serveHeartbeat(), serveHardwareBuilds()],
+  plugins: [react(), serveHeartbeat(), serveRootDocs(), serveHardwareBuilds()],
 });

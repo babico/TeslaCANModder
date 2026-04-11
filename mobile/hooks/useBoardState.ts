@@ -1,66 +1,20 @@
 /** useBoardState — manages firmware board state from JSON messages. */
 
 import { useState, useCallback, useRef } from 'react';
+import type { BoardFeatures, CanFrame, ConsoleMessage as LogMessage, BoardState } from '@teslacanmodder/protocol';
 
-export interface BoardFeatures {
-  fsd: boolean;
-  profile: boolean;
-  nag: boolean;
-  speedOffset: boolean;
-  isaSpeedChime: boolean;
-  summon: boolean;
-}
-
-export interface CanFrame {
-  key: string;
-  id: number;
-  dir: string;
-  seq?: number;
-  dlc: number;
-  data: string;
-  ts: string;
-}
-
-export interface LogMessage {
-  id: number;
-  type: 'info' | 'error';
-  text: string;
-  ts: string;
-}
-
-export interface BoardState {
-  variant: string;
-  hardware: string;
-  driver: string;
-  uptime: number;
-  rate: number;
-
-  fsd: boolean;
-  nag: boolean;
-  profile: number;
-  profilePinned: boolean;
-  offset: number;
-  offsetPinned: boolean;
-  isaChime: boolean;
-  summonActive: boolean;
-
-  canOnline: boolean;
-  standby: boolean;
-  bus2: boolean;
-
-  streaming: boolean;
-  frames: CanFrame[];
-  frameCount: number;
-
-  messages: LogMessage[];
-
-  features: BoardFeatures;
+function detectBoard(hw: string): 'arduino' | 'esp32' | 'unknown' {
+  const lower = hw.toLowerCase();
+  if (lower.includes('arduino') || lower.includes('uno')) return 'arduino';
+  if (lower.includes('esp32') || lower.includes('esp')) return 'esp32';
+  return 'unknown';
 }
 
 const initialState: BoardState = {
   variant: 'hw4',
   hardware: '—',
   driver: '—',
+  board: 'unknown',
   uptime: 0,
   rate: 0,
 
@@ -71,11 +25,17 @@ const initialState: BoardState = {
   offset: 0,
   offsetPinned: false,
   isaChime: false,
+  summonInject: false,
   summonActive: false,
 
   canOnline: false,
   standby: false,
+  bus1: false,
   bus2: false,
+  bus3: false,
+  busFsd: false,
+  busVehicle: false,
+  busBody: false,
 
   streaming: false,
   frames: [],
@@ -112,11 +72,13 @@ export function useBoardState() {
     const t = msg.t as string;
 
     if (t === 'boot') {
+      const hw = (msg.hw as string) || '—';
       setState(prev => ({
         ...prev,
         variant: (msg.variant as string) || 'hw4',
-        hardware: (msg.hw as string) || '—',
+        hardware: hw,
         driver: (msg.drv as string) || '—',
+        board: detectBoard(hw),
         features: (msg.features as BoardFeatures) || prev.features,
         fsd: msg.fsd !== undefined ? Boolean(msg.fsd) : prev.fsd,
         nag: msg.nag !== undefined ? Boolean(msg.nag) : prev.nag,
@@ -125,19 +87,27 @@ export function useBoardState() {
         offset: (msg.offset as number) ?? prev.offset,
         offsetPinned: msg.offsetPin !== undefined ? Boolean(msg.offsetPin) : prev.offsetPinned,
         isaChime: msg.isaChime !== undefined ? Boolean(msg.isaChime) : prev.isaChime,
+        summonInject: msg.summonInject !== undefined ? Boolean(msg.summonInject) : prev.summonInject,
         canOnline: msg.canOnline !== undefined ? Boolean(msg.canOnline) : prev.canOnline,
         standby: msg.standby !== undefined ? Boolean(msg.standby) : prev.standby,
+        bus1: msg.bus1 !== undefined ? Boolean(msg.bus1) : prev.bus1,
         bus2: msg.bus2 !== undefined ? Boolean(msg.bus2) : prev.bus2,
+        bus3: msg.bus3 !== undefined ? Boolean(msg.bus3) : prev.bus3,
+        busFsd: msg.busFsd !== undefined ? Boolean(msg.busFsd) : prev.busFsd,
+        busVehicle: msg.busVehicle !== undefined ? Boolean(msg.busVehicle) : prev.busVehicle,
+        busBody: msg.busBody !== undefined ? Boolean(msg.busBody) : prev.busBody,
       }));
       addMessage('info', `Board connected: ${msg.hw}`);
     }
 
     else if (t === 'status') {
+      const hw = (msg.hw as string) || '';
       setState(prev => ({
         ...prev,
         variant: (msg.variant as string) || prev.variant,
-        hardware: (msg.hw as string) || prev.hardware,
+        hardware: hw || prev.hardware,
         driver: (msg.drv as string) || prev.driver,
+        board: hw ? detectBoard(hw) : prev.board,
         uptime: (msg.up as number) || 0,
         rate: (msg.rate as number) || 0,
         fsd: Boolean(msg.fsd),
@@ -147,11 +117,17 @@ export function useBoardState() {
         offset: (msg.offset as number) ?? prev.offset,
         offsetPinned: Boolean(msg.offsetPin),
         isaChime: Boolean(msg.isaChime),
+        summonInject: msg.summonInject !== undefined ? Boolean(msg.summonInject) : prev.summonInject,
         streaming: Boolean((msg.stream as any)?.on),
         features: (msg.features as BoardFeatures) || prev.features,
         canOnline: msg.canOnline !== undefined ? Boolean(msg.canOnline) : prev.canOnline,
         standby: msg.standby !== undefined ? Boolean(msg.standby) : prev.standby,
+        bus1: msg.bus1 !== undefined ? Boolean(msg.bus1) : prev.bus1,
         bus2: msg.bus2 !== undefined ? Boolean(msg.bus2) : prev.bus2,
+        bus3: msg.bus3 !== undefined ? Boolean(msg.bus3) : prev.bus3,
+        busFsd: msg.busFsd !== undefined ? Boolean(msg.busFsd) : prev.busFsd,
+        busVehicle: msg.busVehicle !== undefined ? Boolean(msg.busVehicle) : prev.busVehicle,
+        busBody: msg.busBody !== undefined ? Boolean(msg.busBody) : prev.busBody,
       }));
     }
 

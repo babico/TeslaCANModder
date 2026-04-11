@@ -1,8 +1,9 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { commands } from '../lib/protocol/commands';
-import type { BoardState } from '../hooks/useBoardState';
-import { colors, spacing, radius } from '../styles/theme';
+import { commands } from '@teslacanmodder/protocol';
+import type { BoardState } from '@teslacanmodder/protocol';
+import { colors, spacing, radius, shadows } from '../styles/theme';
+import { Button, Card } from './ui';
 
 interface Props {
   state: BoardState;
@@ -10,162 +11,181 @@ interface Props {
   onCommand: (cmd: string) => void;
 }
 
-function Btn({ label, disabled, danger, onPress }: { label: string; disabled?: boolean; danger?: boolean; onPress: () => void }) {
-  return (
-    <TouchableOpacity style={[s.btn, danger && s.btnDanger]} disabled={disabled} onPress={onPress}>
-      <Text style={[s.btnText, danger && s.btnDangerText, disabled && s.btnDisabled]}>{label}</Text>
-    </TouchableOpacity>
-  );
+interface CmdDef {
+  label: string;
+  cmd: () => string;
+  danger?: boolean;
 }
 
-function Card({ title, warning, children }: { title: string; warning?: string; children: React.ReactNode }) {
-  return (
-    <View style={s.card}>
-      <View style={s.cardHeader}>
-        <Text style={s.cardTitle}>{title}</Text>
-        {warning ? <Text style={s.cardWarning}>{warning}</Text> : null}
-      </View>
-      <View style={s.cardBody}>{children}</View>
-    </View>
-  );
+interface GroupDef {
+  title: string;
+  warning?: string;
+  cmds?: CmdDef[];
+  render?: (d: boolean, onCmd: (c: string) => void) => React.ReactNode;
 }
 
-function BtnGrid({ children }: { children: React.ReactNode }) {
-  return <View style={s.grid}>{children}</View>;
-}
+const GROUPS: GroupDef[] = [
+  {
+    title: 'Mirrors',
+    cmds: [
+      { label: 'Fold', cmd: commands.mirrorFold },
+      { label: 'Unfold', cmd: commands.mirrorUnfold },
+      { label: 'Heat', cmd: commands.mirrorHeat },
+      { label: 'Auto-fold', cmd: commands.mirrorAutofold },
+      { label: 'Dip on Reverse', cmd: commands.mirrorDip },
+    ],
+  },
+  {
+    title: 'Locks & Horn',
+    cmds: [
+      { label: 'Lock', cmd: commands.lock },
+      { label: 'Unlock', cmd: commands.unlock },
+      { label: 'Child Lock', cmd: commands.lockChild },
+      { label: 'Horn', cmd: commands.horn },
+    ],
+  },
+  {
+    title: 'Trunk & Frunk',
+    cmds: [
+      { label: 'Frunk Open', cmd: commands.frunkOpen },
+      { label: 'Frunk Close', cmd: commands.frunkClose },
+      { label: 'Trunk Open', cmd: commands.trunkOpen },
+      { label: 'Trunk Close', cmd: commands.trunkClose },
+      { label: 'Glovebox', cmd: commands.glovebox },
+    ],
+  },
+  {
+    title: 'Lights',
+    cmds: [
+      { label: 'Front Fog', cmd: commands.lightFogFront },
+      { label: 'Rear Fog', cmd: commands.lightFogRear },
+      { label: 'Auto High', cmd: commands.lightHighbeamAuto },
+      { label: 'Ambient', cmd: commands.lightAmbient },
+      { label: 'Home', cmd: commands.lightHome },
+      { label: 'Dome Off', cmd: commands.lightDomeOff },
+      { label: 'Dome On', cmd: commands.lightDomeOn },
+      { label: 'Dome Auto', cmd: commands.lightDomeAuto },
+    ],
+  },
+  {
+    title: 'Wipers',
+    cmds: [
+      { label: 'Off', cmd: commands.wiperOff },
+      { label: 'Speed 1', cmd: commands.wiper1 },
+      { label: 'Speed 2', cmd: commands.wiper2 },
+      { label: 'Speed 3', cmd: commands.wiper3 },
+    ],
+  },
+  {
+    title: 'Window & Sentry',
+    cmds: [
+      { label: 'Vent Open', cmd: commands.ventOpen },
+      { label: 'Vent Close', cmd: commands.ventClose },
+      { label: 'Sentry On', cmd: commands.sentryOn },
+      { label: 'Sentry Off', cmd: commands.sentryOff },
+    ],
+  },
+  {
+    title: 'Climate',
+    cmds: [
+      { label: 'Keep On', cmd: commands.climateKeep },
+      { label: 'Off', cmd: commands.climateOff },
+    ],
+  },
+  {
+    title: 'Charging',
+    cmds: [
+      { label: 'Start', cmd: commands.chargeStart },
+      { label: 'Stop', cmd: commands.chargeStop },
+      { label: 'Open Port', cmd: commands.chargePort },
+    ],
+  },
+  {
+    title: 'Power',
+    cmds: [
+      { label: 'Acc On', cmd: commands.powerAccOn },
+      { label: 'Acc Off', cmd: commands.powerAccOff },
+      { label: 'Drive Ready', cmd: commands.powerReady },
+      { label: 'Power Off', cmd: commands.powerOff, danger: true },
+    ],
+  },
+];
+
+const SEATS = [
+  { label: 'FL', fn: commands.seatFL },
+  { label: 'FR', fn: commands.seatFR },
+  { label: 'RL', fn: commands.seatRL },
+  { label: 'RR', fn: commands.seatRR },
+  { label: 'RC', fn: commands.seatRC },
+];
 
 export default function VehiclePanel({ state, connected, onCommand }: Props) {
   const d = !connected;
-  const isLegacy = state.variant === 'legacy';
 
-  if (isLegacy) {
+  if (state.variant === 'legacy') {
     return (
-      <View style={s.container}>
+      <View style={styles.container}>
         <Card title="Vehicle Controls" warning="Limited on Legacy variant">
-          <Text style={s.info}>Vehicle commands unavailable on Legacy variant. Switch to HW3 or HW4.</Text>
+          <Text style={styles.info}>Vehicle commands unavailable on Legacy variant. Switch to HW3 or HW4.</Text>
         </Card>
       </View>
     );
   }
 
   return (
-    <ScrollView style={s.container} contentContainerStyle={s.content}>
-      <Card title="Mirrors">
-        <BtnGrid>
-          <Btn label="Fold" disabled={d} onPress={() => onCommand(commands.mirrorFold())} />
-          <Btn label="Unfold" disabled={d} onPress={() => onCommand(commands.mirrorUnfold())} />
-          <Btn label="Heat" disabled={d} onPress={() => onCommand(commands.mirrorHeat())} />
-          <Btn label="Auto-fold" disabled={d} onPress={() => onCommand(commands.mirrorAutofold())} />
-          <Btn label="Dip on Reverse" disabled={d} onPress={() => onCommand(commands.mirrorDip())} />
-        </BtnGrid>
-      </Card>
-
-      <Card title="Locks & Horn">
-        <BtnGrid>
-          <Btn label="Lock" disabled={d} onPress={() => onCommand(commands.lock())} />
-          <Btn label="Unlock" disabled={d} onPress={() => onCommand(commands.unlock())} />
-          <Btn label="Child Lock" disabled={d} onPress={() => onCommand(commands.lockChild())} />
-          <Btn label="Horn" disabled={d} onPress={() => onCommand(commands.horn())} />
-        </BtnGrid>
-      </Card>
-
-      <Card title="Trunk & Frunk">
-        <BtnGrid>
-          <Btn label="Frunk Open" disabled={d} onPress={() => onCommand(commands.frunkOpen())} />
-          <Btn label="Frunk Close" disabled={d} onPress={() => onCommand(commands.frunkClose())} />
-          <Btn label="Trunk Open" disabled={d} onPress={() => onCommand(commands.trunkOpen())} />
-          <Btn label="Trunk Close" disabled={d} onPress={() => onCommand(commands.trunkClose())} />
-          <Btn label="Glovebox" disabled={d} onPress={() => onCommand(commands.glovebox())} />
-        </BtnGrid>
-      </Card>
-
-      <Card title="Lights">
-        <BtnGrid>
-          <Btn label="Front Fog" disabled={d} onPress={() => onCommand(commands.lightFogFront())} />
-          <Btn label="Rear Fog" disabled={d} onPress={() => onCommand(commands.lightFogRear())} />
-          <Btn label="Auto High" disabled={d} onPress={() => onCommand(commands.lightHighbeamAuto())} />
-          <Btn label="Ambient" disabled={d} onPress={() => onCommand(commands.lightAmbient())} />
-          <Btn label="Home" disabled={d} onPress={() => onCommand(commands.lightHome())} />
-          <Btn label="Dome Off" disabled={d} onPress={() => onCommand(commands.lightDomeOff())} />
-          <Btn label="Dome On" disabled={d} onPress={() => onCommand(commands.lightDomeOn())} />
-          <Btn label="Dome Auto" disabled={d} onPress={() => onCommand(commands.lightDomeAuto())} />
-        </BtnGrid>
-      </Card>
-
-      <Card title="Wipers">
-        <BtnGrid>
-          <Btn label="Off" disabled={d} onPress={() => onCommand(commands.wiperOff())} />
-          <Btn label="Speed 1" disabled={d} onPress={() => onCommand(commands.wiper1())} />
-          <Btn label="Speed 2" disabled={d} onPress={() => onCommand(commands.wiper2())} />
-          <Btn label="Speed 3" disabled={d} onPress={() => onCommand(commands.wiper3())} />
-        </BtnGrid>
-      </Card>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {GROUPS.map(group => (
+        <Card key={group.title} title={group.title} warning={group.warning}>
+          <View style={styles.grid}>
+            {group.cmds?.map(c => (
+              <Button
+                key={c.label}
+                label={c.label}
+                variant={c.danger ? 'danger' : 'secondary'}
+                disabled={d}
+                compact
+                onPress={() => onCommand(c.cmd())}
+              />
+            ))}
+          </View>
+        </Card>
+      ))}
 
       <Card title="Seat Heating">
-        {[
-          { label: 'FL', fn: commands.seatFL },
-          { label: 'FR', fn: commands.seatFR },
-          { label: 'RL', fn: commands.seatRL },
-          { label: 'RR', fn: commands.seatRR },
-          { label: 'RC', fn: commands.seatRC },
-        ].map(seat => (
-          <View key={seat.label} style={s.seatRow}>
-            <Text style={s.seatLabel}>{seat.label}</Text>
+        {SEATS.map(seat => (
+          <View key={seat.label} style={styles.seatRow}>
+            <Text style={styles.seatLabel}>{seat.label}</Text>
             {[0, 1, 2, 3].map(l => (
-              <Btn key={l} label={l === 0 ? 'Off' : String(l)} disabled={d} onPress={() => onCommand(seat.fn(l))} />
+              <Button key={l} label={l === 0 ? 'Off' : String(l)} disabled={d} compact onPress={() => onCommand(seat.fn(l))} />
             ))}
           </View>
         ))}
       </Card>
 
-      <Card title="Window & Sentry">
-        <BtnGrid>
-          <Btn label="Vent Open" disabled={d} onPress={() => onCommand(commands.ventOpen())} />
-          <Btn label="Vent Close" disabled={d} onPress={() => onCommand(commands.ventClose())} />
-          <Btn label="Sentry On" disabled={d} onPress={() => onCommand(commands.sentryOn())} />
-          <Btn label="Sentry Off" disabled={d} onPress={() => onCommand(commands.sentryOff())} />
-        </BtnGrid>
-      </Card>
-
-      <Card title="Climate">
-        <BtnGrid>
-          <Btn label="Keep On" disabled={d} onPress={() => onCommand(commands.climateKeep())} />
-          <Btn label="Off" disabled={d} onPress={() => onCommand(commands.climateOff())} />
-        </BtnGrid>
-      </Card>
-
-      <Card title="Charging">
-        <BtnGrid>
-          <Btn label="Start" disabled={d} onPress={() => onCommand(commands.chargeStart())} />
-          <Btn label="Stop" disabled={d} onPress={() => onCommand(commands.chargeStop())} />
-          <Btn label="Open Port" disabled={d} onPress={() => onCommand(commands.chargePort())} />
-        </BtnGrid>
-      </Card>
-
       <Card title="Drive Configuration">
-        <Text style={s.driveLabel}>Pedal</Text>
-        <BtnGrid>
-          <Btn label="Standard" disabled={d} onPress={() => onCommand(commands.pedalStandard())} />
-          <Btn label="Chill" disabled={d} onPress={() => onCommand(commands.pedalChill())} />
-          <Btn label="Sport" disabled={d} onPress={() => onCommand(commands.pedalSport())} />
-        </BtnGrid>
-        <Text style={s.driveLabel}>Regen</Text>
-        <BtnGrid>
-          <Btn label="Off" disabled={d} onPress={() => onCommand(commands.regenOff())} />
-          <Btn label="Low" disabled={d} onPress={() => onCommand(commands.regenLow())} />
-          <Btn label="Standard" disabled={d} onPress={() => onCommand(commands.regenStd())} />
-          <Btn label="Max" disabled={d} onPress={() => onCommand(commands.regenMax())} />
-        </BtnGrid>
-        <Text style={s.driveLabel}>Stop Mode</Text>
-        <BtnGrid>
-          <Btn label="Creep" disabled={d} onPress={() => onCommand(commands.stopCreep())} />
-          <Btn label="Roll" disabled={d} onPress={() => onCommand(commands.stopRoll())} />
-          <Btn label="Hold" disabled={d} onPress={() => onCommand(commands.stopHold())} />
-        </BtnGrid>
+        <Text style={styles.driveLabel}>Pedal</Text>
+        <View style={styles.grid}>
+          <Button label="Standard" disabled={d} compact onPress={() => onCommand(commands.pedalStandard())} />
+          <Button label="Chill" disabled={d} compact onPress={() => onCommand(commands.pedalChill())} />
+          <Button label="Sport" disabled={d} compact onPress={() => onCommand(commands.pedalSport())} />
+        </View>
+        <Text style={styles.driveLabel}>Regen</Text>
+        <View style={styles.grid}>
+          <Button label="Off" disabled={d} compact onPress={() => onCommand(commands.regenOff())} />
+          <Button label="Low" disabled={d} compact onPress={() => onCommand(commands.regenLow())} />
+          <Button label="Standard" disabled={d} compact onPress={() => onCommand(commands.regenStd())} />
+          <Button label="Max" disabled={d} compact onPress={() => onCommand(commands.regenMax())} />
+        </View>
+        <Text style={styles.driveLabel}>Stop Mode</Text>
+        <View style={styles.grid}>
+          <Button label="Creep" disabled={d} compact onPress={() => onCommand(commands.stopCreep())} />
+          <Button label="Roll" disabled={d} compact onPress={() => onCommand(commands.stopRoll())} />
+          <Button label="Hold" disabled={d} compact onPress={() => onCommand(commands.stopHold())} />
+        </View>
       </Card>
 
       <Card title="Display">
-        <Text style={s.driveLabel}>Brightness</Text>
+        <Text style={styles.driveLabel}>Brightness</Text>
         <Slider
           style={{ width: '100%', height: 36 }}
           minimumValue={0}
@@ -178,35 +198,16 @@ export default function VehiclePanel({ state, connected, onCommand }: Props) {
           onSlidingComplete={(v: number) => onCommand(commands.mainDisplay(Math.round(v)))}
         />
       </Card>
-
-      <Card title="Power">
-        <BtnGrid>
-          <Btn label="Acc On" disabled={d} onPress={() => onCommand(commands.powerAccOn())} />
-          <Btn label="Acc Off" disabled={d} onPress={() => onCommand(commands.powerAccOff())} />
-          <Btn label="Drive Ready" disabled={d} onPress={() => onCommand(commands.powerReady())} />
-          <Btn label="Power Off" disabled={d} danger onPress={() => onCommand(commands.powerOff())} />
-        </BtnGrid>
-      </Card>
     </ScrollView>
   );
 }
 
-const s = StyleSheet.create({
+const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: spacing.md, gap: spacing.md },
-  card: { backgroundColor: colors.surface, borderRadius: radius.md, overflow: 'hidden', marginBottom: spacing.sm },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
-  cardTitle: { color: colors.text, fontWeight: '600', fontSize: 14 },
-  cardWarning: { color: colors.warning, fontSize: 11 },
-  cardBody: { padding: spacing.sm },
+  content: { padding: spacing.md, gap: spacing.sm },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  btn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.bgSecondary },
-  btnDanger: { borderColor: colors.error },
-  btnText: { color: colors.text, fontSize: 12 },
-  btnDangerText: { color: colors.error },
-  btnDisabled: { opacity: 0.4 },
   seatRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
-  seatLabel: { color: colors.textMuted, fontWeight: '600', fontSize: 12, width: 24 },
+  seatLabel: { color: colors.textMuted, fontWeight: '600', fontSize: 12, width: 28 },
   driveLabel: { color: colors.textMuted, fontWeight: '600', fontSize: 12, marginTop: spacing.sm, marginBottom: spacing.xs },
   info: { color: colors.textMuted, fontSize: 13 },
 });

@@ -6,8 +6,11 @@ Simple, usable web interface for Tesla CAN bus modification control.
 
 - **USB & Bluetooth Serial** - Connect via Web Serial API
 - **Runtime Variant Switching** - HW4, HW3, Legacy
-- **Live CAN Monitoring** - Real-time frame streaming
+- **Live CAN Monitoring** - Real-time frame streaming with per-bus lane labels
+- **CAN Frame Decoder** - 577 known Tesla frames with signal details
+- **Per-Bus Vehicle Controls** - Controls gated by active bus (Vehicle/Body)
 - **Feature Control** - FSD, nag, profile, offset, ISA chime
+- **Firmware Flasher** - Build & flash with per-bus flag selection
 - **Mobile Responsive** - Works on desktop and Android Chrome
 
 ## Quick Start
@@ -62,12 +65,13 @@ The web UI is 100% compatible with the new simplified hardware firmware. Both us
 ```
 web/
 ├── src/
-│   ├── components/     - Dashboard, Explorer, Setup, Flasher
-│   ├── hooks/          - useBoardLink (main board hook)
+│   ├── components/     - ConnectionBar, ControlPanel, FrameTable, Flasher, Console
+│   ├── hooks/          - useBoardState (board state + bus flags)
 │   ├── lib/board/      - Serial client, protocol, commands
-│   ├── packages/       - Feature packages (FSD, etc.)
+│   ├── pages/          - DashboardPage, FlasherPage, SetupPage
 │   └── styles/         - CSS modules
-├── public/             - Static assets
+├── public/
+│   └── can_frames_mcu2.json  - CAN frame decoder data (577 frames)
 └── index.html          - Entry point
 ```
 

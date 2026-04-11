@@ -1,4 +1,4 @@
-import { parseSerialLine, parseSerialChunk } from '../lib/protocol/parser';
+import { parseSerialLine, parseSerialChunk } from '@teslacanmodder/protocol';
 
 describe('parseSerialLine', () => {
   it('extracts valid JSON from a line', () => {

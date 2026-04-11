@@ -1,6 +1,8 @@
 #pragma once
 #include "core/types.h"
-#include "handler/dispatch.h"
+
+// Forward declarations (defined by platform-specific dispatch & driver)
+void applyFilters(State& s);
 
 // ── System Command Execution ─────────────────────────────────────────────────
 // Handles system-level commands: ping, status, stream, can:raw

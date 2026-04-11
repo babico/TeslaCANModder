@@ -1,0 +1,197 @@
+/* ── Dashboard Page ────────────────────────────────────────────────────────── */
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Dashboard Tabs */
+.dashboard-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 var(--space-lg);
+}
+
+.dashboard-tab {
+  padding: var(--space-md) var(--space-lg);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+}
+
+.dashboard-tab:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.dashboard-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Dashboard Body */
+.dashboard-body {
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboard-controls {
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.dashboard-vehicle {
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-lg);
+}
+
+.dashboard-monitor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dashboard-monitor-frames {
+  overflow: hidden;
+  padding: var(--space-lg);
+  border-right: 1px solid var(--border);
+}
+
+.dashboard-monitor-console {
+  overflow: hidden;
+  padding: var(--space-lg);
+}
+
+/* Vehicle Grid */
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+}
+
+.vehicle-card {
+  margin-bottom: 0;
+}
+
+.vehicle-card .panel-header h3 {
+  font-size: 14px;
+}
+
+/* Seat Grid */
+.seat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.seat-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.seat-label {
+  min-width: 28px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Drive Config Sections */
+.drive-section {
+  margin-bottom: var(--space-md);
+}
+
+.drive-section:last-child {
+  margin-bottom: 0;
+}
+
+.drive-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+/* Brightness Control */
+.brightness-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.brightness-control input[type="range"] {
+  width: 100%;
+}
+
+/* Responsive — Tablet */
+@media (max-width: 768px) {
+  .dashboard-monitor {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .dashboard-monitor-frames {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dashboard-controls {
+    padding: var(--space-md);
+  }
+
+  .dashboard-vehicle {
+    padding: var(--space-md);
+  }
+
+  .vehicle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-tabs {
+    padding: 0 var(--space-sm);
+  }
+
+  .dashboard-tab {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 13px;
+    min-height: var(--touch-min);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-tabs {
+    justify-content: stretch;
+  }
+  .dashboard-tab {
+    flex: 1;
+    text-align: center;
+    padding: var(--space-sm);
+    font-size: 13px;
+  }
+  .dashboard-controls,
+  .dashboard-vehicle {
+    padding: var(--space-sm);
+  }
+  .dashboard-monitor {
+    grid-template-rows: 1fr 200px;
+  }
+  .dashboard-monitor-frames,
+  .dashboard-monitor-console {
+    padding: var(--space-sm);
+  }
+  .seat-row {
+    flex-wrap: wrap;
+  }
+}

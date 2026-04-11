@@ -1,0 +1,79 @@
+/* ── Console ───────────────────────────────────────────────────────────────── */
+
+.console-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.console-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.console-line {
+  display: flex;
+  gap: var(--space-md);
+  padding: 4px 0;
+}
+
+.console-line.error {
+  color: var(--error);
+}
+
+.console-ts {
+  color: var(--text-dim);
+  font-size: 11px;
+  min-width: 80px;
+}
+
+.console-input {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.console-input input {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.console-input input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.console-input input:disabled {
+  opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .console-ts {
+    min-width: 60px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .console-line {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .console-ts {
+    min-width: unset;
+  }
+
+  .console-input {
+    flex-direction: column;
+  }
+}

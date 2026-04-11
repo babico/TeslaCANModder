@@ -22,10 +22,10 @@ Birincil (ve şu anda tek) desteklenen kart.
 | Pin | Fonksiyon | Zorunlu |
 |-----|-----------|---------|
 | D2 | MCP2515 #1 INT | Evet |
-| D3 | MCP2515 #2 INT | Sadece çift CAN |
+| D3 | MCP2515 #2 INT | Sadece Vehicle bus |
 | D4 | HC-05 RX (SoftwareSerial) | Sadece Bluetooth |
 | D5 | HC-05 TX (SoftwareSerial) | Sadece Bluetooth |
-| D9 | MCP2515 #2 CS | Sadece çift CAN |
+| D9 | MCP2515 #2 CS | Sadece Vehicle bus |
 | D10 | MCP2515 #1 CS | Evet |
 | D11 | SPI MOSI | Evet |
 | D12 | SPI MISO | Evet |
@@ -66,12 +66,12 @@ AT+PSWD=1234
 
 ## Firmware Derleme Konfigürasyonları
 
-| Ortam | BT | Çift CAN | Flash Boyutu | RAM Kullanımı |
-|-------|-----|----------|------------|---------------|
-| uno_usb | Hayır | Hayır | ~18 KB | ~800 B |
-| uno_usb_bt | Evet | Hayır | ~22 KB | ~1.1 KB |
-| uno_usb_mcp2 | Hayır | Evet | ~20 KB | ~950 B |
-| uno_full | Evet | Evet | ~24 KB | ~1.3 KB |
+| Ortam | BT | Flash Boyutu | RAM Kullanımı |
+|-------|-----|------------|---------------|
+| uno | Hayır | ~18 KB | ~800 B |
+| uno_bt | Evet | ~22 KB | ~1.1 KB |
+
+Bus etkinleştirme derleme bayrakları ile kontrol edilir: `BUS_VEHICLE_ACTIVE=1`, `BUS_BODY_ACTIVE=1`.
 
 ## Uyumluluk Notları
 

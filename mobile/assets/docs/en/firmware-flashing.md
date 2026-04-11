@@ -14,10 +14,9 @@ The easiest way to flash firmware is through the app's Flasher tab.
 ### Steps
 1. Open the app and go to the **Flasher** tab
 2. Select your firmware variant:
-   - **USB Only** — lightest, no BT or dual CAN
-   - **USB + Bluetooth** — adds HC-05 support
-   - **USB + Dual CAN** — adds second MCP2515
-   - **Full** — everything enabled
+   - **Serial Only** — lightest, FSD bus only
+   - **Serial + Bluetooth** — adds HC-05 support
+3. Toggle CAN bus lanes (FSD always on, Vehicle + Body optional)
 3. Click **Flash via USB**
 4. Select the Arduino serial port when prompted
 5. Wait for "Flashed successfully" message
@@ -41,22 +40,19 @@ pip install platformio
 ```bash
 cd hardware
 
-# USB only
-pio run -e uno_usb -t upload
+# Serial only
+pio run -e uno -t upload
 
-# USB + Bluetooth
-pio run -e uno_usb_bt -t upload
+# Serial + Bluetooth
+pio run -e uno_bt -t upload
 
-# USB + Dual CAN
-pio run -e uno_usb_mcp2 -t upload
-
-# Full (USB + BT + Dual CAN)
-pio run -e uno_full -t upload
+# ESP32 with WiFi + Vehicle + Body buses
+PLATFORMIO_BUILD_FLAGS="-DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1" pio run -e esp32_wifi -t upload
 ```
 
 ### Build Without Upload
 ```bash
-pio run -e uno_usb
+pio run -e uno
 ```
 
 ### Monitor Serial Output
@@ -70,8 +66,10 @@ Each firmware variant is controlled by build flags in `platformio.ini`:
 
 | Flag | Default | Description |
 |------|---------|-------------|
+| BUS_FSD_ACTIVE | 1 | FSD bus (always on) |
+| BUS_VEHICLE_ACTIVE | 0 | Vehicle control bus |
+| BUS_BODY_ACTIVE | 0 | Body control bus |
 | BOARD_ENABLE_BT | 0 | Enable HC-05 Bluetooth |
-| BOARD_ENABLE_MCP2515_2 | 0 | Enable second MCP2515 |
 
 ## Firmware Update Process
 

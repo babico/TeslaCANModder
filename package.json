@@ -1,0 +1,30 @@
+{
+  "name": "teslacanmodder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tesla CAN bus modifier — firmware, web app, mobile app, and debug tools",
+  "workspaces": [
+    "packages/*",
+    "web",
+    "mobile",
+    "tools"
+  ],
+  "scripts": {
+    "build:protocol": "npm run build -w @teslacanmodder/protocol",
+    "test:all": "npm run build:protocol && npm run test:protocol && npm run test:web && npm run test:mobile && npm run test:tools && npm run test:firmware",
+    "test:protocol": "npm test -w @teslacanmodder/protocol",
+    "test:web": "npm run build:protocol && npm test -w tesla-can-modder",
+    "test:mobile": "npm run build:protocol && npm test -w teslacanmodder",
+    "test:tools": "npm test -w @teslacanmodder/tools",
+    "test:firmware": "cd hardware && .\\pio.ps1 test -e native",
+    "lint:all": "npm run lint -w tesla-can-modder",
+    "build:web": "npm run build:protocol && npm run build -w tesla-can-modder"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@babel/runtime": "^7.29.2"
+  }
+}

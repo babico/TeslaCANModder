@@ -1,37 +1,14 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet } from 'react-native';
-import { commands } from '../lib/protocol/commands';
-import type { BoardState } from '../hooks/useBoardState';
-import { colors, spacing, radius } from '../styles/theme';
+import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
+import { commands } from '@teslacanmodder/protocol';
+import type { BoardState } from '@teslacanmodder/protocol';
+import { colors, spacing, radius, shadows } from '../styles/theme';
+import { Button, Card, Badge, StatusDot } from './ui';
 
 interface Props {
   state: BoardState;
   connected: boolean;
   onCommand: (cmd: string) => void;
-}
-
-function Btn({ label, active, disabled, danger, onPress }: { label: string; active?: boolean; disabled?: boolean; danger?: boolean; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      style={[styles.btn, active && styles.btnActive, danger && styles.btnDanger]}
-      disabled={disabled}
-      onPress={onPress}
-    >
-      <Text style={[styles.btnText, active && styles.btnTextActive, danger && styles.btnDangerText, disabled && styles.btnTextDisabled]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-function Section({ title, right, children }: { title: string; right?: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {right ? <Text style={styles.sectionRight}>{right}</Text> : null}
-      </View>
-      {children}
-    </View>
-  );
 }
 
 const formatUptime = (ms?: number) => {
@@ -44,8 +21,29 @@ const formatUptime = (ms?: number) => {
   return `${s}s`;
 };
 
+function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <View style={styles.stat}>
+      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statValue, color ? { color } : undefined]}>{value}</Text>
+    </View>
+  );
+}
+
+function FeatureCard({ title, status, on, children }: { title: string; status: string; on: boolean; children: React.ReactNode }) {
+  return (
+    <View style={[styles.featureCard, on && styles.featureCardOn]}>
+      <View style={styles.featureTop}>
+        <Text style={styles.featureName}>{title}</Text>
+        <Badge label={status} variant={on ? 'success' : 'default'} />
+      </View>
+      <View style={styles.btnRow}>{children}</View>
+    </View>
+  );
+}
+
 export default function ControlPanel({ state, connected, onCommand }: Props) {
-  const { hardware, driver, uptime, variant, fsd, nag, profile, profilePinned, offset, offsetPinned, isaChime, features, canOnline, standby, bus2, summonActive } = state;
+  const { hardware, driver, uptime, variant, board, fsd, nag, profile, profilePinned, offset, offsetPinned, isaChime, summonInject, features, canOnline, standby, bus2, summonActive } = state;
   const [customOffset, setCustomOffset] = useState('');
   const d = !connected;
 
@@ -58,149 +56,147 @@ export default function ControlPanel({ state, connected, onCommand }: Props) {
   };
 
   const busLabel = standby ? 'Standby' : canOnline ? 'CAN Active' : 'Offline';
-  const busColor = standby ? colors.warning : canOnline ? colors.success : colors.textDim;
+  const busStatus: 'connected' | 'warning' | 'disconnected' = standby ? 'warning' : canOnline ? 'connected' : 'disconnected';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Board + EEPROM info */}
       <View style={styles.row}>
-        <View style={styles.half}>
-          <Section title="Board" right={variant.toUpperCase()}>
-            <View style={[styles.healthBanner, { borderLeftColor: busColor }]}>
-              <View style={[styles.healthDot, { backgroundColor: busColor }]} />
-              <Text style={styles.healthText}>{busLabel}</Text>
-            </View>
-            <View style={styles.statGrid}>
-              <Stat label="Board" value={hardware} />
-              <Stat label="Driver" value={driver} />
-              <Stat label="Uptime" value={formatUptime(uptime)} />
-              <Stat label="CAN" value={bus2 ? 'Dual' : 'Single'} />
-            </View>
-          </Section>
-        </View>
-        <View style={styles.half}>
-          <Section title="EEPROM" right="Saved">
-            <View style={styles.statGrid}>
-              <Stat label="Variant" value={variant.toUpperCase()} />
-              <Stat label="FSD" value={fsd ? 'ON' : 'OFF'} color={fsd ? colors.success : undefined} />
-              <Stat label="Nag" value={nag ? 'ON' : 'OFF'} color={nag ? colors.success : undefined} />
-              <Stat label="Profile" value={`${profile} ${profilePinned ? '(pin)' : '(auto)'}`} />
-              {features.speedOffset && <Stat label="Offset" value={`${offset}% ${offsetPinned ? '(pin)' : '(auto)'}`} />}
-              {features.isaSpeedChime && <Stat label="ISA" value={isaChime ? 'Suppress' : 'Original'} />}
-            </View>
-          </Section>
-        </View>
+        <Card title="Board" right={<><Badge label={board === 'esp32' ? 'ESP32' : board === 'arduino' ? 'UNO' : '?'} variant="blue" /><Badge label={variant.toUpperCase()} variant="accent" /></>} style={styles.half}>
+          <View style={styles.healthBanner}>
+            <StatusDot status={busStatus} size={8} />
+            <Text style={styles.healthText}>{busLabel}</Text>
+          </View>
+          <View style={styles.statGrid}>
+            <Stat label="Board" value={hardware} />
+            <Stat label="Driver" value={driver} />
+            <Stat label="Uptime" value={formatUptime(uptime)} />
+            <Stat label="CAN" value={bus2 ? 'Dual' : 'Single'} />
+          </View>
+        </Card>
+
+        <Card title={board === 'esp32' ? 'NVS Flash' : 'EEPROM'} right={<Badge label="Saved" variant="success" />} style={styles.half}>
+          <View style={styles.statGrid}>
+            <Stat label="Variant" value={variant.toUpperCase()} />
+            <Stat label="FSD" value={fsd ? 'ON' : 'OFF'} color={fsd ? colors.success : undefined} />
+            <Stat label="Nag" value={nag ? 'ON' : 'OFF'} color={nag ? colors.success : undefined} />
+            <Stat label="Profile" value={`${profile} ${profilePinned ? '(pin)' : '(auto)'}`} />
+            {features.speedOffset && <Stat label="Offset" value={`${offset}% ${offsetPinned ? '(pin)' : '(auto)'}`} />}
+            {features.isaSpeedChime && <Stat label="ISA" value={isaChime ? 'Suppress' : 'Original'} />}
+            {features.summon && <Stat label="Summon Inj." value={summonInject ? 'ON' : 'OFF'} color={summonInject ? colors.success : undefined} />}
+          </View>
+        </Card>
       </View>
 
       {/* Feature toggles */}
       <View style={styles.featureGrid}>
         <FeatureCard title="FSD" status={fsd ? 'ON' : 'OFF'} on={fsd}>
-          <Btn label="Enable" active={fsd} disabled={d} onPress={() => onCommand(commands.fsd(true))} />
-          <Btn label="Disable" active={!fsd} disabled={d} onPress={() => onCommand(commands.fsd(false))} />
+          <Button label="Enable" active={fsd} disabled={d} compact onPress={() => onCommand(commands.fsd(true))} />
+          <Button label="Disable" active={!fsd} disabled={d} compact onPress={() => onCommand(commands.fsd(false))} />
         </FeatureCard>
 
         <FeatureCard title="Nag Suppress" status={nag ? 'ON' : 'OFF'} on={nag}>
-          <Btn label="Enable" active={nag} disabled={d} onPress={() => onCommand(commands.nag(true))} />
-          <Btn label="Disable" active={!nag} disabled={d} onPress={() => onCommand(commands.nag(false))} />
+          <Button label="Enable" active={nag} disabled={d} compact onPress={() => onCommand(commands.nag(true))} />
+          <Button label="Disable" active={!nag} disabled={d} compact onPress={() => onCommand(commands.nag(false))} />
         </FeatureCard>
 
         {features.isaSpeedChime && (
           <FeatureCard title="ISA Chime" status={isaChime ? 'Suppress' : 'Original'} on={isaChime}>
-            <Btn label="Suppress" active={isaChime} disabled={d} onPress={() => onCommand(commands.isaChime(true))} />
-            <Btn label="Original" active={!isaChime} disabled={d} onPress={() => onCommand(commands.isaChime(false))} />
+            <Button label="Suppress" active={isaChime} disabled={d} compact onPress={() => onCommand(commands.isaChime(true))} />
+            <Button label="Original" active={!isaChime} disabled={d} compact onPress={() => onCommand(commands.isaChime(false))} />
+          </FeatureCard>
+        )}
+
+        {features.summon && (
+          <FeatureCard title="Summon Inject" status={summonInject ? 'ON' : 'OFF'} on={summonInject}>
+            <Button label="Enable" active={summonInject} disabled={d} compact onPress={() => onCommand(commands.summonInject(true))} />
+            <Button label="Disable" active={!summonInject} disabled={d} compact onPress={() => onCommand(commands.summonInject(false))} />
           </FeatureCard>
         )}
 
         {features.summon && (
           <FeatureCard title="Summon" status={summonActive ? 'Active' : 'Idle'} on={summonActive}>
-            <Btn label="Fwd" disabled={d} onPress={() => onCommand(commands.summonForward())} />
-            <Btn label="Rev" disabled={d} onPress={() => onCommand(commands.summonReverse())} />
-            <Btn label="Stop" danger disabled={d} onPress={() => onCommand(commands.summonStop())} />
+            <Button label="Fwd" disabled={d} compact onPress={() => onCommand(commands.summonForward())} />
+            <Button label="Rev" disabled={d} compact onPress={() => onCommand(commands.summonReverse())} />
+            <Button label="Stop" variant="danger" disabled={d} compact onPress={() => onCommand(commands.summonStop())} />
           </FeatureCard>
         )}
       </View>
 
       {/* Speed Profile */}
-      <Section title="Speed Profile" right={`${profile} ${profilePinned ? '(PINNED)' : '(AUTO)'}`}>
+      <Card title="Speed Profile" right={<Text style={styles.cardRight}>{profile} {profilePinned ? '(PINNED)' : '(AUTO)'}</Text>}>
         <View style={styles.btnRow}>
           {[{ id: 0, n: 'Chill' }, { id: 1, n: 'Normal' }, { id: 2, n: 'Hurry' }, { id: 3, n: 'Max' }, { id: 4, n: 'Sloth' }].map(p => (
-            <Btn key={p.id} label={p.n} active={profilePinned && profile === p.id} disabled={d} onPress={() => onCommand(commands.profile(p.id))} />
+            <Button key={p.id} label={p.n} active={profilePinned && profile === p.id} disabled={d} compact onPress={() => onCommand(commands.profile(p.id))} />
           ))}
-          <Btn label="Auto" active={!profilePinned} disabled={d} onPress={() => onCommand(commands.profileAuto())} />
+          <Button label="Auto" active={!profilePinned} disabled={d} compact onPress={() => onCommand(commands.profileAuto())} />
         </View>
-      </Section>
+      </Card>
 
       {/* Speed Offset */}
       {features.speedOffset && (
-        <Section title="Speed Offset" right={`${offset}% ${offsetPinned ? '(PINNED)' : '(AUTO)'}`}>
+        <Card title="Speed Offset" right={<Text style={styles.cardRight}>{offset}% {offsetPinned ? '(PINNED)' : '(AUTO)'}</Text>}>
           <View style={styles.btnRow}>
             {[0, 20, 40, 60, 80, 100].map(o => (
-              <Btn key={o} label={`${o}%`} active={offsetPinned && offset === o} disabled={d} onPress={() => onCommand(commands.offset(o))} />
+              <Button key={o} label={`${o}%`} active={offsetPinned && offset === o} disabled={d} compact onPress={() => onCommand(commands.offset(o))} />
             ))}
-            <Btn label="Auto" active={!offsetPinned} disabled={d} onPress={() => onCommand(commands.offsetAuto())} />
+            <Button label="Auto" active={!offsetPinned} disabled={d} compact onPress={() => onCommand(commands.offsetAuto())} />
           </View>
           <View style={styles.customRow}>
             <TextInput style={styles.customInput} keyboardType="numeric" placeholder="Custom %" placeholderTextColor={colors.textDim} value={customOffset} onChangeText={setCustomOffset} editable={connected} />
-            <Btn label="Set" disabled={d || !customOffset} onPress={handleCustomOffset} />
+            <Button label="Set" disabled={d || !customOffset} compact onPress={handleCustomOffset} />
           </View>
-        </Section>
+        </Card>
       )}
     </ScrollView>
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={[styles.statValue, color ? { color } : undefined]}>{value}</Text>
-    </View>
-  );
-}
-
-function FeatureCard({ title, status, on, children }: { title: string; status: string; on: boolean; children: React.ReactNode }) {
-  return (
-    <View style={styles.featureCard}>
-      <View style={styles.featureTop}>
-        <Text style={styles.featureName}>{title}</Text>
-        <Text style={[styles.featureStatus, on ? styles.statusOn : styles.statusOff]}>{status}</Text>
-      </View>
-      <View style={styles.btnRow}>{children}</View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: spacing.md, gap: spacing.md },
-  row: { flexDirection: 'row', gap: spacing.md },
+  content: { gap: spacing.md },
+  row: { flexDirection: 'row', gap: spacing.sm },
   half: { flex: 1 },
-  section: { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.md },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  sectionTitle: { color: colors.text, fontWeight: '600', fontSize: 15 },
-  sectionRight: { color: colors.textMuted, fontSize: 12 },
-  healthBanner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderLeftWidth: 3, backgroundColor: colors.bgSecondary, borderRadius: radius.sm, marginBottom: spacing.sm },
-  healthDot: { width: 8, height: 8, borderRadius: 4 },
+  healthBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.sm,
+    backgroundColor: colors.bgTertiary,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
+  },
   healthText: { color: colors.text, fontSize: 13, fontWeight: '500' },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   stat: { width: '45%' },
   statLabel: { color: colors.textMuted, fontSize: 11 },
   statValue: { color: colors.text, fontWeight: '600', fontSize: 13 },
   featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  featureCard: { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, width: '48%' },
+  featureCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    width: '48%',
+    ...shadows.sm,
+  },
+  featureCardOn: {
+    borderColor: colors.success,
+  },
   featureTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
   featureName: { color: colors.text, fontWeight: '600', fontSize: 14 },
-  featureStatus: { fontSize: 12, fontWeight: '600' },
-  statusOn: { color: colors.success },
-  statusOff: { color: colors.textDim },
   btnRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  btn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.bgSecondary },
-  btnActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  btnDanger: { borderColor: colors.error },
-  btnText: { color: colors.text, fontSize: 12 },
-  btnTextActive: { color: '#fff' },
-  btnDangerText: { color: colors.error },
-  btnTextDisabled: { opacity: 0.4 },
+  cardRight: { color: colors.textMuted, fontSize: 12 },
   customRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, alignItems: 'center' },
-  customInput: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, padding: spacing.sm, color: colors.text, fontSize: 13, width: 90 },
+  customInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    color: colors.text,
+    fontSize: 13,
+    width: 90,
+    backgroundColor: colors.bgTertiary,
+  },
 });

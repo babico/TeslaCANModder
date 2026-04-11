@@ -1,6 +1,8 @@
 #include <unity.h>
-#include "can/frame.h"
-#include "can/helpers.h"
+#include <cstring>
+#include "core/types.h"
+#include "protocol/can.h"
+#include "protocol/profile.h"
 
 void setUp() {}
 void tearDown() {}

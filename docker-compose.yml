@@ -3,9 +3,16 @@ services:
     build:
       context: .
       dockerfile: hardware/Dockerfile
+    ports:
+      - "8100:8100"
     volumes:
       - .:/app
-    command: ["platformio", "run", "-e", "uno"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health')\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   web:
     build:

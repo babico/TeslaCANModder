@@ -4,43 +4,37 @@ import { Asset } from 'expo-asset';
 import { colors, spacing, radius } from '../styles/theme';
 
 const DOC_MAP: Record<string, { labelEn: string; labelTr: string }> = {
-  'setup': { labelEn: 'Setup Guide', labelTr: 'Kurulum Rehberi' },
-  'wiring': { labelEn: 'Wiring', labelTr: 'Kablolama' },
+  'getting-started': { labelEn: 'Getting Started', labelTr: 'Başlarken' },
+  'hardware-setup': { labelEn: 'Hardware Setup', labelTr: 'Donanım Kurulumu' },
   'commands': { labelEn: 'Commands', labelTr: 'Komutlar' },
   'can-protocol': { labelEn: 'CAN Protocol', labelTr: 'CAN Protokolü' },
+  'firmware-variants': { labelEn: 'Firmware Variants', labelTr: 'Firmware Varyantları' },
+  'ble': { labelEn: 'Bluetooth (BLE)', labelTr: 'Bluetooth (BLE)' },
+  'wifi-api': { labelEn: 'WiFi API', labelTr: 'WiFi API' },
+  'vehicle-features': { labelEn: 'Vehicle Features', labelTr: 'Araç Özellikleri' },
   'troubleshooting': { labelEn: 'Troubleshooting', labelTr: 'Sorun Giderme' },
-  'hardware-variants': { labelEn: 'Hardware Variants', labelTr: 'Donanım Varyantları' },
-  'firmware-flashing': { labelEn: 'Firmware Flashing', labelTr: 'Firmware Yükleme' },
 };
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const docAssets: Record<string, Record<string, number>> = {
-  en: {
-    'setup': require('../assets/docs/en/setup-guide.md'),
-    'wiring': require('../assets/docs/en/wiring.md'),
-    'commands': require('../assets/docs/en/commands.md'),
-    'can-protocol': require('../assets/docs/en/can-protocol.md'),
-    'troubleshooting': require('../assets/docs/en/troubleshooting.md'),
-    'hardware-variants': require('../assets/docs/en/hardware-variants.md'),
-    'firmware-flashing': require('../assets/docs/en/firmware-flashing.md'),
-  },
-  tr: {
-    'setup': require('../assets/docs/tr/setup-guide.md'),
-    'wiring': require('../assets/docs/tr/wiring.md'),
-    'commands': require('../assets/docs/tr/commands.md'),
-    'can-protocol': require('../assets/docs/tr/can-protocol.md'),
-    'troubleshooting': require('../assets/docs/tr/troubleshooting.md'),
-    'hardware-variants': require('../assets/docs/tr/hardware-variants.md'),
-    'firmware-flashing': require('../assets/docs/tr/firmware-flashing.md'),
-  },
+// Load markdown files from the root docs/ folder (shared across all apps)
+const docAssets: Record<string, number> = {
+  'getting-started': require('../../docs/getting-started.md'),
+  'hardware-setup': require('../../docs/hardware-setup.md'),
+  'commands': require('../../docs/commands.md'),
+  'can-protocol': require('../../docs/can-protocol.md'),
+  'firmware-variants': require('../../docs/firmware-variants.md'),
+  'ble': require('../../docs/ble.md'),
+  'wifi-api': require('../../docs/wifi-api.md'),
+  'vehicle-features': require('../../docs/vehicle-features.md'),
+  'troubleshooting': require('../../docs/troubleshooting.md'),
 };
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-async function loadDoc(lang: string, section: string): Promise<{ text: string; label: string }> {
+async function loadDoc(section: string): Promise<{ text: string; label: string }> {
   const map = DOC_MAP[section];
-  const label = lang === 'tr' ? map?.labelTr : map?.labelEn || section;
+  const label = map?.labelEn || section;
   try {
-    const assetId = docAssets[lang]?.[section];
+    const assetId = docAssets[section];
     if (assetId == null) return { text: `No content found for ${section}.`, label };
     const [asset] = await Asset.loadAsync(assetId);
     const uri = asset.localUri || asset.uri;
@@ -66,12 +60,11 @@ export default function DocViewer({ content, title, section, lang }: Props) {
   React.useEffect(() => {
     if (content) { setResolved(content); return; }
     if (!section) return;
-    const l = lang || 'en';
-    loadDoc(l, section).then(({ text, label }) => {
+    loadDoc(section).then(({ text, label }) => {
       setResolved(text);
       if (!title) setResolvedTitle(label);
     });
-  }, [content, section, lang, title]);
+  }, [content, section, title]);
 
   const blocks = parseMarkdown(resolved);
 

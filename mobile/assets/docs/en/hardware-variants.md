@@ -22,10 +22,10 @@ The primary (and currently only) supported board.
 | Pin | Function | Required |
 |-----|----------|----------|
 | D2 | MCP2515 #1 INT | Yes |
-| D3 | MCP2515 #2 INT | Only for dual CAN |
+| D3 | MCP2515 #2 INT | Only for Vehicle bus |
 | D4 | HC-05 RX (SoftwareSerial) | Only for Bluetooth |
 | D5 | HC-05 TX (SoftwareSerial) | Only for Bluetooth |
-| D9 | MCP2515 #2 CS | Only for dual CAN |
+| D9 | MCP2515 #2 CS | Only for Vehicle bus |
 | D10 | MCP2515 #1 CS | Yes |
 | D11 | SPI MOSI | Yes |
 | D12 | SPI MISO | Yes |
@@ -66,12 +66,10 @@ AT+PSWD=1234
 
 ## Firmware Build Configurations
 
-| Environment | BT | Dual CAN | Flash Size | RAM Usage |
+| Environment | BT | Use Case | Flash Size | RAM Usage |
 |-------------|-----|----------|------------|-----------|
-| uno_usb | No | No | ~18 KB | ~800 B |
-| uno_usb_bt | Yes | No | ~22 KB | ~1.1 KB |
-| uno_usb_mcp2 | No | Yes | ~20 KB | ~950 B |
-| uno_full | Yes | Yes | ~24 KB | ~1.3 KB |
+| uno | No | Serial only | ~18 KB | ~800 B |
+| uno_bt | Yes | Serial + Bluetooth | ~22 KB | ~1.1 KB |
 
 ## Compatibility Notes
 

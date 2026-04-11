@@ -56,13 +56,14 @@ Each CAN frame received by the firmware is forwarded to the serial/BT interface 
 - **SPI Clock:** 8 MHz (Arduino SPI default)
 - **Interrupt Mode:** Falling edge on INT pin
 
-## Dual CAN Bus
+## Multi-Bus CAN
 
-When a second MCP2515 is connected:
-- Bus 0 (primary): CS=D10, INT=D2 — VehicleBus
-- Bus 1 (secondary): CS=D9, INT=D3 — Any secondary bus
-- Both buses operate at 500 kbps independently
-- The `bus` field in frame JSON indicates the source
+With additional MCP2515 modules connected:
+- Bus 0 (FSD): CS=D10, INT=D2 — FSD / Autopilot (X179 pins 13-14)
+- Bus 1 (Vehicle): CS=D9, INT=D3 — Vehicle Control (X179 pins 9-10)
+- Bus 2 (Body): CS=D8, INT=D6 — Body Control (X179 pins 2-3)
+- All buses operate at 500 kbps independently
+- The `bus` field in frame JSON indicates the source bus
 
 ## CAN Frame Decoding
 

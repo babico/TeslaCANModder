@@ -25,14 +25,20 @@ TeslaCANModder için donanım kurulumu ve yazılım yapılandırması.
 
 ## Firmware Varyantları
 
-| Varyant | Bluetooth | Çift CAN | Kullanım |
-|---------|-----------|----------|----------|
-| Sadece USB | Hayır | Hayır | En hafif firmware |
-| USB + Bluetooth | Evet | Hayır | HC-05 ile kablosuz kontrol |
-| USB + Çift CAN | Hayır | Evet | İki CAN bus izleme |
-| Tam | Evet | Evet | Her şey etkin |
+| Varyant | Bluetooth | Kullanım |
+|---------|-----------|----------|
+| uno | Hayır | En hafif firmware |
+| uno_bt | Evet | HC-05 ile kablosuz kontrol |
 
-Tüm varyantlar tüm FSD/araç özelliklerini destekler. Bluetooth ve Çift CAN sadece I/O kapasitesini etkiler.
+Bus etkinleştirme derleme bayrakları ile kontrol edilir:
+
+| Bayrak | Varsayılan | Açıklama |
+|--------|-----------|----------|
+| BUS_FSD_ACTIVE | 1 | FSD bus (her zaman açık) |
+| BUS_VEHICLE_ACTIVE | 0 | Vehicle bus'ı etkinleştir |
+| BUS_BODY_ACTIVE | 0 | Body bus'ı etkinleştir |
+
+Tüm varyantlar tüm FSD/araç özelliklerini destekler. Bluetooth sadece I/O kapasitesini etkiler.
 
 ## Araç Varyant Seçimi
 
@@ -59,5 +65,5 @@ Bağlandıktan sonra bağlantı çubuğundan varyantınızı seçin. Firmware bu
 ### PlatformIO CLI
 ```bash
 cd hardware
-pio run -e uno_usb -t upload
+pio run -e uno -t upload
 ```

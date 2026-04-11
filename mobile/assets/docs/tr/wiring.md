@@ -16,9 +16,9 @@ Tüm donanım konfigürasyonları için detaylı kablolama şemaları.
 
 CAN-H / CAN-L'yi X179 pin 13/14'e (VehicleBus) bağlayın.
 
-## MCP2515 #2 → Arduino Uno (İsteğe Bağlı Çift CAN)
+## MCP2515 #2 → Arduino Uno (İsteğe Bağlı Vehicle Bus)
 
-İkinci MCP2515, ikinci bir CAN bus'u izlemenize olanak tanır (örn. PowertrainBus). Firmware başlangıçta otomatik algılar.
+İkinci MCP2515, Vehicle bus'u izlemenize olanak tanır. Firmware başlangıçta otomatik algılar.
 
 | MCP2515 #2 | Arduino | Notlar |
 |------------|---------|--------|
@@ -32,7 +32,7 @@ CAN-H / CAN-L'yi X179 pin 13/14'e (VehicleBus) bağlayın.
 
 SPI hatları (SCK/MISO/MOSI) paylaşımlıdır — sadece CS ve INT farklıdır.
 
-**Uyarı:** Arduino Uno'da tam 2 donanım kesmesi vardır: D2 (INT0) ve D3 (INT1). Çift CAN kullanırken D3'ü başka amaçla kullanmayın.
+**Uyarı:** Arduino Uno'da tam 2 donanım kesmesi vardır: D2 (INT0) ve D3 (INT1). İkinci MCP2515 kullanırken D3'ü başka amaçla kullanmayın.
 
 ## HC-05 Bluetooth → Arduino Uno (İsteğe Bağlı)
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-#include "core/driver.h"
+void driverSend(const Frame& f, uint8_t bus = 0);
 
 // ── Trunk/Frunk Control ──────────────────────────────────────────────────────
 // Unified control for all trunk/frunk operations
@@ -32,11 +32,7 @@ static void controlFrunk(const uint8_t* lastCtrl, bool open, State& s) {
   
   // Send 20 times over 400ms
   for (uint8_t i = 0; i < 20; i++) {
-#if BOARD_ENABLE_MCP2515_2
-    driverSend(f, s.ctrlBus);
-#else
-    driverSend(f);
-#endif
+    driverSend(f, BUS_VEHICLE);
     delay(20);
   }
 }
@@ -53,7 +49,7 @@ static void controlTrunk(bool open) {
   
   // Send 20 times over 2 seconds
   for (uint8_t i = 0; i < 20; i++) {
-    driverSend(f);
+    driverSend(f, BUS_BODY);
     delay(100);
   }
 }
@@ -70,7 +66,7 @@ static void controlGlovebox() {
   
   // Send 20 times over 2 seconds
   for (uint8_t i = 0; i < 20; i++) {
-    driverSend(f);
+    driverSend(f, BUS_BODY);
     delay(100);
   }
 }

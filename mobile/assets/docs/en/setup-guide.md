@@ -25,14 +25,20 @@ Complete hardware installation and software configuration for TeslaCANModder.
 
 ## Firmware Variants
 
-| Variant | Bluetooth | Dual CAN | Use Case |
-|---------|-----------|----------|----------|
-| USB Only | No | No | Lightest firmware |
-| USB + Bluetooth | Yes | No | Wireless control via HC-05 |
-| USB + Dual CAN | No | Yes | Monitor two CAN buses |
-| Full | Yes | Yes | Everything enabled |
+| Variant | Bluetooth | Use Case |
+|---------|-----------|----------|
+| Serial Only | No | Lightest firmware |
+| Serial + Bluetooth | Yes | Wireless control via HC-05 |
 
-All variants support all FSD/vehicle features. Bluetooth and Dual CAN only affect I/O capability.
+CAN bus lanes are controlled independently via build flags:
+
+| Flag | Default | Bus Function |
+|------|---------|--------------|
+| `BUS_FSD_ACTIVE` | ON | FSD / Autopilot (X179 pins 13-14) |
+| `BUS_VEHICLE_ACTIVE` | OFF | Vehicle Control — mirror, lock, climate, charge, drive (X179 pins 9-10) |
+| `BUS_BODY_ACTIVE` | OFF | Body Control — window, sentry, trunk (X179 pins 2-3) |
+
+All variants support all FSD features. Bus flags and connectivity are the only differences.
 
 ## Vehicle Variant Selection
 
@@ -59,5 +65,5 @@ Select your variant in the connection bar after connecting. The firmware saves i
 ### PlatformIO CLI
 ```bash
 cd hardware
-pio run -e uno_usb -t upload
+pio run -e uno -t upload
 ```

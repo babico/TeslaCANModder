@@ -16,9 +16,9 @@ Detailed wiring diagrams for all hardware configurations.
 
 Connect CAN-H / CAN-L to X179 pins 13/14 (VehicleBus).
 
-## MCP2515 #2 → Arduino Uno (Optional Dual CAN)
+## MCP2515 #2 → Arduino Uno (Optional Vehicle Bus)
 
-A second MCP2515 lets you monitor a second CAN bus (e.g. PowertrainBus). The firmware auto-detects it at boot.
+A second MCP2515 lets you access the Vehicle control bus. Enable with `BUS_VEHICLE_ACTIVE=1`. The firmware auto-detects it at boot.
 
 | MCP2515 #2 | Arduino | Notes |
 |------------|---------|-------|
@@ -32,7 +32,7 @@ A second MCP2515 lets you monitor a second CAN bus (e.g. PowertrainBus). The fir
 
 SPI lines (SCK/MISO/MOSI) are shared — only CS and INT differ.
 
-**Warning:** Arduino Uno has exactly 2 hardware interrupts: D2 (INT0) and D3 (INT1). Do not reuse D3 when using dual CAN.
+**Warning:** Arduino Uno has exactly 2 hardware interrupts: D2 (INT0) and D3 (INT1). Do not reuse D3 when using the Vehicle bus.
 
 ## HC-05 Bluetooth → Arduino Uno (Optional)
 
