@@ -16,6 +16,6 @@
 [submodule "legacy/mikegapinski-tesla-can-explorer"]
 	path = legacy/mikegapinski-tesla-can-explorer
 	url = https://github.com/mikegapinski/tesla-can-explorer
-[submodule "legacy/ev-open-can-tools"]
-	path = legacy/ev-open-can-tools
+[submodule "legacy/ev-open-can-tools-ev-open-can-tools"]
+	path = legacy/ev-open-can-tools-ev-open-can-tools
 	url = https://github.com/ev-open-can-tools/ev-open-can-tools
