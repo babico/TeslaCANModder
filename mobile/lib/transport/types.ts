@@ -20,4 +20,5 @@ export interface ScannedDevice {
   id: string;
   name: string | null;
   rssi: number | null;
+  serviceUuids?: string[];
 }

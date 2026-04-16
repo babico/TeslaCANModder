@@ -147,6 +147,7 @@ export function scanForDevices(
       id: device.id,
       name: device.name || device.localName || null,
       rssi: device.rssi,
+      serviceUuids: device.serviceUUIDs ?? undefined,
     });
   });
 

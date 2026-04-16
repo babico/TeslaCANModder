@@ -5,6 +5,27 @@ import type { ScannedDevice, BoardState } from '@teslacanmodder/protocol';
 import { colors, spacing, radius, shadows } from '../styles/theme';
 import { StatusDot, Badge, Button } from './ui';
 
+/** Signal quality label based on RSSI value. */
+function rssiLabel(rssi: number | null): { text: string; variant: 'success' | 'warning' | 'default' } {
+  if (rssi == null) return { text: '—', variant: 'default' };
+  if (rssi >= -50) return { text: 'Excellent', variant: 'success' };
+  if (rssi >= -70) return { text: 'Good', variant: 'success' };
+  if (rssi >= -85) return { text: 'Fair', variant: 'warning' };
+  return { text: 'Weak', variant: 'default' };
+}
+
+const NUS_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const HM_SERVICE = '0000ffe0-0000-1000-8000-00805f9b34fb';
+
+/** Detect BLE service type from advertised UUIDs. */
+function serviceHint(uuids?: string[]): string | null {
+  if (!uuids || uuids.length === 0) return null;
+  const lower = uuids.map(u => u.toLowerCase());
+  if (lower.some(u => u.includes(NUS_SERVICE))) return 'ESP32 (NUS)';
+  if (lower.some(u => u.includes(HM_SERVICE))) return 'HC/HM (FFE)';
+  return null;
+}
+
 interface Props {
   connected: boolean;
   transportType: 'ble' | 'serial' | null;
@@ -45,18 +66,40 @@ export default function ConnectionBar({
     setBleError(null);
     setScanning(true);
     if (Platform.OS === 'web') return;
-    import('../lib/transport/ble').then(({ scanForDevices }) => {
-      try {
-        const stop = scanForDevices((device) => {
-          setDevices(prev => prev.find(d => d.id === device.id) ? prev : [...prev, device]);
-        }, 8000);
-        setTimeout(() => { stop(); setScanning(false); }, 8000);
-      } catch (err: unknown) {
-        setScanning(false);
-        const msg = err instanceof Error ? err.message : 'BLE scan failed';
-        setBleError(msg.includes('NativeEventEmitter')
-          ? 'Bluetooth not available in Expo Go. A development build is required for BLE.'
-          : msg);
+    import('../lib/transport/ble').then(({ scanForDevices, checkBlePermissions, requestBlePermissions }) => {
+      // Check permissions first
+      checkBlePermissions().then(diag => {
+        if (!diag.ready) {
+          // Try requesting permissions
+          requestBlePermissions().then(granted => {
+            if (!granted) {
+              setScanning(false);
+              setBleError(diag.message);
+              return;
+            }
+            doScan();
+          }).catch(() => {
+            setScanning(false);
+            setBleError(diag.message);
+          });
+          return;
+        }
+        doScan();
+      }).catch(() => doScan());
+
+      function doScan() {
+        try {
+          const stop = scanForDevices((device) => {
+            setDevices(prev => prev.find(d => d.id === device.id) ? prev : [...prev, device]);
+          }, 8000);
+          setTimeout(() => { stop(); setScanning(false); }, 8000);
+        } catch (err: unknown) {
+          setScanning(false);
+          const msg = err instanceof Error ? err.message : 'BLE scan failed';
+          setBleError(msg.includes('NativeEventEmitter')
+            ? 'Bluetooth not available in Expo Go. A development build is required for BLE.'
+            : msg);
+        }
       }
     }).catch(() => {
       setScanning(false);
@@ -149,27 +192,36 @@ export default function ConnectionBar({
               <>
                 <Text style={styles.modalTitle}>Bluetooth Error</Text>
                 <Text style={styles.modalError}>{bleError}</Text>
+                <Button label="Retry" variant="primary" onPress={() => { dismissModal(); startScan(); }} style={{ marginBottom: spacing.sm, alignSelf: 'center' }} />
               </>
             ) : (
               <>
                 <Text style={styles.modalTitle}>
-                  {scanning ? 'Scanning for devices...' : 'Select a device'}
+                  {scanning ? 'Scanning for devices...' : `${devices.length} device${devices.length !== 1 ? 's' : ''} found`}
                 </Text>
                 {scanning && <ActivityIndicator color={colors.accent} style={{ marginVertical: 12 }} />}
                 <FlatList
                   data={devices}
                   keyExtractor={item => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.deviceRow} onPress={() => selectDevice(item)}>
-                      <Text style={styles.deviceName}>{item.name || 'Unknown Device'}</Text>
-                      <View style={styles.deviceMeta}>
-                        <Text style={styles.deviceId}>{item.id}</Text>
-                        {item.rssi != null && <Badge label={`${item.rssi} dBm`} variant="blue" />}
-                      </View>
-                    </TouchableOpacity>
-                  )}
+                  renderItem={({ item }) => {
+                    const signal = rssiLabel(item.rssi);
+                    const hint = serviceHint(item.serviceUuids);
+                    return (
+                      <TouchableOpacity style={styles.deviceRow} onPress={() => selectDevice(item)}>
+                        <View style={styles.deviceHeader}>
+                          <Text style={styles.deviceName}>{item.name || 'Unknown Device'}</Text>
+                          <Badge label={signal.text} variant={signal.variant} />
+                        </View>
+                        <View style={styles.deviceMeta}>
+                          <Text style={styles.deviceId}>{item.id}</Text>
+                          {item.rssi != null && <Text style={styles.deviceRssi}>{item.rssi} dBm</Text>}
+                          {hint && <Badge label={hint} variant="blue" />}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  }}
                   ListEmptyComponent={
-                    !scanning ? <Text style={styles.muted}>No devices found</Text> : null
+                    !scanning ? <Text style={styles.muted}>No devices found. Make sure your board is powered on and nearby.</Text> : null
                   }
                 />
               </>
@@ -217,7 +269,9 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     gap: 4,
   },
-  deviceName: { color: colors.text, fontSize: 14, fontWeight: '500' },
-  deviceMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  deviceHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  deviceName: { color: colors.text, fontSize: 14, fontWeight: '500', flex: 1 },
+  deviceMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 2 },
   deviceId: { color: colors.textMuted, fontSize: 11 },
+  deviceRssi: { color: colors.textMuted, fontSize: 11, fontFamily: 'monospace' },
 });
