@@ -154,3 +154,81 @@ jobs:
           rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
       - run: git config --global submodule.recurse false
       - run: docker compose build --no-cache
+
+  # ── Lint (web + mobile) ────────────────────────────────────────────────────
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+          fetch-depth: 0
+      - name: CI-only custom legacy folder exceptions
+        run: |
+          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+      - run: |
+          git config --global http.version HTTP/1.1
+          git config --global http.lowSpeedLimit 0
+          git config --global http.lowSpeedTime 999999
+          git config --global submodule.recurse false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint -w web
+      - run: npm run lint -w mobile
+
+  # ── Security Audit (high/critical) ─────────────────────────────────────────
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+          fetch-depth: 0
+      - name: CI-only custom legacy folder exceptions
+        run: |
+          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+      - run: |
+          git config --global http.version HTTP/1.1
+          git config --global http.lowSpeedLimit 0
+          git config --global http.lowSpeedTime 999999
+          git config --global submodule.recurse false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm audit --audit-level=high
+
+  # ── Docker Smoke (web-prod runtime health) ─────────────────────────────────
+  docker-smoke:
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+          fetch-depth: 0
+      - name: CI-only custom legacy folder exceptions
+        run: |
+          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+      - run: git config --global submodule.recurse false
+      - run: docker compose up --build -d web-prod
+      - run: |
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:8080/heartbeat.json >/dev/null; then
+              echo "web-prod heartbeat is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "web-prod heartbeat did not become healthy in time"
+          docker compose logs web-prod
+          exit 1
+      - if: always()
+        run: docker compose down -v
