@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  # ── Quality Gate: require all CI checks pass ────────────────────────────────
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+          fetch-depth: 0
+      - name: CI-only custom legacy folder exceptions
+        run: |
+          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+      - run: git config --global submodule.recurse false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+
+      # Protocol tests
+      - run: npm test -w packages/protocol
+
+      # Web build
+      - run: npm run build -w packages/protocol
+      - run: npm run typecheck -w web
+      - run: npm test -w web
+      - run: npm run build -w web
+
+      # Security
+      - run: npm audit --audit-level=moderate
+      - name: License check
+        run: npx license-checker --production --excludePrivatePackages --onlyAllow "MIT;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;BlueOak-1.0.0;Python-2.0;GPL-3.0;GPL-3.0-or-later;GPL-3.0-only" --summary
+
+  # ── Build Firmware Artifacts ────────────────────────────────────────────────
+  build-firmware:
+    runs-on: ubuntu-latest
+    needs: quality-gate
+    defaults:
+      run:
+        working-directory: hardware
+    strategy:
+      matrix:
+        env: [uno, uno_bt, esp32, esp32_wifi, esp32_ble, esp32_wifi_ble]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+          fetch-depth: 0
+      - name: CI-only custom legacy folder exceptions
+        working-directory: .
+        run: |
+          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+      - run: git config --global submodule.recurse false
+      - uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: pio-release-${{ matrix.env }}-${{ hashFiles('hardware/platformio.ini') }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install platformio
+      - run: pio run -e ${{ matrix.env }}
+      - name: Collect firmware binary
+        run: |
+          mkdir -p ../release-artifacts
+          if [ -d ".pio/build/${{ matrix.env }}" ]; then
+            cp .pio/build/${{ matrix.env }}/firmware.* ../release-artifacts/ 2>/dev/null || true
+            # Rename to include env name
+            for f in ../release-artifacts/firmware.*; do
+              [ -f "$f" ] && mv "$f" "../release-artifacts/${{ matrix.env }}_$(basename $f)"
+            done
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.env }}
+          path: release-artifacts/
+          retention-days: 5
+
+  # ── Create GitHub Release ───────────────────────────────────────────────────
+  release:
+    runs-on: ubuntu-latest
+    needs: build-firmware
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: artifacts/*
+          fail_on_unmatched_files: false
