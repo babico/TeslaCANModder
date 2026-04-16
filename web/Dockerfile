@@ -1,20 +1,33 @@
 FROM node:20-alpine AS base
 
-WORKDIR /app/web
+WORKDIR /app
 
 RUN apk add --no-cache wget
 
-COPY web/package.json web/package-lock.json ./
+# Copy workspace root files and package structure
+COPY package.json package-lock.json ./
+COPY packages/ ./packages/
+COPY web/ ./web/
+
+# Install dependencies for entire workspace
 RUN npm ci
 
+# Build protocol package as dependency
+RUN npm run build -w packages/protocol
+
 FROM base AS dev
+
+WORKDIR /app/web
+
 COPY web/docker-entrypoint.sh /usr/local/bin/web-dev-entrypoint
 RUN chmod +x /usr/local/bin/web-dev-entrypoint
 ENTRYPOINT ["web-dev-entrypoint"]
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "4173", "--strictPort"]
 
 FROM base AS build
-COPY web ./
+
+WORKDIR /app/web
+
 RUN npm run build
 
 FROM nginx:1.27-alpine AS production
