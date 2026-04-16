@@ -106,6 +106,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./test/setup.ts'],
     css: true,
+    include: ['test/**/*.test.ts', 'test/**/*.test.tsx'],
   },
   server: {
     allowedHosts,

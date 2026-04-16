@@ -52,6 +52,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build -w packages/protocol
       - run: npx tsc --noEmit -p web/tsconfig.json
       - run: npm test -w web
       - run: npm run build -w web
@@ -67,6 +68,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build -w packages/protocol
       - run: npm test -w mobile
 
   # ── Tools ───────────────────────────────────────────────────────────────────
