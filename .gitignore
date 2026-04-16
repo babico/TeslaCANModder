@@ -32,3 +32,9 @@ __pycache__/
 .claude
 node_modules/
 .venv
+
+# Local/custom downloaded legacy mirrors (keep out of git tracking)
+legacy/tesla-fsd-can-mod-2-main/
+legacy/tesla-fsd-can-mod-main/
+legacy/tesla-fsd.netlify.app/
+legacy/tesla-open-can-mod-main/
