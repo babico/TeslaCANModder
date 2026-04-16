@@ -1,0 +1,132 @@
+/* ── Command Palette ────────────────────────────────────────────────────── */
+
+.palette-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+}
+
+.palette {
+  width: 520px;
+  max-width: 90vw;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.palette-input {
+  padding: var(--space-md) var(--space-lg);
+  font-size: 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  outline: none;
+  font-family: var(--font-ui);
+}
+
+.palette-input::placeholder {
+  color: var(--text-dim);
+}
+
+.palette-warning {
+  padding: var(--space-xs) var(--space-lg);
+  font-size: 12px;
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.palette-list {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: var(--space-xs) 0;
+}
+
+.palette-category {
+  padding: var(--space-xs) var(--space-lg);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.palette-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--space-xs) 0;
+}
+
+.palette-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-sm) var(--space-lg);
+  font-size: 14px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition);
+}
+
+.palette-item:hover,
+.palette-item--selected {
+  background: var(--surface-hover);
+}
+
+.palette-item-label {
+  font-weight: 500;
+}
+
+.palette-item-cat {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.palette-empty {
+  padding: var(--space-lg);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.palette-footer {
+  display: flex;
+  gap: var(--space-lg);
+  padding: var(--space-sm) var(--space-lg);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.palette-footer kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  margin-right: 4px;
+}
+
+@media (max-width: 480px) {
+  .palette-overlay {
+    padding-top: 5vh;
+  }
+  .palette {
+    width: 95vw;
+  }
+}
