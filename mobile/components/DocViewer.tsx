@@ -15,7 +15,6 @@ const DOC_MAP: Record<string, { labelEn: string; labelTr: string }> = {
   'troubleshooting': { labelEn: 'Troubleshooting', labelTr: 'Sorun Giderme' },
 };
 
-/* eslint-disable @typescript-eslint/no-require-imports */
 // Load markdown files from the root docs/ folder (shared across all apps)
 const docAssets: Record<string, number> = {
   'getting-started': require('../../docs/getting-started.md'),
@@ -28,7 +27,6 @@ const docAssets: Record<string, number> = {
   'vehicle-features': require('../../docs/vehicle-features.md'),
   'troubleshooting': require('../../docs/troubleshooting.md'),
 };
-/* eslint-enable @typescript-eslint/no-require-imports */
 
 async function loadDoc(section: string): Promise<{ text: string; label: string }> {
   const map = DOC_MAP[section];
@@ -53,7 +51,7 @@ interface Props {
 }
 
 /** Simple markdown-to-text viewer for documentation. Renders headings, paragraphs, lists, and code blocks. */
-export default function DocViewer({ content, title, section, lang }: Props) {
+export default function DocViewer({ content, title, section }: Props) {
   const [resolved, setResolved] = React.useState(content || '');
   const [resolvedTitle, setResolvedTitle] = React.useState(title || '');
 
