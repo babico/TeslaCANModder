@@ -130,7 +130,7 @@ bool driverReinit() {
   return anyOk;
 }
 
-void driverSend(const Frame& f, uint8_t bus = 0) {
+void driverSend(const Frame& f, uint8_t bus) {
   if (bus < BUS_MAX && mcpAvailable[bus]) {
     can_frame raw;
     raw.can_id = f.id;

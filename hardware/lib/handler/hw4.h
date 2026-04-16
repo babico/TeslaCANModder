@@ -5,7 +5,7 @@
 #include "protocol/follow.h"
 
 // Forward declarations (defined by platform-specific driver & serial)
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 void sendLog(const char* msg);
 void sendLog(const __FlashStringHelper* msg);
 
@@ -22,7 +22,7 @@ void handleHW4(Frame& f, State& s) {
     if (f.dlc >= 8) {
       f.data[1] |= 0x20;
       f.data[7] = computeHW4IsaChecksum(f);
-      driverSend(f);
+      driverSend(f, 0);
       if (!hw4LoggedISA) { sendLog(F("HW4: ISA chime suppressed")); hw4LoggedISA = true; }
       return;
     }
@@ -46,7 +46,7 @@ void handleHW4(Frame& f, State& s) {
       setBit(f, 38, true);
       setBit(f, 46, true);
       setBit(f, 60, true);
-      driverSend(f);
+      driverSend(f, 0);
       if (!hw4LoggedFSD) { sendLog(F("HW4: FSD mod active on CAN")); hw4LoggedFSD = true; }
       return;
     }
@@ -54,14 +54,14 @@ void handleHW4(Frame& f, State& s) {
     if (mux == 1 && s.nagSuppress) {
       setBit(f, 19, false);
       setBit(f, 47, true);
-      driverSend(f);
+      driverSend(f, 0);
       if (!hw4LoggedNag) { sendLog(F("HW4: Nag suppressed on CAN")); hw4LoggedNag = true; }
       return;
     }
     
     if (mux == 2 && s.fsdEnabled) {
       writeHW4SpeedProfile(f, s.speedProfile);
-      driverSend(f);
+      driverSend(f, 0);
       return;
     }
   }

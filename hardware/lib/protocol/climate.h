@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Climate Control (0x2F3) ──────────────────────────────────────────────────
 // Climate keeper mode control (bits 33-34)

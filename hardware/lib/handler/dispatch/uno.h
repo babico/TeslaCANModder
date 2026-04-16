@@ -70,7 +70,7 @@ void summonTick(State& s) {
 #if (BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE)
   driverSend(f, s.ctrlBus);
 #else
-  driverSend(f);
+  driverSend(f, 0);
 #endif
   s.summonRemaining--;
   if (s.summonRemaining == 0) sendLog(F("Summon burst complete"));
@@ -90,7 +90,7 @@ void preconditionTick(State& s) {
 #if (BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE)
   driverSend(f, BUS_VEHICLE);
 #else
-  driverSend(f);
+  driverSend(f, 0);
 #endif
 }
 

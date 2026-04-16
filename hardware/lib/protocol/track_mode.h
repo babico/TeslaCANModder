@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Track Mode Inject ────────────────────────────────────────────────────────
 // Modifies CAN 0x313 (UI_trackModeSettings) byte[0] bits 1:0 = 0x01 to enable.

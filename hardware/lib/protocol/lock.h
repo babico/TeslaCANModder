@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Lock Bit Helpers (0x273 UI_vehicleControl) ───────────────────────────────
 enum LockRequest { LOCK_IDLE = 0, LOCK = 1, UNLOCK = 2 };
