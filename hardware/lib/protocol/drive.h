@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Drive Configuration (0x334) ──────────────────────────────────────────────
 // Pedal response, regen level, and stop mode control

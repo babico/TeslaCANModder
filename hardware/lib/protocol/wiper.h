@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Wiper Bit Helpers (0x273 UI_vehicleControl) ─────────────────────────────
 enum WiperRequest { WIPER_OFF = 0, WIPER_1 = 1, WIPER_2 = 2, WIPER_3 = 3 };

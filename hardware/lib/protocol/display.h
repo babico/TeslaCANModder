@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Display Bit Helpers (0x273 UI_vehicleControl) ────────────────────────────
 inline void setDisplayBrightness(Frame& f, uint8_t level) {

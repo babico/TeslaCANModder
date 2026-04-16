@@ -2,7 +2,7 @@
 #include <cstring>
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Battery Preconditioning Trigger ──────────────────────────────────────────
 // Injects CAN 0x082 (UI_tripPlanning) to trigger battery heating for charging.

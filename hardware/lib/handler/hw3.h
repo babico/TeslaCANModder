@@ -5,7 +5,7 @@
 #include "protocol/follow.h"
 
 // Forward declarations (defined by platform-specific driver & serial)
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 void sendLog(const char* msg);
 void sendLog(const __FlashStringHelper* msg);
 
@@ -39,21 +39,21 @@ void handleHW3(Frame& f, State& s) {
       setBit(f, 38, true);
       setBit(f, 46, true);
       setSpeedProfileV12V13(f, s.speedProfile);
-      driverSend(f);
+      driverSend(f, 0);
       if (!hw3LoggedFSD) { sendLog(F("HW3: FSD mod active on CAN")); hw3LoggedFSD = true; }
       return;
     }
     
     if (mux == 1 && s.nagSuppress) {
       setBit(f, 19, false);
-      driverSend(f);
+      driverSend(f, 0);
       if (!hw3LoggedNag) { sendLog(F("HW3: Nag suppressed on CAN")); hw3LoggedNag = true; }
       return;
     }
     
     if (mux == 2 && s.fsdEnabled && fsdUI) {
       writeHW3SpeedOffset(f, s.speedOffset);
-      driverSend(f);
+      driverSend(f, 0);
       if (!hw3LoggedOffset) { sendLog(F("HW3: Speed offset applied")); hw3LoggedOffset = true; }
       return;
     }

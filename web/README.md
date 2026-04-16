@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173
+Open <http://localhost:5173>
 
 ## Build
 
@@ -36,6 +36,7 @@ Output: `dist/`
 The web UI is 100% compatible with the new simplified hardware firmware. Both use the same JSON protocol:
 
 ### Messages
+
 - `boot` - Board initialization
 - `status` - State updates (every 500ms)
 - `frame` - CAN frames (when streaming)
@@ -44,6 +45,7 @@ The web UI is 100% compatible with the new simplified hardware firmware. Both us
 - `pong` - Ping response
 
 ### Commands
+
 - `ping`, `status`
 - `variant:hw4`, `variant:hw3`, `variant:legacy`
 - `fsd:on`, `fsd:off`, `fsd:toggle`
@@ -78,6 +80,7 @@ web/
 ## Development
 
 The web UI automatically detects browser capabilities and adapts:
+
 - Desktop: Full dashboard with drag-drop tiles
 - Mobile: Tabbed interface (Control/Monitor/Advanced)
 - No serial: Guide-only mode
@@ -86,7 +89,7 @@ The web UI automatically detects browser capabilities and adapts:
 
 1. Build and flash firmware: `cd hardware && .\pio.ps1 run -e uno -t upload`
 2. Start web UI: `cd web && npm run dev`
-3. Open http://localhost:5173
+3. Open <http://localhost:5173>
 4. Click "Connect USB"
 5. Select Arduino port
 6. Verify boot message appears

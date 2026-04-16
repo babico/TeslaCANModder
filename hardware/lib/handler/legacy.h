@@ -4,7 +4,7 @@
 #include "protocol/offset.h"
 
 // Forward declarations (defined by platform-specific driver & serial)
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 void sendLog(const char* msg);
 void sendLog(const __FlashStringHelper* msg);
 
@@ -36,14 +36,14 @@ void handleLegacy(Frame& f, State& s) {
       if (!s.profileOverride && steps >= 0 && steps <= 2) s.speedProfile = steps;
       setBit(f, 46, true);
       setSpeedProfileV12V13(f, s.speedProfile);
-      driverSend(f);
+      driverSend(f, 0);
       if (!legacyLoggedFSD) { sendLog(F("Legacy: FSD mod active on CAN")); legacyLoggedFSD = true; }
       return;
     }
     
     if (mux == 1 && s.nagSuppress) {
       setBit(f, 19, false);
-      driverSend(f);
+      driverSend(f, 0);
       if (!legacyLoggedNag) { sendLog(F("Legacy: Nag suppressed on CAN")); legacyLoggedNag = true; }
       return;
     }

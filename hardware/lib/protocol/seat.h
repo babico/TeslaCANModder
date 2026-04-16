@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Seat Heating Bit Helpers (0x273 UI_vehicleControl) ───────────────────────
 enum SeatHeatLevel { SEAT_OFF = 0, SEAT_LOW = 1, SEAT_MED = 2, SEAT_HIGH = 3 };

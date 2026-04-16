@@ -3,6 +3,7 @@
     "legacy/**",
     "**/node_modules/**",
     "**/dist/**",
-    "**/.pio/**"
+    "**/.pio/**",
+    "mobile/.expo/**"
   ]
 }
