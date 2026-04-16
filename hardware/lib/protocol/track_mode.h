@@ -1,4 +1,6 @@
 #pragma once
+#include <cstring>
+#include <Arduino.h>
 #include "core/types.h"
 #include "protocol/can.h"
 void driverSend(const Frame& f, uint8_t bus = 0);
