@@ -1,5 +1,7 @@
 #pragma once
+#include <cstring>
 #include "core/types.h"
+#include "command/system.h"
 
 // Forward declarations
 void saveSettings(const State& s);

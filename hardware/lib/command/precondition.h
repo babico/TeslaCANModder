@@ -1,5 +1,8 @@
 #pragma once
+#include <cstring>
+#include <Arduino.h>
 #include "core/types.h"
+#include "command/system.h"
 #include "protocol/precondition.h"
 
 // Forward declarations

@@ -1,5 +1,7 @@
 #pragma once
+#include <cstring>
 #include "core/types.h"
+#include "command/system.h"
 #include "protocol/track_mode.h"
 
 // Forward declarations
