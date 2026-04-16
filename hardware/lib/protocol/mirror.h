@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Mirror Bit Helpers (0x273 UI_vehicleControl) ─────────────────────────────
 enum MirrorFoldRequest { MIRROR_IDLE = 0, MIRROR_FOLD = 1, MIRROR_UNFOLD = 2 };

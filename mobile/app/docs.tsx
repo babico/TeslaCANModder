@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import DocViewer from '../components/DocViewer';
-import { colors, spacing, radius } from '../styles/theme';
+import { colors, spacing } from '../styles/theme';
 
 const DOC_SECTIONS = [
   { id: 'getting-started', label: 'Getting Started' },

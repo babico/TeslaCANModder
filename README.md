@@ -7,6 +7,7 @@ Browser-based control and monitoring stack for Tesla CAN bus modification using 
 ## Quick Start
 
 ### Hardware
+
 ```powershell
 cd hardware
 .\.pio.ps1 run -e uno          # Arduino Uno, serial only
@@ -19,6 +20,7 @@ cd hardware
 ```
 
 CAN bus selection is controlled via build flags (FSD always on):
+
 ```powershell
 # Enable Vehicle + Body buses alongside FSD
 $env:PLATFORMIO_BUILD_FLAGS = "-DBUS_FSD_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
@@ -26,13 +28,14 @@ $env:PLATFORMIO_BUILD_FLAGS = "-DBUS_FSD_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_B
 ```
 
 ### Web UI
+
 ```bash
 cd web
 npm install
 npm run dev
 ```
 
-Open http://localhost:5173 and click "Connect USB"
+Open <http://localhost:5173> and click "Connect USB"
 
 ## What's Included
 
@@ -59,11 +62,13 @@ Open http://localhost:5173 and click "Connect USB"
 ## Features
 
 ### Runtime Variant Switching
+
 - HW4 (2026.2.3+) with ISA chime control
 - HW3 with speed offset control
 - Legacy for pre-HW3 vehicles
 
 ### Controls (All OFF by default, user enables via web)
+
 - FSD enable/disable/toggle
 - Nag suppression
 - Speed profile (Chill / Normal / Hurry / Max / Sloth)
@@ -84,6 +89,7 @@ Open http://localhost:5173 and click "Connect USB"
 ## Protocol
 
 JSON messages over serial (115200 baud):
+
 - `boot` - Board initialization
 - `status` - State updates (every 500ms)
 - `frame` - CAN frames (when streaming)
@@ -93,6 +99,7 @@ JSON messages over serial (115200 baud):
 ## Commands
 
 ### Core FSD Controls
+
 ```
 ping, status
 variant:hw4, variant:hw3, variant:legacy
@@ -106,6 +113,7 @@ can:raw:on, can:raw:off
 ```
 
 ### ASS Summon
+
 ```
 summon, summon:forward, summon:fwd
 summon:reverse, summon:rev
@@ -113,6 +121,7 @@ summon:stop
 ```
 
 ### Vehicle Control (0x273 UI_vehicleControl)
+
 ```
 # Mirror
 mirror:fold, mirror:unfold, mirror:heat
@@ -146,6 +155,7 @@ power:acc:on, power:acc:off, power:off, power:ready
 ```
 
 ### Advanced Features
+
 ```
 # Window Vent (0x119)
 window:vent:open, vent:open
@@ -208,6 +218,7 @@ npm run test:all     # run all tests (protocol + web + mobile + tools)
 ## CI
 
 GitHub Actions runs on push to `main` and all PRs:
+
 - **firmware** — PlatformIO native tests
 - **protocol** — shared package tests
 - **web** — type-check + test + build

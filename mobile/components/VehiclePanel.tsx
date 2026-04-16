@@ -2,7 +2,7 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { commands } from '@teslacanmodder/protocol';
 import type { BoardState } from '@teslacanmodder/protocol';
-import { colors, spacing, radius, shadows } from '../styles/theme';
+import { colors, spacing } from '../styles/theme';
 import { Button, Card } from './ui';
 
 interface Props {

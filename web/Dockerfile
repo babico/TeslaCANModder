@@ -36,9 +36,11 @@ WORKDIR /app/web
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:stable-alpine AS production
+USER root
 RUN apk upgrade --no-cache && \
     apk add --no-cache curl && \
     rm -rf /var/cache/apk/* /tmp/* /usr/share/nginx/html/*
+USER nginx
 COPY --from=build /app/web/dist /usr/share/nginx/html
 COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080

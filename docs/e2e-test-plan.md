@@ -13,7 +13,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 ---
 
-# Arduino Uno Scenarios
+## Arduino Uno Scenarios
 
 ## UNO-1: First-Time Setup — FSD Only (uno)
 
@@ -132,6 +132,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **HC-05 vs USB Output:** All output functions (`sendBoot`, `sendStatus`, `sendAck`, etc.) mirror to both USB Serial and BT SoftwareSerial simultaneously. Both accept the same command set.
 
 **HC-05 Limitations:**
+
 - 9600 baud (vs 115200 USB) — slower throughput
 - SoftwareSerial on Uno — only one RX pin can listen at a time
 - No encryption (HC-05 is Bluetooth Classic SPP)
@@ -300,7 +301,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 ---
 
-# ESP32 Scenarios
+## ESP32 Scenarios
 
 ## ESP32-1: First-Time Setup — FSD Only (esp32)
 
@@ -377,7 +378,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | 1 | Flash `esp32_wifi` firmware | Upload with `embed_html.py` pre-build | — |
 | 2 | ESP32 creates AP "TeslaCANModder" | SSID visible on phone/laptop | — |
 | 3 | Connect to AP (password: `teslacan123`, channel 6) | DHCP assigns IP (gateway: 192.168.4.1) | — |
-| 4 | Open http://192.168.4.1 | Embedded HTML dashboard loads | — |
+| 4 | Open <http://192.168.4.1> | Embedded HTML dashboard loads | — |
 | 5 | Dashboard shows system status cards | Hardware, CAN stats, WiFi status, settings | — |
 | 6 | Send command via dashboard button | POST `/api/command` → ACK | — |
 | 7 | Check WiFi status card | Mode: AP, IP: 192.168.4.1, SSID: TeslaCANModder | — |
@@ -393,7 +394,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | POST | `/api/command` | Execute command: `{"cmd":"fsd:on"}` → returns updated status |
 | GET | `/api/disable` | Emergency kill: FSD off, summon stop |
 | GET | `/api/wifi/status` | WiFi mode, SSID, IP, RSSI/clients, gateway, MAC |
-| POST | `/api/wifi/config` | Switch WiFi mode: `{"mode":"ap"|"sta","ssid":"...","password":"..."}` |
+| POST | `/api/wifi/config` | Switch WiFi mode: `{"mode":"ap"\|"sta","ssid":"...","password":"..."}` |
 
 **All endpoints return CORS headers** (`Access-Control-Allow-Origin: *`) with OPTIONS preflight support.
 
@@ -483,7 +484,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
 | GET | `/api/ble/status` | `{"enabled":bool,"connected":bool,"deviceName":"TeslaCANModder"}` |
-| POST | `/api/ble/config` | `{"enabled":true|false}` — starts/stops BLE at runtime, saves to NVS |
+| POST | `/api/ble/config` | `{"enabled":true\|false}` — starts/stops BLE at runtime, saves to NVS |
 
 ---
 
@@ -607,7 +608,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 ---
 
-# Cross-Board Scenarios
+## Cross-Board Scenarios
 
 ## CROSS-1: Variant Behavior Consistency
 
@@ -623,6 +624,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | Summon | ✓ | ✓ | — |
 
 **Handler dispatch differences:**
+
 - Uno: `handleMessage` routes Bus 0 to variant handler, Bus 1+ for frame caching
 - ESP32: `handleMessage` routes by bus index (Bus 0=FSD, Bus 1=Vehicle, Bus 2=Body)
 

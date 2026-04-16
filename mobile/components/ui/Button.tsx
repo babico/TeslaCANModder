@@ -1,5 +1,5 @@
 import { TouchableOpacity, Text, StyleSheet, type ViewStyle, type TextStyle } from 'react-native';
-import { colors, spacing, radius, touchMin } from '../../styles/theme';
+import { colors, radius, touchMin } from '../../styles/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 

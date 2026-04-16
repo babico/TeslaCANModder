@@ -3,6 +3,7 @@
 #include <mcp2515.h>
 #include "core/config/uno.h"
 #include "core/types.h"
+#include "protocol/can.h"
 
 // ── MCP2515 Array-Driven Driver (Arduino Uno, up to 3 buses) ────────────────
 // Bus 0 = MCP2515_1, Bus 1 = MCP2515_2, Bus 2 = MCP2515_3
@@ -154,7 +155,7 @@ bool driverReinit() {
   return mcpAvailable[0];
 }
 
-void driverSend(const Frame& f, uint8_t bus = 0) {
+void driverSend(const Frame& f, uint8_t bus) {
   if (bus < BUS_MAX && mcpAvailable[bus]) {
     can_frame raw;
     raw.can_id = f.id;

@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "protocol/can.h"
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 
 // ── Nag Killer — EPAS Torque Spoofing ────────────────────────────────────────
 // Echoes CAN 0x370 (EPAS3P_sysStatus) with counter+1 and zeroed torque request.

@@ -1,5 +1,5 @@
 #pragma once
-#include <cstring>
+#include <string.h>
 #include "core/types.h"
 #include "command/system.h"
 
