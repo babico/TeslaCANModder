@@ -6,7 +6,7 @@
   "description": "TeslaCANModder debug & diagnostics CLI",
   "bin": { "tcm-debug": "./debug.js" },
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config test/jest.config.js"
+    "test": "node --experimental-vm-modules ../node_modules/jest/bin/jest.js --config test/jest.config.js"
   },
   "dependencies": {},
   "devDependencies": {
