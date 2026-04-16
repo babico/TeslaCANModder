@@ -51,16 +51,19 @@ The main FSD frame uses a multiplexer in the lower 3 bits of byte 0:
 | **2** | Speed profile / offset | Profile bytes (HW4) or offset bytes (HW3) |
 
 ### HW4 Handler
+
 - **Mux 0:** Sets bits 38, 46, 60 to enable FSD when UI has FSD selected
 - **Mux 1:** Clears bit 19 and sets bit 47 to suppress nag
 - **Mux 2:** Writes speed profile value
 
 ### HW3 Handler
+
 - **Mux 0:** Sets bits 38, 46, writes speed profile into v12/v13 fields
 - **Mux 1:** Clears bit 19 to suppress nag
 - **Mux 2:** Writes speed offset value
 
 ### Legacy Handler
+
 - Uses CAN ID **1006** instead of 1021
 - **Mux 0:** Sets bit 46, writes speed profile
 - **Mux 1:** Clears bit 19 to suppress nag
@@ -68,6 +71,7 @@ The main FSD frame uses a multiplexer in the lower 3 bits of byte 0:
 ## ISA Speed Chime (HW4 only)
 
 CAN ID 921 — ISA speed chime suppression:
+
 - Sets `data[1] |= 0x20` to suppress the chime
 - Recalculates checksum in `data[7]`
 - Only active when `isaChimeSuppress` is enabled
@@ -122,6 +126,7 @@ CAN ID 0x398 — GTW_carConfig is read at boot to automatically detect whether t
 ## Vehicle Control Frame (CAN ID 627)
 
 Used for summon and vehicle commands. The summon system:
+
 - Bit 4 of byte 0: Summon active
 - Bit 5 of byte 0: Direction (0 = forward, 1 = reverse)
 - Bit 0 of byte 0: Mode (start/stop)
@@ -139,7 +144,7 @@ The dispatch system routes frames based on CAN ID and configured variant:
 
 ## Testing CAN Communication
 
-```
+```bash
 # Enable raw CAN mode to see all frames
 can:raw:on
 

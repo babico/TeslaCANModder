@@ -11,17 +11,20 @@
 ## No CAN Frames
 
 ### Arduino
+
 - Check MCP2515 wiring: CS → D10, INT → D2, SPI pins (D11/D12/D13)
 - Verify **8 MHz crystal** on MCP2515 module
 - Check CAN-H/CAN-L connections to X179 pins 13/14
 
 ### ESP32
+
 - Check MCP2515 #1 wiring: CS → GPIO 15, INT → GPIO 34
 - Check SPI lines: SCK → GPIO 18, MISO → GPIO 19, MOSI → GPIO 23
 - Verify MCP2515 is powered from **5V** (VIN pin), not 3.3V
 - Check CAN-H/CAN-L connections per bus (see [Hardware Setup](hardware-setup))
 
 ### General
+
 - Vehicle must be **powered on** (screen active)
 - Console shows "CAN bus silent" → wiring issue
 - Use `can:raw:on` to see all bus traffic (not just variant-specific IDs)

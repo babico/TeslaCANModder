@@ -48,6 +48,7 @@ If STA connection fails, the device automatically falls back to AP mode.
 | `POST` | `/api/command` | Execute any serial command |
 
 **Request body:**
+
 ```json
 {"cmd": "fsd:on"}
 ```
@@ -64,6 +65,7 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 | `POST` | `/api/wifi/config` | Change WiFi mode / credentials |
 
 **GET `/api/wifi/status`** — AP mode response:
+
 ```json
 {
   "mode": "ap",
@@ -76,6 +78,7 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 ```
 
 **GET `/api/wifi/status`** — STA mode response:
+
 ```json
 {
   "mode": "sta",
@@ -89,6 +92,7 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 ```
 
 **POST `/api/wifi/config`** — Switch to STA:
+
 ```json
 {
   "mode": "sta",
@@ -98,6 +102,7 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 ```
 
 **POST `/api/wifi/config`** — Switch to AP:
+
 ```json
 {
   "mode": "ap",
@@ -116,6 +121,7 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 | `POST` | `/api/ble/config` | Enable or disable BLE at runtime |
 
 **GET `/api/ble/status`** response:
+
 ```json
 {
   "enabled": true,
@@ -125,6 +131,7 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 ```
 
 **POST `/api/ble/config`** — Disable BLE:
+
 ```json
 {"enabled": false}
 ```

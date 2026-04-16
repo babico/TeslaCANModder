@@ -106,6 +106,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 ## Vehicle Commands (3 CAN buses required)
 
 ### Lock & Security
+
 | Command | Description |
 | ------- | ----------- |
 | `lock` | Lock vehicle |
@@ -114,6 +115,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 | `horn` | Horn |
 
 ### Trunk & Frunk
+
 | Command | Description |
 | ------- | ----------- |
 | `frunk` / `frunk:open` | Open frunk |
@@ -123,12 +125,14 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 | `glovebox` | Toggle glovebox |
 
 ### Windows
+
 | Command | Description |
 | ------- | ----------- |
 | `vent:open` | Vent all windows |
 | `vent:close` | Close all windows |
 
 ### Mirrors
+
 | Command | Description |
 | ------- | ----------- |
 | `mirror:fold` | Fold mirrors |
@@ -138,6 +142,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 | `mirror:dip` | Dip mirrors |
 
 ### Lights
+
 | Command | Description |
 | ------- | ----------- |
 | `light:fog:front` | Toggle front fog lights |
@@ -149,18 +154,21 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 | `light:dome:off` | Dome light off |
 
 ### Sentry
+
 | Command | Description |
 | ------- | ----------- |
 | `sentry:on` | Enable sentry mode |
 | `sentry:off` | Disable sentry mode |
 
 ### Climate
+
 | Command | Description |
 | ------- | ----------- |
 | `climate:keep` | Keep climate on |
 | `climate:off` | Turn climate off |
 
 ### Charge
+
 | Command | Description |
 | ------- | ----------- |
 | `charge:start` | Start charging |
@@ -168,6 +176,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 | `chargeport` | Open charge port |
 
 ### Drive Config
+
 | Command | Description |
 | ------- | ----------- |
 | `pedal:standard` / `pedal:std` | Standard pedal mode |

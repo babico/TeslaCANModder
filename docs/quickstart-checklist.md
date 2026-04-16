@@ -87,11 +87,13 @@ Use this checklist to verify every step of a first-time setup. Check off each it
 ## 7. Wireless Setup (ESP32 Only)
 
 ### WiFi
+
 - [ ] Connect to AP: SSID `TeslaCANModder`, Password `teslacan123`
 - [ ] Test: open `http://192.168.4.1` in browser
 - [ ] *(Optional)* Configure STA mode to join your home network
 
 ### BLE
+
 - [ ] Open mobile app or nRF Connect
 - [ ] Scan for `TeslaCANModder` device
 - [ ] Connect — should see boot message in console
