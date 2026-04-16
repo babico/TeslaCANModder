@@ -40,11 +40,14 @@ jobs:
         with:
           submodules: false
           fetch-depth: 0
+      - run: git config --global http.version HTTP/1.1
+      - run: git config --global http.lowSpeedLimit 0
+      - run: git config --global http.lowSpeedTime 999999
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund
       - run: npm test -w packages/protocol
 
   # ── Web (lint + type-check + test + build) ──────────────────────────────────
@@ -56,11 +59,14 @@ jobs:
         with:
           submodules: false
           fetch-depth: 0
+      - run: git config --global http.version HTTP/1.1
+      - run: git config --global http.lowSpeedLimit 0
+      - run: git config --global http.lowSpeedTime 999999
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund
       - run: npm run build -w packages/protocol
       - run: npx tsc --noEmit -p web/tsconfig.json
       - run: npm test -w web
@@ -75,11 +81,14 @@ jobs:
         with:
           submodules: false
           fetch-depth: 0
+      - run: git config --global http.version HTTP/1.1
+      - run: git config --global http.lowSpeedLimit 0
+      - run: git config --global http.lowSpeedTime 999999
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund
       - run: npm run build -w packages/protocol
       - run: npm test -w mobile
 
@@ -91,11 +100,14 @@ jobs:
         with:
           submodules: false
           fetch-depth: 0
+      - run: git config --global http.version HTTP/1.1
+      - run: git config --global http.lowSpeedLimit 0
+      - run: git config --global http.lowSpeedTime 999999
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund
       - run: npm test -w tools
 
   # ── Docker (build only) ────────────────────────────────────────────────────
