@@ -14,8 +14,8 @@ export function parseSerialLine(line: string): ParsedEvent[] {
     try {
       const msg = JSON.parse(cleaned.slice(start, end + 1));
       return [{ type: 'message', message: msg, raw: cleaned }];
-    } catch {
-      return [{ type: 'ignore', raw: cleaned }];
+    } catch (err) {
+      return [{ type: 'parse-error', raw: cleaned, reason: err instanceof Error ? err.message : 'Invalid JSON' }];
     }
   }
 

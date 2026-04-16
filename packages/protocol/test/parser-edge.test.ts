@@ -32,14 +32,15 @@ describe('parseSerialLine — edge cases', () => {
     const events = parseSerialLine('{"a":1} {"b":2}');
     expect(events).toHaveLength(1);
     // outermost braces: from first { to last }
-    // this will be '{"a":1} {"b":2}' which is invalid JSON → ignore
-    // Actually: slice(0, 15) = '{"a":1} {"b":2}' → invalid JSON → ignore  
-    expect(events[0].type).toBe('ignore');
+    // this will be '{"a":1} {"b":2}' which is invalid JSON → parse-error
+    expect(events[0].type).toBe('parse-error');
+    expect(events[0].reason).toBeDefined();
   });
 
   it('handles truncated JSON', () => {
     const events = parseSerialLine('{"t":"boot","variant":');
     expect(events).toHaveLength(1);
+    // No closing brace → never enters JSON parse → ignore
     expect(events[0].type).toBe('ignore');
   });
 
@@ -62,9 +63,10 @@ describe('parseSerialLine — edge cases', () => {
     expect(events[0].type).toBe('ignore');
   });
 
-  it('returns ignore for lone opening brace', () => {
+  it('returns parse-error for lone opening brace', () => {
     const events = parseSerialLine('{');
     expect(events).toHaveLength(1);
+    // start=0, end=-1, end > start is false → ignore (no JSON structure detected)
     expect(events[0].type).toBe('ignore');
   });
 });

@@ -186,7 +186,8 @@ export interface ScannedDevice {
 // ── Parser Types ────────────────────────────────────────────────────────────
 
 export interface ParsedEvent {
-  type: 'message' | 'ignore';
+  type: 'message' | 'ignore' | 'parse-error';
   message?: Record<string, unknown>;
   raw: string;
+  reason?: string;
 }
