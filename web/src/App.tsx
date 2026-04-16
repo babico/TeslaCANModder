@@ -15,8 +15,14 @@ export default function App() {
   const board = useBoardState();
 
   useEffect(() => {
-    serial.setOnMessage(board.handleMessage);
-  }, [serial.setOnMessage, board.handleMessage]);
+    serial.setOnMessage((msg: Record<string, unknown>) => {
+      // Clear pending command on ack
+      if (msg.t === 'ack' && typeof msg.cmd === 'string') {
+        serial.ackReceived(msg.cmd);
+      }
+      board.handleMessage(msg);
+    });
+  }, [serial.setOnMessage, board.handleMessage, serial.ackReceived]);
 
   useEffect(() => {
     if (!serial.connected) {

@@ -60,6 +60,32 @@
 .can-status-standby { color: var(--warning); }
 .can-status-waiting { color: var(--text-dim); }
 
+/* Transport error banner */
+.connection-error {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border-radius: 4px;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Pending command indicator */
+.connection-pending {
+  width: 100%;
+  padding: var(--space-xs) var(--space-md);
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  border-radius: 4px;
+  color: var(--warning);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
   .connection-bar {
     padding: var(--space-sm) var(--space-md);

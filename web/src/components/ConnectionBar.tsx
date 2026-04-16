@@ -1,4 +1,5 @@
 import { commands } from '@teslacanmodder/protocol';
+import type { PendingCommand } from '../hooks/useSerial';
 import './ConnectionBar.css';
 
 interface ConnectionBarProps {
@@ -19,9 +20,12 @@ interface ConnectionBarProps {
   onDisconnect: () => void;
   onCommand: (cmd: string) => void;
   canUseSerial: boolean;
+  lastError?: string | null;
+  pendingCommand?: PendingCommand | null;
+  onClearError?: () => void;
 }
 
-export default function ConnectionBar({ connected, transport, variant, rate, streaming, canOnline, standby, bus1, bus2, bus3, busFsd, busVehicle, busBody, onConnect, onDisconnect, onCommand, canUseSerial }: ConnectionBarProps) {
+export default function ConnectionBar({ connected, transport, variant, rate, streaming, canOnline, standby, bus1, bus2, bus3, busFsd, busVehicle, busBody, onConnect, onDisconnect, onCommand, canUseSerial, lastError, pendingCommand, onClearError }: ConnectionBarProps) {
   const busStatus = standby ? 'standby' : canOnline ? 'online' : 'waiting';
   const busLabel = standby ? 'Standby' : canOnline ? 'CAN Active' : 'Waiting';
 
@@ -71,6 +75,19 @@ export default function ConnectionBar({ connected, transport, variant, rate, str
           <span className="text-muted">Web Serial not supported</span>
         )}
       </div>
+
+      {pendingCommand && (
+        <div className="connection-pending">
+          Waiting for ack: <strong>{pendingCommand.command}</strong>…
+        </div>
+      )}
+
+      {lastError && (
+        <div className="connection-error">
+          <span>{lastError}</span>
+          {onClearError && <button className="btn btn-sm" onClick={onClearError}>Dismiss</button>}
+        </div>
+      )}
     </div>
   );
 }

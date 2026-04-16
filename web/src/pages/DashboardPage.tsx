@@ -22,7 +22,7 @@ interface DashboardPageProps {
 
 export default function DashboardPage({ serial, board }: DashboardPageProps) {
   const [activeTab, setActiveTab] = useState('controls');
-  const { connected, transport, connect, disconnect, send, canUseSerial } = serial;
+  const { connected, transport, connect, disconnect, send, canUseSerial, lastError, pendingCommand, clearError } = serial;
   const { state, clearFrames, clearMessages } = board;
 
   return (
@@ -45,6 +45,9 @@ export default function DashboardPage({ serial, board }: DashboardPageProps) {
         onDisconnect={disconnect}
         onCommand={send}
         canUseSerial={canUseSerial}
+        lastError={lastError}
+        pendingCommand={pendingCommand}
+        onClearError={clearError}
       />
 
       <div className="dashboard-tabs">
