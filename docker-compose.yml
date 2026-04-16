@@ -41,9 +41,9 @@ services:
       dockerfile: web/Dockerfile
       target: production
     ports:
-      - "8080:80"
+      - "8080:8080"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
