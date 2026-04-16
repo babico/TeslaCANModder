@@ -13,7 +13,7 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/slider": "~5.0.1",
-    "expo": "~54.0.0",
+    "expo": "~55.0.15",
     "expo-asset": "~12.0.12",
     "expo-constants": "~18.0.13",
     "expo-file-system": "~19.0.21",
