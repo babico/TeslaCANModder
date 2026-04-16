@@ -7,6 +7,7 @@ RUN apk add --no-cache wget
 # Copy workspace root files and package structure
 COPY package.json package-lock.json ./
 COPY packages/ ./packages/
+COPY docs/ ./docs/
 COPY web/ ./web/
 
 # Install dependencies for entire workspace

@@ -62,6 +62,9 @@ function serveRootDocs() {
       });
     },
     closeBundle() {
+      if (!fs.existsSync(rootDocsDir)) {
+        return;
+      }
       const outDir = path.resolve(currentDir, 'dist/docs');
       fs.mkdirSync(outDir, { recursive: true });
       for (const file of fs.readdirSync(rootDocsDir)) {
