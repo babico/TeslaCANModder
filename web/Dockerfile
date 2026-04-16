@@ -19,8 +19,8 @@ FROM base AS dev
 
 WORKDIR /app/web
 
-COPY web/docker-entrypoint.sh /usr/local/bin/web-dev-entrypoint
-RUN chmod +x /usr/local/bin/web-dev-entrypoint
+RUN cp docker-entrypoint.sh /usr/local/bin/web-dev-entrypoint && \
+    chmod +x /usr/local/bin/web-dev-entrypoint
 ENTRYPOINT ["web-dev-entrypoint"]
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "4173", "--strictPort"]
 
