@@ -67,6 +67,39 @@
 - Console should show "HW4: FSD mod active on CAN" (or HW3/Legacy equivalent)
 - If no log appears, verify CAN ID 1021 (HW3/HW4) or 1006 (Legacy) is being received
 
+## Nag Killer Not Working
+
+- Verify CAN ID 0x370 (EPAS torque) is visible in raw CAN mode (`can:raw:on`)
+- The nag killer intercepts the EPAS frame on the vehicle bus — requires 3-CAN wiring
+- Check that `nagkiller:on` was sent (not just `nag:on` — these are different features)
+- `nag:on` = bit-19 suppress, `nagkiller:on` = EPAS torque zeroing
+
+## BMS Data Not Showing
+
+- BMS telemetry requires CAN IDs 0x132, 0x292, 0x312, 0x33A on the Vehicle bus
+- These frames are only present when the vehicle is powered on
+- Use `can:raw:on` + `stream:on` to verify BMS frames are being received
+- Run `bms` command to see current snapshot in console
+
+## Preconditioning Not Activating
+
+- Requires 3-CAN build with Vehicle bus connected
+- `precondition:on` injects CAN 0x082 — check console for confirmation
+- Preconditioning needs periodic injection; if board loses power, it stops
+
+## Track Mode Not Enabling
+
+- Track Mode injects CAN 0x313 on the Vehicle bus
+- Requires 3-CAN build
+- Sends a 20-frame burst — check that vehicle is in a compatible state (Park or Drive)
+
+## OTA Paused TX
+
+- If commands stop working during an OTA update, this is expected
+- The board auto-detects OTA from CAN 0x318 and pauses all TX
+- TX resumes automatically when OTA completes
+- Dashboard shows "OTA in progress" status
+
 ## Board Stops After Car Sleep
 
 - Board enters **standby** when CAN goes silent

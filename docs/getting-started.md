@@ -1,6 +1,6 @@
 # Getting Started
 
-TeslaCANModder is an open-source CAN bus modification tool for Tesla vehicles. It intercepts and modifies CAN frames to enable features like FSD, nag suppression, speed profiles, summon, and vehicle control commands.
+TeslaCANModder is an open-source CAN bus modification tool for Tesla vehicles. It intercepts and modifies CAN frames to enable features like FSD, nag suppression, nag killer (EPAS torque spoofing), speed profiles, summon, battery preconditioning, track mode, BMS telemetry, and vehicle control commands.
 
 ## Supported Boards
 
@@ -33,8 +33,8 @@ TeslaCANModder is an open-source CAN bus modification tool for Tesla vehicles. I
 
 | Variant | Vehicles | Key Features |
 | -------- | --------- | ------------ |
-| **HW4** | 2023+ with HW4 (FSD v14+) | FSD, Nag, Profile, ISA Chime, Summon |
-| **HW3** | 2019–2023 with HW3 | FSD, Nag, Profile, Speed Offset, Summon |
+| **HW4** | 2023+ with HW4 (FSD v14+) | FSD, Nag, Nag Killer, Profile, ISA Chime, Summon, BMS, Preconditioning, Track Mode |
+| **HW3** | 2019–2023 with HW3 | FSD, Nag, Nag Killer, Profile, Speed Offset, Summon, BMS, Preconditioning, Track Mode |
 | **Legacy** | Pre-HW3 vehicles | FSD, Nag, Profile (limited) |
 
 Select the variant in the Dashboard connection bar or via `variant:hw4` / `variant:hw3` / `variant:legacy` command. Setting is saved to NVS (ESP32) or EEPROM (Arduino).

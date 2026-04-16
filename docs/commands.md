@@ -53,6 +53,36 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 | `variant:hw3` | Set vehicle variant to HW3 |
 | `variant:legacy` | Set vehicle variant to Legacy |
 
+## Nag Killer (EPAS Torque Spoofing)
+
+| Command | Description |
+| ------- | ----------- |
+| `nagkiller:on` | Enable EPAS torque spoofing (zero steering torque) |
+| `nagkiller:off` | Disable EPAS torque spoofing |
+| `nagkiller:toggle` | Toggle nag killer state |
+
+## Battery Preconditioning
+
+| Command | Description |
+| ------- | ----------- |
+| `precondition:on` | Start battery preconditioning for supercharging |
+| `precondition:off` | Stop battery preconditioning |
+| `precondition:toggle` | Toggle preconditioning state |
+
+## Track Mode
+
+| Command | Description |
+| ------- | ----------- |
+| `trackmode:on` | Enable Track Mode |
+| `trackmode:off` | Disable Track Mode |
+| `trackmode:toggle` | Toggle Track Mode state |
+
+## BMS Battery Telemetry
+
+| Command | Description |
+| ------- | ----------- |
+| `bms` | Query current BMS telemetry (voltage, current, SoC, temps) |
+
 ## Summon (HW3/HW4, requires 3 CAN buses)
 
 | Command | Description |

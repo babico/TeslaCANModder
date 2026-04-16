@@ -147,6 +147,26 @@ curl -X POST http://192.168.4.1/api/command \
   -H "Content-Type: application/json" \
   -d '{"cmd":"profile:3"}'
 
+# Enable nag killer (EPAS torque spoofing)
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"nagkiller:on"}'
+
+# Start battery preconditioning
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"precondition:on"}'
+
+# Enable track mode
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"trackmode:on"}'
+
+# Query BMS telemetry
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"bms"}'
+
 # Switch to STA mode
 curl -X POST http://192.168.4.1/api/wifi/config \
   -H "Content-Type: application/json" \

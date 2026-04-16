@@ -19,13 +19,22 @@ The ESP32 3-CAN configuration maps to the Tesla X179 connector as follows:
 | CAN ID | Hex | Name | Bus | Used By |
 | ------ | --- | ---- | --- | ------- |
 | 69 | 0x045 | Legacy stalk position | FSD | Legacy |
+| 130 | 0x082 | UI_tripPlanning (preconditioning) | Vehicle | HW3, HW4 |
 | 281 | 0x119 | Window vent control | Vehicle | HW3, HW4 |
+| 306 | 0x132 | BMS_hvBusStatus (voltage/current) | Vehicle | HW3, HW4 |
 | 627 | 0x273 | UI_vehicleControl (summon, lock, etc.) | Vehicle | HW3, HW4 |
 | 644 | 0x284 | Sentry mode control | Vehicle | HW3, HW4 |
+| 658 | 0x292 | BMS_socStatus (state of charge) | Vehicle | HW3, HW4 |
 | 755 | 0x2F3 | Climate control | Vehicle | HW3, HW4 |
+| 786 | 0x312 | BMS_thermalStatus (cell temps) | Vehicle | HW3, HW4 |
+| 787 | 0x313 | UI_trackModeSettings | Vehicle | HW3, HW4 |
+| 792 | 0x318 | GTW_carState (OTA detection) | Vehicle | HW3, HW4 |
 | 819 | 0x333 | Charge control | Vehicle | HW3, HW4 |
 | 820 | 0x334 | Drive config (pedal/regen/stop) | Vehicle | HW3, HW4 |
+| 826 | 0x33A | BMS_energyStatus (Wh/km) | Vehicle | HW3, HW4 |
+| 880 | 0x370 | EPAS_sysStatus (torque sensor) | Vehicle | HW3, HW4 |
 | 921 | 0x399 | ISA speed chime | FSD | HW4 |
+| 920 | 0x398 | GTW_carConfig (auto HW detect) | Vehicle | HW3, HW4 |
 | 947 | 0x3B3 | Trunk/Glovebox control | Vehicle | HW3, HW4 |
 | 1006 | 0x3EE | Legacy FSD mux | FSD | Legacy |
 | 1016 | 0x3F8 | Follow distance (profile mapping) | FSD | HW3, HW4 |
@@ -67,6 +76,49 @@ CAN ID 921 — ISA speed chime suppression:
 
 CAN ID 1016 — The follow distance stalk position is read from `data[5] bits 7:5` and mapped to a speed profile (0–3) unless profile is manually pinned.
 
+## EPAS Torque Spoofing (Nag Killer)
+
+CAN ID 0x370 — Intercepts the EPAS torque sensor frame and echoes it with zeroed steering torque:
+
+- `data[2]`, `data[3]` = 0x00 (zero torque)
+- Counter (nibble in `data[1]`) incremented by 1
+- Checksum in `data[7]` = sum of bytes 0–6 + 0x70 + 0x03
+
+This is more aggressive than bit-19 nag suppression and eliminates the "apply steering force" prompt.
+
+## BMS Telemetry Frames
+
+Battery management data is decoded from multiple CAN IDs:
+
+| CAN ID | Frame | Decoded Fields |
+| ------ | ----- | -------------- |
+| 0x132 | BMS_hvBusStatus | Voltage (bytes 0–1 × 0.01V), Current (bytes 2–3 signed × 0.1A) |
+| 0x292 | BMS_socStatus | State of Charge (bits 9:0 × 0.1%) |
+| 0x312 | BMS_thermalStatus | Temp min (byte 4 − 40°C), Temp max (byte 5 − 40°C) |
+| 0x33A | BMS_energyStatus | Energy consumption (bytes 0–1 × 0.1 Wh/km) |
+
+## Preconditioning Frame
+
+CAN ID 0x082 — UI_tripPlanning frame injected on the Vehicle bus to trigger battery preconditioning:
+
+- `data[0] = 0x05` to activate, `0x00` to deactivate
+- Requires periodic injection at 500ms intervals
+
+## Track Mode Frame
+
+CAN ID 0x313 — UI_trackModeSettings injected on the Vehicle bus:
+
+- `data[0]` bits 1:0 = `0x01` to enable Track Mode
+- Sent as a 20-frame burst at 20ms intervals
+
+## OTA Detection
+
+CAN ID 0x318 — GTW_carState is monitored for OTA update status. When an OTA is detected, all CAN TX injection is automatically paused until the update completes.
+
+## Auto Hardware Detection
+
+CAN ID 0x398 — GTW_carConfig is read at boot to automatically detect whether the vehicle uses HW3 or HW4. Falls back to the manually configured variant if this frame is not received.
+
 ## Vehicle Control Frame (CAN ID 627)
 
 Used for summon and vehicle commands. The summon system:
@@ -80,9 +132,10 @@ Used for summon and vehicle commands. The summon system:
 The dispatch system routes frames based on CAN ID and configured variant:
 
 1. **RX from Bus 0 (FSD):** IDs 921, 1006, 1016, 1021, 69 → variant handler → modified frame sent back
-2. **RX from Bus 1 (Vehicle):** ID 627 → cached as control frame for vehicle commands
-3. **TX to Bus 1 (Vehicle):** Vehicle commands (lock, trunk, climate, etc.) sent using cached 627 frame
+2. **RX from Bus 1 (Vehicle):** IDs 627, 0x082, 0x132, 0x292, 0x312, 0x313, 0x318, 0x33A, 0x370, 0x398 → cached/decoded/intercepted
+3. **TX to Bus 1 (Vehicle):** Vehicle commands, preconditioning, track mode, nag killer echo
 4. **Streaming:** All received frames optionally forwarded to serial/BLE as JSON
+5. **OTA Guard:** TX automatically paused when 0x318 indicates OTA in progress
 
 ## Testing CAN Communication
 
