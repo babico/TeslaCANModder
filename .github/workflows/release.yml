@@ -79,7 +79,7 @@ jobs:
             cp .pio/build/${{ matrix.env }}/firmware.* ../release-artifacts/ 2>/dev/null || true
             # Rename to include env name
             for f in ../release-artifacts/firmware.*; do
-              [ -f "$f" ] && mv "$f" "../release-artifacts/${{ matrix.env }}_$(basename $f)"
+              [ -f "$f" ] && mv "$f" "../release-artifacts/${{ matrix.env }}_$(basename "$f")"
             done
           fi
       - uses: actions/upload-artifact@v4

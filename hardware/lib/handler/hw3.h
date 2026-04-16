@@ -5,7 +5,7 @@
 #include "protocol/follow.h"
 
 // Forward declarations (defined by platform-specific driver & serial)
-void driverSend(const Frame& f, uint8_t bus = 0);
+void driverSend(const Frame& f, uint8_t bus);
 void sendLog(const char* msg);
 void sendLog(const __FlashStringHelper* msg);
 

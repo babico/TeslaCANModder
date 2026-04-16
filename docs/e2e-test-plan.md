@@ -13,7 +13,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 ---
 
-# Arduino Uno Scenarios
+## Arduino Uno Scenarios
 
 ## UNO-1: First-Time Setup — FSD Only (uno)
 
@@ -301,7 +301,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 ---
 
-# ESP32 Scenarios
+## ESP32 Scenarios
 
 ## ESP32-1: First-Time Setup — FSD Only (esp32)
 
@@ -394,7 +394,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | POST | `/api/command` | Execute command: `{"cmd":"fsd:on"}` → returns updated status |
 | GET | `/api/disable` | Emergency kill: FSD off, summon stop |
 | GET | `/api/wifi/status` | WiFi mode, SSID, IP, RSSI/clients, gateway, MAC |
-| POST | `/api/wifi/config` | Switch WiFi mode: `{"mode":"ap"|"sta","ssid":"...","password":"..."}` |
+| POST | `/api/wifi/config` | Switch WiFi mode: `{"mode":"ap"\|"sta","ssid":"...","password":"..."}` |
 
 **All endpoints return CORS headers** (`Access-Control-Allow-Origin: *`) with OPTIONS preflight support.
 
@@ -484,7 +484,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
 | GET | `/api/ble/status` | `{"enabled":bool,"connected":bool,"deviceName":"TeslaCANModder"}` |
-| POST | `/api/ble/config` | `{"enabled":true|false}` — starts/stops BLE at runtime, saves to NVS |
+| POST | `/api/ble/config` | `{"enabled":true\|false}` — starts/stops BLE at runtime, saves to NVS |
 
 ---
 
@@ -608,7 +608,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 ---
 
-# Cross-Board Scenarios
+## Cross-Board Scenarios
 
 ## CROSS-1: Variant Behavior Consistency
 
