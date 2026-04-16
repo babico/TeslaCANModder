@@ -37,6 +37,8 @@ jobs:
           python-version: "3.12"
       - run: pip install platformio
       - run: pio test -e native
+      - name: Firmware size regression check
+        run: python scripts/check_firmware_size.py --env uno esp32
 
   # ── Shared Protocol Package ─────────────────────────────────────────────────
   protocol:
