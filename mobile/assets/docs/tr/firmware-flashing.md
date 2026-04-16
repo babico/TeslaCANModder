@@ -64,7 +64,7 @@ pio device monitor -b 115200
 Her firmware varyantı `platformio.ini` içindeki derleme bayrakları ile kontrol edilir:
 
 | Bayrak | Varsayılan | Açıklama |
-|--------|-----------|----------|
+| ------ | --------- | -------- |
 | BOARD_ENABLE_BT | 0 | HC-05 Bluetooth'u etkinleştir |
 | BUS_FSD_ACTIVE | 1 | FSD bus (her zaman açık) |
 | BUS_VEHICLE_ACTIVE | 0 | Vehicle bus'ı etkinleştir |

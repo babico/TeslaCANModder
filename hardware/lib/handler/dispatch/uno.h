@@ -1,6 +1,8 @@
 #pragma once
 #include "protocol/can.h"
 #include "protocol/summon.h"
+#include "protocol/bms.h"
+#include "protocol/nag_killer.h"
 #include "core/driver/uno.h"
 #include "handler/hw4.h"
 #include "handler/hw3.h"
@@ -74,6 +76,24 @@ void summonTick(State& s) {
   if (s.summonRemaining == 0) sendLog(F("Summon burst complete"));
 }
 
+// ── Preconditioning Tick ──────────────────────────────────────────────────────
+void preconditionTick(State& s) {
+  if (!s.preconditionEnabled) return;
+  unsigned long now = millis();
+  if (now - s.precondLastMs < 500) return;
+  s.precondLastMs = now;
+  Frame f;
+  f.id = CAN_ID_PRECONDITION;
+  f.dlc = 8;
+  memset(f.data, 0, 8);
+  f.data[0] = 0x05;
+#if (BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE)
+  driverSend(f, BUS_VEHICLE);
+#else
+  driverSend(f);
+#endif
+}
+
 // ── Message Dispatch ─────────────────────────────────────────────────────────
 void handleMessage(Frame& f, uint8_t bus, State& s) {
   if (f.id == CAN_ID_UI_VEHICLE_CTRL && f.dlc >= 8) {
@@ -100,6 +120,70 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
   if (f.id == CAN_ID_DRIVE_CONFIG && f.dlc >= 8) {
     memcpy(s.lastDrive, f.data, 8);
     s.hasDrive = true;
+    return;
+  }
+
+  // BMS battery telemetry (read-only decode)
+  if (f.id == CAN_ID_BMS_HV_BUS && f.dlc >= 4) {
+    s.bmsVoltage = decodeBmsVoltage(f.data);
+    s.bmsCurrent = decodeBmsCurrent(f.data);
+    s.bmsPower = decodeBmsPower(f.data);
+    s.hasBms = true;
+    return;
+  }
+  if (f.id == CAN_ID_BMS_SOC && f.dlc >= 2) {
+    s.bmsSoc = decodeBmsSoc(f.data);
+    s.hasBms = true;
+    return;
+  }
+  if (f.id == CAN_ID_BMS_THERMAL && f.dlc >= 2) {
+    s.bmsTempMin = decodeBmsTempMin(f.data);
+    s.bmsTempMax = decodeBmsTempMax(f.data);
+    s.hasBms = true;
+    return;
+  }
+  if (f.id == CAN_ID_BMS_ENERGY && f.dlc >= 2) {
+    s.bmsWhPerKm = decodeBmsWhPerKm(f.data);
+    s.hasBms = true;
+    return;
+  }
+
+  // Nag killer: intercept EPAS torque frame and echo modified
+  if (f.id == CAN_ID_EPAS_TORQUE && f.dlc >= 8) {
+    if (s.nagKillerEnabled && !s.txPaused) {
+      Frame echo = f;
+      nagKillerModify(echo);
+#if (BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE)
+      driverSend(echo, bus);
+#else
+      driverSend(echo);
+#endif
+    }
+    return;
+  }
+
+  // OTA safety check
+  if (f.id == CAN_ID_GTW_CAR_STATE && f.dlc >= 1) {
+    bool otaActive = (f.data[0] & 0x01) != 0;
+    if (otaActive && !s.otaInProgress) {
+      s.otaInProgress = true;
+      s.txPaused = true;
+      sendLog(F("OTA detected - TX paused"));
+    } else if (!otaActive && s.otaInProgress) {
+      s.otaInProgress = false;
+      s.txPaused = false;
+      sendLog(F("OTA complete - TX resumed"));
+    }
+    return;
+  }
+
+  // Auto HW detection
+  if (f.id == CAN_ID_GTW_CAR_CFG && f.dlc >= 1) {
+    uint8_t hw = (f.data[0] >> 6) & 0x03;
+    if (hw == 2 || hw == 3) {
+      s.detectedHW = hw;
+      s.hwAutoDetected = true;
+    }
     return;
   }
 

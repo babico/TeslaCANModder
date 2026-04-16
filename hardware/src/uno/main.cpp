@@ -107,6 +107,7 @@ void loop() {
 
   // ── Normal Operation ───────────────────────────────────────────────────
   summonTick(state);
+  preconditionTick(state);
 
   Frame frame;
   uint8_t bus;

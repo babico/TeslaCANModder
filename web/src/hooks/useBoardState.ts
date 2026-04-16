@@ -20,6 +20,22 @@ const initialState: BoardState = {
   isaChime: false,
   summonInject: false,
   summonActive: false,
+
+  nagKiller: false,
+  precondition: false,
+  trackMode: false,
+  otaInProgress: false,
+  txPaused: false,
+  detectedHW: 0,
+
+  bmsVoltage: 0,
+  bmsCurrent: 0,
+  bmsPower: 0,
+  bmsSoc: 0,
+  bmsTempMin: 0,
+  bmsTempMax: 0,
+  bmsWhPerKm: 0,
+  hasBms: false,
   
   canOnline: false,
   standby: false,
@@ -91,6 +107,12 @@ export function useBoardState(): UseBoardStateReturn {
         offset: msg.offset ?? prev.offset,
         offsetPinned: msg.offsetPin !== undefined ? Boolean(msg.offsetPin) : prev.offsetPinned,
         isaChime: msg.isaChime !== undefined ? Boolean(msg.isaChime) : prev.isaChime,
+        nagKiller: msg.nagKiller !== undefined ? Boolean(msg.nagKiller) : prev.nagKiller,
+        precondition: msg.precondition !== undefined ? Boolean(msg.precondition) : prev.precondition,
+        trackMode: msg.trackMode !== undefined ? Boolean(msg.trackMode) : prev.trackMode,
+        otaInProgress: msg.otaInProgress !== undefined ? Boolean(msg.otaInProgress) : prev.otaInProgress,
+        txPaused: msg.txPaused !== undefined ? Boolean(msg.txPaused) : prev.txPaused,
+        detectedHW: msg.detectedHW ?? prev.detectedHW,
         canOnline: msg.canOnline !== undefined ? Boolean(msg.canOnline) : prev.canOnline,
         standby: msg.standby !== undefined ? Boolean(msg.standby) : prev.standby,
         bus1: msg.bus1 !== undefined ? Boolean(msg.bus1) : prev.bus1,
@@ -119,6 +141,12 @@ export function useBoardState(): UseBoardStateReturn {
         offset: msg.offset ?? prev.offset,
         offsetPinned: Boolean(msg.offsetPin),
         isaChime: Boolean(msg.isaChime),
+        nagKiller: msg.nagKiller !== undefined ? Boolean(msg.nagKiller) : prev.nagKiller,
+        precondition: msg.precondition !== undefined ? Boolean(msg.precondition) : prev.precondition,
+        trackMode: msg.trackMode !== undefined ? Boolean(msg.trackMode) : prev.trackMode,
+        otaInProgress: msg.otaInProgress !== undefined ? Boolean(msg.otaInProgress) : prev.otaInProgress,
+        txPaused: msg.txPaused !== undefined ? Boolean(msg.txPaused) : prev.txPaused,
+        detectedHW: msg.detectedHW ?? prev.detectedHW,
         streaming: Boolean(msg.stream?.on),
         features: msg.features || prev.features,
         canOnline: msg.canOnline !== undefined ? Boolean(msg.canOnline) : prev.canOnline,
@@ -177,6 +205,21 @@ export function useBoardState(): UseBoardStateReturn {
     
     else if (msg.t === 'pong') {
       addMessage('info', 'Pong received');
+    }
+
+    else if (msg.t === 'bms') {
+      const bms = msg as unknown as { v: number; a: number; kw: number; soc: number; tMin: number; tMax: number; whkm: number; ok: number };
+      setState(prev => ({
+        ...prev,
+        bmsVoltage: bms.v / 100,
+        bmsCurrent: bms.a / 10,
+        bmsPower: bms.kw / 10,
+        bmsSoc: bms.soc / 10,
+        bmsTempMin: bms.tMin,
+        bmsTempMax: bms.tMax,
+        bmsWhPerKm: bms.whkm / 10,
+        hasBms: Boolean(bms.ok),
+      }));
     }
   }, [addMessage]);
 

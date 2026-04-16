@@ -23,7 +23,7 @@ Firmware tarafından alınan her CAN frame, seri/BT arayüzüne JSON olarak ilet
 ```
 
 | Alan | Tür | Açıklama |
-|------|-----|----------|
+| ---- | --- | -------- |
 | type | string | Her zaman "frame" |
 | id | number | CAN ID (ondalık, 11-bit) |
 | dlc | number | Veri uzunluk kodu (0–8) |
@@ -35,7 +35,7 @@ Firmware tarafından alınan her CAN frame, seri/BT arayüzüne JSON olarak ilet
 ## Bilinen CAN ID'leri
 
 | CAN ID | Hex | Açıklama |
-|--------|-----|----------|
+| ------ | --- | -------- |
 | 1160 | 0x488 | VehicleBus durumu |
 | 881 | 0x371 | FSD kontrol |
 | 962 | 0x3C2 | Nag bastırma |

@@ -105,7 +105,7 @@ Use this checklist to verify every step of a first-time setup. Check off each it
 Run through these final checks before relying on the setup:
 
 | Check | Expected | Status |
-|-------|----------|--------|
+| ----- | -------- | ------ |
 | Boot message in console | Board info + variant shown | ☐ |
 | CAN bus status | "CAN Active" in connection bar | ☐ |
 | FSD enable/disable | Console confirms state change | ☐ |
@@ -118,7 +118,7 @@ Run through these final checks before relying on the setup:
 ## Quick Reference
 
 | Action | Command |
-|--------|---------|
+| ------ | ------- |
 | Ping board | `ping` |
 | Check status | `status` |
 | Enable FSD | `fsd:on` |

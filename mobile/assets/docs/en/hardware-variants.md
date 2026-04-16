@@ -7,7 +7,7 @@ Supported hardware combinations and their capabilities.
 The primary (and currently only) supported board.
 
 | Feature | Detail |
-|---------|--------|
+| ------- | ------ |
 | MCU | ATmega328P @ 16 MHz |
 | Flash | 32 KB (firmware uses ~24 KB with full features) |
 | SRAM | 2 KB |
@@ -20,7 +20,7 @@ The primary (and currently only) supported board.
 ### Pin Allocation
 
 | Pin | Function | Required |
-|-----|----------|----------|
+| --- | -------- | -------- |
 | D2 | MCP2515 #1 INT | Yes |
 | D3 | MCP2515 #2 INT | Only for Vehicle bus |
 | D4 | HC-05 RX (SoftwareSerial) | Only for Bluetooth |
@@ -34,7 +34,7 @@ The primary (and currently only) supported board.
 ## MCP2515 CAN Controller
 
 | Feature | Detail |
-|---------|--------|
+| ------- | ------ |
 | Protocol | CAN 2.0A / 2.0B |
 | Speed | Up to 1 Mbps (500 kbps used) |
 | Interface | SPI @ 10 MHz max |
@@ -46,7 +46,7 @@ The primary (and currently only) supported board.
 ## HC-05 Bluetooth Module
 
 | Feature | Detail |
-|---------|--------|
+| ------- | ------ |
 | Bluetooth | Classic SPP (Serial Port Profile) |
 | Baud Rate | 9600 default, configured to 115200 |
 | Range | ~10 meters |
@@ -67,7 +67,7 @@ AT+PSWD=1234
 ## Firmware Build Configurations
 
 | Environment | BT | Use Case | Flash Size | RAM Usage |
-|-------------|-----|----------|------------|-----------|
+| ----------- | --- | -------- | ---------- | --------- |
 | uno | No | Serial only | ~18 KB | ~800 B |
 | uno_bt | Yes | Serial + Bluetooth | ~22 KB | ~1.1 KB |
 

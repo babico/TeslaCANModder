@@ -65,7 +65,7 @@ pio device monitor -b 115200
 Each firmware variant is controlled by build flags in `platformio.ini`:
 
 | Flag | Default | Description |
-|------|---------|-------------|
+| ---- | ------- | ----------- |
 | BUS_FSD_ACTIVE | 1 | FSD bus (always on) |
 | BUS_VEHICLE_ACTIVE | 0 | Vehicle control bus |
 | BUS_BODY_ACTIVE | 0 | Body control bus |

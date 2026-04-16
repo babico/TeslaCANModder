@@ -18,7 +18,7 @@
 ### Wiring — MCP2515 #1 → Arduino Uno
 
 | MCP2515 | Arduino | Notes |
-|---------|---------|-------|
+| ------- | ------- | ----- |
 | VCC | 5V | |
 | GND | GND | |
 | CS | D10 | SPI chip select |
@@ -32,7 +32,7 @@ Connect CAN-H/CAN-L to X179 pins 13/14 (FSD bus).
 ### Wiring — MCP2515 #2 → Arduino Uno (Optional)
 
 | MCP2515 #2 | Arduino | Notes |
-|------------|---------|-------|
+| ---------- | ------- | ----- |
 | VCC | 5V | Shared rail |
 | GND | GND | Shared rail |
 | CS | D9 | Unique chip select |
@@ -46,7 +46,7 @@ Connect CAN-H/CAN-L to X179 pins 13/14 (FSD bus).
 ### Wiring — HC-05 Bluetooth (Optional)
 
 | HC-05 | Arduino | Notes |
-|-------|---------|-------|
+| ----- | ------- | ----- |
 | VCC | 5V | |
 | GND | GND | |
 | RX | D4 | Via voltage divider (5V → 3.3V) |
@@ -72,7 +72,7 @@ The ESP32 uses **3× MCP2515 modules over SPI** for all CAN buses. No TWAI or SN
 ### Wiring — MCP2515 #1 (Bus 0: FSD)
 
 | MCP2515 #1 | ESP32 | Notes |
-|------------|-------|-------|
+| ---------- | ----- | ----- |
 | VCC | 5V (VIN) | MCP2515 needs 5V |
 | GND | GND | |
 | CS | GPIO 15 | SPI chip select |
@@ -86,7 +86,7 @@ Connect CAN-H/CAN-L to **X179 pins 13/14** (FSD / Autopilot CAN).
 ### Wiring — MCP2515 #2 (Bus 1: Vehicle Control)
 
 | MCP2515 #2 | ESP32 | Notes |
-|------------|-------|-------|
+| ---------- | ----- | ----- |
 | VCC | 5V (VIN) | Shared rail |
 | GND | GND | Shared rail |
 | CS | GPIO 27 | Unique chip select |
@@ -100,7 +100,7 @@ Connect CAN-H/CAN-L to **X179 pins 9/10** (Vehicle Control CAN).
 ### Wiring — MCP2515 #3 (Bus 2: Body Control)
 
 | MCP2515 #3 | ESP32 | Notes |
-|------------|-------|-------|
+| ---------- | ----- | ----- |
 | VCC | 5V (VIN) | Shared rail |
 | GND | GND | Shared rail |
 | CS | GPIO 26 | Unique chip select |
@@ -120,7 +120,7 @@ The X179 connector is located behind the center screen in Tesla vehicles.
 ### Tesla X179 Connector — Bus Mapping
 
 | X179 Pin | Connection | Purpose |
-|----------|-----------|---------|
+| -------- | --------- | ------- |
 | Pin 1 | Buck converter VIN+ | 12V power |
 | Pin 20 | Buck converter VIN- | Ground |
 | Pin 13 | MCP2515 #1 CAN-H | FSD / Autopilot CAN high |

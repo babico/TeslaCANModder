@@ -19,7 +19,7 @@ npx expo start       # start dev server
 ### Screens
 
 | Tab | File | Description |
-|-----|------|-------------|
+| --- | ---- | ----------- |
 | Dashboard | `app/index.tsx` | Connection bar + control panel |
 | Vehicle | `app/vehicle.tsx` | Mirror, lock, light, climate, charge, drive commands |
 | Monitor | `app/monitor.tsx` | Live CAN frame table + serial console |
@@ -50,7 +50,7 @@ npm test             # run all 138 tests
 Tests use Jest with `jest-expo` preset and `@testing-library/react-native`.
 
 | Suite | Tests |
-|-------|-------|
+| ----- | ----- |
 | boardState | useBoardState hook |
 | commands | command string builders |
 | decoder | CAN frame decoder |

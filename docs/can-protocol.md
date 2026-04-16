@@ -7,7 +7,7 @@ TeslaCANModder communicates with the vehicle by intercepting and modifying CAN b
 The ESP32 3-CAN configuration maps to the Tesla X179 connector as follows:
 
 | Bus | MCP2515 | X179 Pins | Function | CAN Speed |
-|-----|---------|-----------|----------|-----------|
+| --- | ------- | --------- | -------- | --------- |
 | **0** | MCP2515 #1 | 13–14 | FSD / Autopilot CAN | 500 kbps |
 | **1** | MCP2515 #2 | 9–10 | Vehicle Control CAN | 500 kbps |
 | **2** | MCP2515 #3 | 2–3 | Body Control CAN | 500 kbps |
@@ -17,7 +17,7 @@ The ESP32 3-CAN configuration maps to the Tesla X179 connector as follows:
 ## CAN IDs
 
 | CAN ID | Hex | Name | Bus | Used By |
-|--------|-----|------|-----|---------|
+| ------ | --- | ---- | --- | ------- |
 | 69 | 0x045 | Legacy stalk position | FSD | Legacy |
 | 281 | 0x119 | Window vent control | Vehicle | HW3, HW4 |
 | 627 | 0x273 | UI_vehicleControl (summon, lock, etc.) | Vehicle | HW3, HW4 |
@@ -36,7 +36,7 @@ The ESP32 3-CAN configuration maps to the Tesla X179 connector as follows:
 The main FSD frame uses a multiplexer in the lower 3 bits of byte 0:
 
 | Mux ID | Function | Modified Bits |
-|--------|----------|---------------|
+| ------ | -------- | ------------- |
 | **0** | FSD enable | bit 38 (FSD active), bit 46, bit 60 |
 | **1** | Nag suppress | bit 19 (nag flag cleared), bit 47 (HW4) |
 | **2** | Speed profile / offset | Profile bytes (HW4) or offset bytes (HW3) |

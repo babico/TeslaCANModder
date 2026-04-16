@@ -5,7 +5,7 @@ Tüm donanım konfigürasyonları için detaylı kablolama şemaları.
 ## MCP2515 #1 → Arduino Uno (Zorunlu)
 
 | MCP2515 | Arduino | Notlar |
-|---------|---------|--------|
+| ------- | ------- | ------ |
 | VCC | 5V | |
 | GND | GND | |
 | CS | D10 | SPI chip select |
@@ -21,7 +21,7 @@ CAN-H / CAN-L'yi X179 pin 13/14'e (VehicleBus) bağlayın.
 İkinci MCP2515, Vehicle bus'u izlemenize olanak tanır. Firmware başlangıçta otomatik algılar.
 
 | MCP2515 #2 | Arduino | Notlar |
-|------------|---------|--------|
+| ---------- | ------- | ------ |
 | VCC | 5V | Paylaşımlı hat |
 | GND | GND | Paylaşımlı hat |
 | CS | D9 | Benzersiz chip select |
@@ -37,7 +37,7 @@ SPI hatları (SCK/MISO/MOSI) paylaşımlıdır — sadece CS ve INT farklıdır.
 ## HC-05 Bluetooth → Arduino Uno (İsteğe Bağlı)
 
 | HC-05 | Arduino | Notlar |
-|-------|---------|--------|
+| ----- | ------- | ------ |
 | VCC | 5V | |
 | GND | GND | |
 | RX | D4 | Gerilim bölücü ile (5V → 3.3V) |
@@ -48,7 +48,7 @@ SPI hatları (SCK/MISO/MOSI) paylaşımlıdır — sadece CS ve INT farklıdır.
 ## X179 Araç Bağlantısı
 
 | X179 Pin | Bağlantı | Amaç |
-|----------|----------|------|
+| -------- | -------- | ---- |
 | Pin 1 | Buck dönüştürücü VIN+ | 12V güç |
 | Pin 20 | Buck dönüştürücü VIN- | Toprak |
 | Pin 13 | MCP2515 #1 CAN-H | VehicleBus yüksek |

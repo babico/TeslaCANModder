@@ -93,7 +93,7 @@ Firmware tarafından desteklenen komutların tam listesi. Tüm komutlar seri vey
 ## Yanıt Türleri
 
 | Tür | Açıklama |
-|-----|----------|
+| --- | -------- |
 | boot | Donanım bilgisi ile kart başlatma mesajı |
 | status | Tam durum raporu |
 | frame | CAN frame verisi |

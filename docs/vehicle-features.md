@@ -34,7 +34,7 @@ nag:off    # Disable nag suppression
 Controls the FSD speed profile (aggressiveness), mapped from follow distance stalk position:
 
 | Profile | Description |
-|---------|-------------|
+| -------- | ------------ |
 | 0 | Most aggressive |
 | 1 | Moderate-aggressive |
 | 2 | Moderate-conservative |
@@ -132,7 +132,7 @@ These commands require a 3-CAN build and send frames on the Vehicle Control bus 
 ## Feature Availability by Variant
 
 | Feature | HW4 | HW3 | Legacy |
-|---------|-----|-----|--------|
+| -------- | ---- | ---- | ------- |
 | FSD Enable | ✅ | ✅ | ✅ |
 | Nag Suppress | ✅ | ✅ | ✅ |
 | Speed Profile | ✅ | ✅ | ✅ (limited) |

@@ -63,7 +63,7 @@ $env:PLATFORMIO_BUILD_FLAGS = "-DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
 ## Memory Usage
 
 | Build | RAM | Flash |
-|-------|-----|-------|
+| ----- | --- | ----- |
 | USB + Bluetooth | 1558 bytes (76%) | 11150 bytes (35%) |
 | USB only | 1378 bytes (67%) | 9668 bytes (30%) |
 

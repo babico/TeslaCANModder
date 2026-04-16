@@ -7,7 +7,7 @@ Pre-release checklist for TeslaCANModder. Every tagged release **must** pass all
 ## 1. CI Pipeline Gates
 
 | Gate | Requirement | Verified By |
-|------|-------------|-------------|
+| ----- | ------------ | ------------ |
 | Firmware native tests | All pass (`pio test -e native`) | CI `firmware` job |
 | Firmware size regression | Within thresholds | CI `firmware` job |
 | Protocol unit tests | All 158+ tests pass | CI `protocol` job |
@@ -28,7 +28,7 @@ Pre-release checklist for TeslaCANModder. Every tagged release **must** pass all
 ## 2. Manual Verification
 
 | Check | Owner | Done? |
-|-------|-------|-------|
+| ------ | ------ | ------ |
 | Flash `uno` firmware on test board — boot JSON valid | Engineer | ☐ |
 | Flash `esp32_wifi_ble` firmware — boot JSON valid | Engineer | ☐ |
 | Web dashboard connects to device via Web Serial | Engineer | ☐ |
@@ -40,7 +40,7 @@ Pre-release checklist for TeslaCANModder. Every tagged release **must** pass all
 ## 3. Version Alignment
 
 | Component | Version File | Current |
-|-----------|-------------|---------|
+| ---------- | ------------ | -------- |
 | Root | `package.json` → `version` | — |
 | Protocol | `packages/protocol/package.json` → `version` | — |
 | Web | `web/package.json` → `version` | — |
@@ -53,7 +53,7 @@ All component versions must be aligned before release. Use `npm version <type>` 
 ## 4. Documentation
 
 | Check | Done? |
-|-------|-------|
+| ------ | ------ |
 | CHANGELOG.md updated with release notes | ☐ |
 | Breaking changes documented with migration guide | ☐ |
 | New commands/features documented in `docs/commands.md` | ☐ |
@@ -64,7 +64,7 @@ All component versions must be aligned before release. Use `npm version <type>` 
 ## 5. Release Artifacts
 
 | Artifact | Format | Location |
-|----------|--------|----------|
+| --------- | ------- | --------- |
 | Arduino Uno firmware | `.hex` | GitHub Release attachment |
 | Arduino Uno + BT firmware | `.hex` | GitHub Release attachment |
 | ESP32 firmware (serial) | `.bin` | GitHub Release attachment |

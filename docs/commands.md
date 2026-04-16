@@ -5,14 +5,14 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 ## System Commands
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `ping` | Health check — returns `{"t":"pong","v":1}` |
 | `status` | Full board state with all features, hardware info, uptime |
 
 ## FSD & Autopilot
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `fsd:on` | Enable FSD CAN modification |
 | `fsd:off` | Disable FSD CAN modification |
 | `fsd:toggle` | Toggle FSD state |
@@ -23,7 +23,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 ## Speed Profile
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `profile:0` | Set speed profile to 0 (most aggressive) |
 | `profile:1` | Set speed profile to 1 |
 | `profile:2` | Set speed profile to 2 |
@@ -33,14 +33,14 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 ## Speed Offset (HW3 only)
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `offset:N` | Set speed offset to N |
 | `offset:auto` | Auto-track from UI offset steps |
 
 ## ISA Speed Chime (HW4 only)
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `isa-chime:on` | Suppress ISA speed chime |
 | `isa-chime:off` | Restore original ISA chime |
 | `isa-chime:toggle` | Toggle ISA chime suppression |
@@ -48,7 +48,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 ## Variant Selection
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `variant:hw4` | Set vehicle variant to HW4 |
 | `variant:hw3` | Set vehicle variant to HW3 |
 | `variant:legacy` | Set vehicle variant to Legacy |
@@ -56,7 +56,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 ## Summon (HW3/HW4, requires 3 CAN buses)
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `summon` | Start summon (30-frame burst) |
 | `summon:forward` | Summon forward |
 | `summon:reverse` | Summon reverse |
@@ -67,7 +67,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 ## Streaming & Raw CAN
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `stream:on` | Start frame streaming (JSON per frame) |
 | `stream:off` | Stop frame streaming |
 | `can:raw:on` | Listen to all CAN IDs (unfiltered) |
@@ -77,7 +77,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 
 ### Lock & Security
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `lock` | Lock vehicle |
 | `unlock` | Unlock vehicle |
 | `lock:child` | Child lock |
@@ -85,7 +85,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 
 ### Trunk & Frunk
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `frunk` / `frunk:open` | Open frunk |
 | `frunk:close` | Close frunk |
 | `trunk:open` | Open trunk |
@@ -94,13 +94,13 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 
 ### Windows
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `vent:open` | Vent all windows |
 | `vent:close` | Close all windows |
 
 ### Mirrors
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `mirror:fold` | Fold mirrors |
 | `mirror:unfold` | Unfold mirrors |
 | `mirror:heat` | Heat mirrors |
@@ -109,7 +109,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 
 ### Lights
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `light:fog:front` | Toggle front fog lights |
 | `light:fog:rear` | Toggle rear fog lights |
 | `light:highbeam:auto` | Auto highbeam |
@@ -120,26 +120,26 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 
 ### Sentry
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `sentry:on` | Enable sentry mode |
 | `sentry:off` | Disable sentry mode |
 
 ### Climate
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `climate:keep` | Keep climate on |
 | `climate:off` | Turn climate off |
 
 ### Charge
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `charge:start` | Start charging |
 | `charge:stop` | Stop charging |
 | `chargeport` | Open charge port |
 
 ### Drive Config
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `pedal:standard` / `pedal:std` | Standard pedal mode |
 | `pedal:chill` | Chill pedal mode |
 | `pedal:sport` | Sport pedal mode |

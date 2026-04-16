@@ -10,7 +10,7 @@
 #define NVS_KEY_MAGIC "magic"
 #define NVS_KEY_VERSION "ver"
 #define NVS_SETTINGS_MAGIC 0xCA
-#define NVS_SETTINGS_VERSION 0x03
+#define NVS_SETTINGS_VERSION 0x04
 
 static Preferences prefs;
 
@@ -32,6 +32,9 @@ inline bool loadSettings(State& s) {
   s.offsetOverride   = prefs.getUChar("offPin", 0);
   s.isaChimeSuppress = prefs.getUChar("isa", 0);
   s.summonInject     = prefs.getUChar("sumInj", 0);
+  s.nagKillerEnabled = prefs.getUChar("nagK", 0);
+  s.preconditionEnabled = prefs.getUChar("precond", 0);
+  s.trackModeEnabled = prefs.getUChar("track", 0);
   prefs.end();
   return true;
 }
@@ -49,5 +52,8 @@ inline void saveSettings(const State& s) {
   prefs.putUChar("offPin", s.offsetOverride ? 1 : 0);
   prefs.putUChar("isa", s.isaChimeSuppress ? 1 : 0);
   prefs.putUChar("sumInj", s.summonInject ? 1 : 0);
+  prefs.putUChar("nagK", s.nagKillerEnabled ? 1 : 0);
+  prefs.putUChar("precond", s.preconditionEnabled ? 1 : 0);
+  prefs.putUChar("track", s.trackModeEnabled ? 1 : 0);
   prefs.end();
 }

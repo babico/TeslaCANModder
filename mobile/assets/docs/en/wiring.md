@@ -5,7 +5,7 @@ Detailed wiring diagrams for all hardware configurations.
 ## MCP2515 #1 → Arduino Uno (Required)
 
 | MCP2515 | Arduino | Notes |
-|---------|---------|-------|
+| ------- | ------- | ----- |
 | VCC | 5V | |
 | GND | GND | |
 | CS | D10 | SPI chip select |
@@ -21,7 +21,7 @@ Connect CAN-H / CAN-L to X179 pins 13/14 (VehicleBus).
 A second MCP2515 lets you access the Vehicle control bus. Enable with `BUS_VEHICLE_ACTIVE=1`. The firmware auto-detects it at boot.
 
 | MCP2515 #2 | Arduino | Notes |
-|------------|---------|-------|
+| ---------- | ------- | ----- |
 | VCC | 5V | Shared rail |
 | GND | GND | Shared rail |
 | CS | D9 | Unique chip select |
@@ -37,7 +37,7 @@ SPI lines (SCK/MISO/MOSI) are shared — only CS and INT differ.
 ## HC-05 Bluetooth → Arduino Uno (Optional)
 
 | HC-05 | Arduino | Notes |
-|-------|---------|-------|
+| ----- | ------- | ----- |
 | VCC | 5V | |
 | GND | GND | |
 | RX | D4 | Via voltage divider (5V → 3.3V) |
@@ -48,7 +48,7 @@ SPI lines (SCK/MISO/MOSI) are shared — only CS and INT differ.
 ## X179 Vehicle Connection
 
 | X179 Pin | Connection | Purpose |
-|----------|------------|---------|
+| -------- | ---------- | ------- |
 | Pin 1 | Buck converter VIN+ | 12V power |
 | Pin 20 | Buck converter VIN- | Ground |
 | Pin 13 | MCP2515 #1 CAN-H | VehicleBus high |

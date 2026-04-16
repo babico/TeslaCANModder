@@ -97,6 +97,38 @@ struct State {
   uint8_t lastDrive[8];
   bool hasDrive;
 
+  // BMS battery telemetry (read-only, decoded from CAN)
+  float bmsVoltage;       // Pack voltage (V)
+  float bmsCurrent;       // Pack current (A, negative=discharging)
+  float bmsPower;         // Pack power (kW)
+  float bmsSoc;           // State of charge (%)
+  int8_t bmsTempMin;      // Min cell temp (°C)
+  int8_t bmsTempMax;      // Max cell temp (°C)
+  float bmsWhPerKm;       // Energy consumption (Wh/km)
+  bool hasBms;            // At least one BMS frame received
+
+  // Nag killer (EPAS torque spoofing) — persisted
+  bool nagKillerEnabled;
+
+  // OTA safety check
+  bool otaInProgress;     // true when Tesla OTA detected on 0x318
+  bool txPaused;          // true = all TX paused during OTA
+
+  // Auto HW detection (from 0x398)
+  uint8_t detectedHW;     // 0=unknown, 2=HW3, 3=HW4
+  bool hwAutoDetected;
+
+  // Preconditioning — persisted
+  bool preconditionEnabled;
+  unsigned long precondLastMs;
+
+  // Track mode — persisted
+  bool trackModeEnabled;
+
+  // CAN error monitoring
+  uint8_t canErrorFlags;     // MCP2515 EFLG register snapshot
+  unsigned long canErrorMs;  // last error check time
+
   State() : variant(HW4), fsdEnabled(false), nagSuppress(false),
             speedProfile(1), profileOverride(false),
             speedOffset(0), offsetOverride(false), isaChimeSuppress(false), summonInject(false),
@@ -104,7 +136,15 @@ struct State {
             lastFrameMs(0), canOnline(false), standby(false), lastReinitMs(0),
             summonRemaining(0), summonLastMs(0), hasCtrl(false),
             summonDirection(SUMMON_FORWARD), summonMode(SUMMON_STOP),
-            hasClimate(false), hasCharge(false), hasDrive(false)
+            hasClimate(false), hasCharge(false), hasDrive(false),
+            bmsVoltage(0), bmsCurrent(0), bmsPower(0), bmsSoc(0),
+            bmsTempMin(0), bmsTempMax(0), bmsWhPerKm(0), hasBms(false),
+            nagKillerEnabled(false),
+            otaInProgress(false), txPaused(false),
+            detectedHW(0), hwAutoDetected(false),
+            preconditionEnabled(false), precondLastMs(0),
+            trackModeEnabled(false),
+            canErrorFlags(0), canErrorMs(0)
   {
     for (uint8_t i = 0; i < 8; i++) lastCtrl[i] = 0;
     for (uint8_t i = 0; i < 5; i++) lastClimate[i] = 0;

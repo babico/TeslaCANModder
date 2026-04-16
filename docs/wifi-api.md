@@ -9,7 +9,7 @@ ESP32 firmware variants with WiFi enabled (`esp32_wifi`, `esp32_wifi_ble`) creat
 The ESP32 creates its own WiFi network:
 
 | Setting | Default Value |
-|---------|--------------|
+| -------- | ------------- |
 | SSID | `TeslaCANModder` |
 | Password | `teslacan123` |
 | IP Address | `192.168.4.1` |
@@ -35,7 +35,7 @@ If STA connection fails, the device automatically falls back to AP mode.
 ### System
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+| ------ | -------- | ----------- |
 | `GET` | `/` | Embedded HTML dashboard |
 | `GET` | `/api/ping` | Health check — returns `{"t":"pong","v":1}` |
 | `GET` | `/api/status` | Full board state JSON |
@@ -44,7 +44,7 @@ If STA connection fails, the device automatically falls back to AP mode.
 ### Command Execution
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+| ------- | --------- | ------------ |
 | `POST` | `/api/command` | Execute any serial command |
 
 **Request body:**
@@ -59,7 +59,7 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 ### WiFi Configuration
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+| ------- | --------- | ------------ |
 | `GET` | `/api/wifi/status` | Current WiFi status and configuration |
 | `POST` | `/api/wifi/config` | Change WiFi mode / credentials |
 
@@ -111,7 +111,7 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 ### BLE Control
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+| ------- | --------- | ------------ |
 | `GET` | `/api/ble/status` | BLE state (enabled, connected, device name) |
 | `POST` | `/api/ble/config` | Enable or disable BLE at runtime |
 

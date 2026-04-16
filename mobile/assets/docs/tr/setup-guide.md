@@ -26,14 +26,14 @@ TeslaCANModder için donanım kurulumu ve yazılım yapılandırması.
 ## Firmware Varyantları
 
 | Varyant | Bluetooth | Kullanım |
-|---------|-----------|----------|
+| ------- | --------- | -------- |
 | uno | Hayır | En hafif firmware |
 | uno_bt | Evet | HC-05 ile kablosuz kontrol |
 
 Bus etkinleştirme derleme bayrakları ile kontrol edilir:
 
 | Bayrak | Varsayılan | Açıklama |
-|--------|-----------|----------|
+| ------ | --------- | -------- |
 | BUS_FSD_ACTIVE | 1 | FSD bus (her zaman açık) |
 | BUS_VEHICLE_ACTIVE | 0 | Vehicle bus'ı etkinleştir |
 | BUS_BODY_ACTIVE | 0 | Body bus'ı etkinleştir |
@@ -43,7 +43,7 @@ Tüm varyantlar tüm FSD/araç özelliklerini destekler. Bluetooth sadece I/O ka
 ## Araç Varyant Seçimi
 
 | Varyant | Araçlar | Özellikler |
-|---------|---------|------------|
+| ------- | ------- | ---------- |
 | HW4 | 2023+ HW4 (FSD v14+) | FSD, Nag, Profil, ISA Zil, Çağırma |
 | HW3 | 2019–2023 HW3 | FSD, Nag, Profil, Hız Offset, Çağırma |
 | Legacy | Eski araçlar / basit CAN | Sadece FSD, Nag |

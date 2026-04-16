@@ -7,7 +7,7 @@
 // Bump SETTINGS_VERSION whenever fields are added/removed/reordered.
 
 #define SETTINGS_MAGIC   0xCA
-#define SETTINGS_VERSION 0x03
+#define SETTINGS_VERSION 0x04
 #define SETTINGS_ADDR    0
 
 struct SavedSettings {
@@ -22,6 +22,9 @@ struct SavedSettings {
   uint8_t offsetOverride;    // 1 = pin to speedOffset, 0 = follow CAN
   uint8_t isaChimeSuppress;
   uint8_t summonInject;
+  uint8_t nagKillerEnabled;
+  uint8_t preconditionEnabled;
+  uint8_t trackModeEnabled;
 };
 
 inline bool loadSettings(State& s) {
@@ -39,6 +42,9 @@ inline bool loadSettings(State& s) {
   s.offsetOverride   = saved.offsetOverride;
   s.isaChimeSuppress = saved.isaChimeSuppress;
   s.summonInject     = saved.summonInject;
+  s.nagKillerEnabled = saved.nagKillerEnabled;
+  s.preconditionEnabled = saved.preconditionEnabled;
+  s.trackModeEnabled = saved.trackModeEnabled;
   return true;
 }
 
@@ -55,5 +61,8 @@ inline void saveSettings(const State& s) {
   saved.offsetOverride   = s.offsetOverride ? 1 : 0;
   saved.isaChimeSuppress = s.isaChimeSuppress ? 1 : 0;
   saved.summonInject     = s.summonInject ? 1 : 0;
+  saved.nagKillerEnabled = s.nagKillerEnabled ? 1 : 0;
+  saved.preconditionEnabled = s.preconditionEnabled ? 1 : 0;
+  saved.trackModeEnabled = s.trackModeEnabled ? 1 : 0;
   EEPROM.put(SETTINGS_ADDR, saved);  // put() → update() per byte, only writes changed cells
 }

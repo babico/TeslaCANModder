@@ -23,7 +23,7 @@ Each CAN frame received by the firmware is forwarded to the serial/BT interface 
 ```
 
 | Field | Type | Description |
-|-------|------|-------------|
+| ----- | ---- | ----------- |
 | type | string | Always "frame" |
 | id | number | CAN ID (decimal, 11-bit) |
 | dlc | number | Data length code (0–8) |
@@ -35,7 +35,7 @@ Each CAN frame received by the firmware is forwarded to the serial/BT interface 
 ## Known CAN IDs
 
 | CAN ID | Hex | Description |
-|--------|-----|-------------|
+| ------ | --- | ----------- |
 | 1160 | 0x488 | VehicleBus status |
 | 881 | 0x371 | FSD control |
 | 962 | 0x3C2 | Nag suppression |

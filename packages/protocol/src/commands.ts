@@ -61,6 +61,21 @@ export const commands = {
   stream: (on: boolean) => on ? 'stream:on' : 'stream:off',
   rawCan: (on: boolean) => on ? 'can:raw:on' : 'can:raw:off',
 
+  // Nag Killer (EPAS torque spoofing)
+  nagKiller: (on: boolean) => on ? 'nagkiller:on' : 'nagkiller:off',
+  nagKillerToggle: () => 'nagkiller:toggle',
+
+  // BMS Telemetry
+  bms: () => 'bms',
+
+  // Preconditioning
+  precondition: (on: boolean) => on ? 'precondition:on' : 'precondition:off',
+  preconditionToggle: () => 'precondition:toggle',
+
+  // Track Mode
+  trackMode: (on: boolean) => on ? 'trackmode:on' : 'trackmode:off',
+  trackModeToggle: () => 'trackmode:toggle',
+
   // Mirror
   mirrorFold: () => 'mirror:fold',
   mirrorUnfold: () => 'mirror:unfold',

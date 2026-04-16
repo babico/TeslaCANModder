@@ -81,7 +81,7 @@ docker compose up firmware
 The firmware supports 3 fixed CAN buses on the Tesla X179 connector:
 
 | Bus | Index | X179 Pins | Build Flag | Default |
-|-----|-------|-----------|------------|---------|
+| --- | ----- | --------- | ---------- | -------| 
 | FSD | 0 | 13-14 | `BUS_FSD_ACTIVE` | ON |
 | Vehicle | 1 | 9-10 | `BUS_VEHICLE_ACTIVE` | OFF |
 | Body | 2 | 2-3 | `BUS_BODY_ACTIVE` | OFF |
@@ -91,7 +91,7 @@ Bus activation is controlled by build flags. The build server injects these when
 ## Firmware Environments
 
 | Environment | Board | Features |
-|-------------|-------|----------|
+| ----------- | ----- | --------| 
 | `native` | Host | Tests only |
 | `uno` | Arduino Uno | Serial |
 | `uno_bt` | Arduino Uno | Serial + HC-05 Bluetooth |

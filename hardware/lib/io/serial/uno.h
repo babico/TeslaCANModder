@@ -10,12 +10,14 @@ void sendLog(const __FlashStringHelper* msg);
 #include "command/system.h"
 #include "command/fsd_toggle.h"
 #include "command/nag.h"
+#include "command/nag_killer.h"
 #include "command/profile.h"
 #include "command/offset.h"
 #include "command/isa_chime.h"
 #include "command/summon_inject.h"
 #include "command/summon_cmd.h"
 #include "command/variant.h"
+#include "command/bms.h"
 #include "command/mirror.h"
 #include "command/lock.h"
 #include "command/trunk.h"
@@ -29,6 +31,8 @@ void sendLog(const __FlashStringHelper* msg);
 #include "command/climate.h"
 #include "command/charge.h"
 #include "command/drive.h"
+#include "command/precondition.h"
+#include "command/track_mode.h"
 
 #if BOARD_ENABLE_BT
   #include <SoftwareSerial.h>
@@ -119,6 +123,18 @@ void sendBoot(State& s) {
   printNum(s.isaChimeSuppress ? 1 : 0);
   printStr(F(",\"summonInject\":"));
   printNum(s.summonInject ? 1 : 0);
+  printStr(F(",\"nagKiller\":"));
+  printNum(s.nagKillerEnabled ? 1 : 0);
+  printStr(F(",\"precondition\":"));
+  printNum(s.preconditionEnabled ? 1 : 0);
+  printStr(F(",\"trackMode\":"));
+  printNum(s.trackModeEnabled ? 1 : 0);
+  printStr(F(",\"otaInProgress\":"));
+  printNum(s.otaInProgress ? 1 : 0);
+  printStr(F(",\"txPaused\":"));
+  printNum(s.txPaused ? 1 : 0);
+  printStr(F(",\"detectedHW\":"));
+  printNum(s.detectedHW);
   printStr(F(",\"features\":{\"fsd\":"));
   printNum(f.fsd ? 1 : 0);
   printStr(F(",\"profile\":"));
@@ -197,6 +213,18 @@ void sendStatus(State& s, unsigned long now) {
   printNum(s.summonInject ? 1 : 0);
   printStr(F(",\"nag\":"));
   printNum(s.nagSuppress ? 1 : 0);
+  printStr(F(",\"nagKiller\":"));
+  printNum(s.nagKillerEnabled ? 1 : 0);
+  printStr(F(",\"precondition\":"));
+  printNum(s.preconditionEnabled ? 1 : 0);
+  printStr(F(",\"trackMode\":"));
+  printNum(s.trackModeEnabled ? 1 : 0);
+  printStr(F(",\"otaInProgress\":"));
+  printNum(s.otaInProgress ? 1 : 0);
+  printStr(F(",\"txPaused\":"));
+  printNum(s.txPaused ? 1 : 0);
+  printStr(F(",\"detectedHW\":"));
+  printNum(s.detectedHW);
   printStr(F(",\"features\":{\"fsd\":"));
   printNum(f.fsd ? 1 : 0);
   printStr(F(",\"profile\":"));
@@ -377,6 +405,49 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
   if (executeVariantCmd(cmd, s)) {
     sendAck(cmd);
     sendLog(F("Variant changed - filters updated"));
+    sendStatus(s, now);
+    return;
+  }
+
+  if (executeNagKillerCmd(cmd, s)) {
+    sendAck(cmd);
+    sendLog(s.nagKillerEnabled ? F("Nag killer ON - saved") : F("Nag killer OFF - saved"));
+    sendStatus(s, now);
+    return;
+  }
+
+  if (execBmsCmd(cmd, s)) {
+    printStr(F("{\"t\":\"bms\",\"v\":"));
+    printNum((long)(s.bmsVoltage * 100));
+    printStr(F(",\"a\":"));
+    printNum((long)(s.bmsCurrent * 10));
+    printStr(F(",\"kw\":"));
+    printNum((long)(s.bmsPower * 10));
+    printStr(F(",\"soc\":"));
+    printNum((long)(s.bmsSoc * 10));
+    printStr(F(",\"tMin\":"));
+    printNum(s.bmsTempMin);
+    printStr(F(",\"tMax\":"));
+    printNum(s.bmsTempMax);
+    printStr(F(",\"whkm\":"));
+    printNum((long)(s.bmsWhPerKm * 10));
+    printStr(F(",\"ok\":"));
+    printNum(s.hasBms ? 1 : 0);
+    printStr(F("}"));
+    printLn();
+    return;
+  }
+
+  if (execPreconditionCmd(cmd, s)) {
+    sendAck(cmd);
+    sendLog(s.preconditionEnabled ? F("Precondition ON - saved") : F("Precondition OFF - saved"));
+    sendStatus(s, now);
+    return;
+  }
+
+  if (execTrackModeCmd(cmd, s)) {
+    sendAck(cmd);
+    sendLog(s.trackModeEnabled ? F("Track mode ON - saved") : F("Track mode OFF - saved"));
     sendStatus(s, now);
     return;
   }

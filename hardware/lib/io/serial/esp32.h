@@ -11,12 +11,14 @@ void sendLog(const __FlashStringHelper* msg);
 #include "command/system.h"
 #include "command/fsd_toggle.h"
 #include "command/nag.h"
+#include "command/nag_killer.h"
 #include "command/profile.h"
 #include "command/offset.h"
 #include "command/isa_chime.h"
 #include "command/summon_inject.h"
 #include "command/summon_cmd.h"
 #include "command/variant.h"
+#include "command/bms.h"
 #if BUS_VEHICLE_ACTIVE
   #include "command/mirror.h"
   #include "command/lock.h"
@@ -28,6 +30,8 @@ void sendLog(const __FlashStringHelper* msg);
   #include "command/climate.h"
   #include "command/charge.h"
   #include "command/drive.h"
+  #include "command/precondition.h"
+  #include "command/track_mode.h"
 #endif
 #if BUS_BODY_ACTIVE
   #include "command/window.h"
@@ -141,6 +145,18 @@ void sendBoot(State& s) {
   printNum(s.isaChimeSuppress ? 1 : 0);
   printStr(F(",\"summonInject\":"));
   printNum(s.summonInject ? 1 : 0);
+  printStr(F(",\"nagKiller\":"));
+  printNum(s.nagKillerEnabled ? 1 : 0);
+  printStr(F(",\"precondition\":"));
+  printNum(s.preconditionEnabled ? 1 : 0);
+  printStr(F(",\"trackMode\":"));
+  printNum(s.trackModeEnabled ? 1 : 0);
+  printStr(F(",\"otaInProgress\":"));
+  printNum(s.otaInProgress ? 1 : 0);
+  printStr(F(",\"txPaused\":"));
+  printNum(s.txPaused ? 1 : 0);
+  printStr(F(",\"detectedHW\":"));
+  printNum(s.detectedHW);
   printStr(F(",\"features\":{\"fsd\":"));
   printNum(f.fsd ? 1 : 0);
   printStr(F(",\"profile\":"));
@@ -244,6 +260,18 @@ void sendStatus(State& s, unsigned long now) {
   printNum(s.summonInject ? 1 : 0);
   printStr(F(",\"nag\":"));
   printNum(s.nagSuppress ? 1 : 0);
+  printStr(F(",\"nagKiller\":"));
+  printNum(s.nagKillerEnabled ? 1 : 0);
+  printStr(F(",\"precondition\":"));
+  printNum(s.preconditionEnabled ? 1 : 0);
+  printStr(F(",\"trackMode\":"));
+  printNum(s.trackModeEnabled ? 1 : 0);
+  printStr(F(",\"otaInProgress\":"));
+  printNum(s.otaInProgress ? 1 : 0);
+  printStr(F(",\"txPaused\":"));
+  printNum(s.txPaused ? 1 : 0);
+  printStr(F(",\"detectedHW\":"));
+  printNum(s.detectedHW);
   printStr(F(",\"features\":{\"fsd\":"));
   printNum(f.fsd ? 1 : 0);
   printStr(F(",\"profile\":"));
@@ -429,6 +457,36 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
     return;
   }
 
+  if (executeNagKillerCmd(cmd, s)) {
+    sendAck(cmd);
+    sendLog(s.nagKillerEnabled ? F("Nag killer ON - saved") : F("Nag killer OFF - saved"));
+    sendStatus(s, now);
+    return;
+  }
+
+  if (execBmsCmd(cmd, s)) {
+    // Send BMS telemetry as JSON
+    printStr(F("{\"t\":\"bms\",\"v\":"));
+    printNum((long)(s.bmsVoltage * 100));
+    printStr(F(",\"a\":"));
+    printNum((long)(s.bmsCurrent * 10));
+    printStr(F(",\"kw\":"));
+    printNum((long)(s.bmsPower * 10));
+    printStr(F(",\"soc\":"));
+    printNum((long)(s.bmsSoc * 10));
+    printStr(F(",\"tMin\":"));
+    printNum(s.bmsTempMin);
+    printStr(F(",\"tMax\":"));
+    printNum(s.bmsTempMax);
+    printStr(F(",\"whkm\":"));
+    printNum((long)(s.bmsWhPerKm * 10));
+    printStr(F(",\"ok\":"));
+    printNum(s.hasBms ? 1 : 0);
+    printStr(F("}"));
+    printLn();
+    return;
+  }
+
   // Body bus commands (window, sentry)
 #if BUS_BODY_ACTIVE
   if (execWindowCmd(cmd, s) ||
@@ -440,8 +498,22 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
   }
 #endif
 
-  // Vehicle bus commands (climate, charge, drive)
+  // Vehicle bus commands (climate, charge, drive, precondition, track mode)
 #if BUS_VEHICLE_ACTIVE
+  if (execPreconditionCmd(cmd, s)) {
+    sendAck(cmd);
+    sendLog(s.preconditionEnabled ? F("Precondition ON - saved") : F("Precondition OFF - saved"));
+    sendStatus(s, now);
+    return;
+  }
+
+  if (execTrackModeCmd(cmd, s)) {
+    sendAck(cmd);
+    sendLog(s.trackModeEnabled ? F("Track mode ON - saved") : F("Track mode OFF - saved"));
+    sendStatus(s, now);
+    return;
+  }
+
   if (execClimateCmd(cmd, s) ||
       execChargeCmd(cmd, s) ||
       execDriveCmd(cmd, s)) {

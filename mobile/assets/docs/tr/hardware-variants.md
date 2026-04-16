@@ -7,7 +7,7 @@ Desteklenen donanım kombinasyonları ve yetenekleri.
 Birincil (ve şu anda tek) desteklenen kart.
 
 | Özellik | Detay |
-|---------|-------|
+| ------- | ----- |
 | MCU | ATmega328P @ 16 MHz |
 | Flash | 32 KB (tam özelliklerle firmware ~24 KB kullanır) |
 | SRAM | 2 KB |
@@ -20,7 +20,7 @@ Birincil (ve şu anda tek) desteklenen kart.
 ### Pin Tahsisi
 
 | Pin | Fonksiyon | Zorunlu |
-|-----|-----------|---------|
+| --- | --------- | ------- |
 | D2 | MCP2515 #1 INT | Evet |
 | D3 | MCP2515 #2 INT | Sadece Vehicle bus |
 | D4 | HC-05 RX (SoftwareSerial) | Sadece Bluetooth |
@@ -34,7 +34,7 @@ Birincil (ve şu anda tek) desteklenen kart.
 ## MCP2515 CAN Kontrolcü
 
 | Özellik | Detay |
-|---------|-------|
+| ------- | ----- |
 | Protokol | CAN 2.0A / 2.0B |
 | Hız | Maksimum 1 Mbps (500 kbps kullanılır) |
 | Arayüz | SPI @ maksimum 10 MHz |
@@ -46,7 +46,7 @@ Birincil (ve şu anda tek) desteklenen kart.
 ## HC-05 Bluetooth Modülü
 
 | Özellik | Detay |
-|---------|-------|
+| ------- | ----- |
 | Bluetooth | Klasik SPP (Seri Port Profili) |
 | Baud Hızı | Varsayılan 9600, 115200 olarak yapılandırılır |
 | Menzil | ~10 metre |
@@ -67,7 +67,7 @@ AT+PSWD=1234
 ## Firmware Derleme Konfigürasyonları
 
 | Ortam | BT | Flash Boyutu | RAM Kullanımı |
-|-------|-----|------------|---------------|
+| ----- | --- | ---------- | ------------- |
 | uno | Hayır | ~18 KB | ~800 B |
 | uno_bt | Evet | ~22 KB | ~1.1 KB |
 

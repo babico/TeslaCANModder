@@ -5,7 +5,7 @@ TeslaCANModder is an open-source CAN bus modification tool for Tesla vehicles. I
 ## Supported Boards
 
 | Board | CAN Driver | Buses | Connectivity |
-|-------|-----------|-------|-------------|
+| ----- | --------- | ----- | ----------- |
 | **Arduino Uno** | MCP2515 (SPI) | 1–3 | USB, HC-05 Bluetooth |
 | **ESP32-S DevKit** | MCP2515 (SPI) | 1–3 | USB, WiFi (AP/STA), BLE |
 
@@ -32,7 +32,7 @@ TeslaCANModder is an open-source CAN bus modification tool for Tesla vehicles. I
 ## Vehicle Variants
 
 | Variant | Vehicles | Key Features |
-|---------|----------|-------------|
+| -------- | --------- | ------------ |
 | **HW4** | 2023+ with HW4 (FSD v14+) | FSD, Nag, Profile, ISA Chime, Summon |
 | **HW3** | 2019–2023 with HW3 | FSD, Nag, Profile, Speed Offset, Summon |
 | **Legacy** | Pre-HW3 vehicles | FSD, Nag, Profile (limited) |

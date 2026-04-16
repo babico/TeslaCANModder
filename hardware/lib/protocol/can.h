@@ -42,6 +42,15 @@ inline bool busActive(uint8_t bus) {
 #define CAN_ID_CHARGE         0x333   // 819 - Charge control
 #define CAN_ID_DRIVE_CONFIG   0x334   // 820 - Drive config (pedal/regen/stop)
 #define CAN_ID_TRUNK_CTRL     0x3B3   // 947 - Trunk/Glovebox control
+#define CAN_ID_PRECONDITION   0x082   // 130 - UI_tripPlanning (preconditioning)
+#define CAN_ID_BMS_HV_BUS    0x132   // 306 - BMS_hvBusStatus (V/A/kW)
+#define CAN_ID_BMS_SOC       0x292   // 658 - BMS_socStatus (SoC%)
+#define CAN_ID_BMS_THERMAL   0x312   // 786 - BMS_thermalStatus (temp)
+#define CAN_ID_TRACK_MODE    0x313   // 787 - UI_trackModeSettings
+#define CAN_ID_GTW_CAR_STATE 0x318   // 792 - GTW_carState (OTA detect)
+#define CAN_ID_BMS_ENERGY    0x33A   // 826 - UI_energyGraphData (Wh/km)
+#define CAN_ID_EPAS_TORQUE   0x370   // 880 - EPAS3P_sysStatus (nag killer)
+#define CAN_ID_GTW_CAR_CFG   0x398   // 920 - GTW_carConfig (auto HW detect)
 #define CAN_ID_ISA_SPEED      921
 #define CAN_ID_LEGACY_FSD_MUX 1006
 #define CAN_ID_FOLLOW_DIST    1016

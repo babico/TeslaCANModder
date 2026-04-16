@@ -7,7 +7,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 ## Board Reference
 
 | Board | CAN Modules | CAN Buses | Connectivity | Persistence | Firmware Envs |
-|-------|-------------|-----------|-------------|-------------|---------------|
+| ----- | ----------- | --------- | ----------- | ----------- | ------------- |
 | Arduino Uno R3 | MCP2515 × 1–3 | BUS_FSD, BUS_VEHICLE, BUS_BODY (flags) | USB Serial, HC-05 BT (optional) | EEPROM | `uno`, `uno_bt` |
 | ESP32 DevKit | MCP2515 × 1–3 | BUS_FSD, BUS_VEHICLE, BUS_BODY (flags) | USB Serial, WiFi AP/STA, BLE (NimBLE) | NVS (Preferences) | `esp32`, `esp32_wifi`, `esp32_ble`, `esp32_wifi_ble` |
 
@@ -24,7 +24,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Wiring:**
 
 | MCP2515 Pin | Arduino Pin | Function |
-|-------------|-------------|----------|
+| ----------- | ----------- | -------- |
 | VCC | 5V | Power |
 | GND | GND | Ground |
 | CS | D10 (PIN_MCP2515_1_CS) | SPI chip select |
@@ -36,7 +36,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | CAN-L | X179 pin 10 or 14 | CAN bus low |
 
 | Step | Action | Expected Result | Status |
-|------|--------|----------------|--------|
+| ---- | ------ | -------------- | ------ |
 | 1 | Wire MCP2515 to Arduino per table above | Physical wiring complete | — |
 | 2 | Flash `uno` firmware via PlatformIO | Upload successful at 115200 baud | — |
 | 3 | Open web dashboard in Chrome | Dashboard loads, shows "Not Connected" | — |
@@ -57,13 +57,13 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Additional Wiring (Bus 1):**
 
 | MCP2515 #2 Pin | Arduino Pin | Function |
-|-----------------|-------------|----------|
+| --------------- | ----------- | -------- |
 | CS | D9 (PIN_MCP2515_2_CS) | Bus 1 chip select |
 | INT | D3 (PIN_MCP2515_2_INT) | Hardware interrupt (INT1) |
 | CAN-H/CAN-L | X179 pins 9-10 | Vehicle Control bus |
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Wire second MCP2515 per table above | Both modules on SPI bus |
 | 2 | Flash `uno` with `BUS_VEHICLE_ACTIVE=1` | Boot shows `busFsd:true, busVehicle:true` |
 | 3 | Bus 0 receives FSD frames | 0x399, 0x3FD, 0x3F8 filtered |
@@ -82,13 +82,13 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Additional Wiring (Bus 2):**
 
 | MCP2515 #3 Pin | Arduino Pin | Function |
-|-----------------|-------------|----------|
+| --------------- | ----------- | -------- |
 | CS | D8 (PIN_MCP2515_3_CS) | Bus 2 chip select |
 | INT | D6 (PIN_MCP2515_3_INT) | **Polled** (no hardware INT) |
 | CAN-H/CAN-L | X179 pins 2-3 | Body Control bus |
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Wire third MCP2515 per table | Three modules sharing SPI |
 | 2 | Flash `uno` with `BUS_VEHICLE_ACTIVE=1 BUS_BODY_ACTIVE=1` | Boot shows `busFsd:true, busVehicle:true, busBody:true` |
 | 3 | Bus 2 is polled (no INT) | Slightly higher latency on bus 2, still functional |
@@ -107,7 +107,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **HC-05 Wiring:**
 
 | HC-05 Pin | Arduino Pin | Function |
-|-----------|-------------|----------|
+| --------- | ----------- | -------- |
 | VCC | 5V | Power |
 | GND | GND | Ground |
 | TXD | D4 (PIN_BT_RX) | HC-05 TX → Arduino RX (SoftwareSerial) |
@@ -116,7 +116,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Note:** HC-05 communicates at 9600 baud (BT_BAUD) via SoftwareSerial. The standard USB Serial runs at 115200 baud.
 
 | Step | Action | Expected Result | Status |
-|------|--------|----------------|--------|
+| ---- | ------ | -------------- | ------ |
 | 1 | Wire HC-05 per table above | HC-05 LED blinking (pairing mode) | — |
 | 2 | Flash `uno_bt` firmware | Boot message includes `btEnabled:true` | — |
 | 3 | Pair phone/laptop with HC-05 | BT pairing successful, HC-05 LED solid | — |
@@ -149,7 +149,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Applies to:** All Uno firmware variants
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Send `fsd:on` | ACK, FSD badge ON |
 | 2 | Send `nag:on` | ACK, nag suppression ON |
 | 3 | Send `profile:2` | Profile changes to 2 (PINNED) |
@@ -170,7 +170,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Applies to:** `uno` / `uno_bt` with `BUS_VEHICLE_ACTIVE=1` (needs Vehicle bus for vehicle control)
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Wait for 0x273 frame to be cached | `hasCtrl` = true in status |
 | 2 | Send `unlock` | 30× 0x273 burst, car unlocks |
 | 3 | Send `lock` | 30× 0x273 burst, car locks |
@@ -183,7 +183,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Frame-dependent commands:**
 
 | Command Group | Required Cache | CAN ID |
-|---------------|---------------|--------|
+| ------------- | ------------- | ------ |
 | lock, unlock, frunk, trunk, mirror, light, wiper, seat, display, power | `hasCtrl` (0x273) | 0x273 via ctrlBus |
 | climate:keep, climate:off | `hasClimate` (0x2F3) | 0x2F3 |
 | charge:start, charge:stop, charge:port | `hasCharge` (0x333) | 0x333 |
@@ -196,7 +196,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **User Story:** User switches between Tesla hardware variants.
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Send `variant:hw4` | Variant set, filters re-applied, handler switched |
 | 2 | Features: FSD, nag, profile, ISA chime, summon | All available |
 | 3 | Send `variant:hw3` | Variant switched, speed offset visible |
@@ -208,7 +208,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Feature Matrix:**
 
 | Feature | HW4 | HW3 | Legacy |
-|---------|-----|-----|--------|
+| ------- | --- | --- | ------ |
 | FSD enable/disable | ✓ | ✓ | ✓ |
 | Nag suppression | ✓ | ✓ | ✓ |
 | Speed profile | ✓ (auto/pin) | ✓ (auto/pin) | ✓ (0-2 only) |
@@ -225,7 +225,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Requires:** `hasCtrl` (0x273 cached), HW4 or HW3 variant
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Verify 0x273 cached | `hasCtrl:true` in status |
 | 2 | Send `summon:forward` | 30× 0x273 burst with summon bits @ 20ms |
 | 3 | Car begins moving forward | Visible movement |
@@ -238,7 +238,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 ## UNO-9: CAN Stream & Debugging
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Send `stream:on` | Stream enabled, frames sent to serial |
 | 2 | Frames show `id`, `dlc`, hex data, bus number | JSON frame messages |
 | 3 | Send `can:raw:on` | All CAN IDs pass through (no filter) |
@@ -253,7 +253,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **User Story:** User configures board, disconnects laptop, runs standalone with powerbank.
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Configure FSD=ON, Nag=ON, Profile=3 | Settings saved to EEPROM |
 | 2 | Disconnect laptop USB | Board powered down |
 | 3 | Connect powerbank to Arduino USB | Board reboots, loads EEPROM settings |
@@ -271,7 +271,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 ## UNO-11: Power Cycle Recovery
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Board running with FSD/Nag/Profile active | All settings active |
 | 2 | Power loss (2 seconds) | Board shuts down |
 | 3 | Power restored | Board reboots |
@@ -284,7 +284,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 ## UNO-12: Error Handling
 
 | Case | Trigger | Expected Result |
-|------|---------|----------------|
+| ---- | ------- | -------------- |
 | 12.1 | Send command without CAN initialized | Error response |
 | 12.2 | Send vehicle cmd without 0x273 cached | Error: "Waiting for 0x273 frame" |
 | 12.3 | Send climate cmd without 0x2F3 cached | Error: "Need 0x2F3" |
@@ -311,7 +311,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Wiring:**
 
 | MCP2515 Pin | ESP32 Pin | Function |
-|-------------|-----------|----------|
+| ----------- | --------- | -------- |
 | VCC | 3.3V | Power |
 | GND | GND | Ground |
 | CS | GPIO 15 (PIN_MCP2515_1_CS) | SPI chip select |
@@ -323,7 +323,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | CAN-L | X179 pin 14 | FSD CAN low |
 
 | Step | Action | Expected Result | Status |
-|------|--------|----------------|--------|
+| ---- | ------ | -------------- | ------ |
 | 1 | Wire MCP2515 to ESP32 per table | Physical wiring complete | — |
 | 2 | Flash `esp32` via PlatformIO (COM4) | Upload successful | — |
 | 3 | Open serial monitor at 115200 | Boot JSON received | — |
@@ -342,7 +342,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **X179 Connector Bus Mapping (hardcoded in config/esp32.h):**
 
 | Bus Index | MCP2515 # | X179 Pins | CAN Bus Function | CS GPIO | INT GPIO |
-|-----------|-----------|-----------|-----------------|---------|----------|
+| --------- | --------- | --------- | --------------- | ------- | -------- |
 | 0 (BUS_FSD) | #1 | 13-14 | FSD / Autopilot | 15 | 34 |
 | 1 (BUS_VEHICLE) | #2 | 9-10 | Vehicle Control | 27 | 35 |
 | 2 (BUS_BODY) | #3 | 2-3 | Body Control | 26 | 33 |
@@ -350,7 +350,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **All 3 share SPI:** SCK=18, MOSI=23, MISO=19
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Wire all 3 MCP2515 modules per table | Three modules sharing SPI bus |
 | 2 | Flash `esp32` with `BUS_VEHICLE_ACTIVE=1 BUS_BODY_ACTIVE=1` | Boot shows `busFsd:true, busVehicle:true, busBody:true` |
 | 3 | Bus 0 (FSD) receives autopilot frames | 0x399, 0x3FD, 0x3F8 |
@@ -373,7 +373,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Firmware:** `esp32_wifi` — WiFi ON, BLE OFF
 
 | Step | Action | Expected Result | Status |
-|------|--------|----------------|--------|
+| ---- | ------ | -------------- | ------ |
 | 1 | Flash `esp32_wifi` firmware | Upload with `embed_html.py` pre-build | — |
 | 2 | ESP32 creates AP "TeslaCANModder" | SSID visible on phone/laptop | — |
 | 3 | Connect to AP (password: `teslacan123`, channel 6) | DHCP assigns IP (gateway: 192.168.4.1) | — |
@@ -386,7 +386,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **WiFi REST API Endpoints:**
 
 | Method | Path | Purpose |
-|--------|------|---------|
+| ------ | ---- | ------- |
 | GET | `/` | HTML dashboard (PROGMEM) |
 | GET | `/api/ping` | `{"t":"pong","v":1}` |
 | GET | `/api/status` | Full state JSON (variant, FSD, nag, profile, features, hardware, CAN stats) |
@@ -404,7 +404,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **User Story:** User switches from AP mode to home STA network for remote access.
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Start in AP mode (default) | 192.168.4.1 accessible |
 | 2 | POST `/api/wifi/config` with `{"mode":"sta","ssid":"HomeWiFi","password":"pass123"}` | Board disconnects AP |
 | 3 | ESP32 connects to home router | STA mode, new IP from router DHCP |
@@ -425,13 +425,13 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **BLE Service:** Nordic UART Service (NUS)
 
 | UUID | Direction | Purpose |
-|------|-----------|---------|
+| ---- | --------- | ------- |
 | `6E400001-B5A3-F393-E0A9-E50E24DCCA9E` | — | Service UUID |
 | `6E400002-B5A3-F393-E0A9-E50E24DCCA9E` | Write (phone → device) | RX: Send commands |
 | `6E400003-B5A3-F393-E0A9-E50E24DCCA9E` | Notify (device → phone) | TX: Receive responses |
 
 | Step | Action | Expected Result | Status |
-|------|--------|----------------|--------|
+| ---- | ------ | -------------- | ------ |
 | 1 | Flash `esp32_ble` firmware | Boot shows BLE capability | — |
 | 2 | Open BLE scanner (nRF Connect, LightBlue) | "TeslaCANModder" device visible | — |
 | 3 | Connect to device | BLE connection established | — |
@@ -445,7 +445,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **BLE vs HC-05 (Uno) Comparison:**
 
 | Feature | ESP32 BLE (NimBLE) | Uno HC-05 (SPP) |
-|---------|-------------------|-----------------|
+| ------- | ----------------- | --------------- |
 | Protocol | BLE GATT (NUS) | Bluetooth Classic SPP |
 | iOS support | ✓ | ✗ (iOS blocks SPP) |
 | Android support | ✓ | ✓ |
@@ -466,7 +466,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Firmware:** `esp32_wifi_ble` — WiFi ON, BLE ON
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Flash `esp32_wifi_ble` | Boot shows WiFi + BLE + active buses |
 | 2 | WiFi AP active | "TeslaCANModder" AP visible |
 | 3 | BLE advertising | "TeslaCANModder" in BLE scanner |
@@ -481,7 +481,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **BLE REST API (WiFi+BLE firmware only):**
 
 | Method | Path | Purpose |
-|--------|------|---------|
+| ------ | ---- | ------- |
 | GET | `/api/ble/status` | `{"enabled":bool,"connected":bool,"deviceName":"TeslaCANModder"}` |
 | POST | `/api/ble/config` | `{"enabled":true|false}` — starts/stops BLE at runtime, saves to NVS |
 
@@ -492,7 +492,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **User Story:** Same feature set as Uno, accessible via USB, WiFi, or BLE.
 
 | Step | Action (any channel) | Expected Result |
-|------|---------------------|----------------|
+| ---- | ------------------- | -------------- |
 | 1 | `fsd:on` | ACK, FSD enabled |
 | 2 | `nag:on` | ACK, nag suppression ON |
 | 3 | `profile:2` | Profile pinned to 2 |
@@ -511,7 +511,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Same command set as Uno** — requires `BUS_VEHICLE_ACTIVE=1` and/or `BUS_BODY_ACTIVE=1` for vehicle/window/sentry/climate/charge/drive commands to be compiled in.
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Wait for frame caches to populate | `hasCtrl`, `hasClimate`, `hasCharge`, `hasDrive` from live CAN |
 | 2 | `unlock` via WiFi dashboard | 30× 0x273 burst on Bus 1 (Vehicle) |
 | 3 | `frunk:open` | 50× 0x273 burst |
@@ -524,7 +524,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **ESP32 Bus Routing:**
 
 | Command Group | Target Bus | CAN ID |
-|---------------|-----------|--------|
+| ------------- | --------- | ------ |
 | FSD, nag, profile, ISA | Bus 0 (FSD) | 0x399 (intercepted) |
 | lock, unlock, mirror, seat, power | Bus 1 (Vehicle) | 0x273 |
 | climate | Bus 1 (Vehicle) | 0x2F3 |
@@ -545,7 +545,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 ## ESP32-10: CAN Stream & Debugging
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | `stream:on` (via any channel) | CAN frames streamed as JSON |
 | 2 | Frames show bus index (0, 1, 2) | All 3 buses visible |
 | 3 | `can:raw:on` | All buses pass-through (filters cleared) |
@@ -557,7 +557,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 ## ESP32-11: Powerbank Deployment
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Configure via WiFi dashboard | Settings saved to NVS |
 | 2 | Disconnect laptop | Board still powered |
 | 3 | Connect powerbank | Board reboots, loads NVS settings |
@@ -574,7 +574,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 ## ESP32-12: Power Cycle Recovery
 
 | Step | Action | Expected Result |
-|------|--------|----------------|
+| ---- | ------ | -------------- |
 | 1 | Board running normally | All features active |
 | 2 | Power loss (2 seconds) | Board shuts down |
 | 3 | Power restored | Board reboots |
@@ -589,7 +589,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 ## ESP32-13: Error Handling
 
 | Case | Trigger | Expected Result |
-|------|---------|----------------|
+| ---- | ------- | -------------- |
 | 13.1 | Send command without CAN init | Error response |
 | 13.2 | Vehicle cmd without 0x273 cache | Error: "Waiting for 0x273 frame" |
 | 13.3 | Climate cmd without 0x2F3 cache | Error: "Need 0x2F3" |
@@ -614,7 +614,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **Same variant behavior on both boards:**
 
 | Feature | HW4 | HW3 | Legacy |
-|---------|-----|-----|--------|
+| ------- | --- | --- | ------ |
 | FSD enable/disable | ✓ | ✓ | ✓ |
 | Nag suppression | ✓ | ✓ | ✓ |
 | Speed profile | Auto/Pin (0-3) | Auto/Pin (0-3) | 0-2 only |
@@ -633,7 +633,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 All commands work identically across all I/O channels:
 
 | Channel | Board | Baud/Protocol | Simultaneous |
-|---------|-------|---------------|-------------|
+| ------- | ----- | ------------- | ----------- |
 | USB Serial | Both | 115200 baud, JSON | Always |
 | HC-05 BT | Uno (`uno_bt`) | 9600 baud SPP, JSON | Yes (with USB) |
 | BLE (NimBLE) | ESP32 (`*_ble`) | BLE NUS packets, JSON | Yes (with USB + WiFi) |
@@ -643,7 +643,7 @@ All commands work identically across all I/O channels:
 **Full Command Reference:**
 
 | Command | Domain | Cached Frame Required |
-|---------|--------|----------------------|
+| ------- | ------ | -------------------- |
 | `ping` | System | — |
 | `status` | System | — |
 | `stream:on` / `stream:off` | System | — |
@@ -675,7 +675,7 @@ All commands work identically across all I/O channels:
 ## CROSS-3: Persistence Parity
 
 | Field | Uno (EEPROM) | ESP32 (NVS) |
-|-------|-------------|-------------|
+| ----- | ----------- | ----------- |
 | Magic | 0xCA at addr 0 | `magic` key = 0xCA |
 | Version | 0x02 at addr 1 | `ver` key = 0x02 |
 | Variant | byte | `variant` key |
@@ -696,7 +696,7 @@ All commands work identically across all I/O channels:
 Both boards implement the same CAN health monitoring:
 
 | Constant | Value | Purpose |
-|----------|-------|---------|
+| -------- | ----- | ------- |
 | `CAN_TIMEOUT_MS` | 10,000 ms | No frames → enter standby |
 | `CAN_REINIT_INTERVAL` | 5,000 ms | Retry MCP2515 init in standby |
 | `LED_STANDBY_INTERVAL` | 2,000 ms | LED slow-blink in standby |
@@ -710,7 +710,7 @@ Both boards implement the same CAN health monitoring:
 Both boards use MCP2515 hardware filters (RXF0-5, MASK0/MASK1) set per variant and per bus.
 
 | Bus | Uno Filter Source | ESP32 Filter Source |
-|-----|------------------|-------------------|
+| --- | ---------------- | ----------------- |
 | 0 | Variant FSD IDs (0x399, etc.) | Same — FSD bus only |
 | 1 | Vehicle IDs (0x273, 0x2F3, 0x333, 0x334) | Same — Vehicle bus only |
 | 2 | (if 3-CAN) Body IDs | Same — Body bus only |

@@ -51,7 +51,7 @@ Open http://localhost:5173 and click "Connect USB"
 ### X179 CAN Bus Lanes
 
 | Bus | X179 Pins | Build Flag | Default |
-|-----|-----------|------------|---------|
+|---- | --------- | ---------- | ------- |
 | FSD (Bus 0) | 13-14 | `BUS_FSD_ACTIVE` | ON |
 | Vehicle (Bus 1) | 9-10 | `BUS_VEHICLE_ACTIVE` | OFF |
 | Body (Bus 2) | 2-3 | `BUS_BODY_ACTIVE` | OFF |
@@ -77,7 +77,7 @@ Open http://localhost:5173 and click "Connect USB"
 ## Memory Usage
 
 | Build | RAM | Flash |
-|-------|-----|-------|
+|------ | --- | ----- |
 | USB + Bluetooth | 1558 bytes (76%) | 11150 bytes (35%) |
 | USB only | 1378 bytes (67%) | 9668 bytes (30%) |
 
@@ -198,7 +198,7 @@ npm run test:all     # run all tests (protocol + web + mobile + tools)
 ## Testing
 
 | Layer | Runner | Tests |
-|-------|--------|-------|
+|------ | ------ | ----- |
 | Firmware | PlatformIO Unity | 178 |
 | Protocol | Jest (ESM) | 102 |
 | Web | Vitest + Testing Library | 63 |

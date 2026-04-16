@@ -25,6 +25,12 @@ export interface BootMessage {
   offsetPin?: number;
   isaChime?: number;
   summonInject?: number;
+  nagKiller?: number;
+  precondition?: number;
+  trackMode?: number;
+  otaInProgress?: number;
+  txPaused?: number;
+  detectedHW?: number;
   canOnline?: number;
   standby?: number;
   bus1?: number;
@@ -50,6 +56,12 @@ export interface StatusMessage {
   offsetPin?: number;
   isaChime?: number;
   summonInject?: number;
+  nagKiller?: number;
+  precondition?: number;
+  trackMode?: number;
+  otaInProgress?: number;
+  txPaused?: number;
+  detectedHW?: number;
   stream?: { on: number; emitted: number };
   features?: BoardFeatures;
   canOnline?: number;
@@ -93,6 +105,18 @@ export interface PongMessage {
   t: 'pong';
 }
 
+export interface BmsMessage {
+  t: 'bms';
+  v: number;     // voltage * 100
+  a: number;     // current * 10
+  kw: number;    // power * 10
+  soc: number;   // SoC * 10
+  tMin: number;  // temp min (°C)
+  tMax: number;  // temp max (°C)
+  whkm: number;  // Wh/km * 10
+  ok: number;    // 1 = data available
+}
+
 export type BoardMessage =
   | BootMessage
   | StatusMessage
@@ -100,7 +124,8 @@ export type BoardMessage =
   | AckMessage
   | ErrorMessage
   | LogMessage
-  | PongMessage;
+  | PongMessage
+  | BmsMessage;
 
 // ── Board State ─────────────────────────────────────────────────────────────
 
@@ -140,6 +165,23 @@ export interface BoardState {
   isaChime: boolean;
   summonInject: boolean;
   summonActive: boolean;
+
+  nagKiller: boolean;
+  precondition: boolean;
+  trackMode: boolean;
+  otaInProgress: boolean;
+  txPaused: boolean;
+  detectedHW: number;
+
+  // BMS battery telemetry
+  bmsVoltage: number;
+  bmsCurrent: number;
+  bmsPower: number;
+  bmsSoc: number;
+  bmsTempMin: number;
+  bmsTempMax: number;
+  bmsWhPerKm: number;
+  hasBms: boolean;
 
   canOnline: boolean;
   standby: boolean;

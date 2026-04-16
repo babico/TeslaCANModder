@@ -93,7 +93,7 @@ Complete list of commands supported by the firmware. All commands are sent as JS
 ## Response Types
 
 | Type | Description |
-|------|-------------|
+| ---- | ----------- |
 | boot | Board boot message with hardware info |
 | status | Full status report |
 | frame | CAN frame data |

@@ -5,7 +5,7 @@ TeslaCANModder supports multiple build configurations for different hardware set
 ## Arduino Uno Variants
 
 | Environment | Bluetooth | Use Case |
-|------------|-----------|----------|
+| ---------- | --------- | -------- |
 | `uno` | No | Serial only |
 | `uno_bt` | Yes (HC-05) | Serial + Bluetooth |
 
@@ -14,7 +14,7 @@ TeslaCANModder supports multiple build configurations for different hardware set
 All ESP32 variants use MCP2515 modules over SPI. No TWAI or SN65HVD230 needed.
 
 | Environment | WiFi | BLE | Use Case |
-|------------|------|-----|----------|
+| ---------- | ---- | --- | -------- |
 | `esp32` | No | No | Serial only |
 | `esp32_wifi` | Yes | No | WiFi REST API |
 | `esp32_ble` | No | Yes | BLE control |
@@ -25,7 +25,7 @@ All ESP32 variants use MCP2515 modules over SPI. No TWAI or SN65HVD230 needed.
 Each CAN bus lane is enabled independently. The FSD bus is always on.
 
 | Flag | Default | X179 Pins | Bus Function |
-|------|---------|-----------|-------------|
+| ---- | ------- | --------- | ----------- |
 | `BUS_FSD_ACTIVE` | 1 (always) | 13-14 | FSD / Autopilot |
 | `BUS_VEHICLE_ACTIVE` | 0 | 9-10 | Vehicle Control (mirror, lock, climate, charge, drive) |
 | `BUS_BODY_ACTIVE` | 0 | 2-3 | Body Control (window, sentry, trunk) |
@@ -33,7 +33,7 @@ Each CAN bus lane is enabled independently. The FSD bus is always on.
 ### Other Build Flags
 
 | Flag | Values | Description |
-|------|--------|-------------|
+| ---- | ------ | ----------- |
 | `BOARD_ENABLE_WIFI` | 0 or 1 | Enable WiFi AP/STA + REST API |
 | `BOARD_ENABLE_BLE` | 0 or 1 | Enable BLE (NimBLE Nordic UART) |
 | `BOARD_CAN_CLOCK_MHZ` | 8 | MCP2515 crystal frequency |

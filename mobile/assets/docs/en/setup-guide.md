@@ -26,14 +26,14 @@ Complete hardware installation and software configuration for TeslaCANModder.
 ## Firmware Variants
 
 | Variant | Bluetooth | Use Case |
-|---------|-----------|----------|
+| ------- | --------- | -------- |
 | Serial Only | No | Lightest firmware |
 | Serial + Bluetooth | Yes | Wireless control via HC-05 |
 
 CAN bus lanes are controlled independently via build flags:
 
 | Flag | Default | Bus Function |
-|------|---------|--------------|
+| ---- | ------- | ------------ |
 | `BUS_FSD_ACTIVE` | ON | FSD / Autopilot (X179 pins 13-14) |
 | `BUS_VEHICLE_ACTIVE` | OFF | Vehicle Control — mirror, lock, climate, charge, drive (X179 pins 9-10) |
 | `BUS_BODY_ACTIVE` | OFF | Body Control — window, sentry, trunk (X179 pins 2-3) |
@@ -43,7 +43,7 @@ All variants support all FSD features. Bus flags and connectivity are the only d
 ## Vehicle Variant Selection
 
 | Variant | Vehicles | Features |
-|---------|----------|----------|
+| ------- | -------- | -------- |
 | HW4 | 2023+ with HW4 (FSD v14+) | FSD, Nag, Profile, ISA Chime, Summon |
 | HW3 | 2019–2023 with HW3 | FSD, Nag, Profile, Speed Offset, Summon |
 | Legacy | Older vehicles / simple CAN | FSD, Nag only |

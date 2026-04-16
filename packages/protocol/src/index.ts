@@ -10,6 +10,7 @@ export type {
   ErrorMessage,
   LogMessage,
   PongMessage,
+  BmsMessage,
   BoardMessage,
   CanFrame,
   ConsoleMessage,
