@@ -3,6 +3,7 @@
 #include <mcp2515.h>
 #include "core/config/uno.h"
 #include "core/types.h"
+#include "protocol/can.h"
 
 // ── MCP2515 Array-Driven Driver (Arduino Uno, up to 3 buses) ────────────────
 // Bus 0 = MCP2515_1, Bus 1 = MCP2515_2, Bus 2 = MCP2515_3

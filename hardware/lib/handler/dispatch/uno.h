@@ -156,7 +156,7 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
 #if (BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE)
       driverSend(echo, bus);
 #else
-      driverSend(echo);
+      driverSend(echo, 0);
 #endif
     }
     return;

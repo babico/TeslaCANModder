@@ -3,6 +3,7 @@
 #include <mcp2515.h>
 #include "core/config/esp32.h"
 #include "core/types.h"
+#include "protocol/can.h"
 
 // ── MCP2515 Array-Driven Driver (ESP32, up to 3 buses) ─────────────────────
 // All CAN buses use MCP2515 modules over SPI.
