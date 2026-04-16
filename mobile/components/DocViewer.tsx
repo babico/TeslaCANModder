@@ -28,9 +28,9 @@ const docAssets: Record<string, number> = {
   'troubleshooting': require('../../docs/troubleshooting.md'),
 };
 
-async function loadDoc(section: string): Promise<{ text: string; label: string }> {
+async function loadDoc(section: string, lang: 'en' | 'tr' = 'en'): Promise<{ text: string; label: string }> {
   const map = DOC_MAP[section];
-  const label = map?.labelEn || section;
+  const label = (lang === 'tr' ? map?.labelTr : map?.labelEn) || section;
   try {
     const assetId = docAssets[section];
     if (assetId == null) return { text: `No content found for ${section}.`, label };
@@ -51,18 +51,18 @@ interface Props {
 }
 
 /** Simple markdown-to-text viewer for documentation. Renders headings, paragraphs, lists, and code blocks. */
-export default function DocViewer({ content, title, section }: Props) {
+export default function DocViewer({ content, title, section, lang = 'en' }: Props) {
   const [resolved, setResolved] = React.useState(content || '');
   const [resolvedTitle, setResolvedTitle] = React.useState(title || '');
 
   React.useEffect(() => {
     if (content) { setResolved(content); return; }
     if (!section) return;
-    loadDoc(section).then(({ text, label }) => {
+    loadDoc(section, lang).then(({ text, label }) => {
       setResolved(text);
       if (!title) setResolvedTitle(label);
     });
-  }, [content, section, title]);
+  }, [content, section, title, lang]);
 
   const blocks = parseMarkdown(resolved);
 
