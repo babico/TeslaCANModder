@@ -194,7 +194,7 @@ These commands require a 3-CAN build and send frames on the Vehicle Control bus 
 - `light:fog:front` / `light:fog:rear` — Fog lights
 - `light:highbeam:auto` — Auto highbeam
 - `light:ambient` — Ambient lighting
-- `light:dome:on` / `light:dome:off` — Dome light
+- `light:dome:on` / `light:dome:off` / `light:dome:auto` — Dome light
 
 ### Sentry
 
@@ -218,6 +218,34 @@ These commands require a 3-CAN build and send frames on the Vehicle Control bus 
 - `regen:off` / `regen:low` / `regen:standard` / `regen:max` — Regen braking
 - `stop:creep` / `stop:roll` / `stop:hold` — Stopping mode
 
+### Wiper
+
+- `wiper:off` / `wiper:1` / `wiper:2` / `wiper:3` — Wiper speed (off, low, medium, high)
+
+### Seat Heating
+
+Controls heated seats for all five positions via CAN ID 0x273. Each seat has levels 0–3 (off, low, med, high).
+
+- `seat:fl:0` – `seat:fl:3` — Front-left
+- `seat:fr:0` – `seat:fr:3` — Front-right
+- `seat:rl:0` – `seat:rl:3` — Rear-left
+- `seat:rr:0` – `seat:rr:3` — Rear-right
+- `seat:rc:0` – `seat:rc:3` — Rear-center
+
+### Display Brightness
+
+Sets main display brightness via CAN ID 0x273 byte 4 (0–127, factor 0.5).
+
+- `maindisplay:N` — Set brightness (0–127)
+
+### Power Control
+
+Controls vehicle power states via CAN ID 0x273.
+
+- `power:acc:on` / `power:acc:off` — Accessory power (bit 0)
+- `power:off` — Power off (bit 31)
+- `power:ready` — Drive-ready state (bit 62)
+
 ## Feature Availability by Variant
 
 | Feature | HW4 | HW3 | Legacy |
@@ -227,9 +255,20 @@ These commands require a 3-CAN build and send frames on the Vehicle Control bus 
 | Speed Profile | ✅ | ✅ | ✅ (limited) |
 | Speed Offset | ❌ | ✅ | ❌ |
 | ISA Chime | ✅ | ❌ | ❌ |
+| Nag Killer (EPAS) | ✅ | ✅ | ❌ |
+| Preconditioning | ✅ | ✅ | ❌ |
+| Track Mode | ✅ | ✅ | ❌ |
+| BMS Telemetry | ✅ | ✅ | ❌ |
+| OTA Safety | ✅ | ✅ | ❌ |
+| Auto HW Detect | ✅ | ✅ | ❌ |
 | Summon | ✅ | ✅ | ❌ |
 | Vehicle Commands | ✅ | ✅ | ❌ |
+| Seat Heating | ✅ | ✅ | ❌ |
+| Wiper Control | ✅ | ✅ | ❌ |
+| Display Brightness | ✅ | ✅ | ❌ |
+| Power Control | ✅ | ✅ | ❌ |
+| CAN Error Monitor | ✅ | ✅ | ✅ |
 
 ## NVS Persistence
 
-All toggle states (FSD, nag, ISA chime, profile, offset, variant) are saved to NVS flash (ESP32) or EEPROM (Arduino) and persist across reboots.
+All toggle states (FSD, nag, ISA chime, nag killer, precondition, track mode, profile, offset, variant) are saved to NVS flash (ESP32) or EEPROM (Arduino) and persist across reboots.

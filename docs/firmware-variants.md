@@ -27,7 +27,7 @@ Each CAN bus lane is enabled independently. The FSD bus is always on.
 | Flag | Default | X179 Pins | Bus Function |
 | ---- | ------- | --------- | ----------- |
 | `BUS_FSD_ACTIVE` | 1 (always) | 13-14 | FSD / Autopilot |
-| `BUS_VEHICLE_ACTIVE` | 0 | 9-10 | Vehicle Control (mirror, lock, climate, charge, drive) |
+| `BUS_VEHICLE_ACTIVE` | 0 | 9-10 | Vehicle Control (mirror, lock, climate, charge, drive, seat, wiper, display, power) |
 | `BUS_BODY_ACTIVE` | 0 | 2-3 | Body Control (window, sentry, trunk) |
 
 ### Other Build Flags
@@ -62,4 +62,4 @@ pio test -e native
 4. Click **Build & Download** or **Flash via USB**
 5. Monitor the console for progress and boot messages
 
-> Vehicle controls (mirror, lock, climate, charge, drive) require `BUS_VEHICLE_ACTIVE=1`. Body controls (window, sentry) require `BUS_BODY_ACTIVE=1`. FSD features are always available.
+> Vehicle controls (mirror, lock, climate, charge, drive, seat heating, wiper, display, power) require `BUS_VEHICLE_ACTIVE=1`. Body controls (window, sentry) require `BUS_BODY_ACTIVE=1`. FSD features are always available.

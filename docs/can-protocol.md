@@ -125,12 +125,42 @@ CAN ID 0x398 — GTW_carConfig is read at boot to automatically detect whether t
 
 ## Vehicle Control Frame (CAN ID 627)
 
-Used for summon and vehicle commands. The summon system:
+Used for summon, vehicle commands, seat heating, wiper, display, and power control. All use the cached 0x273 frame as a base with specific bits modified.
+
+### Summon
 
 - Bit 4 of byte 0: Summon active
 - Bit 5 of byte 0: Direction (0 = forward, 1 = reverse)
 - Bit 0 of byte 0: Mode (start/stop)
 - Sends 30-frame bursts when summon is activated
+
+### Seat Heating
+
+Five seats, each with 2-bit level (0=off, 1=low, 2=med, 3=high):
+
+| Seat | Byte | Bits | Mask |
+| ---- | ---- | ---- | ---- |
+| Front-left | 5 | 42–43 | 0x0C |
+| Front-right | 5 | 44–45 | 0x30 |
+| Rear-left | 5 | 46–47 | 0xC0 |
+| Rear-center | 6 | 48–49 | 0x03 |
+| Rear-right | 6 | 50–51 | 0x0C |
+
+### Wiper
+
+Wiper speed in byte 7 bits 56–58 (mask 0x07): 0=off, 1=low, 2=medium, 3=high. Sends 20-frame burst.
+
+### Display Brightness
+
+Byte 4 (bits 32–39) sets display brightness (0–127, factor 0.5). Sends 20-frame burst.
+
+### Power Control
+
+| Function | Byte | Bit | Value |
+| -------- | ---- | --- | ----- |
+| Accessory power | 0 | 0 | 1=on, 0=off |
+| Power off | 3 | 31 | 1=off |
+| Drive-ready | 7 | 62 | 1=enable |
 
 ## Frame Routing
 

@@ -9,7 +9,7 @@ export const COMMAND_RANGES = {
   profile: { min: 0, max: 4 },
   offset: { min: -10, max: 10 },
   seat: { min: 0, max: 3 },
-  mainDisplay: { min: 0, max: 100 },
+  mainDisplay: { min: 0, max: 127 },
 } as const;
 
 function assertRange(name: string, value: number, min: number, max: number): void {

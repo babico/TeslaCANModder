@@ -180,12 +180,12 @@ describe('commands', () => {
 
     it('mainDisplay rejects out of range', () => {
       expect(() => commands.mainDisplay(-1)).toThrow(RangeError);
-      expect(() => commands.mainDisplay(101)).toThrow(RangeError);
+      expect(() => commands.mainDisplay(128)).toThrow(RangeError);
     });
     it('mainDisplay accepts boundary values', () => {
       expect(commands.mainDisplay(0)).toBe('maindisplay:0');
       expect(commands.mainDisplay(50)).toBe('maindisplay:50');
-      expect(commands.mainDisplay(100)).toBe('maindisplay:100');
+      expect(commands.mainDisplay(127)).toBe('maindisplay:127');
     });
   });
 });

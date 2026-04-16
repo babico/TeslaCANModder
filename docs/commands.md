@@ -152,6 +152,7 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 | `light:home` | Home lights |
 | `light:dome:on` | Dome light on |
 | `light:dome:off` | Dome light off |
+| `light:dome:auto` | Dome light auto |
 
 ### Sentry
 
@@ -174,6 +175,40 @@ All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Command
 | `charge:start` | Start charging |
 | `charge:stop` | Stop charging |
 | `chargeport` | Open charge port |
+
+### Wiper
+
+| Command | Description |
+| ------- | ----------- |
+| `wiper:off` | Wiper off |
+| `wiper:1` | Wiper speed 1 (low) |
+| `wiper:2` | Wiper speed 2 (medium) |
+| `wiper:3` | Wiper speed 3 (high) |
+
+### Seat Heating
+
+| Command | Description |
+| ------- | ----------- |
+| `seat:fl:0` – `seat:fl:3` | Front-left seat heat (0=off, 1=low, 2=med, 3=high) |
+| `seat:fr:0` – `seat:fr:3` | Front-right seat heat |
+| `seat:rl:0` – `seat:rl:3` | Rear-left seat heat |
+| `seat:rr:0` – `seat:rr:3` | Rear-right seat heat |
+| `seat:rc:0` – `seat:rc:3` | Rear-center seat heat |
+
+### Display Brightness
+
+| Command | Description |
+| ------- | ----------- |
+| `maindisplay:N` | Set main display brightness (0–127) |
+
+### Power Control
+
+| Command | Description |
+| ------- | ----------- |
+| `power:acc:on` | Accessory power on |
+| `power:acc:off` | Accessory power off |
+| `power:ready` | Drive-ready state |
+| `power:off` | Power off vehicle |
 
 ### Drive Config
 
