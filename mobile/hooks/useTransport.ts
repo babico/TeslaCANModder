@@ -12,10 +12,14 @@ export function useTransport() {
   const [connected, setConnected] = useState(false);
   const [transportType, setTransportType] = useState<'ble' | 'serial' | null>(null);
   const [deviceName, setDeviceName] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
   const transportRef = useRef<Transport | null>(null);
   const onMessageRef = useRef<((msg: Record<string, unknown>) => void) | null>(null);
 
+  const clearError = useCallback(() => setLastError(null), []);
+
   const connect = useCallback(async (type: 'ble' | 'serial', deviceId?: string) => {
+    setLastError(null);
     let transport: Transport;
 
     if (type === 'ble') {
@@ -36,7 +40,9 @@ export function useTransport() {
         setDeviceName(null);
         transportRef.current = null;
       },
-      onError: (err) => console.error('Transport error:', err.message),
+      onError: (err) => {
+        setLastError(err.message);
+      },
     };
 
     transport.setListeners(events);
@@ -56,6 +62,7 @@ export function useTransport() {
     setConnected(false);
     setTransportType(null);
     setDeviceName(null);
+    setLastError(null);
   }, []);
 
   const send = useCallback(async (command: string) => {
@@ -81,5 +88,7 @@ export function useTransport() {
     setOnMessage,
     canUseBle,
     canUseSerial,
+    lastError,
+    clearError,
   };
 }
