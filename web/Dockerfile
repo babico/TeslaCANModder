@@ -31,7 +31,7 @@ WORKDIR /app/web
 
 RUN npm run build
 
-FROM nginx:1.28-alpine AS production
+FROM nginx:1.29-alpine AS production
 RUN apk upgrade --no-cache && \
     apk add --no-cache curl && \
     rm -rf /var/cache/apk/* /tmp/* /usr/share/nginx/html/*
