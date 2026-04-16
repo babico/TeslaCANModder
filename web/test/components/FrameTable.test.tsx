@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import FrameTable, { framesToCsv, framesToJson, BUILT_IN_PRESETS } from '../../src/components/FrameTable';
+import FrameTable from '../../src/components/FrameTable';
+import { framesToCsv, framesToJson, BUILT_IN_PRESETS } from '../../src/components/frameUtils';
 import type { CanFrame } from '@teslacanmodder/protocol';
 
 // Mock fetch for CAN DB

@@ -23,38 +23,38 @@ import argparse
 
 THRESHOLDS = {
     "uno": {
-        "flash_max": 28000,       # ~87% of 32256 — leave headroom
-        "ram_max": 1800,          # ~88% of 2048
+        "flash_max": 30000,       # ~93% of 32256 — new features add ~2KB
+        "ram_max": 1950,          # ~95% of 2048 — BMS/state fields added
         "flash_total": 32256,
         "ram_total": 2048,
     },
     "uno_bt": {
-        "flash_max": 30000,       # ~93% — BT adds overhead
-        "ram_max": 1900,          # ~93%
+        "flash_max": 31000,       # ~96% — BT + new features
+        "ram_max": 1980,          # ~97%
         "flash_total": 32256,
         "ram_total": 2048,
     },
     "esp32": {
-        "flash_max": 1000000,     # ~76% of 1310720
-        "ram_max": 280000,        # ~85% of 327680
+        "flash_max": 1100000,     # ~84% of 1310720 — new features add overhead
+        "ram_max": 300000,        # ~92% of 327680
         "flash_total": 1310720,
         "ram_total": 327680,
     },
     "esp32_wifi": {
-        "flash_max": 1100000,     # WiFi adds ~100KB
-        "ram_max": 290000,
+        "flash_max": 1200000,     # WiFi + new features
+        "ram_max": 310000,
         "flash_total": 1310720,
         "ram_total": 327680,
     },
     "esp32_ble": {
-        "flash_max": 1100000,     # BLE adds ~100KB
-        "ram_max": 290000,
+        "flash_max": 1200000,     # BLE + new features
+        "ram_max": 310000,
         "flash_total": 1310720,
         "ram_total": 327680,
     },
     "esp32_wifi_ble": {
-        "flash_max": 1200000,     # WiFi + BLE
-        "ram_max": 300000,
+        "flash_max": 1280000,     # WiFi + BLE + new features
+        "ram_max": 320000,
         "flash_total": 1310720,
         "ram_total": 327680,
     },

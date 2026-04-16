@@ -10,6 +10,10 @@ COPY packages/ ./packages/
 COPY docs/ ./docs/
 COPY web/ ./web/
 
+# Stub workspace entries so npm ci can resolve all workspaces
+COPY mobile/package.json ./mobile/package.json
+COPY tools/package.json ./tools/package.json
+
 # Install dependencies for entire workspace
 RUN npm ci
 

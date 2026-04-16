@@ -1,39 +1,12 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { CanFrame } from '@teslacanmodder/protocol';
+import { BUILT_IN_PRESETS, framesToCsv, framesToJson } from './frameUtils';
+import type { FilterPreset } from './frameUtils';
 import './FrameTable.css';
 
 interface CanDbEntry {
   name: string;
   signals?: string[];
-}
-
-export interface FilterPreset {
-  label: string;
-  bus?: number;
-  dir?: string;
-  idMin?: number;
-  idMax?: number;
-}
-
-export const BUILT_IN_PRESETS: FilterPreset[] = [
-  { label: 'All Frames' },
-  { label: 'FSD Bus Only', bus: 0 },
-  { label: 'Vehicle Bus Only', bus: 1 },
-  { label: 'Body Bus Only', bus: 2 },
-  { label: 'RX Only', dir: 'rx' },
-  { label: 'TX Only', dir: 'tx' },
-];
-
-export function framesToCsv(frames: CanFrame[]): string {
-  const header = 'Time,Bus,BusName,Dir,ID,DLC,Data';
-  const rows = frames.map(f =>
-    `${f.ts},${f.bus},${f.busName},${f.dir},0x${f.id.toString(16).toUpperCase()},${f.dlc},${f.data || ''}`
-  );
-  return [header, ...rows].join('\n');
-}
-
-export function framesToJson(frames: CanFrame[]): string {
-  return JSON.stringify(frames, null, 2);
 }
 
 function downloadBlob(content: string, filename: string, mime: string) {
@@ -58,7 +31,7 @@ export default function FrameTable({ frames, frameCount, onClear }: FrameTablePr
   const [paused, setPaused] = useState(false);
   const [activePreset, setActivePreset] = useState(0);
   const [idFilter, setIdFilter] = useState('');
-  const pausedFramesRef = useRef<CanFrame[]>([]);
+  const [pausedFrames, setPausedFrames] = useState<CanFrame[]>([]);
 
   useEffect(() => {
     fetch('/can_frames_mcu2.json')
@@ -70,11 +43,11 @@ export default function FrameTable({ frames, frameCount, onClear }: FrameTablePr
   // Snapshot frames when pausing
   useEffect(() => {
     if (paused) {
-      pausedFramesRef.current = frames;
+      setPausedFrames(frames); // eslint-disable-line react-hooks/set-state-in-effect -- intentional snapshot
     }
   }, [paused]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const displayFrames = paused ? pausedFramesRef.current : frames;
+  const displayFrames = paused ? pausedFrames : frames;
 
   const filteredFrames = useMemo(() => {
     const preset = BUILT_IN_PRESETS[activePreset];

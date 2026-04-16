@@ -21,10 +21,10 @@ describe('parseSerialLine', () => {
     expect(events[0].type).toBe('ignore');
   });
 
-  it('returns ignore for invalid JSON', () => {
+  it('returns parse-error for invalid JSON', () => {
     const events = parseSerialLine('{bad json}');
     expect(events).toHaveLength(1);
-    expect(events[0].type).toBe('ignore');
+    expect(events[0].type).toBe('parse-error');
   });
 
   it('returns empty for empty string', () => {

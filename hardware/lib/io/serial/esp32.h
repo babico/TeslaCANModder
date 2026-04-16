@@ -548,7 +548,6 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
     return;
   }
 #endif
-#endif
 
   sendError(F("Unknown command"));
 }

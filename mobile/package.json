@@ -42,7 +42,12 @@
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)"
     ],
-    "moduleDirectories": ["node_modules", "../node_modules"]
+    "moduleDirectories": ["node_modules", "../node_modules"],
+    "moduleNameMapper": {
+      "^react$": "<rootDir>/node_modules/react",
+      "^react/(.*)$": "<rootDir>/node_modules/react/$1",
+      "^react-dom$": "<rootDir>/node_modules/react-dom"
+    }
   },
   "private": true
 }

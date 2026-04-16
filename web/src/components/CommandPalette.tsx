@@ -79,7 +79,7 @@ export default function CommandPalette({ open, onClose, onCommand, connected }: 
 
   useEffect(() => {
     if (open) {
-      setQuery('');
+      setQuery(''); // eslint-disable-line react-hooks/set-state-in-effect -- intentional reset on open
       setSelectedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 0);
     }
@@ -127,7 +127,7 @@ export default function CommandPalette({ open, onClose, onCommand, connected }: 
 
   // Reset selection when filter changes
   useEffect(() => {
-    setSelectedIndex(0);
+    setSelectedIndex(0); // eslint-disable-line react-hooks/set-state-in-effect -- intentional reset on query change
   }, [query]);
 
   if (!open) return null;

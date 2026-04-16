@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import ControlPanel from '../../src/components/ControlPanel';
 import type { BoardState } from '@teslacanmodder/protocol';
 
@@ -19,6 +18,21 @@ const defaultState: BoardState = {
   offsetPinned: false,
   isaChime: false,
   summonInject: false,
+  summonActive: false,
+  nagKiller: false,
+  precondition: false,
+  trackMode: false,
+  otaInProgress: false,
+  txPaused: false,
+  detectedHW: 0,
+  bmsVoltage: 0,
+  bmsCurrent: 0,
+  bmsPower: 0,
+  bmsSoc: 0,
+  bmsTempMin: 0,
+  bmsTempMax: 0,
+  bmsWhPerKm: 0,
+  hasBms: false,
   canOnline: true,
   standby: false,
   bus1: false,
@@ -27,7 +41,6 @@ const defaultState: BoardState = {
   busFsd: true,
   busVehicle: false,
   busBody: false,
-  summonActive: false,
   streaming: false,
   frames: [],
   frameCount: 0,

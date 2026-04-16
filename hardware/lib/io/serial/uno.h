@@ -18,21 +18,27 @@ void sendLog(const __FlashStringHelper* msg);
 #include "command/summon_cmd.h"
 #include "command/variant.h"
 #include "command/bms.h"
-#include "command/mirror.h"
-#include "command/lock.h"
-#include "command/trunk.h"
-#include "command/light.h"
-#include "command/wiper.h"
-#include "command/seat.h"
-#include "command/display.h"
-#include "command/power.h"
-#include "command/window.h"
-#include "command/sentry.h"
-#include "command/climate.h"
-#include "command/charge.h"
-#include "command/drive.h"
-#include "command/precondition.h"
-#include "command/track_mode.h"
+#if BUS_VEHICLE_ACTIVE
+  #include "command/mirror.h"
+  #include "command/lock.h"
+  #include "command/light.h"
+  #include "command/wiper.h"
+  #include "command/seat.h"
+  #include "command/display.h"
+  #include "command/power.h"
+  #include "command/climate.h"
+  #include "command/charge.h"
+  #include "command/drive.h"
+  #include "command/precondition.h"
+  #include "command/track_mode.h"
+#endif
+#if BUS_BODY_ACTIVE
+  #include "command/window.h"
+  #include "command/sentry.h"
+#endif
+#if BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE
+  #include "command/trunk.h"
+#endif
 
 #if BOARD_ENABLE_BT
   #include <SoftwareSerial.h>
@@ -438,6 +444,8 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
     return;
   }
 
+  // Vehicle bus commands (precondition, track mode, climate, charge, drive)
+#if BUS_VEHICLE_ACTIVE
   if (execPreconditionCmd(cmd, s)) {
     sendAck(cmd);
     sendLog(s.preconditionEnabled ? F("Precondition ON - saved") : F("Precondition OFF - saved"));
@@ -451,11 +459,8 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
     sendStatus(s, now);
     return;
   }
-  
-  // Try advanced commands first (don't need 0x273)
-  if (execWindowCmd(cmd, s) ||
-      execSentryCmd(cmd, s) ||
-      execClimateCmd(cmd, s) ||
+
+  if (execClimateCmd(cmd, s) ||
       execChargeCmd(cmd, s) ||
       execDriveCmd(cmd, s)) {
     sendAck(cmd);
@@ -470,15 +475,27 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
   }
   
   if (s.variant != LEGACY && (
-      execMirrorCmd(cmd, s) || execLockCmd(cmd, s) || execTrunkCmd(cmd, s) ||
+      execMirrorCmd(cmd, s) || execLockCmd(cmd, s) ||
       execLightCmd(cmd, s) || execWiperCmd(cmd, s) || execSeatCmd(cmd, s) ||
       execDisplayCmd(cmd, s) || execPowerCmd(cmd, s))) {
     sendAck(cmd);
     sendLog(cmd);
     sendStatus(s, now);
-  } else {
-    sendError(F("Unknown command"));
+    return;
   }
+#endif
+
+  // Trunk commands (frunk = vehicle bus, trunk/glovebox = body bus)
+#if BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE
+  if (s.variant != LEGACY && execTrunkCmd(cmd, s)) {
+    sendAck(cmd);
+    sendLog(cmd);
+    sendStatus(s, now);
+    return;
+  }
+#endif
+
+  sendError(F("Unknown command"));
 }
 
 void handleChar(char* buf, uint8_t& len, char c, State& s) {

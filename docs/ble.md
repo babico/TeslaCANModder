@@ -26,6 +26,7 @@ TeslaCANModder uses the Nordic UART Service UUIDs, which are widely supported by
 ## How to Connect
 
 ### iOS
+
 1. Install a BLE UART app (e.g. **nRF Connect**, **LightBlue**, **Serial Bluetooth Terminal**)
 2. Scan for BLE devices
 3. Connect to **TeslaCANModder**
@@ -33,6 +34,7 @@ TeslaCANModder uses the Nordic UART Service UUIDs, which are widely supported by
 5. Write commands to the RX characteristic (e.g. `fsd:on\n`)
 
 ### Android
+
 1. Install **Serial Bluetooth Terminal** or **nRF Connect**
 2. Scan for BLE devices → connect to **TeslaCANModder**
 3. Send commands as text, terminated with newline (`\n`)

@@ -1,0 +1,8 @@
+{
+  "ignores": [
+    "legacy/**",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.pio/**"
+  ]
+}

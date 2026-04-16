@@ -23,7 +23,7 @@ export default function DocsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- data fetch loading state
     fetch(`/docs/${activeDoc}.md`)
       .then(r => {
         if (!r.ok) throw new Error('Not found');
