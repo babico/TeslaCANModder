@@ -7,6 +7,7 @@ const initialState: BoardState = {
   variant: 'hw4',
   hardware: '—',
   driver: '—',
+  board: 'unknown',
   uptime: 0,
   rate: 0,
   
@@ -17,6 +18,7 @@ const initialState: BoardState = {
   offset: 0,
   offsetPinned: false,
   isaChime: false,
+  summonInject: false,
   summonActive: false,
   
   canOnline: false,
