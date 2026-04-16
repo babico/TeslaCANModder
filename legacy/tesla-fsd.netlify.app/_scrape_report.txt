@@ -1,0 +1,19 @@
+File: C:\Users\boran\Masaüstü\Tesla-CAN-Mod\legacy\tesla-fsd.netlify.app\index.html
+Bytes: 12629992
+Lines: 6284
+SHA256: 635AFCC905B4569D8DF300BC2591F74BEE64C56E05E6F76F8C2DE60E22810132
+
+Response headers:
+HTTP/2 200 
+accept-ranges: bytes
+age: 2026
+cache-control: public,max-age=0,must-revalidate
+cache-status: "Netlify Edge"; hit
+content-type: text/html; charset=UTF-8
+date: Wed, 15 Apr 2026 23:46:06 GMT
+etag: "aff4fbe0639b466abdf81c4dc81459db-ssl"
+server: Netlify
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+x-nf-request-id: 01KP9RKB743GYG6GPHBGNC2R72
+content-length: 12629989
+

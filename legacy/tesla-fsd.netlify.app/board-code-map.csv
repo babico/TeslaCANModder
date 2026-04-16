@@ -1,0 +1,7 @@
+board_id,title,code_ids
+"esp8266","ESP8266 NodeMCU V3","code-esp8266"
+"esp32s3","ESP32-S3 TWAI (Waveshare)","code-esp32s3"
+"esp32","ESP32 DevKit V1","code-esp32"
+"feather","RP2040 Feather + ESP32-C3 Bridge","code-feather | code-esp32c3"
+"uno","Arduino Uno R3 / Nano (klasik 5V)","code-uno"
+"esp32lite","ESP32 LITE — base / WiFi'siz","code-esp32lite"

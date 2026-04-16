@@ -70,8 +70,8 @@
  //  AYARLAR — Sadece bu bölümü değiştirin
  // ─────────────────────────────────────────────────────────────
  
- #define FW_VERSION     "v3.0"
- #define FW_DATE        "09.04.2026"
+ #define FW_VERSION     "v3.1"
+ #define FW_DATE        "15.04.2026"
  #define DEFAULT_PASS   "tesla1234"
 
  #define WIFI_SSID      "CanFeather"
@@ -334,7 +334,7 @@
    // RXB1 — vehicle control + ISA chime (mask trick)
    // Mask 0x7F8 = alt 3 bit don't care → 8'lik bloklar kabul
    mcp.setFilterMask(MCP2515::MASK1, false, 0x7F8);
-   mcp.setFilter(MCP2515::RXF2, false, 0x270);   // 0x270-0x277 (0x273 dahil)
+   mcp.setFilter(MCP2515::RXF2, false, 0x370);   // 0x370-0x377 (nag killer)
    mcp.setFilter(MCP2515::RXF3, false, 0x2F0);   // 0x2F0-0x2F7 (0x2F3 dahil)
    mcp.setFilter(MCP2515::RXF4, false, 0x330);   // 0x330-0x337 (0x333, 0x334 dahil)
    mcp.setFilter(MCP2515::RXF5, false, 0x398);   // 0x398-0x39F (0x399 dahil)

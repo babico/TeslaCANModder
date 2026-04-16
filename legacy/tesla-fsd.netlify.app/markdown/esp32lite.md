@@ -1,0 +1,207 @@
+# ESP32 LITE — base / WiFi'siz
+
+Board ID: esp32lite
+
+## Categories
+- 📚 Genel
+- 🔧 Kurulum
+- ⚙ Ayarlar (kod ici)
+- </> Kod
+
+## Main Sections
+- 🧳 Neden ESP32 LITE? WiFi'nin getirdigi tum sorunlardan kacma
+- 01 Donanim Normal ESP32 ile birebir ayni
+- 02 Kutuphane Kurulumu Tek kutuphane: mcp2515 by autowp
+- 03 Ilk Yukleme Aç, ayarla, derle, yukle
+- 04 MCP2515 Kristal Frekansi 8 MHz mi 16 MHz mi? — modulun uzerine bak
+- ⚙ Compile-Time Ayarlar Kodun en ustundeki #define satirlari
+- </> Kaynak Kod CanFeather_ESP32_LITE.ino
+
+## Code IDs
+- code-esp32lite
+
+---
+
+# ESP32 LITE — base / WiFi'siz
+
+## Categories
+- 📚 Genel
+- 🔧 Kurulum
+- ⚙ Ayarlar (kod ici)
+- </> Kod
+
+## Extracted Content
+
+## ESP32 LITE — base / WiFi'siz
+
+ESP32 DevKit V1 + MCP2515 · sadece FSD bypass, hicbir extra yok
+
+📚 Genel
+🔧 Kurulum
+⚙ Ayarlar (kod ici)
+</> Kod
+
+### 🧳 Neden ESP32 LITE? WiFi'nin getirdigi tum sorunlardan kacma
+
+▼
+
+ESP32 LITE, normal ESP32 DevKit V1 kartini kullanir ama WiFi stack'ini hic baslatmaz . Web arayuzu, EEPROM persistence, OTA, vehicle control komutlari — hepsi cikarildi. Geriye sadece dogrudan calisan FSD bypass mantigi kalir. Ayarlar kodun en ustunde sabit ( #define ), runtime degisim yok.
+
+> Bu varyant kim icin? Normal ESP32 build'inde (WiFi acik) " FSD bir geliyor bir gidiyor " sorunu yasayan kullanicilar icin. WiFi stack'in arka plan interrupt baskisi ve server.handleClient() blocking'i MCP2515'in 2-frame RX FIFO'sunu tasiriyor olabilir. WiFi'yi kod seviyesinde tamamen kaldirmak bu sorunu yapisal olarak imkansiz hale getirir.
+
+#### Test Hipotezi
+
+v2.7'deki while loop fix'i ve v2.8'deki dual-core CAN task bazi kullanicilarda WiFi acikken FSD sorununu cozdu, bazilarinda yetmedi. Eger LITE varyant senin aracinda tutarli sekilde calisirsa , sebep WiFi stack'in CPU baskisidir — bu kanit bize sorunu nasil daha iyi cozecegimizi gosterir. LITE'ta da calismiyorsa , sebep daha derinde (Tesla 2026.8.6 mimari degisikligi gibi).
+
+#### Neler Var / Neler Yok
+
+| Ozellik | LITE | Normal ESP32 |
+| --- | --- | --- |
+| FSD enable bit (mux 0) | ✅ | ✅ |
+| NAG suppress (mux 1) | ✅ | ✅ |
+| Speed profile + ISA Speed Override (mux 2) | ✅ | ✅ |
+| Bypass TLSSC (UI ayarsiz FSD) | ✅ | ✅ |
+| Bus-off auto-recovery | ✅ | ✅ |
+| HW3 / HW4 / Legacy secimi | ✅ (compile-time) | ✅ (web UI) |
+| Web arayuzu | ❌ | ✅ |
+| WiFi access point | ❌ | ✅ |
+| EEPROM persistence | ❌ (sabit kod) | ✅ |
+| OTA guncelleme | ❌ | ✅ |
+| Vehicle control (ayna/kilit/klima/sentry) | ❌ | ✅ |
+| Log buffer / FSD history | ❌ | ✅ |
+| Runtime ayar degisimi | ❌ (yeniden derle) | ✅ |
+
+> Donanim ayni! ESP32 LITE'i denemek icin yeni kart almaya gerek yok. Mevcut ESP32 DevKit V1 + MCP2515 kombinasyonun olduğu gibi calisir, sadece farkli bir .ino dosyasi yuklersin.
+
+### 01 Donanim Normal ESP32 ile birebir ayni
+
+▼
+
+> ESP32 LITE, mevcut ESP32 DevKit V1 + MCP2515 donanimini birebir kullanir. Yeni parca almana gerek yok. Pin baglantilari da ayni: CS=GPIO5, SCK=GPIO18, MISO=GPIO19, MOSI=GPIO23 . Detayli parca listesi ve baglanti semasi icin " ESP32 DevKit V1 " sekmesindeki "Parca Listesi" ve "Baglanti" bolumlerine bak. ESP32 LITE icin sadece farkli .ino dosyasi yuklemek yeterli.
+
+| MCP2515 | ESP32 DevKit V1 |
+| --- | --- |
+| VCC | VIN (5V) veya 5V |
+| GND | GND |
+| CS | GPIO5 |
+| SCK | GPIO18 |
+| MISO | GPIO19 |
+| MOSI | GPIO23 |
+| INT | (kullanilmiyor) |
+
+> ⚠ MCP2515 modulundeki J1 jumper'ini CIKARIN. Tesla CAN bus'i zaten kendi terminasyonuna sahip; ikincisi paralel olunca empedans bozulur ve frame error patlamasi yaratir.
+
+### 02 Kutuphane Kurulumu Tek kutuphane: mcp2515 by autowp
+
+▼
+
+- Arduino IDE ac (1.8.x veya 2.x)
+
+- Tools → Manage Libraries (Library Manager)
+
+- Arama: mcp2515 → "mcp2515 by autowp" kur
+
+- Tools → Board → "ESP32 Dev Module" sec
+
+- Tools → Port → ESP32'nin bagli oldugu COM portu
+
+> SPI kutuphanesi Arduino IDE ile birlikte gelir, ayrica kurmaya gerek yok. WiFi.h, WebServer.h, EEPROM.h hicbiri include edilmiyor — LITE varyant bunlari hic kullanmiyor.
+
+### 03 Ilk Yukleme Aç, ayarla, derle, yukle
+
+▼
+
+- "Kod" sekmesinden CanFeather_ESP32_LITE.ino dosyasini indir veya kopyala
+
+- Arduino IDE'de ac
+
+- Dosyanin en ustundeki AYARLAR bolumunde compile-time defaultlari kontrol et:
+
+#define HW_VERSION — 0 =Legacy, 1 =HW3, 2 =HW4 (default: HW3)
+
+- #define CAN_CRYSTAL — MCP_8MHZ veya MCP_16MHZ (default: 8 MHz)
+
+- #define SPEED_PROFILE — 0..4 (default: 2 = Hurry)
+
+- Verify (✓) ile derle
+
+- Upload (→) ile ESP32'ye yukle
+
+- Tools → Serial Monitor → 115200 baud
+
+- Boot mesajini gormeli: === CanFeather ESP32 LITE ===
+
+- 5 saniyede bir status satiri yazilir: HW=1 P=2 UI=ON FD=3 OFF=14 RX=12345 TX=2400 ERR=0
+
+### 04 MCP2515 Kristal Frekansi 8 MHz mi 16 MHz mi? — modulun uzerine bak
+
+▼
+
+MCP2515 modulunun uzerinde, MCP2515 chip'inin yaninda kucuk gumuş bir kutucuk (kristal osilator) vardir. Uzerinde frekansi yazar:
+
+- 8.000 veya 8000 → 8 MHz → kodda #define CAN_CRYSTAL MCP_8MHZ
+
+- 16.000 veya 16000 → 16 MHz → kodda #define CAN_CRYSTAL MCP_16MHZ
+
+> Yanlis ayar = bus okuyamaz. MCP2515 yanlis bit timing ile calistirilirsa hicbir frame yakalayamaz. RX sayaci 0'da kalir. Eger ekranda " RX=0 " goruyorsan, kristal ayarini kontrol et.
+
+> Onemli — iki ayri kristal var:
+> - ESP32 SoC'sinin kendi kristali — her ESP32-WROOM-32D'de 40 MHz , otomatik kullanilir, dokunma
+> - MCP2515 modulunun kristali — 8 veya 16 MHz , modulden moduluine degisir, bizim ayarladigimiz
+> Kodda CAN_CRYSTAL bilesinde MCP2515'in kristalini belirtiyoruz, ESP32'nin degil.
+
+### ⚙ Compile-Time Ayarlar Kodun en ustundeki #define satirlari
+
+▼
+
+LITE varyantta web arayuzu yok — tum ayarlar koda gomulu. Degistirmek icin .ino dosyasini ac, satiri degistir, derle, yeniden yukle.
+
+#### Ana Ayarlar
+
+| #define | Default | Aciklama |
+| --- | --- | --- |
+| HW_VERSION | 1 (HW3) | 0 =Legacy (HW1/HW2) · 1 =HW3 · 2 =HW4 |
+| CAN_CRYSTAL | MCP_8MHZ | MCP2515 modul kristali. Yanlis ayar → bus okuyamaz |
+| SPEED_PROFILE | 2 (Hurry) | 0 =Chill 1 =Normal 2 =Hurry 3 =Max(HW4) 4 =Sloth(HW4) |
+
+#### Aktif Bayraklar (default acik)
+
+| #define | Default | Aciklama |
+| --- | --- | --- |
+| FSD_ENABLED | true | 💉 FSD bit enjeksiyonu (master) |
+| CAN_INJECTION | true | Tum CAN enjeksiyonu (master switch) |
+| BYPASS_TLSSC | true | ⚡ "Trafik Isigi" UI ayarsiz FSD aktif |
+| BUS_AUTO_RECOVER | true | ♻ Bus-off durumunda MCP2515 oto-reset |
+| ISA_SPEED_OVERRIDE | true | 🙊 Gercek hizi nav hiz limitine ezdirme |
+| ISA_SPEED_MUL | 7 | ISA hiz carpan (1-15) |
+
+#### Kapali Bayraklar (default kapali)
+
+| #define | Default | Aciklama |
+| --- | --- | --- |
+| ISA_SUPPRESS | false | Hiz uyari sesi bastir (HW3/HW4 0x399 frame) |
+| EMERGENCY_DETECT | false | Acil arac algilama bit59 |
+| PROFILE_OVERRIDE | false | CAN auto-mapping yerine sabit profile |
+
+#### Debug
+
+| #define | Default | Aciklama |
+| --- | --- | --- |
+| SERIAL_DEBUG | true | Serial Monitor'a periyodik status yaz |
+| DEBUG_INTERVAL_MS | 5000 | Status yazma araligi (ms) |
+
+> Ornek — HW4'e gecmek:
+> - Dosyayi ac, #define HW_VERSION 1 satirini bul
+> - 1 'i 2 ile degistir: #define HW_VERSION 2
+> - Verify → Upload
+> - Bitti — ESP32 artik HW4 handler'ini calistirir
+> Ayni mantik diger tum #define 'lar icin gecerli. Compile-time secim oldugu icin kullanilmayan handler kodu binary'e bile dahil edilmez — en kucuk firmware boyutu.
+
+### Kaynak Kod CanFeather_ESP32_LITE.ino
+
+▼
+
+CanFeather_ESP32_LITE.ino
+ESP32 + MCP2515 — WiFi'siz, base FSD bypass
+
+Kopyala

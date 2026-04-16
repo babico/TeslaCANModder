@@ -646,3 +646,4 @@ void loop() {
   // Serial komut polling (nadiren bir karakter olur)
   pollSerial();
 }
+

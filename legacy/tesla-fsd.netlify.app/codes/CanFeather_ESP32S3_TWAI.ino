@@ -67,8 +67,8 @@
 //  AYARLAR
 // ─────────────────────────────────────────────────────────────
 
-#define FW_VERSION     "v3.0"
-#define FW_DATE        "09.04.2026"
+#define FW_VERSION     "v3.1"
+#define FW_DATE        "15.04.2026"
 #define DEFAULT_PASS   "tesla1234"
 
 #define WIFI_SSID      "CanFeather"
@@ -378,11 +378,7 @@ void canSend(CanMsg& f) {
 // ─────────────────────────────────────────────────────────────
 
 inline void handleNagKiller(CanMsg& f) {
-  if (!cfg.nagKiller || f.id != 880) return;
-  // Gercekte eller direksiyon disindaysa (handsOn = 0)
-  uint8_t realHandsOn = (f.data[4] >> 6) & 0x03;
-  if (realHandsOn != 0) return;  // Zaten tutuyorsa dokunma
-
+  if (f.id != 0x370) return;  // zorunlu: toggle'dan bagimsiz, her zaman aktif (880 = 0x370)
   // Sahte torque degeri enjekte et — AP "direksiyonu tutuyor" sanir
   f.data[3] = 0xB6;                                   // torque value
   f.data[4] = (f.data[4] & ~0xC0) | 0x40;             // handsOn = 1
@@ -1677,3 +1673,4 @@ void loop() {
     }
   }
 }
+

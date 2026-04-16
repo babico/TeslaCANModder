@@ -1,0 +1,261 @@
+<div id="tab-uno" class="tab-content">
+<div class="gh-pagehead">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.692 1.72l.04.04a.75.75 0 0 1-1.06 1.06l-.04-.04A2.5 2.5 0 0 1 2 11.5Zm10.5 0V12h-8a1 1 0 0 0-.83.444A.745.745 0 0 1 4 12.5V2.5A1 1 0 0 1 5 1.5h7.5v1Z"/></svg>
+  <h2>Arduino Uno R3 / Nano (klasik 5V)</h2>
+  <span class="count">ATmega328P &middot; MCP2515 + Serial Monitor (WiFi'siz, lean)</span>
+</div>
+
+<div class="cat-wrap">
+  <button class="cat-btn active" onclick="switchCat('uno','genel',this)">&#128218; Genel</button>
+  <button class="cat-btn" onclick="switchCat('uno','kurulum',this)">&#128295; Kurulum</button>
+  <button class="cat-btn" onclick="switchCat('uno','komutlar',this)">&#9881; Komutlar</button>
+  <button class="cat-btn" onclick="switchCat('uno','kod',this)">&#60;/&#62; Kod</button>
+</div>
+
+<div id="uno-genel" class="cat-content active">
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h3><span class="num">&#128161;</span> <span>Neden Arduino Uno / Nano?</span> <span class="subtitle">En basit, en ucuz, evde duruyor</span></h3>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body">
+    <p style="font-size:.85rem;line-height:1.7;margin-bottom:.8rem">Arduino Uno R3 ve Arduino Nano (klasik 5V), CanFeather'in en minimal donanim hedefidir. Ikisi de <strong>ayni cipi</strong> (ATmega328P) ve ayni pin numaralarini kullanir &mdash; sadece form factor farkli (Uno tam boy, Nano breadboard dostu kucuk). <strong>Tek kod, iki kart</strong>, hicbir degisiklik gerekmez. Cogu hobicide zaten masada duran bir karttir &mdash; yeni donanim almaya gerek yok.</p>
+
+    <div class="note"><strong>Bu varyant kimin icin?</strong> Elinde Uno veya Nano duran, web arayuzu istemeyen, sadece "FSD bypass + speed profile" calismasi yetsin diyen kullanicilar icin. Daha fazla ozellik istiyorsaniz (web UI, OTA, vehicle control komutlari) <strong>ESP8266</strong> veya <strong>ESP32</strong> sekmesini kullanin.</div>
+
+    <div class="note warn"><strong>&#9888; DIKKAT &mdash; Hangi Nano?</strong> Bu kod sadece <strong>klasik 5V Arduino Nano (ATmega328P)</strong> icin calisir. Asagidakiler <strong>desteklenmiyor</strong> (farkli mimari, kod derlenmez):
+      <ul style="margin:.4rem 0 0 1.2rem;padding:0">
+        <li><code>Arduino Nano 33 BLE</code> &mdash; 3.3V, nRF52840 ARM</li>
+        <li><code>Arduino Nano 33 IoT</code> &mdash; 3.3V, SAMD21 ARM</li>
+        <li><code>Arduino Nano RP2040 Connect</code> &mdash; 3.3V, RP2040 ARM</li>
+        <li><code>Arduino Nano Every</code> &mdash; 5V ama ATmega4809, farkli pin layout, test edilmemis</li>
+      </ul>
+      Almadan once urun aciklamasinda <strong>"ATmega328P"</strong> ve <strong>"5V"</strong> yazdigindan emin olun. CH340 USB chip'li Cin klonlari da klasik Nano sayilir, calisir.
+    </div>
+
+    <h4 class="sub-h">Neler Var?</h4>
+    <table style="margin-top:.4rem"><thead><tr><th>Ozellik</th><th>Durum</th></tr></thead><tbody>
+      <tr><td>HW3 / HW4 / Legacy FSD bypass</td><td>&#9989; Var (handler kodu birebir ayni)</td></tr>
+      <tr><td>Speed profile (Chill .. Sloth)</td><td>&#9989; Var (compile-time veya Serial)</td></tr>
+      <tr><td>ISA Speed Override (gercek hiz)</td><td>&#9989; Var</td></tr>
+      <tr><td>ISA Speed Chime suppress</td><td>&#9989; Var</td></tr>
+      <tr><td>Emergency vehicle detection</td><td>&#9989; Var</td></tr>
+      <tr><td>Bypass "Trafik Isigi" gerekligi</td><td>&#9989; Var</td></tr>
+      <tr><td>EEPROM persistence (boot ayari)</td><td>&#9989; Var (1 KB EEPROM kullanilir)</td></tr>
+      <tr><td>Serial komut interface (runtime)</td><td>&#9989; Var (9600 baud, '?' yardim)</td></tr>
+      <tr><td>Web arayuzu</td><td>&#10060; Yok (WiFi yok)</td></tr>
+      <tr><td>Vehicle control (ayna/kilit/klima)</td><td>&#10060; Yok (RAM yetmiyor)</td></tr>
+      <tr><td>OTA guncelleme</td><td>&#10060; Yok (USB ile flash)</td></tr>
+      <tr><td>FSD history / log buffer</td><td>&#10060; Yok (RAM yetmiyor)</td></tr>
+    </tbody></table>
+
+    <div class="note warn" style="margin-top:.8rem"><strong>Sinirlamalar:</strong> Uno'nun 2 KB RAM ve 32 KB Flash sinirlari sebebiyle bu varyant <strong>yalin</strong> tutulmustur. ATmega328P single-core 16 MHz &mdash; Tesla VehicleBus'in ~500 fps frame rate'i sinirina yakin calisir, frame loss riski ESP'lerden biraz daha yuksektir. Sahada beta olarak test edilmesi onerilir.</div>
+  </div>
+</div>
+
+</div><!-- /uno-genel -->
+
+<div id="uno-kurulum" class="cat-content">
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h3><span class="num">01</span> <span>Parca Listesi</span> <span class="subtitle">Uno / Nano + MCP2515 &mdash; klasik 5V kombinasyon</span></h3>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body">
+    <div class="note danger"><strong>MCP2515 VCC &rarr; 5V!</strong> TJA1050 transceiver 5V gerektirir. Uno ve Nano'nun <code>5V</code> pinine baglayin (3.3V calismaz). 3.3V Nano varyantlari (BLE, IoT, RP2040 Connect) bu kod ile derlemez &mdash; sadece klasik <strong>ATmega328P 5V</strong> destekleniyor.</div>
+
+    <h4 class="sub-h">Temel Parcalar (Uno seceneği)</h4>
+    <table><thead><tr><th>#</th><th>Parca</th><th>Model</th><th>Fiyat</th><th>Link</th></tr></thead><tbody>
+      <tr><td>1</td><td>Mikrodenetleyici</td><td>Arduino Uno R3 klon (CH340 USB chip, kablo dahil)</td><td>~150-200 TL</td><td><a href="https://www.robotistan.com/arduino-uno-r3-klon-usb-kablo-hediyeli-usb-chip-ch340" target="_blank">Robotistan</a></td></tr>
+      <tr><td>2</td><td>CAN Controller</td><td>MCP2515 + TJA1050 Modulu</td><td>~40-80 TL</td><td><a href="https://www.robotistan.com/mcp2515-canbus-spi-haberlesme-modulu" target="_blank">Robotistan</a> &middot; <a href="https://www.direnc.net/mcp2515-modul" target="_blank">Direnc.net</a></td></tr>
+      <tr><td>3</td><td>Jumper Kablo</td><td>Disi-Disi, 10cm</td><td>~10 TL</td><td><a href="https://www.robotistan.com/40-pin-ayrilabilen-disi-disi-f-f-jumper-kablo-200-mm" target="_blank">Robotistan</a></td></tr>
+      <tr><td>4</td><td>JST-XH 2-pin</td><td>CAN hatti hizli sokum</td><td>~5 TL</td><td><a href="https://www.robotistan.com/i-ds1066-scw002-2-pin-jst-terminalsiz-fis" target="_blank">Robotistan</a></td></tr>
+      <tr><td>5</td><td>Proje Kutusu</td><td>80x50x25mm (Uno tam boy)</td><td>~20-30 TL</td><td><a href="https://www.robotistan.com/54-x-84-x-32-el-tipi-kutu-5921" target="_blank">Robotistan</a></td></tr>
+    </tbody></table>
+
+    <h4 class="sub-h">Temel Parcalar (Nano seceneği &mdash; daha kucuk + ucuz)</h4>
+    <table><thead><tr><th>#</th><th>Parca</th><th>Model</th><th>Fiyat</th><th>Link</th></tr></thead><tbody>
+      <tr><td>1</td><td>Mikrodenetleyici</td><td>Arduino Nano (ATmega328, USB kablolu)</td><td>~80-150 TL</td><td><a href="https://www.robotistan.com/arduino-nano-328-usb-kablolu" target="_blank">Robotistan</a></td></tr>
+      <tr><td>2</td><td>CAN Controller</td><td>MCP2515 + TJA1050 Modulu</td><td>~40-80 TL</td><td><a href="https://www.robotistan.com/mcp2515-canbus-spi-haberlesme-modulu" target="_blank">Robotistan</a> &middot; <a href="https://www.direnc.net/mcp2515-modul" target="_blank">Direnc.net</a></td></tr>
+      <tr><td>3</td><td>Jumper Kablo</td><td>Disi-Disi, 10cm</td><td>~10 TL</td><td><a href="https://www.robotistan.com/40-pin-ayrilabilen-disi-disi-f-f-jumper-kablo-200-mm" target="_blank">Robotistan</a></td></tr>
+      <tr><td>4</td><td>JST-XH 2-pin</td><td>CAN hatti hizli sokum</td><td>~5 TL</td><td><a href="https://www.robotistan.com/i-ds1066-scw002-2-pin-jst-terminalsiz-fis" target="_blank">Robotistan</a></td></tr>
+      <tr><td>5</td><td>Proje Kutusu</td><td>Kucuk boy (Nano breadboard dostu)</td><td>~15-25 TL</td><td><a href="https://www.robotistan.com/54-x-84-x-32-el-tipi-kutu-5921" target="_blank">Robotistan</a></td></tr>
+    </tbody></table>
+
+    <h4 class="sub-h">Guc Kaynagi (her iki secenek icin ayni)</h4>
+    <table><thead><tr><th>#</th><th>Parca</th><th>Model / Not</th><th>Fiyat</th><th>Link</th></tr></thead><tbody>
+      <tr><td>10</td><td>Buck Converter</td><td>Mini560 (MP2315S) sabit 5V &mdash; giris 4.5-20V</td><td>~15-30 TL</td><td><a href="https://www.robotistan.com/mini560-5v-dc-dc-voltaj-dusurucu" target="_blank">Robotistan</a></td></tr>
+      <tr><td>11</td><td>Sigorta Tutucu + 3A</td><td>Arac hatti korumasi</td><td>~10 TL</td><td>&mdash;</td></tr>
+      <tr><td>12</td><td>Disi JST-XH 2-pin (x2)</td><td>12V giris + 5V cikis</td><td>~5 TL</td><td><a href="https://www.robotistan.com/i-ds1066-scw002-2-pin-jst-terminalsiz-fis" target="_blank">Robotistan</a></td></tr>
+    </tbody></table>
+
+    <div class="note"><strong>Tasarruf notu:</strong> Nano + MCP2515 + Mini560 toplam ~150-250 TL civarinda kalir &mdash; CanFeather'in en ucuz donanim seceneği. ESP8266 veya ESP32 ile karsilastirildiginda ~50-100 TL daha ucuz, ama web arayuzu olmadigi icin ayar degisimi Serial Monitor uzerinden yapilir.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h3><span class="num">02</span> <span>Donanim Baglanti</span> <span class="subtitle">Uno / Nano + MCP2515 modulu &mdash; SPI uzerinden</span></h3>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body">
+
+    <table><thead><tr><th>MCP2515 Modul</th><th>Uno / Nano</th><th>Not</th></tr></thead><tbody>
+      <tr><td><code>VCC</code></td><td><code>5V</code></td><td>Modul 5V tolerant</td></tr>
+      <tr><td><code>GND</code></td><td><code>GND</code></td><td></td></tr>
+      <tr><td><code>CS</code></td><td><code>D10</code> (SS)</td><td>Chip Select</td></tr>
+      <tr><td><code>MOSI</code></td><td><code>D11</code></td><td>SPI sabit pin</td></tr>
+      <tr><td><code>MISO</code></td><td><code>D12</code></td><td>SPI sabit pin</td></tr>
+      <tr><td><code>SCK</code></td><td><code>D13</code></td><td>SPI sabit pin (LED ile cakisir, normal)</td></tr>
+      <tr><td><code>INT</code></td><td><code>D2</code></td><td>Kullanilmiyor (polling)</td></tr>
+    </tbody></table>
+
+    <h4 class="sub-h" style="margin-top:1rem">Tesla X179 Konnektor</h4>
+    <table><thead><tr><th>MCP2515</th><th>X179 Pin</th></tr></thead><tbody>
+      <tr><td><code>CAN-H</code></td><td>Pin 13</td></tr>
+      <tr><td><code>CAN-L</code></td><td>Pin 14</td></tr>
+    </tbody></table>
+
+    <div class="note" style="margin-top:.8rem">
+      <strong>Uno mu Nano mu?</strong> Pin numaralari ve baglantilari <strong>ayni</strong> (D10/D11/D12/D13). Tek farkli sey Arduino IDE'de board secimi:
+      <ul style="margin:.4rem 0 0 1.2rem;padding:0">
+        <li><strong>Uno R3:</strong> Tools &rarr; Board &rarr; <code>Arduino Uno</code></li>
+        <li><strong>Nano (orijinal yeni):</strong> Tools &rarr; Board &rarr; <code>Arduino Nano</code> + Processor &rarr; <code>ATmega328P</code></li>
+        <li><strong>Nano (eski / Cin klonu):</strong> Tools &rarr; Board &rarr; <code>Arduino Nano</code> + Processor &rarr; <code>ATmega328P (Old Bootloader)</code></li>
+      </ul>
+      Eger Nano'da yukleme "<code>avrdude: stk500_recv(): programmer is not responding</code>" hatasi verirse Old Bootloader secenegini dene. Cogu CH340 USB chip'li klon Old Bootloader ister.
+    </div>
+
+    <div class="note warn" style="margin-top:.8rem">
+      <strong>&#9888; MCP2515 modulundeki J1 jumper'ini CIKARIN.</strong> Bu jumper 120Ω terminasyon direncini devreye sokuyor. Tesla'nin CAN bus'i zaten kendi terminasyonuna sahip &mdash; ikincisi paralel olunca bus empedansi 60Ω yerine 40Ω olur, frame error patlamasi yaratir. Module'u kullanmadan once kucuk PCB jumper'ini (genelde modulun bir kosesinde "J1" etiketli) <strong>cikar veya kes</strong>.
+    </div>
+
+    <div class="note warn" style="margin-top:.8rem">
+      <strong>&#9888; 3.3V Nano varyantlari calismaz.</strong> Nano 33 BLE, Nano 33 IoT, Nano RP2040 Connect &mdash; bunlarin hicbiri ATmega328P degil, ARM tabanli ve 3.3V calisir. Bu kodu derlemezler. Ayrica Tesla'nin 5V CAN sinyaline dogrudan baglanmaniz icin transceiver level shift'i farkli olur. Sadece <strong>klasik 5V Arduino Nano (ATmega328P)</strong> destekleniyor &mdash; satin alirken urun sayfasinda "ATmega328P" yazdigindan emin olun.
+    </div>
+
+    <div class="note">
+      <strong>MCP2515 kristal frekansi:</strong> Cogu modul 8 MHz veya 16 MHz kristal ile gelir. Modulu ters cevirip kristalin uzerindeki yaziya bakin. Kod icindeki <code>#define CAN_CLOCK_MHZ</code> degerini ona gore ayarlayin (8 veya 16). Yanlis ayar &rarr; bus'a hic frame okuyamaz.
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h3><span class="num">03</span> <span>Kutuphane Kurulumu</span> <span class="subtitle">Tek kutuphane gerek &mdash; mcp2515 by autowp</span></h3>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body">
+    <ol style="font-size:.85rem;line-height:1.7;padding-left:1.2rem">
+      <li>Arduino IDE ac (1.8.x veya 2.x)</li>
+      <li>Tools &rarr; Manage Libraries (Library Manager)</li>
+      <li>Arama kutusuna <code>mcp2515</code> yaz</li>
+      <li><strong>"mcp2515 by autowp"</strong> kutuphanesini kur (genelde ilk sirada gelir)</li>
+      <li>Tools &rarr; Board &rarr; <strong>Arduino Uno</strong> sec</li>
+      <li>Tools &rarr; Port &rarr; Uno'nun bagli oldugu portu sec</li>
+    </ol>
+    <div class="note">SPI ve EEPROM kutuphaneleri Arduino IDE ile birlikte gelir, ayrica kurmaya gerek yok.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h3><span class="num">04</span> <span>Ilk Yukleme</span> <span class="subtitle">Kodu ac, ayarla, derle, yukle</span></h3>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body">
+    <ol style="font-size:.85rem;line-height:1.7;padding-left:1.2rem">
+      <li>"Kod" sekmesinden <strong>CanFeather_ArduinoUno.ino</strong> dosyasini indir veya kopyala</li>
+      <li>Arduino IDE'de ac</li>
+      <li>Dosyanin uzerindeki <strong>AYARLAR</strong> bolumunde compile-time defaultlari kontrol et:
+        <ul>
+          <li><code>#define DEFAULT_HW</code> &mdash; aracin (0=Legacy, 1=HW3, 2=HW4)</li>
+          <li><code>#define DEFAULT_PROFILE</code> &mdash; baslangic profili (0..4)</li>
+          <li><code>#define CAN_CLOCK_MHZ</code> &mdash; MCP2515 kristali (8 veya 16)</li>
+        </ul>
+      </li>
+      <li>Verify (&#10003;) ile derle &mdash; hata almamali</li>
+      <li>Upload (&rarr;) ile Uno'ya yukle</li>
+      <li>Tools &rarr; Serial Monitor &rarr; <strong>9600 baud</strong> sec</li>
+      <li>Boot mesajini gormeli: <code>=== CanFeather Uno v2.8-uno ===</code></li>
+      <li>Status icin <code>s</code> yaz, komut listesi icin <code>?</code> yaz</li>
+    </ol>
+  </div>
+</div>
+
+</div><!-- /uno-kurulum -->
+
+<div id="uno-komutlar" class="cat-content">
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h3><span class="num">&#9881;</span> <span>Serial Komut Listesi</span> <span class="subtitle">Runtime ayar degisimi &mdash; 9600 baud</span></h3>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body">
+    <p style="font-size:.85rem;line-height:1.6">Web arayuzu olmadigi icin tum ayarlar Serial Monitor uzerinden yapilir. Komutu yazip Enter'a bas. EEPROM'a kalici kaydetmek icin sonunda <code>save</code> komutunu unutma.</p>
+
+    <table style="margin-top:.6rem"><thead><tr><th>Komut</th><th>Aciklama</th><th>Ornek</th></tr></thead><tbody>
+      <tr><td><code>?</code></td><td>Yardim &mdash; komut listesi</td><td><code>?</code></td></tr>
+      <tr><td><code>s</code></td><td>Status &mdash; anlik durum (HW, profile, FSD, RX/TX/ERR)</td><td><code>s</code></td></tr>
+      <tr><td><code>hw 0|1|2</code></td><td>HW seciminin degistir (0=Legacy 1=HW3 2=HW4)</td><td><code>hw 2</code></td></tr>
+      <tr><td><code>p 0..4</code></td><td>Speed profile (0=Chill 1=Normal 2=Hurry 3=Max 4=Sloth)</td><td><code>p 4</code></td></tr>
+      <tr><td><code>fsd on|off</code></td><td>FSD enjeksiyonu</td><td><code>fsd on</code></td></tr>
+      <tr><td><code>inj on|off</code></td><td>Tum CAN enjeksiyonu (FSD dahil) &mdash; "guvenlik kapama"</td><td><code>inj off</code></td></tr>
+      <tr><td><code>isa on|off</code></td><td>ISA hiz uyari sesi suppress (HW3/HW4)</td><td><code>isa on</code></td></tr>
+      <tr><td><code>ev on|off</code></td><td>Acil arac algilama (HW3/HW4 bit59)</td><td><code>ev on</code></td></tr>
+      <tr><td><code>tlssc on|off</code></td><td>Bypass "Trafik Isigi" gerekligi (UI ayarsiz FSD)</td><td><code>tlssc on</code></td></tr>
+      <tr><td><code>ovr on|off</code></td><td>Profile override (CAN auto-mapping yerine sabit)</td><td><code>ovr on</code></td></tr>
+      <tr><td><code>isaovr on|off</code></td><td>ISA Speed Override (gercek hizi nav hiz limitine ezdirme)</td><td><code>isaovr on</code></td></tr>
+      <tr><td><code>isamul N</code></td><td>ISA hiz carpan (1-15, default 7)</td><td><code>isamul 9</code></td></tr>
+      <tr><td><code>save</code></td><td>Mevcut ayarlari EEPROM'a yaz (kalici)</td><td><code>save</code></td></tr>
+      <tr><td><code>load</code></td><td>EEPROM'dan ayarlari geri yukle</td><td><code>load</code></td></tr>
+      <tr><td><code>reset</code></td><td>EEPROM'u temizle &mdash; default ayarlara don</td><td><code>reset</code></td></tr>
+    </tbody></table>
+
+    <h4 class="sub-h" style="margin-top:1rem">Ornek Akis</h4>
+    <pre style="background:var(--surface2);padding:.7rem;border-radius:6px;font-size:.78rem;line-height:1.5;overflow-x:auto"><code>&gt; ?              <span style="color:var(--text-dim)">// komut listesi</span>
+&gt; s              <span style="color:var(--text-dim)">// status goster</span>
+FW=v2.8-uno HW=2 P=2 FSD=ON INJ=ON UI=OFF FD=0 OFF=0 RX=4521 TX=890 ERR=0
+&gt; hw 2           <span style="color:var(--text-dim)">// HW4 secimi</span>
+hw=2
+&gt; p 4            <span style="color:var(--text-dim)">// Sloth profili</span>
+p=4
+&gt; tlssc on       <span style="color:var(--text-dim)">// Trafik Isigi gerekligi bypass</span>
+tlssc=ON
+&gt; save           <span style="color:var(--text-dim)">// EEPROM'a yaz</span>
+[ee] kaydedildi
+&gt; s              <span style="color:var(--text-dim)">// dogrula</span>
+FW=v2.8-uno HW=2 P=4 FSD=ON INJ=ON UI=OFF FD=0 OFF=0 RX=8932 TX=1782 ERR=0</code></pre>
+
+    <div class="note">Bir kere <code>save</code> ettikten sonra kabloyu cikarip bagladiginda Uno EEPROM'dan ayarlari otomatik yukler &mdash; Serial Monitor acmaya gerek yok, "tak ve calistir".</div>
+  </div>
+</div>
+
+</div><!-- /uno-komutlar -->
+
+<div id="uno-kod" class="cat-content">
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <h3><span class="num">&#60;/&#62;</span> <span>Kaynak Kod</span> <span class="subtitle">CanFeather_ArduinoUno.ino</span></h3>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <div class="ino-block">
+        <div class="ino-header">
+          <div class="ino-title">CanFeather_ArduinoUno.ino <span>Arduino Uno R3 &mdash; lean (WiFi'siz)</span></div>
+          <button class="copy-btn" onclick="copyCode('code-uno', this)">Kopyala</button>
+        </div>
+        <pre class="ino-code" id="code-uno"></pre>
+      </div>
+    </div>
+  </div>
+</div><!-- /uno-kod -->
+
+</div><!-- /tab-uno -->
+
+
+<!-- ========== ESP32 LITE ========== -->
+
