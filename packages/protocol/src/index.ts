@@ -21,7 +21,8 @@ export type {
 } from './types.js';
 
 // Commands
-export { commands, PROFILE_LABELS } from './commands.js';
+export { commands, PROFILE_LABELS, COMMAND_RANGES, VALID_VARIANTS } from './commands.js';
+export type { Variant } from './commands.js';
 
 // Decoder
 export {

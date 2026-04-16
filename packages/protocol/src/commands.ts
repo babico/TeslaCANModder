@@ -1,10 +1,34 @@
 /** Command builders for all TeslaCANModder firmware commands. */
 
+/** Valid firmware variants. */
+export const VALID_VARIANTS = ['hw3', 'hw4', 'legacy'] as const;
+export type Variant = (typeof VALID_VARIANTS)[number];
+
+/** Range limits for numeric command parameters. */
+export const COMMAND_RANGES = {
+  profile: { min: 0, max: 4 },
+  offset: { min: -10, max: 10 },
+  seat: { min: 0, max: 3 },
+  mainDisplay: { min: 0, max: 100 },
+} as const;
+
+function assertRange(name: string, value: number, min: number, max: number): void {
+  if (!Number.isInteger(value) || value < min || value > max) {
+    throw new RangeError(`${name} must be an integer between ${min} and ${max}, got ${value}`);
+  }
+}
+
+function assertVariant(v: string): asserts v is Variant {
+  if (!(VALID_VARIANTS as readonly string[]).includes(v)) {
+    throw new RangeError(`variant must be one of ${VALID_VARIANTS.join(', ')}, got "${v}"`);
+  }
+}
+
 export const commands = {
   // System
   ping: () => 'ping',
   status: () => 'status',
-  variant: (v: string) => `variant:${v}`,
+  variant: (v: string) => { assertVariant(v); return `variant:${v}`; },
 
   // FSD
   fsd: (on: boolean) => on ? 'fsd:on' : 'fsd:off',
@@ -15,11 +39,11 @@ export const commands = {
   nagToggle: () => 'nag:toggle',
 
   // Speed Profile
-  profile: (p: number) => `profile:${p}`,
+  profile: (p: number) => { assertRange('profile', p, COMMAND_RANGES.profile.min, COMMAND_RANGES.profile.max); return `profile:${p}`; },
   profileAuto: () => 'profile:auto',
 
   // Speed Offset (HW3)
-  offset: (o: number) => `offset:${o}`,
+  offset: (o: number) => { assertRange('offset', o, COMMAND_RANGES.offset.min, COMMAND_RANGES.offset.max); return `offset:${o}`; },
   offsetAuto: () => 'offset:auto',
 
   // ISA Chime (HW4)
@@ -74,14 +98,14 @@ export const commands = {
   wiper3: () => 'wiper:3',
 
   // Seat Heating
-  seatFL: (level: number) => `seat:fl:${level}`,
-  seatFR: (level: number) => `seat:fr:${level}`,
-  seatRL: (level: number) => `seat:rl:${level}`,
-  seatRR: (level: number) => `seat:rr:${level}`,
-  seatRC: (level: number) => `seat:rc:${level}`,
+  seatFL: (level: number) => { assertRange('seatFL', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:fl:${level}`; },
+  seatFR: (level: number) => { assertRange('seatFR', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:fr:${level}`; },
+  seatRL: (level: number) => { assertRange('seatRL', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:rl:${level}`; },
+  seatRR: (level: number) => { assertRange('seatRR', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:rr:${level}`; },
+  seatRC: (level: number) => { assertRange('seatRC', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:rc:${level}`; },
 
   // Display
-  mainDisplay: (level: number) => `maindisplay:${level}`,
+  mainDisplay: (level: number) => { assertRange('mainDisplay', level, COMMAND_RANGES.mainDisplay.min, COMMAND_RANGES.mainDisplay.max); return `maindisplay:${level}`; },
 
   // Power
   powerAccOn: () => 'power:acc:on',

@@ -1,10 +1,16 @@
-import { commands } from '../src/commands.js';
+import { commands, COMMAND_RANGES, VALID_VARIANTS } from '../src/commands.js';
 
 describe('commands', () => {
   describe('system', () => {
     it('ping', () => expect(commands.ping()).toBe('ping'));
     it('status', () => expect(commands.status()).toBe('status'));
     it('variant', () => expect(commands.variant('hw3')).toBe('variant:hw3'));
+    it('variant hw4', () => expect(commands.variant('hw4')).toBe('variant:hw4'));
+    it('variant legacy', () => expect(commands.variant('legacy')).toBe('variant:legacy'));
+    it('rejects invalid variant', () => {
+      expect(() => commands.variant('hw5')).toThrow(RangeError);
+      expect(() => commands.variant('')).toThrow(RangeError);
+    });
   });
 
   describe('FSD', () => {
@@ -118,5 +124,68 @@ describe('commands', () => {
     it('pedalSport', () => expect(commands.pedalSport()).toBe('pedal:sport'));
     it('regenMax', () => expect(commands.regenMax()).toBe('regen:max'));
     it('stopHold', () => expect(commands.stopHold()).toBe('stop:hold'));
+  });
+
+  describe('range validation', () => {
+    it('profile rejects below min', () => {
+      expect(() => commands.profile(-1)).toThrow(RangeError);
+    });
+    it('profile rejects above max', () => {
+      expect(() => commands.profile(5)).toThrow(RangeError);
+    });
+    it('profile rejects non-integer', () => {
+      expect(() => commands.profile(1.5)).toThrow(RangeError);
+    });
+    it('profile accepts all valid values', () => {
+      for (let i = COMMAND_RANGES.profile.min; i <= COMMAND_RANGES.profile.max; i++) {
+        expect(commands.profile(i)).toBe(`profile:${i}`);
+      }
+    });
+
+    it('offset rejects below min', () => {
+      expect(() => commands.offset(-11)).toThrow(RangeError);
+    });
+    it('offset rejects above max', () => {
+      expect(() => commands.offset(11)).toThrow(RangeError);
+    });
+    it('offset rejects non-integer', () => {
+      expect(() => commands.offset(0.5)).toThrow(RangeError);
+    });
+    it('offset accepts boundary values', () => {
+      expect(commands.offset(-10)).toBe('offset:-10');
+      expect(commands.offset(0)).toBe('offset:0');
+      expect(commands.offset(10)).toBe('offset:10');
+    });
+
+    it('seat rejects out of range', () => {
+      expect(() => commands.seatFL(-1)).toThrow(RangeError);
+      expect(() => commands.seatFL(4)).toThrow(RangeError);
+      expect(() => commands.seatFR(99)).toThrow(RangeError);
+      expect(() => commands.seatRL(-1)).toThrow(RangeError);
+      expect(() => commands.seatRR(4)).toThrow(RangeError);
+      expect(() => commands.seatRC(4)).toThrow(RangeError);
+    });
+    it('seat rejects non-integer', () => {
+      expect(() => commands.seatFL(1.5)).toThrow(RangeError);
+    });
+    it('seat accepts all valid levels', () => {
+      for (let i = COMMAND_RANGES.seat.min; i <= COMMAND_RANGES.seat.max; i++) {
+        expect(commands.seatFL(i)).toBe(`seat:fl:${i}`);
+        expect(commands.seatFR(i)).toBe(`seat:fr:${i}`);
+        expect(commands.seatRL(i)).toBe(`seat:rl:${i}`);
+        expect(commands.seatRR(i)).toBe(`seat:rr:${i}`);
+        expect(commands.seatRC(i)).toBe(`seat:rc:${i}`);
+      }
+    });
+
+    it('mainDisplay rejects out of range', () => {
+      expect(() => commands.mainDisplay(-1)).toThrow(RangeError);
+      expect(() => commands.mainDisplay(101)).toThrow(RangeError);
+    });
+    it('mainDisplay accepts boundary values', () => {
+      expect(commands.mainDisplay(0)).toBe('maindisplay:0');
+      expect(commands.mainDisplay(50)).toBe('maindisplay:50');
+      expect(commands.mainDisplay(100)).toBe('maindisplay:100');
+    });
   });
 });
