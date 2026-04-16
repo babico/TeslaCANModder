@@ -235,7 +235,7 @@ jobs:
         run: |
           git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
           rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - uses: DavidAnson/markdownlint-cli2-action@v19
+      - uses: DavidAnson/markdownlint-cli2-action@v23
         with:
           globs: |
             **/*.md
