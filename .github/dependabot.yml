@@ -1,0 +1,56 @@
+version: 2
+updates:
+  # Root workspace + packages/protocol, web, mobile, tools
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      prod-dependencies:
+        dependency-type: production
+        update-types: [minor, patch]
+    labels:
+      - dependencies
+
+  # PlatformIO (hardware/)
+  - package-ecosystem: pip
+    directory: /hardware
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ci
+
+  # Docker
+  - package-ecosystem: docker
+    directory: /web
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - docker
+
+  - package-ecosystem: docker
+    directory: /hardware
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - docker
