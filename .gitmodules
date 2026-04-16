@@ -19,3 +19,21 @@
 [submodule "legacy/ev-open-can-tools-ev-open-can-tools"]
 	path = legacy/ev-open-can-tools-ev-open-can-tools
 	url = https://github.com/ev-open-can-tools/ev-open-can-tools
+[submodule "legacy/hypery11-flipper-tesla-fsd"]
+	path = legacy/hypery11-flipper-tesla-fsd
+	url = https://github.com/hypery11/flipper-tesla-fsd
+[submodule "legacy/linesoft2-tesla-fsd-can-mod-fork"]
+	path = legacy/linesoft2-tesla-fsd-can-mod-fork
+	url = https://github.com/linesoft2/tesla-fsd-can-mod-fork
+[submodule "legacy/tuncasoftbildik-tesla-can-mod"]
+	path = legacy/tuncasoftbildik-tesla-can-mod
+	url = https://github.com/tuncasoftbildik/tesla-can-mod
+[submodule "legacy/J0811-flipper-tesla-fsd"]
+	path = legacy/J0811-flipper-tesla-fsd
+	url = https://github.com/J0811/flipper-tesla-fsd
+[submodule "legacy/binfen1-tesla-fsd-can-mod"]
+	path = legacy/binfen1-tesla-fsd-can-mod
+	url = https://github.com/binfen1/tesla-fsd-can-mod
+[submodule "legacy/JelloEa-Tesla-Open-CAN-Mod"]
+	path = legacy/JelloEa-Tesla-Open-CAN-Mod
+	url = https://github.com/JelloEa/Tesla-Open-CAN-Mod
