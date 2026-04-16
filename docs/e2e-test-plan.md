@@ -132,6 +132,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 **HC-05 vs USB Output:** All output functions (`sendBoot`, `sendStatus`, `sendAck`, etc.) mirror to both USB Serial and BT SoftwareSerial simultaneously. Both accept the same command set.
 
 **HC-05 Limitations:**
+
 - 9600 baud (vs 115200 USB) — slower throughput
 - SoftwareSerial on Uno — only one RX pin can listen at a time
 - No encryption (HC-05 is Bluetooth Classic SPP)
@@ -377,7 +378,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | 1 | Flash `esp32_wifi` firmware | Upload with `embed_html.py` pre-build | — |
 | 2 | ESP32 creates AP "TeslaCANModder" | SSID visible on phone/laptop | — |
 | 3 | Connect to AP (password: `teslacan123`, channel 6) | DHCP assigns IP (gateway: 192.168.4.1) | — |
-| 4 | Open http://192.168.4.1 | Embedded HTML dashboard loads | — |
+| 4 | Open <http://192.168.4.1> | Embedded HTML dashboard loads | — |
 | 5 | Dashboard shows system status cards | Hardware, CAN stats, WiFi status, settings | — |
 | 6 | Send command via dashboard button | POST `/api/command` → ACK | — |
 | 7 | Check WiFi status card | Mode: AP, IP: 192.168.4.1, SSID: TeslaCANModder | — |
@@ -623,6 +624,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | Summon | ✓ | ✓ | — |
 
 **Handler dispatch differences:**
+
 - Uno: `handleMessage` routes Bus 0 to variant handler, Bus 1+ for frame caching
 - ESP32: `handleMessage` routes by bus index (Bus 0=FSD, Bus 1=Vehicle, Bus 2=Body)
 

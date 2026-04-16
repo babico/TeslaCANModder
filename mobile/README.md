@@ -29,6 +29,7 @@ npx expo start       # start dev server
 ### UI Components
 
 Shared primitives in `components/ui/`:
+
 - `Button` — variant (primary/secondary/ghost/danger), active, disabled, compact
 - `Card` — title, right slot (ReactNode), warning banner
 - `Badge` — colored pill (default/success/warning/error/accent/blue)
@@ -61,6 +62,7 @@ Tests use Jest with `jest-expo` preset and `@testing-library/react-native`.
 ## Theme
 
 Dark theme defined in `styles/theme.ts` with design tokens:
+
 - Colors (bg, surface, text, accent, status colors, soft variants)
 - Spacing scale (xs through xxl)
 - Border radius (sm, md, lg, xl, full)
