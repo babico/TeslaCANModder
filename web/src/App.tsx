@@ -24,12 +24,14 @@ export default function App() {
       }
       board.handleMessage(msg);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serial.setOnMessage, board.handleMessage, serial.ackReceived]);
 
   useEffect(() => {
     if (!serial.connected) {
       board.reset();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serial.connected, board.reset]);
 
   // Ctrl+K / Cmd+K to open command palette
