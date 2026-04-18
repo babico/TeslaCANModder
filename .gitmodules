@@ -232,3 +232,6 @@
 [submodule "legacy/nicolozak-nag-killer"]
 	path = legacy/nicolozak-nag-killer
 	url = https://gitlab.com/nicolozak/nag-killer
+[submodule "legacy/yoziru-esphome-tesla-ble"]
+	path = legacy/yoziru-esphome-tesla-ble
+	url = https://github.com/yoziru/esphome-tesla-ble.git
