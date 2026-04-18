@@ -37,3 +37,198 @@
 [submodule "legacy/JelloEa-Tesla-Open-CAN-Mod"]
 	path = legacy/JelloEa-Tesla-Open-CAN-Mod
 	url = https://github.com/JelloEa/Tesla-Open-CAN-Mod
+[submodule "legacy/Adminius-ESP32-ScanMyTesla"]
+	path = legacy/Adminius-ESP32-ScanMyTesla
+	url = https://github.com/Adminius/ESP32-ScanMyTesla
+[submodule "legacy/Akisoft41-TeslapLX"]
+	path = legacy/Akisoft41-TeslapLX
+	url = https://github.com/Akisoft41/TeslapLX
+[submodule "legacy/alzza-tesla-open-can-mod"]
+	path = legacy/alzza-tesla-open-can-mod
+	url = https://github.com/alzza/tesla-open-can-mod
+[submodule "legacy/amzoo-TMS_2016_LOGS"]
+	path = legacy/amzoo-TMS_2016_LOGS
+	url = https://github.com/amzoo/TMS_2016_LOGS
+[submodule "legacy/Arkay92-TeslaCANInterpreter"]
+	path = legacy/Arkay92-TeslaCANInterpreter
+	url = https://github.com/Arkay92/TeslaCANInterpreter
+[submodule "legacy/automotive-stuff-Tesla_canbus"]
+	path = legacy/automotive-stuff-Tesla_canbus
+	url = https://github.com/automotive-stuff/Tesla_canbus
+[submodule "legacy/bbrightwell-forklift-dash"]
+	path = legacy/bbrightwell-forklift-dash
+	url = https://github.com/bbrightwell/forklift-dash
+[submodule "legacy/BluedDot-IT-TeslaCANalyzer-Controller"]
+	path = legacy/BluedDot-IT-TeslaCANalyzer-Controller
+	url = https://github.com/BluedDot-IT/TeslaCANalyzer-Controller
+[submodule "legacy/bobmorane83-TeslaCam"]
+	path = legacy/bobmorane83-TeslaCam
+	url = https://github.com/bobmorane83/TeslaCam
+[submodule "legacy/bruvv-tesla-can-explorer"]
+	path = legacy/bruvv-tesla-can-explorer
+	url = https://github.com/bruvv/tesla-can-explorer
+[submodule "legacy/canhackers-jupiter"]
+	path = legacy/canhackers-jupiter
+	url = https://github.com/canhackers/jupiter
+[submodule "legacy/cbusillo-TeslaPiCAN"]
+	path = legacy/cbusillo-TeslaPiCAN
+	url = https://github.com/cbusillo/TeslaPiCAN
+[submodule "legacy/codethaumaturge-911-tesla-gauges"]
+	path = legacy/codethaumaturge-911-tesla-gauges
+	url = https://github.com/codethaumaturge/911-tesla-gauges
+[submodule "legacy/ColinM-sys-tesla-can-boost"]
+	path = legacy/ColinM-sys-tesla-can-boost
+	url = https://github.com/ColinM-sys/tesla-can-boost
+[submodule "legacy/DemiVis-charge-port-opener"]
+	path = legacy/DemiVis-charge-port-opener
+	url = https://github.com/DemiVis/charge-port-opener
+[submodule "legacy/denysvitali-tesla-sentry-viewer"]
+	path = legacy/denysvitali-tesla-sentry-viewer
+	url = https://github.com/denysvitali/tesla-sentry-viewer
+[submodule "legacy/devon-smith-six-pack-capacitor-tesla-coil"]
+	path = legacy/devon-smith-six-pack-capacitor-tesla-coil
+	url = https://github.com/devon-smith/six-pack-capacitor-tesla-coil
+[submodule "legacy/dongho74s-tesla-open-can-mod"]
+	path = legacy/dongho74s-tesla-open-can-mod
+	url = https://github.com/dongho74s/tesla-open-can-mod
+[submodule "legacy/ekr-candash"]
+	path = legacy/ekr-candash
+	url = https://github.com/ekr/candash
+[submodule "legacy/enstw-tesla-can-mod-guide"]
+	path = legacy/enstw-tesla-can-mod-guide
+	url = https://github.com/enstw/tesla-can-mod-guide
+[submodule "legacy/erikhedb-WE-EV-CAN-Dashboard_POC"]
+	path = legacy/erikhedb-WE-EV-CAN-Dashboard_POC
+	url = https://github.com/erikhedb/WE-EV-CAN-Dashboard_POC
+[submodule "legacy/evoffer-can-decoder-firmware"]
+	path = legacy/evoffer-can-decoder-firmware
+	url = https://github.com/evoffer/can-decoder-firmware
+[submodule "legacy/gregjhogan-tesla-pre-ap-epas-patch"]
+	path = legacy/gregjhogan-tesla-pre-ap-epas-patch
+	url = https://github.com/gregjhogan/tesla-pre-ap-epas-patch
+[submodule "legacy/hanswolff-TeslaCanBusInspector"]
+	path = legacy/hanswolff-TeslaCanBusInspector
+	url = https://github.com/hanswolff/TeslaCanBusInspector
+[submodule "legacy/honeer-Tesla-ESP-CAN"]
+	path = legacy/honeer-Tesla-ESP-CAN
+	url = https://github.com/honeer/Tesla-ESP-CAN
+[submodule "legacy/ibmthinkpad-model3mon"]
+	path = legacy/ibmthinkpad-model3mon
+	url = https://github.com/ibmthinkpad/model3mon
+[submodule "legacy/iubns-tesla-fsd-can-mod"]
+	path = legacy/iubns-tesla-fsd-can-mod
+	url = https://github.com/iubns/tesla-fsd-can-mod
+[submodule "legacy/jamiejones85-ESP32TeslaShuntCan"]
+	path = legacy/jamiejones85-ESP32TeslaShuntCan
+	url = https://github.com/jamiejones85/ESP32TeslaShuntCan
+[submodule "legacy/jberstler-tesla-warmer"]
+	path = legacy/jberstler-tesla-warmer
+	url = https://github.com/jberstler/tesla-warmer
+[submodule "legacy/JelloEa-tesla-fsd-controller"]
+	path = legacy/JelloEa-tesla-fsd-controller
+	url = https://github.com/JelloEa/tesla-fsd-controller
+[submodule "legacy/jiezaichan-teslaAuthFlutter"]
+	path = legacy/jiezaichan-teslaAuthFlutter
+	url = https://github.com/jiezaichan/teslaAuthFlutter
+[submodule "legacy/jomytec-My_TeslaBMS"]
+	path = legacy/jomytec-My_TeslaBMS
+	url = https://github.com/jomytec/My_TeslaBMS
+[submodule "legacy/JonnoFTW-rpi-can-logger"]
+	path = legacy/JonnoFTW-rpi-can-logger
+	url = https://github.com/JonnoFTW/rpi-can-logger
+[submodule "legacy/joshwardell-model3dbc"]
+	path = legacy/joshwardell-model3dbc
+	url = https://github.com/joshwardell/model3dbc
+[submodule "legacy/jsamuel1-tesla_canlogjs"]
+	path = legacy/jsamuel1-tesla_canlogjs
+	url = https://github.com/jsamuel1/tesla_canlogjs
+[submodule "legacy/kangbumhee-TLA-SpeedAlert"]
+	path = legacy/kangbumhee-TLA-SpeedAlert
+	url = https://github.com/kangbumhee/TLA-SpeedAlert
+[submodule "legacy/krconv-tesla_can_decoding"]
+	path = legacy/krconv-tesla_can_decoding
+	url = https://github.com/krconv/tesla_can_decoding
+[submodule "legacy/LeeGaHyeon-tesla_CAN_traffic_decode"]
+	path = legacy/LeeGaHyeon-tesla_CAN_traffic_decode
+	url = https://github.com/LeeGaHyeon/tesla_CAN_traffic_decode
+[submodule "legacy/MatthewDriver-TeslaCAN"]
+	path = legacy/MatthewDriver-TeslaCAN
+	url = https://github.com/MatthewDriver/TeslaCAN
+[submodule "legacy/mcirish-TeslaModelS_RefreshCAN.dbc"]
+	path = legacy/mcirish-TeslaModelS_RefreshCAN.dbc
+	url = https://github.com/mcirish/TeslaModelS_RefreshCAN.dbc
+[submodule "legacy/mgerczuk-TeslaCANPi"]
+	path = legacy/mgerczuk-TeslaCANPi
+	url = https://github.com/mgerczuk/TeslaCANPi
+[submodule "legacy/mhpetiwala-TeslaCAN"]
+	path = legacy/mhpetiwala-TeslaCAN
+	url = https://github.com/mhpetiwala/TeslaCAN
+[submodule "legacy/monster-xxx-tesla-can-controller"]
+	path = legacy/monster-xxx-tesla-can-controller
+	url = https://github.com/monster-xxx/tesla-can-controller
+[submodule "legacy/MrStarTraveller-tesla-fsd-can-mod"]
+	path = legacy/MrStarTraveller-tesla-fsd-can-mod
+	url = https://github.com/MrStarTraveller/tesla-fsd-can-mod
+[submodule "legacy/nicholasyangyang-ESP32-dash-direct"]
+	path = legacy/nicholasyangyang-ESP32-dash-direct
+	url = https://github.com/nicholasyangyang/ESP32-dash-direct
+[submodule "legacy/oliwiah-Tesla_Battery_Range_Calc_React"]
+	path = legacy/oliwiah-Tesla_Battery_Range_Calc_React
+	url = https://github.com/oliwiah/Tesla_Battery_Range_Calc_React
+[submodule "legacy/rafal83-Car-Light-Sync"]
+	path = legacy/rafal83-Car-Light-Sync
+	url = https://github.com/rafal83/Car-Light-Sync
+[submodule "legacy/riderx-autosteerplus"]
+	path = legacy/riderx-autosteerplus
+	url = https://github.com/riderx/autosteerplus
+[submodule "legacy/rjyo-homebridge-tesla-remote"]
+	path = legacy/rjyo-homebridge-tesla-remote
+	url = https://github.com/rjyo/homebridge-tesla-remote
+[submodule "legacy/rossklonowski-CANserver"]
+	path = legacy/rossklonowski-CANserver
+	url = https://github.com/rossklonowski/CANserver
+[submodule "legacy/rrrovalle-tesla-car-app"]
+	path = legacy/rrrovalle-tesla-car-app
+	url = https://github.com/rrrovalle/tesla-car-app
+[submodule "legacy/RuairidhScott-Brown-TeslaCAN"]
+	path = legacy/RuairidhScott-Brown-TeslaCAN
+	url = https://github.com/RuairidhScott-Brown/TeslaCAN
+[submodule "legacy/sahilcc7-tesla_can"]
+	path = legacy/sahilcc7-tesla_can
+	url = https://github.com/sahilcc7/tesla_can
+[submodule "legacy/SergeyStaroletov-Tesla-CAN-packets-generator"]
+	path = legacy/SergeyStaroletov-Tesla-CAN-packets-generator
+	url = https://github.com/SergeyStaroletov/Tesla-CAN-packets-generator
+[submodule "legacy/SlipknotTN-Tesla_CanBus_Reader"]
+	path = legacy/SlipknotTN-Tesla_CanBus_Reader
+	url = https://github.com/SlipknotTN/Tesla_CanBus_Reader
+[submodule "legacy/stylylsty-TelemetryX"]
+	path = legacy/stylylsty-TelemetryX
+	url = https://github.com/stylylsty/TelemetryX
+[submodule "legacy/sydneyg007-Tesla-Model-3-EPAS-emulator"]
+	path = legacy/sydneyg007-Tesla-Model-3-EPAS-emulator
+	url = https://github.com/sydneyg007/Tesla-Model-3-EPAS-emulator
+[submodule "legacy/sydneyg007-Tesla-Model-3-Front-DI-emulator"]
+	path = legacy/sydneyg007-Tesla-Model-3-Front-DI-emulator
+	url = https://github.com/sydneyg007/Tesla-Model-3-Front-DI-emulator
+[submodule "legacy/talas9-tesla_can_signals"]
+	path = legacy/talas9-tesla_can_signals
+	url = https://github.com/talas9/tesla_can_signals
+[submodule "legacy/tesberry-tesberry"]
+	path = legacy/tesberry-tesberry
+	url = https://github.com/tesberry/tesberry
+[submodule "legacy/tumik-S3XY-candump"]
+	path = legacy/tumik-S3XY-candump
+	url = https://github.com/tumik/S3XY-candump
+[submodule "legacy/uhi22-tesla-crc"]
+	path = legacy/uhi22-tesla-crc
+	url = https://github.com/uhi22/tesla-crc
+[submodule "legacy/wimaha-TeslaBleHttpProxy"]
+	path = legacy/wimaha-TeslaBleHttpProxy
+	url = https://github.com/wimaha/TeslaBleHttpProxy
+[submodule "legacy/ylovex75-tesla-open-can-mod-release"]
+	path = legacy/ylovex75-tesla-open-can-mod-release
+	url = https://github.com/ylovex75/tesla-open-can-mod-release
+[submodule "legacy/nicolozak-nag-killer"]
+	path = legacy/nicolozak-nag-killer
+	url = https://gitlab.com/nicolozak/nag-killer
