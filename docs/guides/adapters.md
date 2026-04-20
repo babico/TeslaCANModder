@@ -1,4 +1,4 @@
-﻿---
+---
 title: USB and Bluetooth Adapters
 description: Detailed guide to establishing USB serial and Bluetooth wireless connections with Tesla CAN Mod
 category: guides
@@ -10,12 +10,12 @@ icon: 🔌
 
 ## Quick Reference
 
-| Connection Type | Setup Time | Reliability | Use Case |
-| --- | --- | --- | --- |
-| **USB Serial (COM)** | <5 min | High | Local development, direct MCU access |
-| **Bluetooth COM** | 5-10 min | Medium | Wireless testing, vehicle-mounted setup |
-| **REST API (WiFi)** | 2-3 min | Medium | Long-range diagnostics, multi-device |
-| **BLE (Bluetooth Low Energy)** | 5-10 min | Medium | Client native targets, lowest power drain |
+| Connection Type                | Setup Time | Reliability | Use Case                                  |
+| ------------------------------ | ---------- | ----------- | ----------------------------------------- |
+| **USB Serial (COM)**           | <5 min     | High        | Local development, direct MCU access      |
+| **Bluetooth COM**              | 5-10 min   | Medium      | Wireless testing, vehicle-mounted setup   |
+| **REST API (WiFi)**            | 2-3 min    | Medium      | Long-range diagnostics, multi-device      |
+| **BLE (Bluetooth Low Energy)** | 5-10 min   | Medium      | Client native targets, lowest power drain |
 
 ---
 
@@ -34,6 +34,7 @@ icon: 🔌
 **Most boards come with auto-installing drivers. To manually install:**
 
 **For CH340 chips (common on cheaper boards):**
+
 ```
 1. Download: http://www.wch-ic.com/en/products/WCH341.html
 2. Extract and run the Windows installer
@@ -41,6 +42,7 @@ icon: 🔌
 ```
 
 **For CP2102/CP2103 chips:**
+
 ```
 1. Download: https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers
 2. Extract and run the installer
@@ -58,6 +60,7 @@ Get-PnpDevice -Class Ports | Where-Object { $_.Name -like "*COM*" }
 ```
 
 **Example output:**
+
 ```
 Name                           Status
 COMX USB Serial Port          OK
@@ -238,6 +241,7 @@ Easiest method for development, best range.
 ### Prerequisites
 
 Your firmware must include WiFi support. Check with:
+
 ```
 Phone WiFi settings → Look for "ESP32_xxxxx" or "TeslaCAN_xxxxx" network
 ```
@@ -254,12 +258,14 @@ Password: (check your firmware config, default often: tesla1234)
 
 #### 2. Find Device IP
 
-**Option A: Fixed IP (if configured)**
+##### Option A: Fixed IP (if configured)
+
 ```
 Use the configured IP (e.g., 192.168.4.1)
 ```
 
-**Option B: Dynamic IP**
+##### Option B: Dynamic IP
+
 ```powershell
 # Windows: Find in your router's DHCP client list
 # OR ping:
@@ -283,16 +289,16 @@ nslookup esp32.local
 
 ## Connection Troubleshooting Matrix
 
-| Symptom | Cause | Solution |
-| --- | --- | --- |
-| **Windows: USB not detected** | Missing driver | Download CH340/CP2102 driver; restart |
-| **macOS: Serial port not found** | Driver missing | Download appropriate driver from Silicon Labs or WCH |
-| **Linux: permission denied** | User not in dialout group | `sudo usermod -a -G dialout $USER` ; log out |
-| **COM port says "in use"** | Another app has serial open | Close Arduino IDE, PuTTY, Debug terminal |
-| **Bluetooth won't pair** | Device not in pairing mode | Restart device; check firmware supports BT |
-| **"Fetch Status" timeout** | Device offline or wrong IP | Verify IP, check power, restart device |
-| **Garbled/corrupt data** | Baud rate mismatch | Check firmware baud rate (usually 9600 or 115200) |
-| **WiFi AP not visible** | Device in STA mode, not AP mode | Check firmware config; may need reflash or config command |
+| Symptom                          | Cause                           | Solution                                                  |
+| -------------------------------- | ------------------------------- | --------------------------------------------------------- |
+| **Windows: USB not detected**    | Missing driver                  | Download CH340/CP2102 driver; restart                     |
+| **macOS: Serial port not found** | Driver missing                  | Download appropriate driver from Silicon Labs or WCH      |
+| **Linux: permission denied**     | User not in dialout group       | `sudo usermod -a -G dialout $USER` ; log out              |
+| **COM port says "in use"**       | Another app has serial open     | Close Arduino IDE, PuTTY, Debug terminal                  |
+| **Bluetooth won't pair**         | Device not in pairing mode      | Restart device; check firmware supports BT                |
+| **"Fetch Status" timeout**       | Device offline or wrong IP      | Verify IP, check power, restart device                    |
+| **Garbled/corrupt data**         | Baud rate mismatch              | Check firmware baud rate (usually 9600 or 115200)         |
+| **WiFi AP not visible**          | Device in STA mode, not AP mode | Check firmware config; may need reflash or config command |
 
 ---
 
@@ -303,8 +309,8 @@ Once you have one transport working:
 1. In **Monitor** → **Connection** section
 2. Click a different transport option
 3. For transports requiring config (HTTP, COM):
-   - Adjust URL/COM port in the UI
-   - Click "Apply Transport"
+    - Adjust URL/COM port in the UI
+    - Click "Apply Transport"
 4. **"Fetch Status"** to verify new connection
 
 ---
@@ -317,4 +323,3 @@ Once you have one transport working:
 2. Go to **Controls** tab → Try sending a test command
 3. Open **Monitor** → Inspect CAN frames, decoder datasets
 4. Read [feature-workflows.md](./feature-workflows.md) for usage patterns
-
