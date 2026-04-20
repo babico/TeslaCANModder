@@ -1,4 +1,6 @@
 export default {
-  transform: {},
-  testMatch: ['<rootDir>/**/*.test.js'],
+	transform: {},
+	testMatch: ["<rootDir>/**/*.test.js"],
+	testPathIgnorePatterns: ["<rootDir>/coverage/"],
+	watchPathIgnorePatterns: ["<rootDir>/coverage/"],
 };
