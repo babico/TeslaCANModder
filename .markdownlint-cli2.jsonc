@@ -4,6 +4,7 @@
     "**/node_modules/**",
     "**/dist/**",
     "**/.pio/**",
-    "mobile/.expo/**"
+    "**/.pio-home/**",
+    "client/.expo/**"
   ]
 }
