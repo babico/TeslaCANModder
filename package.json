@@ -1,60 +1,61 @@
 {
-  "name": "teslacanmodder",
-  "version": "2.0.0",
-  "private": true,
-  "description": "Tesla CAN bus modifier — firmware, client app, and debug tools",
-  "workspaces": [
-    "packages/*",
-    "client",
-    "tools"
-  ],
-  "scripts": {
-    "sync:client-docs": "node tools/generate-client-docs.cjs",
-    "build:protocol": "npm run build -w @teslacanmodder/protocol",
-    "test:all": "npm run build:protocol && npm run test:protocol && npm run test:client && npm run test:tools && npm run test:firmware",
-    "test:protocol": "npm test -w @teslacanmodder/protocol",
-    "test:client": "npm run build:protocol && npm test -w @teslacanmodder/client",
-    "test:tools": "npm test -w @teslacanmodder/tools",
-    "test:firmware": "cd firmware && .\\pio.ps1 test -e native",
-    "lint:all": "npm run lint -w @teslacanmodder/client",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "typecheck:protocol": "tsc -p packages/protocol/tsconfig.json --noEmit",
-    "typecheck:client": "tsc -p client/tsconfig.json --noEmit",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,cjs,mjs}": [
-      "prettier --write",
-      "eslint --fix"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ]
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "overrides": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
-    "react-test-renderer": "19.1.0",
-    "babel-preset-expo": "~54.0.10",
-    "@react-native/babel-plugin-codegen": "~0.81.6",
-    "@react-native/babel-preset": "~0.81.6",
-    "@react-native/codegen": "~0.81.6"
-  },
-  "license": "GPL-3.0",
-  "devDependencies": {
-    "@babel/runtime": "^7.29.2",
-    "@eslint/js": "^9.28.0",
-    "eslint": "^9.28.0",
-    "globals": "^16.1.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.4.0",
-    "prettier": "^3.5.3",
-    "typescript-eslint": "^8.34.0"
-  }
+	"name": "teslacanmodder",
+	"version": "2.0.0",
+	"private": true,
+	"description": "Tesla CAN bus modifier — firmware, client app, and debug tools",
+	"workspaces": [
+		"packages/*",
+		"client",
+		"tools"
+	],
+	"scripts": {
+		"sync:client-docs": "node tools/generate-client-docs.cjs",
+		"build:protocol": "npm run build -w @teslacanmodder/protocol",
+		"test:all": "npm run build:protocol && npm run test:protocol && npm run test:client && npm run test:tools && npm run test:firmware",
+		"test:protocol": "npm test -w @teslacanmodder/protocol",
+		"test:client": "npm run build:protocol && npm test -w @teslacanmodder/client",
+		"test:tools": "npm test -w @teslacanmodder/tools",
+		"test:firmware": "cd firmware && .\\pio.ps1 test -e native",
+		"lint:all": "npm run lint -w @teslacanmodder/client",
+		"lint": "eslint .",
+		"audit:ci": "node scripts/npm-audit-actionable.cjs --severity=moderate",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"typecheck:protocol": "tsc -p packages/protocol/tsconfig.json --noEmit",
+		"typecheck:client": "tsc -p client/tsconfig.json --noEmit",
+		"prepare": "husky"
+	},
+	"lint-staged": {
+		"*.{ts,tsx,js,cjs,mjs}": [
+			"prettier --write",
+			"eslint --fix"
+		],
+		"*.{json,md,yml,yaml}": [
+			"prettier --write"
+		]
+	},
+	"engines": {
+		"node": ">=18"
+	},
+	"overrides": {
+		"react": "19.1.0",
+		"react-dom": "19.1.0",
+		"react-native": "0.81.5",
+		"react-test-renderer": "19.1.0",
+		"babel-preset-expo": "~54.0.10",
+		"@react-native/babel-plugin-codegen": "~0.81.6",
+		"@react-native/babel-preset": "~0.81.6",
+		"@react-native/codegen": "~0.81.6"
+	},
+	"license": "GPL-3.0",
+	"devDependencies": {
+		"@babel/runtime": "^7.29.2",
+		"@eslint/js": "^9.28.0",
+		"eslint": "^9.28.0",
+		"globals": "^16.1.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.4.0",
+		"prettier": "^3.5.3",
+		"typescript-eslint": "^8.34.0"
+	}
 }

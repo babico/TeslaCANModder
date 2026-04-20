@@ -9,7 +9,7 @@ Unified firmware, browser, and native client stack for Tesla CAN bus modificatio
 ### Hardware
 
 ```powershell
-cd hardware
+cd firmware
 .\.pio.ps1 run -e uno          # Arduino Uno, serial only
 .\.pio.ps1 run -e uno_bt        # Arduino Uno + HC-05 Bluetooth
 .\.pio.ps1 run -e esp32         # ESP32, serial only
@@ -53,11 +53,11 @@ Open <http://localhost:5173> and click "Connect USB"
 
 ### X179 CAN Bus Lanes
 
-| Bus | X179 Pins | Build Flag | Default |
-| --- | --------- | ---------- | ------- |
-| Chassis (Bus 0) | 13-14 | `BUS_CHASSIS_ACTIVE` | ON |
-| Vehicle (Bus 1) | 9-10 | `BUS_VEHICLE_ACTIVE` | OFF |
-| Body (Bus 2) | 2-3 | `BUS_BODY_ACTIVE` | OFF |
+| Bus             | X179 Pins | Build Flag           | Default |
+| --------------- | --------- | -------------------- | ------- |
+| Chassis (Bus 0) | 13-14     | `BUS_CHASSIS_ACTIVE` | ON      |
+| Vehicle (Bus 1) | 9-10      | `BUS_VEHICLE_ACTIVE` | OFF     |
+| Body (Bus 2)    | 2-3       | `BUS_BODY_ACTIVE`    | OFF     |
 
 ## Features
 
@@ -81,10 +81,10 @@ Open <http://localhost:5173> and click "Connect USB"
 
 ## Memory Usage
 
-| Build | RAM | Flash |
-| ----- | --- | ----- |
+| Build           | RAM              | Flash             |
+| --------------- | ---------------- | ----------------- |
 | USB + Bluetooth | 1558 bytes (76%) | 11150 bytes (35%) |
-| USB only | 1378 bytes (67%) | 9668 bytes (30%) |
+| USB only        | 1378 bytes (67%) | 9668 bytes (30%)  |
 
 ## Protocol
 
@@ -195,7 +195,7 @@ This is an npm workspace monorepo:
 
 ```
 packages/protocol   — shared types, commands, decoder, parser (@teslacanmodder/protocol)
-hardware            — PlatformIO ESP32/Arduino firmware
+firmware            — PlatformIO ESP32/Arduino firmware
 client              — React Native + Expo client app for browser, iOS, and Android
 tools               — CLI debug utilities
 ```
@@ -207,11 +207,11 @@ npm run test:all     # run all tests (protocol + client + tools + firmware)
 
 ## Testing
 
-| Layer | Runner | Tests |
-| ----- | ------ | ----- |
-| Firmware | PlatformIO Unity | 178 |
-| Protocol | Jest (ESM) | 102 |
-| Client | Jest + Testing Library/RN | 138 |
+| Layer    | Runner                    | Tests |
+| -------- | ------------------------- | ----- |
+| Firmware | PlatformIO Unity          | 178   |
+| Protocol | Jest (ESM)                | 102   |
+| Client   | Jest + Testing Library/RN | 138   |
 
 ## CI
 
@@ -234,19 +234,19 @@ GitHub Actions runs on push to `main` and all PRs:
 ## Legacy References
 
 The `legacy/` directory contains **83 external repositories** added as read-only
-git submodules for research and comparison.  No code is copied into the main
+git submodules for research and comparison. No code is copied into the main
 codebase.
 
-| Category | Count | Examples |
-| -------- | ----- | ------- |
-| FSD CAN Mod | 14 | jvanakker, juamiso, herrfrei, JelloEa |
-| CAN Monitoring / Analysis | 12 | ekr-candash, hanswolff, bruvv, mikegapinski |
-| CAN Database / Decoding | 8 | joshwardell-model3dbc, krconv, talas9 |
-| Flipper Zero | 3 | hypery11, J0811, canhackers-jupiter |
-| BLE / Bluetooth | 2 | wimaha-TeslaBleHttpProxy, DemiVis |
-| Steering / EPAS | 3 | gregjhogan, sydneyg007 (×2) |
-| Battery / Charging | 3 | jomytec-My_TeslaBMS, jamiejones85, oliwiah |
-| Other (logging, apps, tools) | 38 | rossklonowski-CANserver, tesberry, uhi22 |
+| Category                     | Count | Examples                                    |
+| ---------------------------- | ----- | ------------------------------------------- |
+| FSD CAN Mod                  | 14    | jvanakker, juamiso, herrfrei, JelloEa       |
+| CAN Monitoring / Analysis    | 12    | ekr-candash, hanswolff, bruvv, mikegapinski |
+| CAN Database / Decoding      | 8     | joshwardell-model3dbc, krconv, talas9       |
+| Flipper Zero                 | 3     | hypery11, J0811, canhackers-jupiter         |
+| BLE / Bluetooth              | 2     | wimaha-TeslaBleHttpProxy, DemiVis           |
+| Steering / EPAS              | 3     | gregjhogan, sydneyg007 (×2)                 |
+| Battery / Charging           | 3     | jomytec-My_TeslaBMS, jamiejones85, oliwiah  |
+| Other (logging, apps, tools) | 38    | rossklonowski-CANserver, tesberry, uhi22    |
 
 - **Individual analyses** → [`docs/legacy/<repo>.md`](docs/legacy/)
 - **Synthesis report** → [`docs/legacy-summary.md`](docs/legacy-summary.md)

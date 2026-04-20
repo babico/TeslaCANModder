@@ -1,271 +1,271 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  # ── Firmware (PlatformIO native tests) ──────────────────────────────────────
-  firmware:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: hardware
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        working-directory: .
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: git config --global submodule.recurse false
-      - uses: actions/cache@v4
-        with:
-          path: ~/.platformio
-          key: pio-${{ hashFiles('firmware/platformio.ini') }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install platformio
-      # Native firmware tests include GTW shield, TLSSC restore, HW4 EAP/EVD,
-      # and ring/log buffer regression coverage.
-      - run: pio test -e native
-      - name: Firmware size regression check
-        run: python scripts/check_firmware_size.py --env uno esp32
+    # ── Firmware (PlatformIO native tests) ──────────────────────────────────────
+    firmware:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: firmware
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              working-directory: .
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - run: git config --global submodule.recurse false
+            - uses: actions/cache@v4
+              with:
+                  path: ~/.platformio
+                  key: pio-${{ hashFiles('firmware/platformio.ini') }}
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+            - run: pip install platformio
+            # Native firmware tests include GTW shield, TLSSC restore, HW4 EAP/EVD,
+            # and ring/log buffer regression coverage.
+            - run: pio test -e native
+            - name: Firmware size regression check
+              run: python scripts/check_firmware_size.py --env uno esp32
 
-  # ── Shared Protocol Package ─────────────────────────────────────────────────
-  protocol:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: |
-          git config --global http.version HTTP/1.1
-          git config --global http.lowSpeedLimit 0
-          git config --global http.lowSpeedTime 999999
-          git config --global submodule.recurse false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm test -w packages/protocol
+    # ── Shared Protocol Package ─────────────────────────────────────────────────
+    protocol:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - run: |
+                  git config --global http.version HTTP/1.1
+                  git config --global http.lowSpeedLimit 0
+                  git config --global http.lowSpeedTime 999999
+                  git config --global submodule.recurse false
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci --no-audit --no-fund
+            - run: npm test -w packages/protocol
 
-  # ── E2E Smoke (command lifecycle integration) ───────────────────────────────
-  e2e-smoke:
-    runs-on: ubuntu-latest
-    needs: protocol
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: |
-          git config --global http.version HTTP/1.1
-          git config --global http.lowSpeedLimit 0
-          git config --global http.lowSpeedTime 999999
-          git config --global submodule.recurse false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run build -w packages/protocol
-      - name: Run E2E smoke tests
-        run: npx jest --config packages/protocol/jest.config.js --testPathPattern="e2e-smoke"
+    # ── E2E Smoke (command lifecycle integration) ───────────────────────────────
+    e2e-smoke:
+        runs-on: ubuntu-latest
+        needs: protocol
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - run: |
+                  git config --global http.version HTTP/1.1
+                  git config --global http.lowSpeedLimit 0
+                  git config --global http.lowSpeedTime 999999
+                  git config --global submodule.recurse false
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci --no-audit --no-fund
+            - run: npm run build -w packages/protocol
+            - name: Run E2E smoke tests
+              run: npx jest --config packages/protocol/jest.config.js --testPathPattern="e2e-smoke"
 
-  # ── Client (test) ──────────────────────────────────────────────────────────
-  client:
-    runs-on: ubuntu-latest
-    needs: protocol
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: |
-          git config --global http.version HTTP/1.1
-          git config --global http.lowSpeedLimit 0
-          git config --global http.lowSpeedTime 999999
-          git config --global submodule.recurse false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run build -w packages/protocol
-      - run: npm test -w @teslacanmodder/client
+    # ── Client (test) ──────────────────────────────────────────────────────────
+    client:
+        runs-on: ubuntu-latest
+        needs: protocol
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - run: |
+                  git config --global http.version HTTP/1.1
+                  git config --global http.lowSpeedLimit 0
+                  git config --global http.lowSpeedTime 999999
+                  git config --global submodule.recurse false
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci --no-audit --no-fund
+            - run: npm run build -w packages/protocol
+            - run: npm test -w @teslacanmodder/client
 
-  # ── Tools ───────────────────────────────────────────────────────────────────
-  tools:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: |
-          git config --global http.version HTTP/1.1
-          git config --global http.lowSpeedLimit 0
-          git config --global http.lowSpeedTime 999999
-          git config --global submodule.recurse false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm test -w tools
+    # ── Tools ───────────────────────────────────────────────────────────────────
+    tools:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - run: |
+                  git config --global http.version HTTP/1.1
+                  git config --global http.lowSpeedLimit 0
+                  git config --global http.lowSpeedTime 999999
+                  git config --global submodule.recurse false
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci --no-audit --no-fund
+            - run: npm test -w tools
 
-  # ── Docker (build only) ────────────────────────────────────────────────────
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: git config --global submodule.recurse false
-      - run: docker compose build --no-cache
+    # ── Docker (build only) ────────────────────────────────────────────────────
+    docker:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - run: git config --global submodule.recurse false
+            - run: docker compose build --no-cache
 
-  # ── Lint (client) ──────────────────────────────────────────────────────────
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: |
-          git config --global http.version HTTP/1.1
-          git config --global http.lowSpeedLimit 0
-          git config --global http.lowSpeedTime 999999
-          git config --global submodule.recurse false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run lint -w @teslacanmodder/client
+    # ── Lint (client) ──────────────────────────────────────────────────────────
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - run: |
+                  git config --global http.version HTTP/1.1
+                  git config --global http.lowSpeedLimit 0
+                  git config --global http.lowSpeedTime 999999
+                  git config --global submodule.recurse false
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci --no-audit --no-fund
+            - run: npm run lint -w @teslacanmodder/client
 
-  # ── Workflow Lint (GitHub Actions) ─────────────────────────────────────────
-  workflow-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - uses: rhysd/actionlint@v1.7.12
+    # ── Workflow Lint (GitHub Actions) ─────────────────────────────────────────
+    workflow-lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - uses: rhysd/actionlint@v1.7.12
 
-  # ── Markdown Lint ──────────────────────────────────────────────────────────
-  markdown-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - uses: DavidAnson/markdownlint-cli2-action@v23
-        with:
-          globs: |
-            **/*.md
+    # ── Markdown Lint ──────────────────────────────────────────────────────────
+    markdown-lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - uses: DavidAnson/markdownlint-cli2-action@v23
+              with:
+                  globs: |
+                      **/*.md
 
-  # ── Security Audit (medium+ vulnerabilities + license check) ─────────────
-  security-audit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: |
-          git config --global http.version HTTP/1.1
-          git config --global http.lowSpeedLimit 0
-          git config --global http.lowSpeedTime 999999
-          git config --global submodule.recurse false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - name: Dependency audit (medium+)
-        run: npm audit --audit-level=moderate
-      - name: License compatibility check
-        run: |
-          npx license-checker --production --excludePrivatePackages --onlyAllow "MIT;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;BlueOak-1.0.0;Python-2.0;GPL-3.0;GPL-3.0-or-later;GPL-3.0-only" --summary
+    # ── Security Audit (actionable medium+ vulnerabilities + license check) ───
+    security-audit:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - run: |
+                  git config --global http.version HTTP/1.1
+                  git config --global http.lowSpeedLimit 0
+                  git config --global http.lowSpeedTime 999999
+                  git config --global submodule.recurse false
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci --no-audit --no-fund
+            - name: Dependency audit (actionable medium+)
+              run: npm run audit:ci
+            - name: License compatibility check
+              run: |
+                  npx license-checker --production --excludePrivatePackages --onlyAllow "MIT;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;BlueOak-1.0.0;Python-2.0;GPL-3.0;GPL-3.0-or-later;GPL-3.0-only" --summary
 
-  # ── Docker Smoke (client-prod runtime health) ──────────────────────────────
-  docker-smoke:
-    runs-on: ubuntu-latest
-    needs: docker
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: git config --global submodule.recurse false
-      - run: docker compose up --build -d client-prod
-      - run: |
-          for _i in {1..20}; do
-            if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
-              echo "client-prod is healthy"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "client-prod did not become healthy in time"
-          docker compose logs client-prod
-          exit 1
-      - if: always()
-        run: docker compose down -v
+    # ── Docker Smoke (client-prod runtime health) ──────────────────────────────
+    docker-smoke:
+        runs-on: ubuntu-latest
+        needs: docker
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: false
+                  fetch-depth: 0
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+            - run: git config --global submodule.recurse false
+            - run: docker compose up --build -d client-prod
+            - run: |
+                  for _i in {1..20}; do
+                    if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
+                      echo "client-prod is healthy"
+                      exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "client-prod did not become healthy in time"
+                  docker compose logs client-prod
+                  exit 1
+            - if: always()
+              run: docker compose down -v
