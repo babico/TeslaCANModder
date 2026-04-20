@@ -22,20 +22,20 @@ This guide documents the canonical client experience in `client/`.
 ### Runtime layers
 
 1. Transport + command execution:
-- Implemented in `client/src/hardware/controller.ts`.
-- Uses protocol commands from `@teslacanmodder/protocol`.
+    - Implemented in `client/src/hardware/controller.ts`.
+    - Uses protocol commands from `@teslacanmodder/protocol`.
 
-2. Shared board state domain:
-- Uses `initialBoardState` and reducer-compatible payload ingestion.
-- App-side ingestion in `client/src/state/board.ts`.
+1. Shared board state domain:
+    - Uses `initialBoardState` and reducer-compatible payload ingestion.
+    - App-side ingestion in `client/src/state/board.ts`.
 
-3. Unified shell and tabs:
-- `Drive`, `Controls`, `Monitor` are orchestrated in `client/src/AppExperience.tsx`.
+1. Unified shell and tabs:
+    - `Drive`, `Controls`, `Monitor` are orchestrated in `client/src/AppExperience.tsx`.
 
-4. Feature modules:
-- Drive cluster: `client/src/components/DriveScreen.tsx`.
-- Controls surface: `client/src/components/ControlsScreen.tsx`.
-- Monitor diagnostics panels: telemetry/integration/utility panels under `client/src/components/`.
+1. Feature modules:
+    - Drive cluster: `client/src/components/DriveScreen.tsx`.
+    - Controls surface: `client/src/components/ControlsScreen.tsx`.
+    - Monitor diagnostics panels: telemetry/integration/utility panels under `client/src/components/`.
 
 ## Setup
 
