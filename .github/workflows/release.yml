@@ -75,7 +75,7 @@ jobs:
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
                   rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: git config --global submodule.recurse false
-            - uses: actions/cache@v4
+            - uses: actions/cache@v5
               with:
                   path: ~/.platformio
                   key: pio-release-${{ matrix.env }}-${{ hashFiles('firmware/platformio.ini') }}
