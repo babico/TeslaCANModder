@@ -8,9 +8,9 @@ legacy
 web/node_modules
 web/dist
 
-hardware/.pio
-hardware/.pio-home
-hardware/.cache
+firmware/.pio
+firmware/.pio-home
+firmware/.cache
 
 **/node_modules
 **/.DS_Store

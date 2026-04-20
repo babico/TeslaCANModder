@@ -7,19 +7,19 @@ trim_trailing_whitespace = true
 charset = utf-8
 
 [*.{js,jsx,ts,tsx,json,css,html,yml,yaml,md}]
-indent_style = space
-indent_size = 2
+indent_style = tab
+indent_size = 4
 
 [*.py]
-indent_style = space
+indent_style = tab
 indent_size = 4
 
 [*.{cpp,h,c,ino}]
-indent_style = space
-indent_size = 2
+indent_style = tab
+indent_size = 4
 
 [platformio.ini]
-indent_style = space
+indent_style = tab
 indent_size = 4
 
 [Makefile]

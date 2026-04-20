@@ -1,6 +1,6 @@
 {
   "name": "@teslacanmodder/tools",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "description": "TeslaCANModder debug & diagnostics CLI",
@@ -8,7 +8,8 @@
     "tcm-debug": "./debug.js"
   },
   "scripts": {
-    "test": "node --experimental-vm-modules ../node_modules/jest/bin/jest.js --config test/jest.config.js"
+    "test": "node --experimental-vm-modules ../node_modules/jest/bin/jest.js --config test/jest.config.js",
+    "bridge": "node serial-http-bridge.js"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

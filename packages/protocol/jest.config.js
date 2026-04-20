@@ -9,4 +9,13 @@ export default {
     '^.+\\.ts$': ['ts-jest', { useESM: true }],
   },
   extensionsToTreatAsEsm: ['.ts'],
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 55,
+      lines: 70,
+      statements: 70,
+    },
+  },
 };

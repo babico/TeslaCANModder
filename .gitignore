@@ -14,12 +14,37 @@ web/dist/
 web/coverage/
 web/*.log
 web/*.png
+web/.vite/
+
+# Legacy web app (removed from active workspace)
+web/
+
+# Client build artifacts
+client/dist-ios/
+client/dist-web/
+client/.expo/
+client/.expo-shared/
+client/coverage/
+
+# Auto-generated docs bundle (regenerated on every prestart/prebuild/pretest)
+client/src/generated/
+
+# Shared package build artifacts
+packages/*/dist/
+packages/*/coverage/
+packages/*/*.tsbuildinfo
+
+# Common build logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # PlatformIO / firmware build
-hardware/.pio/
-hardware/.pio-home/
-hardware/.cache/
-hardware/build/
+firmware/.pio/
+firmware/.pio-home/
+firmware/.cache/
+firmware/build/
 
 # Python
 __pycache__/
@@ -30,5 +55,6 @@ __pycache__/
 *.temp
 
 .claude
+.husky/
 node_modules/
 .venv

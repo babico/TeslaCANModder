@@ -1,0 +1,372 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://teslacanmodder.local/schemas/serial-output.schema.json",
+  "title": "Serial Output Message",
+  "description": "Union schema for JSON lines emitted by hardware/lib/io/serial/*",
+  "oneOf": [
+    { "$ref": "#/$defs/Ack" },
+    { "$ref": "#/$defs/Error" },
+    { "$ref": "#/$defs/LogSimple" },
+    { "$ref": "#/$defs/LogDump" },
+    { "$ref": "#/$defs/Frame" },
+    { "$ref": "#/$defs/Pong" },
+    { "$ref": "#/$defs/StatusLive" },
+    { "$ref": "#/$defs/Bms" },
+    { "$ref": "#/$defs/Tpms" },
+    { "$ref": "#/$defs/Powertrain" },
+    { "$ref": "#/$defs/FwCompat" },
+    { "$ref": "#/$defs/Vehicle" },
+    { "$ref": "#/$defs/Platform" },
+    { "$ref": "#/$defs/Boot" },
+    { "$ref": "#/$defs/Status" },
+    { "$ref": "#/$defs/StatusMeta" },
+    { "$ref": "#/$defs/StatusFeatures" },
+    { "$ref": "#/$defs/StatusCan" },
+    { "$ref": "#/$defs/StatusState" },
+    { "$ref": "#/$defs/StatusCompact" }
+  ],
+  "$defs": {
+    "TypeTag": {
+      "type": "object",
+      "properties": {
+        "t": { "type": "string" }
+      },
+      "required": ["t"]
+    },
+    "Ack": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "ack" },
+            "cmd": { "type": "string", "minLength": 1 }
+          },
+          "required": ["t", "cmd"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Error": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "error" },
+            "msg": { "type": "string" }
+          },
+          "required": ["t", "msg"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "LogSimple": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "log" },
+            "msg": { "type": "string" }
+          },
+          "required": ["t", "msg"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "LogDump": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "log" },
+            "count": { "type": "integer", "minimum": 0 },
+            "entries": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "ms": { "type": "integer", "minimum": 0 },
+                  "m": { "type": "string" }
+                },
+                "required": ["ms", "m"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["t", "count", "entries"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Frame": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "frame" },
+            "dir": { "type": "string" },
+            "bus": { "type": "integer", "minimum": 0 },
+            "id": { "type": "integer", "minimum": 0 },
+            "seq": { "type": "integer", "minimum": 0 },
+            "ms": { "type": "integer", "minimum": 0 },
+            "ext": { "type": "integer", "enum": [0, 1] },
+            "dlc": { "type": "integer", "minimum": 0, "maximum": 8 },
+            "d": { "type": "string", "pattern": "^[0-9A-Fa-f]*$" }
+          },
+          "required": ["t", "dir", "bus", "id", "seq", "ms", "ext", "dlc", "d"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Pong": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "pong" },
+            "v": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["t", "v"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "StatusLive": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "statusLive" },
+            "on": { "type": "integer", "enum": [0, 1] },
+            "intervalMs": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["t", "on", "intervalMs"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Bms": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "bms" },
+            "ok": { "type": "integer", "enum": [0, 1] },
+            "soc": { "type": "integer" },
+            "v": { "type": "integer" },
+            "a": { "type": "integer" },
+            "kw": { "type": "integer" }
+          },
+          "required": ["t", "ok"],
+          "additionalProperties": true
+        }
+      ]
+    },
+    "Tpms": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "tpms" },
+            "fl": { "type": "integer" },
+            "fr": { "type": "integer" },
+            "rl": { "type": "integer" },
+            "rr": { "type": "integer" },
+            "tfl": { "type": "integer" },
+            "tfr": { "type": "integer" },
+            "trl": { "type": "integer" },
+            "trr": { "type": "integer" },
+            "ok": { "type": "integer", "enum": [0, 1] }
+          },
+          "required": ["t", "fl", "fr", "rl", "rr", "ok"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Powertrain": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "powertrain" },
+            "speed": { "type": "integer" },
+            "gear": { "type": "integer" },
+            "pedal": { "type": "integer" },
+            "steer": { "type": "integer" },
+            "rpmR": { "type": "integer" },
+            "rpmF": { "type": "integer" },
+            "ok": { "type": "integer", "enum": [0, 1] }
+          },
+          "required": ["t", "ok"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "FwCompat": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "fwcompat" },
+            "year": { "type": "integer" },
+            "release": { "type": "integer" },
+            "minor": { "type": "integer" },
+            "build": { "type": "integer" },
+            "compat": { "type": "integer" },
+            "ok": { "type": "integer", "enum": [0, 1] }
+          },
+          "required": ["t", "year", "compat", "ok"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Vehicle": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "vehicle" },
+            "model": { "type": "integer" },
+            "year": { "type": "integer" },
+            "ok": { "type": "integer", "enum": [0, 1] }
+          },
+          "required": ["t", "model", "year", "ok"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Platform": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "platform" },
+            "model": { "type": "integer" },
+            "hwGen": { "type": "integer" },
+            "swYear": { "type": "integer" },
+            "swWeek": { "type": "integer" },
+            "swRelease": { "type": "integer" },
+            "fsdProto": { "type": "integer" },
+            "swCompat": { "type": "integer" },
+            "resolved": { "type": "integer", "enum": [0, 1] },
+            "canHealth": { "type": "object", "additionalProperties": true }
+          },
+          "required": ["t", "model", "resolved", "canHealth"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Boot": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "boot" },
+            "hw": { "type": "string" },
+            "can": { "type": "string" },
+            "drv": { "type": "string" },
+            "variant": { "type": "string" }
+          },
+          "required": ["t", "hw", "can", "drv", "variant"],
+          "additionalProperties": true
+        }
+      ]
+    },
+    "Status": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "status" },
+            "hw": { "type": "string" }
+          },
+          "required": ["t", "hw"],
+          "additionalProperties": true
+        }
+      ]
+    },
+    "StatusMeta": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "status_meta" }
+          },
+          "required": ["t"],
+          "additionalProperties": true
+        }
+      ]
+    },
+    "StatusFeatures": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "status_features" },
+            "features": { "type": "object" }
+          },
+          "required": ["t", "features"],
+          "additionalProperties": true
+        }
+      ]
+    },
+    "StatusCan": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "status_can" },
+            "clock": { "type": "object" }
+          },
+          "required": ["t", "clock"],
+          "additionalProperties": true
+        }
+      ]
+    },
+    "StatusState": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "status_state" },
+            "state": { "type": "object" }
+          },
+          "required": ["t", "state"],
+          "additionalProperties": true
+        }
+      ]
+    },
+    "StatusCompact": {
+      "allOf": [
+        { "$ref": "#/$defs/TypeTag" },
+        {
+          "type": "object",
+          "properties": {
+            "t": { "const": "status_compact" },
+            "meta": { "type": "object" }
+          },
+          "required": ["t", "meta"],
+          "additionalProperties": true
+        }
+      ]
+    }
+  }
+}

@@ -4,9 +4,10 @@
 
 export interface BoardFeatures {
   fsd: boolean;
+  fsdForce: boolean;
+  offset: boolean;
   profile: boolean;
   nag: boolean;
-  speedOffset: boolean;
   isaSpeedChime: boolean;
   summon: boolean;
 }
@@ -18,6 +19,7 @@ export interface BootMessage {
   drv?: string;
   features?: BoardFeatures;
   fsd?: number;
+  fsdForce?: number;
   nag?: number;
   sp?: number;
   spPin?: number;
@@ -26,19 +28,128 @@ export interface BootMessage {
   isaChime?: number;
   summonInject?: number;
   nagKiller?: number;
+  nagKillerMode?: string;
+  dasHandsOn?: number;
+  turnSignalLeft?: number;
+  turnSignalRight?: number;
+  bsmLeftLevel?: number;
+  bsmRightLevel?: number;
+  doorFrontLeftOpen?: number;
+  doorFrontRightOpen?: number;
+  doorRearLeftOpen?: number;
+  doorRearRightOpen?: number;
+  driverDoorOpen?: number;
+  anyDoorOpen?: number;
+  frunkOpen?: number;
+  trunkOpen?: number;
+  cruiseSetSpeed?: number;
+  accSpeedLimit?: number;
+  mapSpeedLimit?: number;
+  maxSpeed?: number;
   precondition?: number;
   trackMode?: number;
   otaInProgress?: number;
   txPaused?: number;
   detectedHW?: number;
-  canOnline?: number;
+  variantAutoDetect?: number;
+  gtwAutopilotTier?: number;
+  canClockReqMHz?: number;
+  canClockMHz?: number;
+  banShield?: number;
+  banThreat?: number;
+  banDetectCount?: number;
+  gtwShieldArmed?: number;
+  gtwShieldBlocks?: number;
+  eap?: number;
+  evd?: number;
+  tlssc?: number;
+  bmsNomFullPack?: number;
+  bmsNomRemain?: number;
+  bmsIdealRemain?: number;
+  bmsCellVMax?: number;
+  bmsCellVMin?: number;
+  bmsMaxRegen?: number;
+  bmsMaxDischarge?: number;
+  hasEnhancedBms?: number;
+  steeringMode?: number;
+  hasSteeringMode?: number;
+  driveMode?: number;
+  currentDriveMode?: number;
+  eceR79?: number;
+  regionCode?: number;
+  hasRegion?: number;
+  cnLocked?: number;
+  rateLimit?: number;
+  hasTpms?: number;
+  regionSpoofCode?: number;
+  alcAutoConfirm?: number;
+  dasLaneChangeState?: number;
+  seatbeltEmulation?: number;
+  wiperPersist?: number;
+  mirrorAutoFold?: number;
+  canSim?: number;
+  hasPowertrain?: number;
+  singleShot?: number;
+  fwYear?: number;
+  fwRelease?: number;
+  fwMinor?: number;
+  fwCompat?: number;
+  hasFwVersion?: number;
+  mqtt?: number;
+  mqttConnected?: number;
+  vehicleModel?: number;
+  vehicleYear?: number;
+  hasVehicleConfig?: number;
+  platformModel?: number;
+  platformHwGen?: number;
+  platformSwYear?: number;
+  platformSwWeek?: number;
+  platformSwRelease?: number;
+  platformFsdProto?: number;
+  platformSwCompat?: number;
+  platformResolved?: number;
+  canHealth?: Record<string, { on: number; det: number }>;
+  chassisOnline?: number;
   standby?: number;
-  bus1?: number;
-  bus2?: number;
-  bus3?: number;
-  busFsd?: number;
+  vehicleOnline?: number;
+  bodyOnline?: number;
+  busChassis?: number;
   busVehicle?: number;
   busBody?: number;
+  // Button remapping
+  btnMapLampShort?: string;
+  btnMapLampLong?: string;
+  btnMapLampDouble?: string;
+  btnMapParkShort?: string;
+  btnMapParkLong?: string;
+  btnMapParkDouble?: string;
+  hasBtnMap?: number;
+  // Speed camera alert BLE
+  speedAlert?: number;
+  // GVRET TCP gateway
+  gvret?: number;
+  gvretPort?: number;
+  gvretClients?: number;
+  // ESP-NOW
+  espNow?: number;
+  espNowChannel?: number;
+  espNowPeers?: number;
+  // ScanMyTesla BT bridge
+  scanMyTesla?: number;
+  // ELM327 emulation
+  elm327?: number;
+  // Tesla BLE Vehicle Control (4.4)
+  teslaBle?: number;
+  teslaBleConnected?: number;
+  teslaBleAuth?: number;
+  // Home Assistant / ESPHome (4.5)
+  homeAssistant?: number;
+  haConnected?: number;
+  haEntities?: number;
+  haInterval?: number;
+  // Encrypted BLE Multi-Device (4.6)
+  bleEncrypt?: number;
+  bleEncryptPaired?: number;
 }
 
 export interface StatusMessage {
@@ -48,7 +159,65 @@ export interface StatusMessage {
   drv?: string;
   up?: number;
   rate?: number;
+  gtwAutopilotTier?: number;
+  canClockReqMHz?: number;
+  canClockMHz?: number;
+  banShield?: number;
+  banThreat?: number;
+  banDetectCount?: number;
+  gtwShieldArmed?: number;
+  gtwShieldBlocks?: number;
+  eap?: number;
+  evd?: number;
+  tlssc?: number;
+  driveMode?: number;
+  currentDriveMode?: number;
+  eceR79?: number;
+  regionCode?: number;
+  hasRegion?: number;
+  cnLocked?: number;
+  rateLimit?: number;
+  hasTpms?: number;
+  regionSpoofCode?: number;
+  alcAutoConfirm?: number;
+  dasLaneChangeState?: number;
+  seatbeltEmulation?: number;
+  wiperPersist?: number;
+  mirrorAutoFold?: number;
+  canSim?: number;
+  hasPowertrain?: number;
+  singleShot?: number;
+  fwYear?: number;
+  fwRelease?: number;
+  fwMinor?: number;
+  fwCompat?: number;
+  hasFwVersion?: number;
+  mqtt?: number;
+  mqttConnected?: number;
+  vehicleModel?: number;
+  vehicleYear?: number;
+  hasVehicleConfig?: number;
+  platformModel?: number;
+  platformHwGen?: number;
+  platformSwYear?: number;
+  platformSwWeek?: number;
+  platformSwRelease?: number;
+  platformFsdProto?: number;
+  platformSwCompat?: number;
+  platformResolved?: number;
+  canHealth?: Record<string, { on: number; det: number }>;
+  bmsNomFullPack?: number;
+  bmsNomRemain?: number;
+  bmsIdealRemain?: number;
+  bmsCellVMax?: number;
+  bmsCellVMin?: number;
+  bmsMaxRegen?: number;
+  bmsMaxDischarge?: number;
+  hasEnhancedBms?: number;
+  steeringMode?: number;
+  hasSteeringMode?: number;
   fsd?: number;
+  fsdForce?: number;
   nag?: number;
   sp?: number;
   spPin?: number;
@@ -57,21 +226,73 @@ export interface StatusMessage {
   isaChime?: number;
   summonInject?: number;
   nagKiller?: number;
+  nagKillerMode?: string;
+  dasHandsOn?: number;
+  turnSignalLeft?: number;
+  turnSignalRight?: number;
+  bsmLeftLevel?: number;
+  bsmRightLevel?: number;
+  doorFrontLeftOpen?: number;
+  doorFrontRightOpen?: number;
+  doorRearLeftOpen?: number;
+  doorRearRightOpen?: number;
+  driverDoorOpen?: number;
+  anyDoorOpen?: number;
+  frunkOpen?: number;
+  trunkOpen?: number;
+  cruiseSetSpeed?: number;
+  accSpeedLimit?: number;
+  mapSpeedLimit?: number;
+  maxSpeed?: number;
   precondition?: number;
   trackMode?: number;
   otaInProgress?: number;
   txPaused?: number;
   detectedHW?: number;
+  variantAutoDetect?: number;
   stream?: { on: number; emitted: number };
   features?: BoardFeatures;
-  canOnline?: number;
+  chassisOnline?: number;
   standby?: number;
-  bus1?: number;
-  bus2?: number;
-  bus3?: number;
-  busFsd?: number;
+  vehicleOnline?: number;
+  bodyOnline?: number;
+  busChassis?: number;
   busVehicle?: number;
   busBody?: number;
+  // Button remapping
+  btnMapLampShort?: string;
+  btnMapLampLong?: string;
+  btnMapLampDouble?: string;
+  btnMapParkShort?: string;
+  btnMapParkLong?: string;
+  btnMapParkDouble?: string;
+  hasBtnMap?: number;
+  // Speed camera alert BLE
+  speedAlert?: number;
+  // GVRET TCP gateway
+  gvret?: number;
+  gvretPort?: number;
+  gvretClients?: number;
+  // ESP-NOW
+  espNow?: number;
+  espNowChannel?: number;
+  espNowPeers?: number;
+  // ScanMyTesla BT bridge
+  scanMyTesla?: number;
+  // ELM327 emulation
+  elm327?: number;
+  // Tesla BLE Vehicle Control (4.4)
+  teslaBle?: number;
+  teslaBleConnected?: number;
+  teslaBleAuth?: number;
+  // Home Assistant / ESPHome (4.5)
+  homeAssistant?: number;
+  haConnected?: number;
+  haEntities?: number;
+  haInterval?: number;
+  // Encrypted BLE Multi-Device (4.6)
+  bleEncrypt?: number;
+  bleEncryptPaired?: number;
 }
 
 export interface FrameMessage {
@@ -114,7 +335,93 @@ export interface BmsMessage {
   tMin: number;  // temp min (°C)
   tMax: number;  // temp max (°C)
   whkm: number;  // Wh/km * 10
-  ok: number;    // 1 = data available
+  nomFull?: number;      // nominal full pack * 100 (kWh)
+  nomRemain?: number;    // nominal remaining * 100 (kWh)
+  idealRemain?: number;  // ideal remaining * 100 (kWh)
+  cellVMax?: number;     // cell voltage max * 1000 (V)
+  cellVMin?: number;     // cell voltage min * 1000 (V)
+  maxRegen?: number;     // max regen power * 100 (kW)
+  maxDischarge?: number; // max discharge power * 100 (kW)
+  enhanced?: number;     // 1 = enhanced BMS data available
+  ok: number;            // 1 = data available
+  // Expanded fields
+  socUI?: number;        // SoC UI * 10
+  socMax?: number;       // SoC max * 10
+  socAvg?: number;       // SoC avg * 10
+  initFull?: number;     // initial full pack * 10 (kWh)
+  expRange?: number;     // expected range * 10 (km)
+  idealRange?: number;   // ideal range * 10 (km)
+  ratedCons?: number;    // rated consumption * 10 (Wh/km)
+  actSoc?: number;       // actual SoC integer %
+  useSoc?: number;       // usable SoC integer %
+  pwrDiss?: number;      // power dissipation * 100 (kW)
+  flowReq?: number;      // flow request * 10 (LPM)
+  coolTgt?: number;      // cooling target * 10 (°C)
+  heatTgt?: number;      // heating target * 10 (°C)
+  packTMin?: number;     // pack temp min * 10 (°C)
+  packTMax?: number;     // pack temp max * 10 (°C)
+  heatPwr?: number;      // stationary heat power * 100 (kW)
+  hvacBgt?: number;      // HVAC budget * 100 (kW)
+  precondOk?: number;    // precondition allowed (0/1)
+  heatWorth?: number;    // heating worthwhile (0/1)
+  contState?: number;    // contactor state (0-7)
+  hvState?: number;      // HV bus state (0-7)
+  minBusV?: number;      // min bus voltage * 100 (V)
+  maxBusV?: number;      // max bus voltage * 100 (V)
+  maxChgA?: number;      // max charge current * 10 (A)
+  maxDchA?: number;      // max discharge current * 10 (A)
+  expRemain?: number;    // expected remaining * 100 (kWh)
+  eBuf?: number;         // energy buffer * 100 (kWh)
+  eToChg?: number;       // energy to charge complete * 100 (kWh)
+  charged?: number;      // fully charged (0/1)
+  kwhDch?: number;       // lifetime discharge total (kWh)
+  kwhChg?: number;       // lifetime charge total (kWh)
+  acChg?: number;        // AC charge total (kWh)
+  dcChg?: number;        // DC charge total (kWh)
+  regen?: number;        // regen total (kWh)
+  drvDch?: number;       // drive discharge total (kWh)
+  chgTime?: number;      // charge time to full * 100 (hours)
+}
+
+export interface TpmsMessage {
+  t: 'tpms';
+  fl: number;   // front-left pressure * 100 (bar)
+  fr: number;   // front-right pressure * 100 (bar)
+  rl: number;   // rear-left pressure * 100 (bar)
+  rr: number;   // rear-right pressure * 100 (bar)
+  tfl: number;  // front-left temp (°C)
+  tfr: number;  // front-right temp (°C)
+  trl: number;  // rear-left temp (°C)
+  trr: number;  // rear-right temp (°C)
+  ok: number;   // 1 = data available
+}
+
+export interface PowertrainMessage {
+  t: 'powertrain';
+  speed: number;  // vehicle speed * 100 (km/h)
+  gear: number;   // gear state (0=inv, 1=P, 2=R, 3=N, 4=D)
+  pedal: number;  // accelerator pedal % (0-100)
+  steer: number;  // steering angle * 10 (degrees, + = right)
+  rpmR: number;   // rear motor RPM
+  rpmF: number;   // front motor RPM
+  ok: number;     // 1 = data available
+}
+
+export interface FwCompatMessage {
+  t: 'fwcompat';
+  year: number;
+  release: number;
+  minor: number;
+  build: number;
+  compat: number;  // 0=UNKNOWN, 1=OK, 2=WARN, 3=FAIL
+  ok: number;      // 1 = data available
+}
+
+export interface VehicleConfigMessage {
+  t: 'vehicle';
+  model: number;   // 0=UNKNOWN, 1=MODEL_3, 2=MODEL_Y, 3=MODEL_S, 4=MODEL_X, 5=CYBERTRUCK
+  year: number;
+  ok: number;      // 1 = data available
 }
 
 export type BoardMessage =
@@ -125,7 +432,11 @@ export type BoardMessage =
   | ErrorMessage
   | LogMessage
   | PongMessage
-  | BmsMessage;
+  | BmsMessage
+  | TpmsMessage
+  | PowertrainMessage
+  | FwCompatMessage
+  | VehicleConfigMessage;
 
 // ── Board State ─────────────────────────────────────────────────────────────
 
@@ -157,6 +468,7 @@ export interface BoardState {
   rate: number;
 
   fsd: boolean;
+  fsdForce: boolean;
   nag: boolean;
   profile: number;
   profilePinned: boolean;
@@ -167,11 +479,162 @@ export interface BoardState {
   summonActive: boolean;
 
   nagKiller: boolean;
+  nagKillerMode: string;
+  dasHandsOn: number;
+  turnSignalLeft: boolean;
+  turnSignalRight: boolean;
+  bsmLeftLevel: number;
+  bsmRightLevel: number;
+  doorFrontLeftOpen: boolean;
+  doorFrontRightOpen: boolean;
+  doorRearLeftOpen: boolean;
+  doorRearRightOpen: boolean;
+  driverDoorOpen: boolean;
+  anyDoorOpen: boolean;
+  frunkOpen: boolean;
+  trunkOpen: boolean;
+  cruiseSetSpeedKph: number;
+  accSpeedLimitKph: number;
+  mapSpeedLimitKph: number;
+  maxSpeedKph: number;
   precondition: boolean;
   trackMode: boolean;
   otaInProgress: boolean;
   txPaused: boolean;
   detectedHW: number;
+  variantAutoDetect: boolean;
+  gtwAutopilotTier: number;
+  canClockReqMHz: number;
+  canClockMHz: number;
+  banShield: boolean;
+  banThreat: number;
+  banDetectCount: number;
+  gtwShieldArmed: boolean;
+  gtwShieldBlocks: number;
+  enhancedAutopilot: boolean;
+  evdEnabled: boolean;
+  tlsscRestore: boolean;
+
+  // TPMS tire pressure
+  tpmsPressureFL: number;
+  tpmsPressureFR: number;
+  tpmsPressureRL: number;
+  tpmsPressureRR: number;
+  tpmsTempFL: number;
+  tpmsTempFR: number;
+  tpmsTempRL: number;
+  tpmsTempRR: number;
+  hasTpms: boolean;
+
+  // Drive mode override
+  driveMode: number;
+  currentDriveMode: number;
+
+  // Region detection
+  regionCode: number;
+  hasRegion: boolean;
+  cnLocked: boolean;
+  regionSpoofCode: number;
+
+  // Auto Lane Change auto-confirm
+  alcAutoConfirm: boolean;
+  dasLaneChangeState: number;
+
+  // ECE R79 bypass
+  eceR79: boolean;
+
+  // Rate limiting
+  rateLimit: boolean;
+
+  // New vehicle features
+  seatbeltEmulation: boolean;
+  wiperPersist: boolean;
+  mirrorAutoFold: boolean;
+  canSim: boolean;
+
+  // Single-shot TX
+  singleShot: boolean;
+
+  // Button remapping (2.2)
+  btnMapLampShort: string;
+  btnMapLampLong: string;
+  btnMapLampDouble: string;
+  btnMapParkShort: string;
+  btnMapParkLong: string;
+  btnMapParkDouble: string;
+  hasBtnMap: boolean;
+
+  // Speed camera alert BLE (2.8)
+  speedAlert: boolean;
+
+  // GVRET TCP gateway (3.5)
+  gvret: boolean;
+  gvretPort: number;
+  gvretClients: number;
+
+  // ESP-NOW multi-device (4.1)
+  espNow: boolean;
+  espNowChannel: number;
+  espNowPeers: number;
+
+  // ScanMyTesla BT bridge (4.2)
+  scanMyTesla: boolean;
+
+  // ELM327 emulation (4.3)
+  elm327: boolean;
+
+  // Tesla BLE Vehicle Control (4.4)
+  teslaBle: boolean;
+  teslaBleConnected: boolean;
+  teslaBleAuth: boolean;
+
+  // Home Assistant / ESPHome (4.5)
+  homeAssistant: boolean;
+  haConnected: boolean;
+  haEntities: number;
+  haInterval: number;
+
+  // Encrypted BLE Multi-Device (4.6)
+  bleEncrypt: boolean;
+  bleEncryptPaired: number;
+
+  // Firmware version compatibility
+  fwYear: number;
+  fwRelease: number;
+  fwMinor: number;
+  fwCompat: number;
+  hasFwVersion: boolean;
+
+  // MQTT bridge
+  mqtt: boolean;
+  mqttConnected: boolean;
+
+  // Vehicle configuration
+  vehicleModel: number;
+  vehicleYear: number;
+  hasVehicleConfig: boolean;
+
+  // Vehicle platform identity (Model → HW → SW)
+  platformModel: number;
+  platformHwGen: number;
+  platformSwYear: number;
+  platformSwWeek: number;
+  platformSwRelease: number;
+  platformFsdProto: number;
+  platformSwCompat: number;
+  platformResolved: boolean;
+
+  // CAN bus health (per-bus MCP2515 status)
+  canHealth: Record<string, { on: boolean; det: boolean }>;
+
+  // Powertrain telemetry
+  vehicleSpeed: number;
+  gearState: number;
+  accelPedal: number;
+  steeringAngle: number;
+  rearMotorRpm: number;
+  frontMotorRpm: number;
+  hasPowertrain: boolean;
 
   // BMS battery telemetry
   bmsVoltage: number;
@@ -183,12 +646,83 @@ export interface BoardState {
   bmsWhPerKm: number;
   hasBms: boolean;
 
-  canOnline: boolean;
+  // Enhanced BMS telemetry
+  bmsNominalFullPack: number;
+  bmsNominalRemaining: number;
+  bmsIdealRemaining: number;
+  bmsCellVoltageMax: number;
+  bmsCellVoltageMin: number;
+  bmsMaxRegenPower: number;
+  bmsMaxDischargePower: number;
+  hasEnhancedBms: boolean;
+
+  // Expanded SoC
+  bmsSocUI: number;
+  bmsSocMax: number;
+  bmsSocAvg: number;
+  bmsInitialFullPack: number;
+
+  // Range & consumption
+  bmsExpectedRange: number;
+  bmsIdealRange: number;
+  bmsRatedConsumption: number;
+  bmsActualSocInt: number;
+  bmsUsableSocInt: number;
+
+  // Thermal
+  bmsPowerDissipation: number;
+  bmsFlowRequest: number;
+  bmsCoolTarget: number;
+  bmsHeatTarget: number;
+  bmsPackTMin: number;
+  bmsPackTMax: number;
+  bmsThermistorTMin: number;
+  bmsThermistorTMax: number;
+  bmsModelTMin: number;
+  bmsModelTMax: number;
+
+  // Power budget
+  bmsStationaryHeatPower: number;
+  bmsHvacPowerBudget: number;
+
+  // BMS status
+  bmsPrecondAllowed: boolean;
+  bmsHeatingWorthwhile: boolean;
+  bmsContactorState: number;
+  bmsHvState: number;
+
+  // Drive limits
+  bmsMinBusVoltage: number;
+  bmsMaxBusVoltage: number;
+  bmsMaxChargeCurrent: number;
+  bmsMaxDischargeCurrent: number;
+
+  // Energy status mux=1
+  bmsExpectedRemaining: number;
+  bmsEnergyBuffer: number;
+  bmsEnergyToCharge: number;
+  bmsFullyCharged: boolean;
+
+  // Lifetime counters
+  bmsKwhDischargeTotal: number;
+  bmsKwhChargeTotal: number;
+  bmsAcChargeTotal: number;
+  bmsDcChargeTotal: number;
+  bmsRegenTotal: number;
+  bmsDriveDischargeTotal: number;
+
+  // Charge time
+  bmsChargeTimeToFull: number;
+
+  // Steering mode
+  steeringMode: number;
+  hasSteeringMode: boolean;
+
+  chassisOnline: boolean;
   standby: boolean;
-  bus1: boolean;
-  bus2: boolean;
-  bus3: boolean;
-  busFsd: boolean;
+  vehicleOnline: boolean;
+  bodyOnline: boolean;
+  busChassis: boolean;
   busVehicle: boolean;
   busBody: boolean;
 

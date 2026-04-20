@@ -15,6 +15,15 @@ export function parseArgs(argv) {
       } else {
         result[key] = true;
       }
+    } else if (arg.startsWith('-') && arg.length > 1) {
+      const key = arg.slice(1);
+      const next = argv[i + 1];
+      if (next !== undefined && !next.startsWith('-')) {
+        result[key] = next;
+        i++;
+      } else {
+        result[key] = true;
+      }
     } else {
       result._.push(arg);
     }
@@ -60,5 +69,11 @@ export function resolveOptions(args) {
     benchDurMs:   Number(args['bench-duration']) || 10000,
     // vehicle
     vehicleCmd:   args['vehicle-cmd'] ? String(args['vehicle-cmd']) : null,
+    // drive-context
+    driveCtxDurMs: Number(args['drive-duration']) || Number(args.duration) || 30000,
+    driveCtxOutput: args['drive-output'] ? String(args['drive-output']) : null,
+    driveCtxExpectFull: Boolean(args['drive-expect-full']),
+    driveCtxMinSamples: Number(args['drive-min-samples']) || 1,
+    driveCtxNoteOutput: args['drive-note-output'] ? String(args['drive-note-output']) : null,
   };
 }

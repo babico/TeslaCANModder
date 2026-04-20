@@ -175,10 +175,109 @@ Those notices are preserved in:
 web/node_modules/vite/LICENSE.md
 
 ================================================================================
+Legacy Reference Repositories (Git Submodules)
+================================================================================
+
+The following upstream projects are tracked as read-only Git submodules under
+legacy/ for research and comparison purposes. No code is copied into the main
+codebase. Each submodule retains its own license file inside its directory.
+
+Repository                                  License          Source
+--------------------------------------------------------------------------------
+1-v-1-tesla-open-can-mod                    GPL-3.0          LICENSE
+Adminius-ESP32-ScanMyTesla                  GPL-3.0          LICENSE
+Akisoft41-TeslapLX                          Apache-2.0       LICENSE
+alzza-tesla-open-can-mod                    GPL-3.0          LICENSE
+Arkay92-TeslaCANInterpreter                 MIT              LICENSE
+bruvv-tesla-can-explorer                    BSD-0-Clause     LICENSE
+canhackers-jupiter                          CC               LICENSE
+codethaumaturge-911-tesla-gauges            MIT              LICENSE
+ColinM-sys-tesla-can-boost                  CC               LICENSE
+denysvitali-tesla-sentry-viewer             MIT              LICENSE
+dongho74s-tesla-open-can-mod                GPL-3.0          LICENSE
+ekr-candash                                 GPL-3.0          LICENSE
+ev-open-can-tools-ev-open-can-tools         GPL-3.0          LICENSE
+gregjhogan-tesla-pre-ap-epas-patch          GPL-3.0          LICENSE
+hanswolff-TeslaCanBusInspector              MIT              LICENSE
+hypery11-flipper-tesla-fsd                  GPL-3.0          LICENSE
+ibmthinkpad-model3mon                       MIT              LICENSE
+iubns-tesla-fsd-can-mod                     GPL-3.0          LICENSE
+J0811-flipper-tesla-fsd                     GPL-3.0          LICENSE
+jamiejones85-ESP32TeslaShuntCan             MIT              LICENSE
+jberstler-tesla-warmer                      MIT              LICENSE
+JelloEa-tesla-fsd-controller                GPL-3.0          LICENSE
+JelloEa-Tesla-Open-CAN-Mod                  GPL-3.0          LICENSE
+jiezaichan-teslaAuthFlutter                 GPL-3.0          LICENSE
+joshwardell-model3dbc                       MIT              LICENSE
+jsamuel1-tesla_canlogjs                     MIT              LICENSE
+krconv-tesla_can_decoding                   MIT              LICENSE
+MatthewDriver-TeslaCAN                      MIT              LICENSE
+mgerczuk-TeslaCANPi                         Apache-2.0       LICENSE
+mhpetiwala-TeslaCAN                         MIT              LICENSE
+mikegapinski-tesla-can-explorer             BSD-0-Clause     LICENSE
+monster-xxx-tesla-can-controller            MIT              LICENSE
+MrStarTraveller-tesla-fsd-can-mod           GPL-3.0          LICENSE
+nicholasyangyang-my-tt                      GPL-3.0          LICENSE
+rafal83-Car-Light-Sync                      Non-Commercial   LICENSE
+riderx-autosteerplus                        MIT              LICENSE
+rjyo-homebridge-tesla-remote                MIT              package.json
+rossklonowski-CANserver                     MIT              LICENSE
+sahilcc7-tesla_can                          GPL-3.0          LICENSE
+SlipknotTN-Tesla_CanBus_Reader              MIT              LICENSE
+tesla-fsd-can-mod-2-main                    GPL-3.0          LICENSE
+tesla-open-can-mod-main                     GPL-3.0          LICENSE
+tumik-S3XY-candump                          GPL-3.0          LICENSE
+tuncasoftbildik-tesla-can-mod               MIT              LICENSE
+wimaha-TeslaBleHttpProxy                    Apache-2.0       LICENSE
+ylovex75-tesla-open-can-mod-release         GPL-3.0          LICENSE
+
+The following legacy submodules do not include a LICENSE file:
+- 1-v-1-tesla-fsd-can-mod (empty repository)
+- amzoo-TMS_2016_LOGS
+- automotive-stuff-Tesla_canbus
+- bbrightwell-forklift-dash
+- binfen1-tesla-fsd-can-mod
+- BluedDot-IT-TeslaCANalyzer-Controller
+- bobmorane83-TeslaCam
+- cbusillo-TeslaPiCAN
+- DemiVis-charge-port-opener
+- devon-smith-six-pack-capacitor-tesla-coil
+- enstw-tesla-can-mod-guide
+- erikhedb-WE-EV-CAN-Dashboard_POC
+- evoffer-can-decoder-firmware
+- herrfrei-tesla-fsd-canbus-esp32
+- honeer-Tesla-ESP-CAN
+- jomytec-My_TeslaBMS
+- JonnoFTW-rpi-can-logger
+- juamiso-tesla-fsd-can-enabler
+- jvanakker-tesla-fsd-can-mod
+- kangbumhee-TLA-SpeedAlert
+- LeeGaHyeon-tesla_CAN_traffic_decode
+- linesoft2-tesla-fsd-can-mod-fork
+- mcirish-TeslaModelS_RefreshCAN.dbc
+- nicholasyangyang-ESP32-dash-direct
+- nicolozak-nag-killer
+- oliwiah-Tesla_Battery_Range_Calc_React
+- rrrovalle-tesla-car-app
+- RuairidhScott-Brown-TeslaCAN
+- SergeyStaroletov-Tesla-CAN-packets-generator
+- stylylsty-TelemetryX
+- sydneyg007-Tesla-Model-3-EPAS-emulator
+- sydneyg007-Tesla-Model-3-Front-DI-emulator
+- talas9-tesla_can_signals
+- tesberry-tesberry
+- tesla-fsd-can-mod-main
+- tesla-fsd.netlify.app
+- uhi22-tesla-crc
+
+License distribution: GPL-3.0 (21), MIT (17), Apache-2.0 (3),
+BSD-0-Clause (2), CC (2), Non-Commercial (1), No license (37)
+
+================================================================================
 Notes
 ================================================================================
 
-- This file intentionally lists the active first-party app dependencies used by
-  the current firmware and web app.
-- Legacy reference repositories under legacy/* are separate upstream projects
-  tracked as Git submodules and keep their own licenses inside those repos.
+- This file lists the active dependencies used by the firmware and web app,
+  and the legacy reference repositories tracked as Git submodules.
+- Full license texts for legacy submodules are inside their respective
+  directories under legacy/.

@@ -18,7 +18,7 @@ jobs:
       run:
         working-directory: hardware
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -31,11 +31,13 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.platformio
-          key: pio-${{ hashFiles('hardware/platformio.ini') }}
-      - uses: actions/setup-python@v6
+          key: pio-${{ hashFiles('firmware/platformio.ini') }}
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install platformio
+      # Native firmware tests include GTW shield, TLSSC restore, HW4 EAP/EVD,
+      # and ring/log buffer regression coverage.
       - run: pio test -e native
       - name: Firmware size regression check
         run: python scripts/check_firmware_size.py --env uno esp32
@@ -44,7 +46,7 @@ jobs:
   protocol:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -57,7 +59,7 @@ jobs:
           git config --global http.lowSpeedLimit 0
           git config --global http.lowSpeedTime 999999
           git config --global submodule.recurse false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
@@ -69,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: protocol
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -82,7 +84,7 @@ jobs:
           git config --global http.lowSpeedLimit 0
           git config --global http.lowSpeedTime 999999
           git config --global submodule.recurse false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
@@ -91,12 +93,12 @@ jobs:
       - name: Run E2E smoke tests
         run: npx jest --config packages/protocol/jest.config.js --testPathPattern="e2e-smoke"
 
-  # ── Web (lint + type-check + test + build) ──────────────────────────────────
-  web:
+  # ── Client (test) ──────────────────────────────────────────────────────────
+  client:
     runs-on: ubuntu-latest
     needs: protocol
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -109,47 +111,19 @@ jobs:
           git config --global http.lowSpeedLimit 0
           git config --global http.lowSpeedTime 999999
           git config --global submodule.recurse false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run build -w packages/protocol
-      - run: npx tsc --noEmit -p web/tsconfig.json
-      - run: npm test -w web
-      - run: npm run build -w web
-
-  # ── Mobile (test) ──────────────────────────────────────────────────────────
-  mobile:
-    runs-on: ubuntu-latest
-    needs: protocol
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: false
-          fetch-depth: 0
-      - name: CI-only custom legacy folder exceptions
-        run: |
-          git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-          rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
-      - run: |
-          git config --global http.version HTTP/1.1
-          git config --global http.lowSpeedLimit 0
-          git config --global http.lowSpeedTime 999999
-          git config --global submodule.recurse false
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run build -w packages/protocol
-      - run: npm test -w mobile
+      - run: npm test -w @teslacanmodder/client
 
   # ── Tools ───────────────────────────────────────────────────────────────────
   tools:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -162,7 +136,7 @@ jobs:
           git config --global http.lowSpeedLimit 0
           git config --global http.lowSpeedTime 999999
           git config --global submodule.recurse false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
@@ -173,7 +147,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -184,11 +158,11 @@ jobs:
       - run: git config --global submodule.recurse false
       - run: docker compose build --no-cache
 
-  # ── Lint (web + mobile) ────────────────────────────────────────────────────
+  # ── Lint (client) ──────────────────────────────────────────────────────────
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -201,19 +175,18 @@ jobs:
           git config --global http.lowSpeedLimit 0
           git config --global http.lowSpeedTime 999999
           git config --global submodule.recurse false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npm run lint -w web
-      - run: npm run lint -w mobile
+      - run: npm run lint -w @teslacanmodder/client
 
   # ── Workflow Lint (GitHub Actions) ─────────────────────────────────────────
   workflow-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -227,7 +200,7 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -244,7 +217,7 @@ jobs:
   security-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -257,7 +230,7 @@ jobs:
           git config --global http.lowSpeedLimit 0
           git config --global http.lowSpeedTime 999999
           git config --global submodule.recurse false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
@@ -268,12 +241,12 @@ jobs:
         run: |
           npx license-checker --production --excludePrivatePackages --onlyAllow "MIT;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;BlueOak-1.0.0;Python-2.0;GPL-3.0;GPL-3.0-or-later;GPL-3.0-only" --summary
 
-  # ── Docker Smoke (web-prod runtime health) ─────────────────────────────────
+  # ── Docker Smoke (client-prod runtime health) ──────────────────────────────
   docker-smoke:
     runs-on: ubuntu-latest
     needs: docker
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -282,17 +255,17 @@ jobs:
           git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
           rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
       - run: git config --global submodule.recurse false
-      - run: docker compose up --build -d web-prod
+      - run: docker compose up --build -d client-prod
       - run: |
           for _i in {1..20}; do
-            if curl -fsS http://127.0.0.1:8080/heartbeat.json >/dev/null; then
-              echo "web-prod heartbeat is healthy"
+            if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
+              echo "client-prod is healthy"
               exit 0
             fi
             sleep 2
           done
-          echo "web-prod heartbeat did not become healthy in time"
-          docker compose logs web-prod
+          echo "client-prod did not become healthy in time"
+          docker compose logs client-prod
           exit 1
       - if: always()
         run: docker compose down -v

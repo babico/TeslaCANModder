@@ -1,8 +1,8 @@
-# TeslaCANModder
+# Tesla CAN Modder
 
 [![CI](https://github.com/babico/TeslaCANModder/actions/workflows/ci.yml/badge.svg)](https://github.com/babico/TeslaCANModder/actions/workflows/ci.yml)
 
-Browser-based control and monitoring stack for Tesla CAN bus modification using Arduino Uno or ESP32-S DevKit.
+Unified firmware, browser, and native client stack for Tesla CAN bus modification using Arduino Uno or ESP32-S DevKit.
 
 ## Quick Start
 
@@ -23,16 +23,16 @@ CAN bus selection is controlled via build flags (FSD always on):
 
 ```powershell
 # Enable Vehicle + Body buses alongside FSD
-$env:PLATFORMIO_BUILD_FLAGS = "-DBUS_FSD_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
+$env:PLATFORMIO_BUILD_FLAGS = "-DBUS_CHASSIS_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
 .\.pio.ps1 run -e esp32_wifi
 ```
 
-### Web UI
+### Client
 
 ```bash
-cd web
+cd client
 npm install
-npm run dev
+npm run web
 ```
 
 Open <http://localhost:5173> and click "Connect USB"
@@ -40,8 +40,8 @@ Open <http://localhost:5173> and click "Connect USB"
 ## What's Included
 
 - **Hardware Firmware** - Arduino Uno + ESP32-S firmware with per-bus feature gating
-- **Web UI** - React dashboard with Web Serial API, CAN frame decoder
-- **Docker Support** - Build firmware and run web UI in containers
+- **Client App** - Expo-based client for browser, iOS, and Android targets
+- **Docker Support** - Build firmware and run the browser client in containers
 
 ## Hardware
 
@@ -54,8 +54,8 @@ Open <http://localhost:5173> and click "Connect USB"
 ### X179 CAN Bus Lanes
 
 | Bus | X179 Pins | Build Flag | Default |
-|---- | --------- | ---------- | ------- |
-| FSD (Bus 0) | 13-14 | `BUS_FSD_ACTIVE` | ON |
+| --- | --------- | ---------- | ------- |
+| Chassis (Bus 0) | 13-14 | `BUS_CHASSIS_ACTIVE` | ON |
 | Vehicle (Bus 1) | 9-10 | `BUS_VEHICLE_ACTIVE` | OFF |
 | Body (Bus 2) | 2-3 | `BUS_BODY_ACTIVE` | OFF |
 
@@ -67,9 +67,9 @@ Open <http://localhost:5173> and click "Connect USB"
 - HW3 with speed offset control
 - Legacy for pre-HW3 vehicles
 
-### Controls (All OFF by default, user enables via web)
+### Controls (All OFF by default, user enables via client)
 
-- FSD enable/disable/toggle
+- FSD enable/disable
 - Nag suppression
 - Speed profile (Chill / Normal / Hurry / Max / Sloth)
 - Speed offset (HW3: 0-100%)
@@ -82,7 +82,7 @@ Open <http://localhost:5173> and click "Connect USB"
 ## Memory Usage
 
 | Build | RAM | Flash |
-|------ | --- | ----- |
+| ----- | --- | ----- |
 | USB + Bluetooth | 1558 bytes (76%) | 11150 bytes (35%) |
 | USB only | 1378 bytes (67%) | 9668 bytes (30%) |
 
@@ -103,11 +103,11 @@ JSON messages over serial (115200 baud):
 ```
 ping, status
 variant:hw4, variant:hw3, variant:legacy
-fsd:on, fsd:off, fsd:toggle
-nag:on, nag:off, nag:toggle
+fsd:on, fsd:off
+nag:on, nag:off
 profile:0-4 (or sp:0-4)
 offset:0-100 (HW3 only)
-isa-chime:on, isa-chime:off, isa-chime:toggle (HW4 only)
+isa-chime:on, isa-chime:off (HW4 only)
 stream:on, stream:off
 can:raw:on, can:raw:off
 ```
@@ -158,6 +158,7 @@ power:acc:on, power:acc:off, power:off, power:ready
 
 ```
 # Window Vent (0x119)
+window:vent:N        # N = 0..100
 window:vent:open, vent:open
 window:vent:close, vent:close
 
@@ -195,25 +196,22 @@ This is an npm workspace monorepo:
 ```
 packages/protocol   — shared types, commands, decoder, parser (@teslacanmodder/protocol)
 hardware            — PlatformIO ESP32/Arduino firmware
-web                 — React + Vite + TypeScript dashboard
-mobile              — React Native + Expo mobile app
+client              — React Native + Expo client app for browser, iOS, and Android
 tools               — CLI debug utilities
 ```
 
 ```bash
 npm install          # install all workspaces
-npm run test:all     # run all tests (protocol + web + mobile + tools)
+npm run test:all     # run all tests (protocol + client + tools + firmware)
 ```
 
 ## Testing
 
 | Layer | Runner | Tests |
-|------ | ------ | ----- |
+| ----- | ------ | ----- |
 | Firmware | PlatformIO Unity | 178 |
 | Protocol | Jest (ESM) | 102 |
-| Web | Vitest + Testing Library | 63 |
-| Mobile | Jest + Testing Library/RN | 138 |
-| **Total** | | **481** |
+| Client | Jest + Testing Library/RN | 138 |
 
 ## CI
 
@@ -221,16 +219,38 @@ GitHub Actions runs on push to `main` and all PRs:
 
 - **firmware** — PlatformIO native tests
 - **protocol** — shared package tests
-- **web** — type-check + test + build
-- **mobile** — Jest tests
+- **client** — Jest tests
 - **tools** — CLI tests
 - **docker** — docker compose build
 
 ## Documentation
 
-- `hardware/README.md` - Firmware details
-- `web/README.md` - Web UI details
+- `docs/unified-setup-guide.md` - Canonical end-to-end setup (build, flash, connect, validate)
+- `docs/unified-client-guide.md` - Canonical client architecture, setup, monitor workflows, and migration notes
+- `docs/reference/can-ids.md` - Master CAN ID reference table
+- `firmware/README.md` - Firmware details
 - `docs/WIFI_BOARD_GUIDE.md` - ESP32 WiFi dashboard setup
+
+## Legacy References
+
+The `legacy/` directory contains **83 external repositories** added as read-only
+git submodules for research and comparison.  No code is copied into the main
+codebase.
+
+| Category | Count | Examples |
+| -------- | ----- | ------- |
+| FSD CAN Mod | 14 | jvanakker, juamiso, herrfrei, JelloEa |
+| CAN Monitoring / Analysis | 12 | ekr-candash, hanswolff, bruvv, mikegapinski |
+| CAN Database / Decoding | 8 | joshwardell-model3dbc, krconv, talas9 |
+| Flipper Zero | 3 | hypery11, J0811, canhackers-jupiter |
+| BLE / Bluetooth | 2 | wimaha-TeslaBleHttpProxy, DemiVis |
+| Steering / EPAS | 3 | gregjhogan, sydneyg007 (×2) |
+| Battery / Charging | 3 | jomytec-My_TeslaBMS, jamiejones85, oliwiah |
+| Other (logging, apps, tools) | 38 | rossklonowski-CANserver, tesberry, uhi22 |
+
+- **Individual analyses** → [`docs/legacy/<repo>.md`](docs/legacy/)
+- **Synthesis report** → [`docs/legacy-summary.md`](docs/legacy-summary.md)
+- **License compliance** → [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md)
 
 ## License
 

@@ -34,6 +34,18 @@ describe('parseArgs', () => {
     const result = parseArgs(['--verbose']);
     expect(result.verbose).toBe(true);
   });
+
+  it('parses short options with values', () => {
+    const result = parseArgs(['-i', 'in.json', '-f', 'csv', '-o', 'out.csv']);
+    expect(result.i).toBe('in.json');
+    expect(result.f).toBe('csv');
+    expect(result.o).toBe('out.csv');
+  });
+
+  it('parses short option without value as boolean', () => {
+    const result = parseArgs(['-x']);
+    expect(result.x).toBe(true);
+  });
 });
 
 describe('resolveOptions', () => {
@@ -84,5 +96,23 @@ describe('resolveOptions', () => {
   it('maps vehicle command', () => {
     const opts = resolveOptions({ _: ['vehicle'], 'vehicle-cmd': 'mirror-fold' });
     expect(opts.vehicleCmd).toBe('mirror-fold');
+  });
+
+  it('maps drive-context strict options', () => {
+    const opts = resolveOptions({
+      _: ['drive-context'],
+      'drive-duration': '60000',
+      'drive-output': 'artifacts/report.json',
+      'drive-note-output': 'artifacts/roadmap-note.txt',
+      'drive-min-samples': '10',
+      'drive-expect-full': true,
+    });
+
+    expect(opts.command).toBe('drive-context');
+    expect(opts.driveCtxDurMs).toBe(60000);
+    expect(opts.driveCtxOutput).toBe('artifacts/report.json');
+    expect(opts.driveCtxNoteOutput).toBe('artifacts/roadmap-note.txt');
+    expect(opts.driveCtxMinSamples).toBe(10);
+    expect(opts.driveCtxExpectFull).toBe(true);
   });
 });

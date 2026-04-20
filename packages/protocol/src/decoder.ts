@@ -18,7 +18,12 @@ export interface DecoderFrame {
 }
 
 export interface DecoderDataset {
-  dataset_source?: { vehicle?: string };
+  dataset_source?: {
+    vehicle?: string;
+    firmware?: string;
+    mcu?: string;
+    soc?: string;
+  };
   frames: DecoderFrame[];
 }
 

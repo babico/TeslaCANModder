@@ -4,9 +4,8 @@
 
 ```bash
 TeslaCANModder/
-├── hardware/          # PlatformIO firmware (C++, Arduino Uno + ESP32)
-├── web/               # React web app (TypeScript, Vite)
-├── mobile/            # React Native mobile app (TypeScript, Expo)
+├── firmware/          # PlatformIO firmware (C++, Arduino Uno + ESP32)
+├── client/            # Unified Expo client app (browser, iOS, Android)
 ├── tools/             # Debug CLI (Node.js ESM)
 ├── packages/
 │   └── protocol/      # Shared protocol types, commands, decoder (TypeScript)
@@ -32,9 +31,8 @@ npm install           # installs all workspaces
 
 ```bash
 npm run test:all      # all test suites
-npm run test:firmware # PlatformIO native tests (9 suites)
-npm run test:web      # web app tests
-npm run test:mobile   # mobile app tests
+npm run test:firmware # PlatformIO native tests
+npm run test:client   # client app tests
 npm run test:protocol # shared protocol package tests
 npm run test:tools    # CLI tools tests
 ```
@@ -42,11 +40,11 @@ npm run test:tools    # CLI tools tests
 ### Development Servers
 
 ```bash
-# Web app (Vite dev server)
-cd web && npm run dev
+# Client app (Expo)
+cd client && npm start
 
-# Mobile app (Expo)
-cd mobile && npm start
+# Browser target
+cd client && npm run web
 
 # Firmware build server (Docker)
 docker compose up firmware
@@ -56,17 +54,27 @@ docker compose up firmware
 
 ### TypeScript / JavaScript
 
-- Strict TypeScript where available (web, mobile, packages/protocol)
+- Strict TypeScript where available (client, packages/protocol)
 - ESM modules (`"type": "module"`)
 - Functional React components with hooks
 - No class components
 
 ### C++ (Firmware)
 
-- Header-only library pattern in `hardware/lib/`
+- Header-only library pattern in `firmware/lib/`
 - 2-space indentation
 - `#pragma once` header guards
 - Build flags for feature gating (`BUS_*_ACTIVE`, `BOARD_ENABLE_*`)
+
+## Checklist Expectations
+
+Use the docs checklists as part of normal engineering review, not only at release time.
+
+- `docs/checklists/can-review-checklist.md`: required when firmware changes can affect CAN frame mutation, routing, checksums, or transport-visible message shape.
+- `docs/checklists/release-checklist.md`: required before tagged releases and artifact publishing.
+- `docs/guides/quickstart-checklist.md`: review when changing setup, flashing, wiring, connection, or first-run flows.
+- `docs/checklists/deprecation-checklist.md`: review when changing workspaces, CI, Docker, or docs-bundle generation so the repo stays consolidated around `client/`.
+- `docs/checklists/testing-plan.md`: use its visual-regression section for UI-facing visual changes once the fixture + golden-image workflow is in place; until then, treat that section as the implementation plan for the workflow.
 
 ### Naming
 
@@ -89,11 +97,11 @@ The firmware supports 3 fixed CAN buses on the Tesla X179 connector:
 
 | Bus | Index | X179 Pins | Build Flag | Default |
 | --- | ----- | --------- | ---------- | ------- |
-| FSD | 0 | 13-14 | `BUS_FSD_ACTIVE` | ON |
+| Chassis | 0 | 13-14 | `BUS_CHASSIS_ACTIVE` | OFF when unset |
 | Vehicle | 1 | 9-10 | `BUS_VEHICLE_ACTIVE` | OFF |
 | Body | 2 | 2-3 | `BUS_BODY_ACTIVE` | OFF |
 
-Bus activation is controlled by build flags. The build server injects these when compiling. `BUS_MAX` is always 3; `busActive(i)` checks if a bus is enabled.
+Bus activation is controlled by build flags. The build server or environment config injects these when compiling. `BUS_MAX` is always 3; `busActive(i)` checks if a bus is enabled. Shipping Uno / ESP32 environments enable the chassis bus explicitly in `firmware/platformio.ini`.
 
 ## Firmware Environments
 

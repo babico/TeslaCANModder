@@ -1,168 +1,488 @@
 /** Command builders for all TeslaCANModder firmware commands. */
 
 /** Valid firmware variants. */
-export const VALID_VARIANTS = ['hw3', 'hw4', 'legacy'] as const;
+export const VALID_VARIANTS = ["hw3", "hw4", "legacy", "auto"] as const;
 export type Variant = (typeof VALID_VARIANTS)[number];
+export const VALID_NAG_KILLER_MODES = ["legacy", "safe", "natural"] as const;
+export type NagKillerMode = (typeof VALID_NAG_KILLER_MODES)[number];
+
+/** Valid region spoof codes. */
+export const VALID_REGION_SPOOF_CODES = ["na", "eu", "cn", "apac", "me", "off"] as const;
+export type RegionSpoofCode = (typeof VALID_REGION_SPOOF_CODES)[number];
+
+/** Valid button names for button remapping. */
+export const VALID_BUTTONS = ["lamp", "parking"] as const;
+export type ButtonName = (typeof VALID_BUTTONS)[number];
+
+/** Valid press types for button actions. */
+export const VALID_PRESS_TYPES = ["short", "long", "double"] as const;
+export type PressType = (typeof VALID_PRESS_TYPES)[number];
+
+/** Valid button actions for remapping. */
+export const VALID_BUTTON_ACTIONS = [
+	"none", "trunk", "frunk", "sentry", "horn", "fold", "hazard", "recirc",
+] as const;
+export type ButtonAction = (typeof VALID_BUTTON_ACTIONS)[number];
 
 /** Range limits for numeric command parameters. */
 export const COMMAND_RANGES = {
-  profile: { min: 0, max: 4 },
-  offset: { min: -10, max: 10 },
-  seat: { min: 0, max: 3 },
-  mainDisplay: { min: 0, max: 127 },
+	profile: { min: 0, max: 4 },
+	offset: { min: 0, max: 100 },
+	canClockMHz: { min: 8, max: 20 },
+	seat: { min: 0, max: 3 },
+	mainDisplay: { min: 0, max: 127 },
+	windowVent: { min: 0, max: 100 },
+	gvretPort: { min: 1, max: 65535 },
+	espNowChannel: { min: 1, max: 13 },
+	haInterval: { min: 500, max: 60000 },
 } as const;
 
-function assertRange(name: string, value: number, min: number, max: number): void {
-  if (!Number.isInteger(value) || value < min || value > max) {
-    throw new RangeError(`${name} must be an integer between ${min} and ${max}, got ${value}`);
-  }
+function assertRange(
+	name: string,
+	value: number,
+	min: number,
+	max: number,
+): void {
+	if (!Number.isInteger(value) || value < min || value > max) {
+		throw new RangeError(
+			`${name} must be an integer between ${min} and ${max}, got ${value}`,
+		);
+	}
 }
 
 function assertVariant(v: string): asserts v is Variant {
-  if (!(VALID_VARIANTS as readonly string[]).includes(v)) {
-    throw new RangeError(`variant must be one of ${VALID_VARIANTS.join(', ')}, got "${v}"`);
-  }
+	if (!(VALID_VARIANTS as readonly string[]).includes(v)) {
+		throw new RangeError(
+			`variant must be one of ${VALID_VARIANTS.join(", ")}, got "${v}"`,
+		);
+	}
+}
+
+function assertNagKillerMode(m: string): asserts m is NagKillerMode {
+	if (!(VALID_NAG_KILLER_MODES as readonly string[]).includes(m)) {
+		throw new RangeError(
+			`nag killer mode must be one of ${VALID_NAG_KILLER_MODES.join(", ")}, got "${m}"`,
+		);
+	}
+}
+
+function assertRegionSpoofCode(c: string): asserts c is RegionSpoofCode {
+	if (!(VALID_REGION_SPOOF_CODES as readonly string[]).includes(c)) {
+		throw new RangeError(
+			`region spoof code must be one of ${VALID_REGION_SPOOF_CODES.join(", ")}, got "${c}"`,
+		);
+	}
+}
+
+function assertButtonName(b: string): asserts b is ButtonName {
+	if (!(VALID_BUTTONS as readonly string[]).includes(b)) {
+		throw new RangeError(
+			`button must be one of ${VALID_BUTTONS.join(", ")}, got "${b}"`,
+		);
+	}
+}
+
+function assertPressType(p: string): asserts p is PressType {
+	if (!(VALID_PRESS_TYPES as readonly string[]).includes(p)) {
+		throw new RangeError(
+			`press type must be one of ${VALID_PRESS_TYPES.join(", ")}, got "${p}"`,
+		);
+	}
+}
+
+function assertButtonAction(a: string): asserts a is ButtonAction {
+	if (!(VALID_BUTTON_ACTIONS as readonly string[]).includes(a)) {
+		throw new RangeError(
+			`button action must be one of ${VALID_BUTTON_ACTIONS.join(", ")}, got "${a}"`,
+		);
+	}
 }
 
 export const commands = {
-  // System
-  ping: () => 'ping',
-  status: () => 'status',
-  variant: (v: string) => { assertVariant(v); return `variant:${v}`; },
+	// System
+	ping: () => "ping",
+	status: () => "status",
+	variant: (v: string) => {
+		assertVariant(v);
+		return `variant:${v}`;
+	},
 
-  // FSD
-  fsd: (on: boolean) => on ? 'fsd:on' : 'fsd:off',
-  fsdToggle: () => 'fsd:toggle',
+	// FSD
+	fsd: (on: boolean) => (on ? "fsd:on" : "fsd:off"),
+	fsdForce: (on: boolean) => (on ? "fsd:force:on" : "fsd:force:off"),
 
-  // Nag
-  nag: (on: boolean) => on ? 'nag:on' : 'nag:off',
-  nagToggle: () => 'nag:toggle',
+	// Nag
+	nag: (on: boolean) => (on ? "nag:on" : "nag:off"),
 
-  // Speed Profile
-  profile: (p: number) => { assertRange('profile', p, COMMAND_RANGES.profile.min, COMMAND_RANGES.profile.max); return `profile:${p}`; },
-  profileAuto: () => 'profile:auto',
+	// Speed Profile
+	profile: (p: number) => {
+		assertRange(
+			"profile",
+			p,
+			COMMAND_RANGES.profile.min,
+			COMMAND_RANGES.profile.max,
+		);
+		return `profile:${p}`;
+	},
+	profileAuto: () => "profile:auto",
+	profileLock: () => "profile:lock",
+	profileUnlock: () => "profile:unlock",
 
-  // Speed Offset (HW3)
-  offset: (o: number) => { assertRange('offset', o, COMMAND_RANGES.offset.min, COMMAND_RANGES.offset.max); return `offset:${o}`; },
-  offsetAuto: () => 'offset:auto',
+	// Speed Offset (auto-routes to HW4 range 0-63 or legacy range 0-100 based on detected HW)
+	offset: (o: number) => {
+		assertRange(
+			"offset",
+			o,
+			COMMAND_RANGES.offset.min,
+			COMMAND_RANGES.offset.max,
+		);
+		return `offset:${o}`;
+	},
+	offsetAuto: () => "offset:auto",
+	offsetOff: () => "offset:off",
 
-  // ISA Chime (HW4)
-  isaChime: (on: boolean) => on ? 'isa-chime:on' : 'isa-chime:off',
-  isaChimeToggle: () => 'isa-chime:toggle',
+	// ISA Chime (HW4)
+	isaChime: (on: boolean) => (on ? "isa-chime:on" : "isa-chime:off"),
 
-  // Summon
-  summonInject: (on: boolean) => on ? 'summon-inject:on' : 'summon-inject:off',
-  summon: () => 'summon',
-  summonForward: () => 'summon:forward',
-  summonReverse: () => 'summon:reverse',
-  summonStop: () => 'summon:stop',
+	// Summon
+	summonInject: (on: boolean) =>
+		on ? "summon-inject:on" : "summon-inject:off",
+	summon: () => "summon",
+	summonForward: () => "summon:forward",
+	summonReverse: () => "summon:reverse",
+	summonStop: () => "summon:stop",
 
-  // Streaming
-  stream: (on: boolean) => on ? 'stream:on' : 'stream:off',
-  rawCan: (on: boolean) => on ? 'can:raw:on' : 'can:raw:off',
+	// Streaming
+	stream: (on: boolean) => (on ? "stream:on" : "stream:off"),
+	rawCan: (on: boolean) => (on ? "can:raw:on" : "can:raw:off"),
+	canClockAuto: () => "canclock:auto",
+	canClock: (mhz: number) => {
+		if (![8, 12, 16, 20].includes(mhz)) {
+			throw new RangeError(
+				`canClockMHz must be one of 8, 12, 16, 20, got ${mhz}`,
+			);
+		}
+		return `canclock:${mhz}`;
+	},
 
-  // Nag Killer (EPAS torque spoofing)
-  nagKiller: (on: boolean) => on ? 'nagkiller:on' : 'nagkiller:off',
-  nagKillerToggle: () => 'nagkiller:toggle',
+	// Nag Killer (EPAS torque spoofing)
+	nagKiller: (on: boolean) => (on ? "nag:killer:on" : "nag:killer:off"),
+	nagKillerMode: (mode: string) => {
+		assertNagKillerMode(mode);
+		return `nag:killer:mode:${mode}`;
+	},
 
-  // BMS Telemetry
-  bms: () => 'bms',
+	// BMS Telemetry
+	bms: () => "bms",
 
-  // Preconditioning
-  precondition: (on: boolean) => on ? 'precondition:on' : 'precondition:off',
-  preconditionToggle: () => 'precondition:toggle',
+	// Ban Shield (experimental telemetry monitoring)
+	banShield: (on: boolean) => (on ? "banshield:on" : "banshield:off"),
+	gtwShieldArm: () => "gtwshield:arm",
+	gtwShieldDisarm: () => "gtwshield:disarm",
+	gtwShieldReset: () => "gtwshield:reset",
 
-  // Track Mode
-  trackMode: (on: boolean) => on ? 'trackmode:on' : 'trackmode:off',
-  trackModeToggle: () => 'trackmode:toggle',
+	// AP config restore / unlock features
+	tlssc: (on: boolean) => (on ? "tlssc:on" : "tlssc:off"),
+	eap: (on: boolean) => (on ? "eap:on" : "eap:off"),
+	evd: (on: boolean) => (on ? "evd:on" : "evd:off"),
 
-  // Mirror
-  mirrorFold: () => 'mirror:fold',
-  mirrorUnfold: () => 'mirror:unfold',
-  mirrorHeat: () => 'mirror:heat',
-  mirrorAutofold: () => 'mirror:autofold',
-  mirrorDip: () => 'mirror:dip',
+	// Preconditioning
+	precondition: (on: boolean) =>
+		on ? "precondition:on" : "precondition:off",
 
-  // Lock
-  lock: () => 'lock',
-  unlock: () => 'unlock',
-  lockChild: () => 'lock:child',
-  horn: () => 'horn',
+	// Track Mode
+	trackMode: (on: boolean) => (on ? "trackmode:on" : "trackmode:off"),
 
-  // Trunk/Frunk
-  frunkOpen: () => 'frunk:open',
-  frunkClose: () => 'frunk:close',
-  trunkOpen: () => 'trunk:open',
-  trunkClose: () => 'trunk:close',
-  glovebox: () => 'glovebox',
+	// Mirror
+	mirrorFold: () => "mirror:fold",
+	mirrorUnfold: () => "mirror:unfold",
+	mirrorHeat: () => "mirror:heat",
+	mirrorAutofold: () => "mirror:autofold",
+	mirrorDip: () => "mirror:dip",
 
-  // Lights
-  lightFogFront: () => 'light:fog:front',
-  lightFogRear: () => 'light:fog:rear',
-  lightHighbeamAuto: () => 'light:highbeam:auto',
-  lightAmbient: () => 'light:ambient',
-  lightHome: () => 'light:home',
-  lightDomeOff: () => 'light:dome:off',
-  lightDomeOn: () => 'light:dome:on',
-  lightDomeAuto: () => 'light:dome:auto',
+	// Lock
+	lock: () => "lock",
+	unlock: () => "unlock",
+	lockChild: () => "lock:child",
+	horn: () => "horn",
 
-  // Wiper
-  wiperOff: () => 'wiper:off',
-  wiper1: () => 'wiper:1',
-  wiper2: () => 'wiper:2',
-  wiper3: () => 'wiper:3',
+	// Trunk/Frunk
+	frunkOpen: () => "frunk:open",
+	frunkClose: () => "frunk:close",
+	trunkOpen: () => "trunk:open",
+	trunkClose: () => "trunk:close",
+	glovebox: () => "glovebox",
 
-  // Seat Heating
-  seatFL: (level: number) => { assertRange('seatFL', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:fl:${level}`; },
-  seatFR: (level: number) => { assertRange('seatFR', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:fr:${level}`; },
-  seatRL: (level: number) => { assertRange('seatRL', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:rl:${level}`; },
-  seatRR: (level: number) => { assertRange('seatRR', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:rr:${level}`; },
-  seatRC: (level: number) => { assertRange('seatRC', level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max); return `seat:rc:${level}`; },
+	// Lights
+	lightFogFront: () => "light:fog:front",
+	lightFogRear: () => "light:fog:rear",
+	lightHighbeamAuto: () => "light:highbeam:auto",
+	lightAmbient: () => "light:ambient",
+	lightHome: () => "light:home",
+	lightDomeOff: () => "light:dome:off",
+	lightDomeOn: () => "light:dome:on",
+	lightDomeAuto: () => "light:dome:auto",
 
-  // Display
-  mainDisplay: (level: number) => { assertRange('mainDisplay', level, COMMAND_RANGES.mainDisplay.min, COMMAND_RANGES.mainDisplay.max); return `maindisplay:${level}`; },
+	// Wiper
+	wiperOff: () => "wiper:off",
+	wiper1: () => "wiper:1",
+	wiper2: () => "wiper:2",
+	wiper3: () => "wiper:3",
 
-  // Power
-  powerAccOn: () => 'power:acc:on',
-  powerAccOff: () => 'power:acc:off',
-  powerOff: () => 'power:off',
-  powerReady: () => 'power:ready',
+	// Seat Heating
+	seatFL: (level: number) => {
+		assertRange(
+			"seatFL",
+			level,
+			COMMAND_RANGES.seat.min,
+			COMMAND_RANGES.seat.max,
+		);
+		return `seat:fl:${level}`;
+	},
+	seatFR: (level: number) => {
+		assertRange(
+			"seatFR",
+			level,
+			COMMAND_RANGES.seat.min,
+			COMMAND_RANGES.seat.max,
+		);
+		return `seat:fr:${level}`;
+	},
+	seatRL: (level: number) => {
+		assertRange(
+			"seatRL",
+			level,
+			COMMAND_RANGES.seat.min,
+			COMMAND_RANGES.seat.max,
+		);
+		return `seat:rl:${level}`;
+	},
+	seatRR: (level: number) => {
+		assertRange(
+			"seatRR",
+			level,
+			COMMAND_RANGES.seat.min,
+			COMMAND_RANGES.seat.max,
+		);
+		return `seat:rr:${level}`;
+	},
+	seatRC: (level: number) => {
+		assertRange(
+			"seatRC",
+			level,
+			COMMAND_RANGES.seat.min,
+			COMMAND_RANGES.seat.max,
+		);
+		return `seat:rc:${level}`;
+	},
 
-  // Window
-  ventOpen: () => 'vent:open',
-  ventClose: () => 'vent:close',
+	// Display
+	mainDisplay: (level: number) => {
+		assertRange(
+			"mainDisplay",
+			level,
+			COMMAND_RANGES.mainDisplay.min,
+			COMMAND_RANGES.mainDisplay.max,
+		);
+		return `maindisplay:${level}`;
+	},
 
-  // Sentry
-  sentryOn: () => 'sentry:on',
-  sentryOff: () => 'sentry:off',
+	// Power
+	powerAccOn: () => "power:acc:on",
+	powerAccOff: () => "power:acc:off",
+	powerOff: () => "power:off",
+	powerReady: () => "power:ready",
 
-  // Climate
-  climateKeep: () => 'climate:keep',
-  climateOff: () => 'climate:off',
+	// Window
+	windowVentOpen: () => "window:vent:open",
+	windowVentClose: () => "window:vent:close",
+	ventOpen: () => "vent:open",
+	ventClose: () => "vent:close",
+	windowVent: (position: number) => {
+		assertRange(
+			"windowVent",
+			position,
+			COMMAND_RANGES.windowVent.min,
+			COMMAND_RANGES.windowVent.max,
+		);
+		return `window:vent:${position}`;
+	},
 
-  // Charge
-  chargeStart: () => 'charge:start',
-  chargeStop: () => 'charge:stop',
-  chargePort: () => 'chargeport',
+	// Sentry
+	sentryOn: () => "sentry:on",
+	sentryOff: () => "sentry:off",
 
-  // Drive Config
-  pedalStandard: () => 'pedal:standard',
-  pedalChill: () => 'pedal:chill',
-  pedalSport: () => 'pedal:sport',
-  regenOff: () => 'regen:off',
-  regenLow: () => 'regen:low',
-  regenStd: () => 'regen:std',
-  regenMax: () => 'regen:max',
-  stopCreep: () => 'stop:creep',
-  stopRoll: () => 'stop:roll',
-  stopHold: () => 'stop:hold',
+	// Climate
+	climateKeep: () => "climate:keep",
+	climateOff: () => "climate:off",
+
+	// Charge
+	chargeStart: () => "charge:start",
+	chargeStop: () => "charge:stop",
+	chargePort: () => "chargeport",
+
+	// Drive Config
+	pedalStandard: () => "pedal:standard",
+	pedalChill: () => "pedal:chill",
+	pedalSport: () => "pedal:sport",
+	regenOff: () => "regen:off",
+	regenLow: () => "regen:low",
+	regenStd: () => "regen:std",
+	regenMax: () => "regen:max",
+	stopCreep: () => "stop:creep",
+	stopRoll: () => "stop:roll",
+	stopHold: () => "stop:hold",
+
+	// Drive Mode Override ("Ghost Mode")
+	driveModeOff: () => "drivemode:off",
+	driveModeChill: () => "drivemode:chill",
+	driveModeStandard: () => "drivemode:standard",
+	driveModePerformance: () => "drivemode:performance",
+
+	// TPMS query
+	tpms: () => "tpms",
+
+	// ECE R79 bypass (EU only)
+	eceR79: (on: boolean) => (on ? "ecer79:on" : "ecer79:off"),
+
+	// Region spoofing
+	regionSpoof: (code: string) => {
+		assertRegionSpoofCode(code);
+		return `region:spoof:${code}`;
+	},
+
+	// Auto Lane Change confirmation
+	alc: (on: boolean) => (on ? "alc:on" : "alc:off"),
+
+	// Rate limiting
+	rateLimit: (on: boolean) => (on ? "ratelimit:on" : "ratelimit:off"),
+
+	// Turn signals (3-blink lane change)
+	turnLeft3: () => "turn:left3",
+	turnRight3: () => "turn:right3",
+	turnHazard: () => "turn:hazard",
+	turnOff: () => "turn:off",
+
+	// Seatbelt emulation
+	seatbelt: (on: boolean) => (on ? "seatbelt:on" : "seatbelt:off"),
+
+	// Air recirculation
+	airRecirc: (on: boolean) => (on ? "airecirc:on" : "airecirc:off"),
+
+	// Wiper speed persistence
+	wiperPersist: (on: boolean) =>
+		on ? "wiperpersist:on" : "wiperpersist:off",
+
+	// Mirror auto-fold on lock
+	mirrorAutoFold: (on: boolean) =>
+		on ? "mirror:autofold:on" : "mirror:autofold:off",
+
+	// Powertrain telemetry query
+	powertrain: () => "powertrain",
+
+	// CAN simulation
+	canSimStart: () => "simu:start",
+	canSimStop: () => "simu:stop",
+
+	// Single-shot TX mode
+	singleShot: (on: boolean) => (on ? "singleshot:on" : "singleshot:off"),
+
+	// Firmware version compatibility query
+	fwCompat: () => "fwcompat",
+
+	// MQTT bridge
+	mqtt: (on: boolean) => (on ? "mqtt:on" : "mqtt:off"),
+	mqttBroker: (host: string) => {
+		if (!host || host.length > 63)
+			throw new RangeError(
+				`MQTT broker host must be 1-63 chars, got "${host}"`,
+			);
+		return `mqtt:broker:${host}`;
+	},
+	mqttPort: (port: number) => {
+		if (!Number.isInteger(port) || port < 1 || port > 65535)
+			throw new RangeError(`MQTT port must be 1-65535, got ${port}`);
+		return `mqtt:port:${port}`;
+	},
+	mqttInterval: (ms: number) => {
+		if (!Number.isInteger(ms) || ms < 100 || ms > 60000)
+			throw new RangeError(
+				`MQTT interval must be 100-60000 ms, got ${ms}`,
+			);
+		return `mqtt:interval:${ms}`;
+	},
+
+	// Vehicle config query
+	vehicle: () => "vehicle",
+
+	// Vehicle platform identity query
+	platform: () => "platform",
+
+	// Log ring buffer dump
+	log: () => "log",
+
+	// Button remapping (2.2)
+	btnMap: (button: string, press: string, action: string) => {
+		assertButtonName(button);
+		assertPressType(press);
+		assertButtonAction(action);
+		return `btnmap:${button}:${press}:${action}`;
+	},
+	btnMapQuery: () => "btnmap:query",
+	btnMapReset: () => "btnmap:reset",
+
+	// Speed camera alert BLE service (2.8)
+	speedAlert: (on: boolean) => (on ? "speedalert:on" : "speedalert:off"),
+
+	// GVRET TCP gateway (3.5)
+	gvret: (on: boolean) => (on ? "gvret:on" : "gvret:off"),
+	gvretPort: (port: number) => {
+		if (!Number.isInteger(port) || port < 1 || port > 65535)
+			throw new RangeError(`GVRET port must be 1-65535, got ${port}`);
+		return `gvret:port:${port}`;
+	},
+
+	// ESP-NOW multi-device (4.1)
+	espNow: (on: boolean) => (on ? "espnow:on" : "espnow:off"),
+	espNowChannel: (ch: number) => {
+		if (!Number.isInteger(ch) || ch < 1 || ch > 13)
+			throw new RangeError(`ESP-NOW channel must be 1-13, got ${ch}`);
+		return `espnow:channel:${ch}`;
+	},
+
+	// ScanMyTesla BT bridge (4.2)
+	scanMyTesla: (on: boolean) => (on ? "smt:on" : "smt:off"),
+
+	// ELM327 emulation (4.3)
+	elm327: (on: boolean) => (on ? "elm327:on" : "elm327:off"),
+
+	// Tesla BLE Vehicle Control (4.4)
+	teslaBle: (on: boolean) => (on ? "teslable:on" : "teslable:off"),
+	teslaBleAuth: () => "teslable:auth",
+	teslaBleForget: () => "teslable:forget",
+
+	// Home Assistant / ESPHome integration (4.5)
+	homeAssistant: (on: boolean) => (on ? "ha:on" : "ha:off"),
+	haDiscovery: () => "ha:discovery",
+	haInterval: (ms: number) => {
+		if (!Number.isInteger(ms) || ms < 500 || ms > 60000)
+			throw new RangeError(
+				`HA polling interval must be 500-60000 ms, got ${ms}`,
+			);
+		return `ha:interval:${ms}`;
+	},
+
+	// Encrypted BLE Multi-Device (4.6)
+	bleEncrypt: (on: boolean) => (on ? "bleencrypt:on" : "bleencrypt:off"),
+	blePair: () => "bleencrypt:pair",
+	bleUnpair: () => "bleencrypt:unpair",
 } as const;
 
 /** Profile label map */
 export const PROFILE_LABELS: Record<number, string> = {
-  0: 'Chill',
-  1: 'Normal',
-  2: 'Hurry',
-  3: 'Max',
-  4: 'Sloth',
+	0: "Chill",
+	1: "Normal",
+	2: "Hurry",
+	3: "Max",
+	4: "Sloth",
 };

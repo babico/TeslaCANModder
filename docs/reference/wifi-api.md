@@ -1,0 +1,285 @@
+﻿---
+title: WiFi REST API
+title_tr: WiFi REST API
+description: HTTP endpoints and wireless AP configuration
+category: reference
+folder: reference
+tags: [wifi, api, rest, http]
+order: 10
+icon: 📡
+---
+
+# WiFi REST API
+
+ESP32 firmware variants with WiFi enabled (`esp32_wifi`, `esp32_wifi_ble`) create a wireless access point for HTTP control.
+
+## WiFi Modes
+
+### Access Point (AP) Mode — Default
+
+The ESP32 creates its own WiFi network:
+
+| Setting | Default Value |
+| -------- | ------------- |
+| SSID | `TeslaCANModder` |
+| Password | `T3SL@c@n123.` |
+| IP Address | `192.168.4.1` |
+| Port | `80` |
+| Channel | `6` |
+| Max Clients | `4` |
+
+### Station (STA) Mode
+
+Connect the ESP32 to your existing WiFi network:
+
+1. Open the embedded dashboard at `http://192.168.4.1`
+2. Switch WiFi mode to **STA**
+3. Enter your network SSID and password
+4. Click **Connect**
+
+If STA connection fails, the device automatically falls back to AP mode.
+
+> WiFi configuration is saved to NVS flash and persists across reboots.
+
+## REST Endpoints
+
+### System
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| `GET` | `/` | Embedded HTML dashboard |
+| `GET` | `/api/ping` | Health check — returns `{"t":"pong","v":1}` |
+| `GET` | `/api/status` | Full board state JSON |
+| `GET` | `/api/disable` | Emergency disable all injections |
+
+### Command Execution
+
+| Method | Endpoint | Description |
+| ------- | --------- | ------------ |
+| `POST` | `/api/command` | Execute any serial command |
+
+**Request body:**
+
+```json
+{"cmd": "fsd:on"}
+```
+
+**Response:** Full board state JSON (same as `/api/status`).
+
+All serial commands work over REST. See [Command Reference](commands) for the full list.
+
+### WiFi Configuration
+
+| Method | Endpoint | Description |
+| ------- | --------- | ------------ |
+| `GET` | `/api/wifi/status` | Current WiFi status and configuration |
+| `POST` | `/api/wifi/config` | Change WiFi mode / credentials |
+
+**GET `/api/wifi/status`** — AP mode response:
+
+```json
+{
+  "mode": "ap",
+  "ssid": "TeslaCANModder",
+  "ip": "192.168.4.1",
+  "clients": 1,
+  "channel": 6,
+  "mac": "AA:BB:CC:DD:EE:FF"
+}
+```
+
+**GET `/api/wifi/status`** — STA mode response:
+
+```json
+{
+  "mode": "sta",
+  "ssid": "MyHomeWiFi",
+  "ip": "192.168.1.42",
+  "rssi": -65,
+  "connected": true,
+  "gateway": "192.168.1.1",
+  "mac": "AA:BB:CC:DD:EE:FF"
+}
+```
+
+**POST `/api/wifi/config`** — Switch to STA:
+
+```json
+{
+  "mode": "sta",
+  "ssid": "MyHomeWiFi",
+  "password": "mypassword"
+}
+```
+
+**POST `/api/wifi/config`** — Switch to AP:
+
+```json
+{
+  "mode": "ap",
+  "ssid": "CustomName",
+  "password": "mypassword8"
+}
+```
+
+> AP password must be 8–64 characters or empty (open network).
+
+### BLE Control
+
+| Method | Endpoint | Description |
+| ------- | --------- | ------------ |
+| `GET` | `/api/ble/status` | BLE state (enabled, connected, device name) |
+| `POST` | `/api/ble/config` | Enable or disable BLE at runtime |
+
+### TPMS & Diagnostics
+
+| Method | Endpoint | Description |
+| ------- | --------- | ------------ |
+| `GET` | `/api/tpms` | TPMS tire pressure & temperature JSON |
+| `GET` | `/api/log` | Debug ring buffer dump (last 256 events) |
+
+**GET `/api/tpms`** response:
+
+```json
+{
+  "ok": true,
+  "fl": 2.45, "fr": 2.50, "rl": 2.48, "rr": 2.47,
+  "tfl": 25, "tfr": 26, "trl": 24, "trr": 25
+}
+```
+
+Pressures are in bar, temperatures in °C. `ok` is `false` when no TPMS data has been received yet.
+
+**GET `/api/log`** response:
+
+```json
+[
+  {"ts": 12345, "msg": "FSD enabled"},
+  {"ts": 12400, "msg": "ECE R79 bypass active"}
+]
+```
+
+**GET `/api/ble/status`** response:
+
+```json
+{
+  "enabled": true,
+  "connected": false,
+  "deviceName": "TeslaCANModder"
+}
+```
+
+**POST `/api/ble/config`** — Disable BLE:
+
+```json
+{"enabled": false}
+```
+
+> BLE state is saved to NVS and persists across reboots.
+
+## Example Requests
+
+```bash
+# Check status
+curl http://192.168.4.1/api/status
+
+# Enable FSD
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"fsd:on"}'
+
+# Set speed profile
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"profile:3"}'
+
+# Enable nag killer (EPAS torque spoofing)
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"nag:killer:on"}'
+
+# Start battery preconditioning
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"precondition:on"}'
+
+# Enable track mode
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"trackmode:on"}'
+
+# Query BMS telemetry
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"bms"}'
+
+# Switch to STA mode
+curl -X POST http://192.168.4.1/api/wifi/config \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"sta","ssid":"MyWiFi","password":"pass1234"}'
+
+# Check WiFi status
+curl http://192.168.4.1/api/wifi/status
+
+# Disable BLE
+curl -X POST http://192.168.4.1/api/ble/config \
+  -H "Content-Type: application/json" \
+  -d '{"enabled":false}'
+
+# Emergency disable all modifications
+curl http://192.168.4.1/api/disable
+
+# Query TPMS data
+curl http://192.168.4.1/api/tpms
+
+# Set drive mode to Performance
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"drivemode:performance"}'
+
+# Enable ECE R79 bypass
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"ecer79:on"}'
+
+# Dump debug log
+curl http://192.168.4.1/api/log
+```
+
+## Embedded Dashboard
+
+The ESP32 serves a built-in HTML dashboard at `http://192.168.4.1/` with:
+
+- Real-time status display (variant, CAN online, FSD, nag, profile)
+- WiFi settings (AP/STA mode switching, credentials)
+- BLE settings (enable/disable toggle, connection status)
+- Hardware variant selector (HW4 / HW3 / Legacy)
+- FSD toggle controls (FSD, nag, ISA chime, speed profile)
+- Vehicle commands (lock, trunk, mirrors, climate, summon, etc.)
+- System log output
+- Powertrain telemetry panel (speed, gear, pedal, steering, motor RPMs)
+- Turn signal, seatbelt emulation, wiper persist, mirror auto-fold controls
+- CAN simulation mode for bench testing
+
+## Phase 2 Status Fields
+
+The `/api/status` response now includes the following additional fields:
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `seatbeltEmulation` | boolean | Rear seatbelt emulation enabled |
+| `wiperPersist` | boolean | Wiper speed persistence enabled |
+| `mirrorAutoFold` | boolean | Mirror auto-fold on lock enabled |
+| `canSim` | boolean | CAN simulation mode active |
+| `hasPowertrain` | boolean | Powertrain telemetry data available |
+| `powertrain` | object | Powertrain data (when `hasPowertrain` is true) |
+| `powertrain.speed` | number | Vehicle speed (km/h) |
+| `powertrain.gear` | number | Gear state (1=P, 2=R, 3=N, 4=D) |
+| `powertrain.pedal` | number | Accelerator pedal (0–100%) |
+| `powertrain.steer` | number | Steering angle (degrees, ÷10) |
+| `powertrain.rpmR` | number | Rear motor RPM |
+| `powertrain.rpmF` | number | Front motor RPM |
+
+## CORS
+
+All API endpoints include CORS headers (`Access-Control-Allow-Origin: *`) for cross-origin requests from the web UI.

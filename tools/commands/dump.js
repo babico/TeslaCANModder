@@ -1,12 +1,20 @@
 /** dump command — Record CAN frames to file (JSONL or CSV). */
 
 import { createWriteStream } from 'node:fs';
+import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { ts } from '../lib/output.js';
 
 export async function runDump(session, opts, out) {
   const { watchDurMs, dumpFile, dumpFormat, timeoutMs, watchRaw } = opts;
-  const outputPath = dumpFile || `dump-${Date.now()}.${dumpFormat === 'csv' ? 'csv' : 'jsonl'}`;
+  const outputName = dumpFile || `dump-${Date.now()}.${dumpFormat === 'csv' ? 'csv' : 'jsonl'}`;
+
+  if (!isSafePathInput(outputName)) {
+    out.fail('Invalid --output path');
+    return;
+  }
+
+  const outputPath = resolve(outputName);
 
   out.section('CAN Frame Dump');
   out.info(`Duration: ${watchDurMs}ms`);
@@ -47,4 +55,8 @@ export async function runDump(session, opts, out) {
 
   stream.end();
   out.pass(`Dumped ${frameCount} frames to ${outputPath}`);
+}
+
+function isSafePathInput(value) {
+  return typeof value === 'string' && value.length > 0 && !value.includes('\0');
 }

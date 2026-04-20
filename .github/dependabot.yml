@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # Root workspace + packages/protocol, web, mobile, tools
+  # Root workspace + packages/protocol, web, client, tools
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -17,9 +17,9 @@ updates:
     labels:
       - dependencies
 
-  # PlatformIO (hardware/)
+  # PlatformIO (firmware/)
   - package-ecosystem: pip
-    directory: /hardware
+    directory: /firmware
     schedule:
       interval: weekly
       day: monday

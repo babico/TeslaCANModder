@@ -1,6 +1,7 @@
 /** replay command — Replay recorded CAN frames from a JSONL file. */
 
 import { createReadStream } from 'node:fs';
+import { resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { setTimeout as delay } from 'node:timers/promises';
 
@@ -12,18 +13,27 @@ export async function runReplay(session, opts, out, C) {
     process.exit(1);
   }
 
+  if (!isSafePathInput(replayFile)) {
+    out.fail('Invalid --input path');
+    return;
+  }
+
+  const inputPath = resolve(replayFile);
+
   out.section('CAN Frame Replay');
-  out.info(`File: ${replayFile}`);
+  out.info(`File: ${inputPath}`);
   out.info(`Speed: ${replaySpeed}x`);
 
   const lines = [];
-  const rl = createInterface({ input: createReadStream(replayFile), crlfDelay: Infinity });
+  const rl = createInterface({ input: createReadStream(inputPath), crlfDelay: Infinity });
   for await (const line of rl) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('timestamp,')) continue; // skip CSV header
     try {
       const obj = JSON.parse(trimmed);
-      lines.push(obj);
+      if (isReplayFrameLike(obj)) {
+        lines.push(obj);
+      }
     } catch {
       // skip non-JSON lines
     }
@@ -54,4 +64,16 @@ export async function runReplay(session, opts, out, C) {
   }
 
   out.pass(`Replayed ${sent} frames at ${replaySpeed}x speed`);
+}
+
+function isSafePathInput(value) {
+  return typeof value === 'string' && value.length > 0 && !value.includes('\0');
+}
+
+function isReplayFrameLike(value) {
+  if (!value || typeof value !== 'object') return false;
+  if (typeof value.id !== 'number') return false;
+  if (value.data !== undefined && typeof value.data !== 'string') return false;
+  if (value.bus !== undefined && typeof value.bus !== 'number') return false;
+  return true;
 }

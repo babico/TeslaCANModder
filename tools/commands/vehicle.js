@@ -18,7 +18,7 @@ const VEHICLE_COMMANDS = {
   // climate
   'climate-on': 'climate:keep', 'climate-off': 'climate:off',
   // charge
-  'charge-start': 'charge:start', 'charge-stop': 'charge:stop', 'charge-port': 'charge:port',
+  'charge-start': 'charge:start', 'charge-stop': 'charge:stop', 'charge-port': 'chargeport',
   // sentry
   'sentry-on': 'sentry:on', 'sentry-off': 'sentry:off',
   // vent
