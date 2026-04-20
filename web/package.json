@@ -15,7 +15,7 @@
     "@teslacanmodder/protocol": "*",
     "lightningcss": "^1.32.0",
     "lucide-react": "^1.8.0",
-    "mermaid": "^10.9.5",
+    "mermaid": "^11.14.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-markdown": "^10.1.0",
