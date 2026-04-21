@@ -1,4 +1,4 @@
----
+﻿---
 title: Flasher Quickstart
 description: Complete guide to flashing the Tesla CAN Mod firmware and connecting via USB or Bluetooth
 category: guides

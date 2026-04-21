@@ -1,7 +1,7 @@
 /*
  * TeslaCANModder - Arduino Uno Firmware
  * Main entry point - setup() and loop()
- * 
+ *
  * This firmware provides runtime-switchable Tesla CAN bus modification
  * with full web UI control over USB and optional Bluetooth.
  */
