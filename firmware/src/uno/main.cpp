@@ -78,9 +78,11 @@ void loop() {
     state.chassisOnline = false;
     state.standby = true;
     state.hasCtrl = false;
+#if !defined(BOARD_COMPACT_AVR)
     state.hasClimate = false;
     state.hasCharge = false;
     state.hasDrive = false;
+#endif
     state.summonRemaining = 0;
     sendLog(F("CAN bus silent - entering standby"));
   }

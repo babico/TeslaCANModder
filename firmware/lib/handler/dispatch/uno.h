@@ -1,16 +1,19 @@
 #pragma once
 #include "infra/can.h"
 #include "feature/summon.h"
-#include "feature/bms.h"
 #include "feature/nag.h"
-#include "feature/ban_detect.h"
 #include "feature/auto_lane_change.h"
 #include "feature/turn_signal.h"
-#include "feature/drive_context.h"
 #include "core/driver/uno.h"
 #include "handler/hw4.h"
 #include "handler/hw3.h"
 #include "handler/legacy.h"
+
+#if !defined(BOARD_COMPACT_AVR)
+#include "feature/bms.h"
+#include "feature/ban_detect.h"
+#include "feature/drive_context.h"
+#endif
 
 void resetHandlerLogFlags() {
   resetHW4LogFlags();
@@ -157,6 +160,7 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
     return;
   }
 
+#if !defined(BOARD_COMPACT_AVR)
   if (f.id == CAN_ID_CLIMATE && f.dlc >= 5) {
     memcpy(s.lastClimate, f.data, 5);
     s.hasClimate = true;
@@ -222,6 +226,7 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
     s.hasBms = true;
     return;
   }
+#endif
 
   if (f.id == CAN_ID_DAS_STATUS && f.dlc >= 6) {
     s.dasHandsOnState = readDasHandsOnState(f);
@@ -246,6 +251,7 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
     return;
   }
 
+#if !defined(BOARD_COMPACT_AVR)
   if (f.id == CAN_ID_DAS_CONTROL && f.dlc >= 2) {
     s.cruiseSetSpeedKph = decodeCruiseSetSpeedKph(f);
     s.maxSpeedKph = s.cruiseSetSpeedKph;
@@ -263,6 +269,7 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
     if (s.mapSpeedLimitKph > s.maxSpeedKph) s.maxSpeedKph = s.mapSpeedLimitKph;
     return;
   }
+#endif
 
   // D-05 safety cues: turn signal status from VCFRONT lights
   if (f.id == CAN_ID_VCFRONT_LIGHTS && f.dlc >= 7) {
@@ -271,6 +278,7 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
     return;
   }
 
+#if !defined(BOARD_COMPACT_AVR)
   // D-05 safety cues: blind-spot levels
   if (f.id == CAN_ID_BLIND_SPOT && f.dlc >= 1) {
     s.bsmLeftLevel = decodeBlindSpotLeftLevel(f);
@@ -386,34 +394,36 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
       s.hasEnhancedBms = true;
       return;
     }
+#endif
 
-    // Nag killer + steering mode: intercept EPAS torque frame
-    if (f.id == CAN_ID_EPAS_TORQUE && f.dlc >= 8) {
-      s.steeringMode = (f.data[0] >> 4) & 0x0F;
-      s.hasSteeringMode = true;
-      if (!s.txPaused && nagKillerShouldEcho(s)) {
-        Frame echo = f;
-        if (s.nagKillerMode == NAG_KILLER_NATURAL &&
-            nagNaturalIntervalReady(s, millis())) {
-          float torque = nagNaturalTorque(s.steeringAngle, s.dasHandsOnState);
-          nagKillerModifyNatural(echo, torque);
+  // Nag killer + steering mode: intercept EPAS torque frame
+  if (f.id == CAN_ID_EPAS_TORQUE && f.dlc >= 8) {
+    s.steeringMode = (f.data[0] >> 4) & 0x0F;
+    s.hasSteeringMode = true;
+    if (!s.txPaused && nagKillerShouldEcho(s)) {
+      Frame echo = f;
+      if (s.nagKillerMode == NAG_KILLER_NATURAL &&
+          nagNaturalIntervalReady(s, millis())) {
+        float torque = nagNaturalTorque(s.steeringAngle, s.dasHandsOnState);
+        nagKillerModifyNatural(echo, torque);
 #if (BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE)
-          driverSend(echo, bus);
+        driverSend(echo, bus);
 #else
-          driverSend(echo, 0);
+        driverSend(echo, 0);
 #endif
-        } else if (s.nagKillerMode != NAG_KILLER_NATURAL) {
-          nagKillerModify(echo);
+      } else if (s.nagKillerMode != NAG_KILLER_NATURAL) {
+        nagKillerModify(echo);
 #if (BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE)
-          driverSend(echo, bus);
+        driverSend(echo, bus);
 #else
-          driverSend(echo, 0);
+        driverSend(echo, 0);
 #endif
-        }
       }
-      return;
     }
+    return;
+  }
 
+#if !defined(BOARD_COMPACT_AVR)
   // OTA safety check
   if (f.id == CAN_ID_GTW_CAR_STATE && f.dlc >= 1) {
     bool otaActive = (f.data[0] & 0x01) != 0;
@@ -462,6 +472,7 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
     }
     return;
   }
+#endif
 
   // Only process FSD/variant-specific frames from bus 0 (MCP2515_1)
   if (bus != 0) return;

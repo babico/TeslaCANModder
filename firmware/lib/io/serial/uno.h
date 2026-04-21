@@ -24,7 +24,9 @@ uint8_t driverGetClockMHz();
 #include "feature/isa_chime.h"
 #include "feature/summon.h"
 #include "feature/variant.h"
+#if !defined(BOARD_COMPACT_AVR)
 #include "feature/bms.h"
+#endif
 #if BUS_VEHICLE_ACTIVE
   #include "feature/mirror.h"
   #include "feature/lock.h"
@@ -105,7 +107,9 @@ void printLn() {
 // ── JSON Messages ────────────────────────────────────────────────────────────
 void sendBoot(State& s) {
   Features f = s.features();
+#if BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE
   extern bool mcpAvailable[];
+#endif
 
   jsonLine()
     .str("t", "boot")
@@ -127,6 +131,7 @@ void sendBoot(State& s) {
 #else
       o.boolean("btEnabled", false);
 #endif
+    #if !defined(BOARD_COMPACT_AVR)
 #if BUS_VEHICLE_ACTIVE
       o.boolean("vehicleOnline", mcpAvailable[1]);
 #else
@@ -136,6 +141,7 @@ void sendBoot(State& s) {
       o.boolean("bodyOnline", mcpAvailable[2]);
 #else
       o.boolean("bodyOnline", false);
+#endif
 #endif
       o.boolean("chassisOnline", s.chassisOnline)
        .boolean("standby", s.standby);
@@ -164,12 +170,15 @@ void sendBoot(State& s) {
        .boolean("txPaused", s.txPaused)
        .num("detectedHW", s.detectedHW)
        .boolean("variantAutoDetect", s.variantAutoDetect)
+#if !defined(BOARD_COMPACT_AVR)
        .num("gtwAutopilotTier", (int)s.gtwAutopilotTier)
+#endif
        .boolean("rawCan", s.rawCanListen)
        .object("stream", [&](JsonLineBuilder::JsonObjectBuilder& stream) {
          stream.boolean("on", false).num("emitted", 0);
        });
     })
+#if !defined(BOARD_COMPACT_AVR)
     .object("driverAssist", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.num("turnSignalLeft", s.turnSignalLeft ? 1 : 0)
        .num("turnSignalRight", s.turnSignalRight ? 1 : 0)
@@ -202,10 +211,15 @@ void sendBoot(State& s) {
        .num("maxDischarge", (long)(s.bmsMaxDischargePower * 100))
        .boolean("hasEnhanced", s.hasEnhancedBms);
     })
+    #endif
     .object("safety", [&](JsonLineBuilder::JsonObjectBuilder& o) {
+    #if defined(BOARD_COMPACT_AVR)
+      o.boolean("banShield", s.banShieldEnabled);
+    #else
       o.boolean("banShield", s.banShieldEnabled)
        .num("banThreat", s.banThreatLevel)
        .num("banDetectCount", s.banDetectionCount);
+    #endif
     })
     .object("can", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.num("clockReqMHz", s.canClockReqMHz).num("clockMHz", s.canClockMHz);
@@ -224,7 +238,9 @@ void sendBoot(State& s) {
 
 void sendStatus(State& s, unsigned long now) {
   Features f = s.features();
+#if BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE
   extern bool mcpAvailable[];
+#endif
 
   jsonLine()
     .str("t", "status")
@@ -246,6 +262,7 @@ void sendStatus(State& s, unsigned long now) {
 #else
       o.boolean("btEnabled", false);
 #endif
+    #if !defined(BOARD_COMPACT_AVR)
 #if BUS_VEHICLE_ACTIVE
       o.boolean("vehicleOnline", mcpAvailable[1]);
 #else
@@ -255,6 +272,7 @@ void sendStatus(State& s, unsigned long now) {
       o.boolean("bodyOnline", mcpAvailable[2]);
 #else
       o.boolean("bodyOnline", false);
+#endif
 #endif
       o.boolean("chassisOnline", s.chassisOnline)
        .boolean("standby", s.standby);
@@ -280,12 +298,15 @@ void sendStatus(State& s, unsigned long now) {
        .boolean("txPaused", s.txPaused)
        .num("detectedHW", s.detectedHW)
        .boolean("variantAutoDetect", s.variantAutoDetect)
+#if !defined(BOARD_COMPACT_AVR)
        .num("gtwAutopilotTier", (int)s.gtwAutopilotTier)
+#endif
        .boolean("rawCan", s.rawCanListen)
        .object("stream", [&](JsonLineBuilder::JsonObjectBuilder& stream) {
          stream.boolean("on", s.streamEnabled).num("emitted", s.streamCount);
        });
     })
+#if !defined(BOARD_COMPACT_AVR)
     .object("driverAssist", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.num("turnSignalLeft", s.turnSignalLeft ? 1 : 0)
        .num("turnSignalRight", s.turnSignalRight ? 1 : 0)
@@ -318,10 +339,15 @@ void sendStatus(State& s, unsigned long now) {
        .num("maxDischarge", (long)(s.bmsMaxDischargePower * 100))
        .boolean("hasEnhanced", s.hasEnhancedBms);
     })
+    #endif
     .object("safety", [&](JsonLineBuilder::JsonObjectBuilder& o) {
+    #if defined(BOARD_COMPACT_AVR)
+      o.boolean("banShield", s.banShieldEnabled);
+    #else
       o.boolean("banShield", s.banShieldEnabled)
        .num("banThreat", s.banThreatLevel)
        .num("banDetectCount", s.banDetectionCount);
+    #endif
     })
     .object("can", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.num("clockReqMHz", s.canClockReqMHz).num("clockMHz", s.canClockMHz);
@@ -480,6 +506,7 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
     return;
   }
 
+#if !defined(BOARD_COMPACT_AVR)
   if (execBmsCmd(cmd, s)) {
     auto bmsCore = [&](JsonLineBuilder& out) {
       out.num("v", (long)(s.bmsVoltage * 100))
@@ -542,6 +569,7 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
     jsonLine().str("t", "bms").merge(bmsCore, bmsExtended).end();
     return;
   }
+#endif
 
   // Vehicle bus commands (precondition, track mode, climate, charge, drive)
 #if BUS_VEHICLE_ACTIVE

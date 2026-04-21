@@ -25,6 +25,7 @@ bool executeBanShieldCmd(const char* cmd, State& s) {
 // gtwshield:reset    — disarm + clear snapshot (re-learning phase)
 //
 // Source pattern: hypery11/flipper-tesla-fsd fsd_handle_gtw_shield()
+#if !defined(BOARD_COMPACT_AVR)
 bool executeGtwShieldCmd(const char* cmd, State& s) {
   if (strncmp(cmd, "gtwshield:", 10) != 0) return false;
   const char* arg = cmd + 10;
@@ -90,4 +91,5 @@ bool handleGtwShield(Frame& f, State& s) {
   }
   return false;
 }
+#endif
 
