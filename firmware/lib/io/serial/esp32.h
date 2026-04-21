@@ -1217,6 +1217,7 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
     return;
   }
 
+#if BUS_VEHICLE_ACTIVE
   // MQTT bridge: mqtt:on/off, mqtt:broker:<host>, mqtt:port:<port>, mqtt:interval:<ms>
   if (execMqttCmd(cmd, s)) {
     sendAck(cmd);
@@ -1225,6 +1226,7 @@ void executeCommand(const char* cmd, State& s, unsigned long now) {
     sendStatus(s, now);
     return;
   }
+#endif
 
   // Vehicle config query: vehicle
   if (execVehicleConfigCmd(cmd, s)) {

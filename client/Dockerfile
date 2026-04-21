@@ -15,6 +15,7 @@ CMD ["npm", "run", "web", "-w", "@teslacanmodder/client", "--", "--host", "0.0.0
 
 FROM base AS build
 COPY . .
+RUN npm run build -w packages/protocol
 RUN npm run web:build -w @teslacanmodder/client
 
 FROM nginx:1.27-alpine AS production
