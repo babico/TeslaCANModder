@@ -1,7 +1,7 @@
 ﻿---
 title: Firmware Variants
 title_tr: Firmware Varyantları
-description: Build configurations for Arduino, ESP32, and their connectivity options
+description: Build configurations for ESP32 and its connectivity options
 category: reference
 folder: reference
 tags: [firmware, variants, build]
@@ -11,43 +11,36 @@ icon: 💾
 
 # Firmware Variants
 
-TeslaCANModder supports multiple build configurations for different hardware setups. Select the variant that matches your board and connectivity needs. CAN bus lanes are controlled independently via build flags.
-
-## Arduino Uno Variants
-
-| Environment | Bluetooth | Use Case |
-| ---------- | --------- | -------- |
-| `uno` | No | Serial only |
-| `uno_bt` | Yes (HC-05) | Serial + Bluetooth |
+TeslaCANModder supports multiple build configurations for different ESP32 connectivity needs. Select the variant that matches your board and connectivity needs. CAN bus lanes are controlled independently via build flags.
 
 ## ESP32 Variants
 
 All ESP32 variants use MCP2515 modules over SPI. No TWAI or SN65HVD230 needed.
 
-| Environment | WiFi | BLE | Use Case |
-| ---------- | ---- | --- | -------- |
-| `esp32` | No | No | Serial only |
-| `esp32_wifi` | Yes | No | WiFi REST API |
-| `esp32_ble` | No | Yes | BLE control |
-| `esp32_wifi_ble` | Yes | Yes | WiFi + BLE |
+| Environment      | WiFi | BLE | Use Case      |
+| ---------------- | ---- | --- | ------------- |
+| `esp32`          | No   | No  | Serial only   |
+| `esp32_wifi`     | Yes  | No  | WiFi REST API |
+| `esp32_ble`      | No   | Yes | BLE control   |
+| `esp32_wifi_ble` | Yes  | Yes | WiFi + BLE    |
 
 ## CAN Bus Flags
 
 Each CAN bus lane is enabled independently. The FSD bus is always on.
 
-| Flag | Default | X179 Pins | Bus Function |
-| ---- | ------- | --------- | ----------- |
-| `BUS_CHASSIS_ACTIVE` | 1 (always) | 13-14 | Chassis / Autopilot |
-| `BUS_VEHICLE_ACTIVE` | 0 | 9-10 | Vehicle Control (mirror, lock, climate, charge, drive, seat, wiper, display, power) |
-| `BUS_BODY_ACTIVE` | 0 | 2-3 | Body Control (window, sentry, trunk) |
+| Flag                 | Default    | X179 Pins | Bus Function                                                                        |
+| -------------------- | ---------- | --------- | ----------------------------------------------------------------------------------- |
+| `BUS_CHASSIS_ACTIVE` | 1 (always) | 13-14     | Chassis / Autopilot                                                                 |
+| `BUS_VEHICLE_ACTIVE` | 0          | 9-10      | Vehicle Control (mirror, lock, climate, charge, drive, seat, wiper, display, power) |
+| `BUS_BODY_ACTIVE`    | 0          | 2-3       | Body Control (window, sentry, trunk)                                                |
 
 ### Other Build Flags
 
-| Flag | Values | Description |
-| ---- | ------ | ----------- |
-| `BOARD_ENABLE_WIFI` | 0 or 1 | Enable WiFi AP/STA + REST API |
-| `BOARD_ENABLE_BLE` | 0 or 1 | Enable BLE (NimBLE Nordic UART) |
-| `BOARD_CAN_CLOCK_MHZ` | 8 | MCP2515 crystal frequency |
+| Flag                  | Values | Description                     |
+| --------------------- | ------ | ------------------------------- |
+| `BOARD_ENABLE_WIFI`   | 0 or 1 | Enable WiFi AP/STA + REST API   |
+| `BOARD_ENABLE_BLE`    | 0 or 1 | Enable BLE (NimBLE Nordic UART) |
+| `BOARD_CAN_CLOCK_MHZ` | 8      | MCP2515 crystal frequency       |
 
 ## Building with PlatformIO
 

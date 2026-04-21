@@ -24,7 +24,6 @@ BUILD_DIR = PROJECT_DIR / ".pio" / "build"
 
 # Valid environment names (must match platformio.ini)
 VALID_ENVS = {
-    "uno", "uno_bt",
     "esp32", "esp32_wifi", "esp32_ble", "esp32_wifi_ble",
 }
 
@@ -60,12 +59,8 @@ def build_firmware(env, chassis=1, vehicle=0, body=0):
         raise RuntimeError(f"Build failed:\n{result.stderr[-2000:]}")
 
     # Find the output file
-    if env.startswith("esp32"):
-        fw_path = BUILD_DIR / env / "firmware.bin"
-        ext = ".bin"
-    else:
-        fw_path = BUILD_DIR / env / "firmware.hex"
-        ext = ".hex"
+    fw_path = BUILD_DIR / env / "firmware.bin"
+    ext = ".bin"
 
     if not fw_path.exists():
         raise FileNotFoundError(f"Firmware not found: {fw_path}")

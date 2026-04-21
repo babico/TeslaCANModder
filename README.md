@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/babico/TeslaCANModder/actions/workflows/ci.yml/badge.svg)](https://github.com/babico/TeslaCANModder/actions/workflows/ci.yml)
 
-Unified firmware, browser, and native client stack for Tesla CAN bus modification using Arduino Uno or ESP32-S DevKit.
+Unified firmware, browser, and native client stack for Tesla CAN bus modification using ESP32-S DevKit.
 
 ## Quick Start
 
@@ -10,13 +10,11 @@ Unified firmware, browser, and native client stack for Tesla CAN bus modificatio
 
 ```powershell
 cd firmware
-.\.pio.ps1 run -e uno          # Arduino Uno, serial only
-.\.pio.ps1 run -e uno_bt        # Arduino Uno + HC-05 Bluetooth
 .\.pio.ps1 run -e esp32         # ESP32, serial only
 .\.pio.ps1 run -e esp32_wifi    # ESP32 + WiFi REST API
 .\.pio.ps1 run -e esp32_ble     # ESP32 + BLE
 .\.pio.ps1 run -e esp32_wifi_ble # ESP32 + WiFi + BLE
-.\.pio.ps1 run -e uno -t upload  # Flash to board
+.\.pio.ps1 run -e esp32 -t upload  # Flash to board
 ```
 
 CAN bus selection is controlled via build flags (FSD always on):
@@ -39,13 +37,12 @@ Open <http://localhost:5173> and click "Connect USB"
 
 ## What's Included
 
-- **Hardware Firmware** - Arduino Uno + ESP32-S firmware with per-bus feature gating
+- **Hardware Firmware** - ESP32-S firmware with per-bus feature gating
 - **Client App** - Expo-based client for browser, iOS, and Android targets
 - **Docker Support** - Build firmware and run the browser client in containers
 
 ## Hardware
 
-- **Arduino Uno R3** (CH340 or ATmega16U2) — up to 3× MCP2515, optional HC-05 BT
 - **ESP32-S DevKit** — up to 3× MCP2515, built-in WiFi + BLE
 - MCP2515 CAN module (8 MHz crystal) + TJA1050 transceiver per bus
 - 9V-36V to 5V converter

@@ -20,35 +20,35 @@ Each entry shows: command → gate → state → CAN path → bus target.
 
 ### Bus Layout (Tesla X179 Connector)
 
-| Bus | ID | Name | Direction |
-| --- | -- | ---- | --------- |
-| 0 | BUS_CHASSIS | Chassis CAN | Intercept + modify |
-| 1 | BUS_VEHICLE | Vehicle Control CAN | Inject / echo / read |
-| 2 | BUS_BODY | Body Control CAN | Inject |
+| Bus | ID          | Name                | Direction            |
+| --- | ----------- | ------------------- | -------------------- |
+| 0   | BUS_CHASSIS | Chassis CAN         | Intercept + modify   |
+| 1   | BUS_VEHICLE | Vehicle Control CAN | Inject / echo / read |
+| 2   | BUS_BODY    | Body Control CAN    | Inject               |
 
 ### Feature Categories
 
-| Category | Pattern | Typical Bus |
-| -------- | ------- | ----------- |
-| Toggle-Inject | ON → add filter + intercept + modify + send, OFF → remove filter | 0 (FSD) |
-| Echo-Inject | Read frame → clone → modify → send back on same bus | 1 (Vehicle) |
-| Burst-Inject | Build frame → `startBurst(count, delayMs)` non-blocking | 1 or 2 |
-| Tick-Inject | Dedicated timer loop sends frames indefinitely or with countdown | 1 (Vehicle) |
-| Read-Only | Decode frame → update state (no send) | 1 (Vehicle) |
-| Config-Only | Update state + persist (no CAN interaction) | — |
+| Category      | Pattern                                                          | Typical Bus |
+| ------------- | ---------------------------------------------------------------- | ----------- |
+| Toggle-Inject | ON → add filter + intercept + modify + send, OFF → remove filter | 0 (FSD)     |
+| Echo-Inject   | Read frame → clone → modify → send back on same bus              | 1 (Vehicle) |
+| Burst-Inject  | Build frame → `startBurst(count, delayMs)` non-blocking          | 1 or 2      |
+| Tick-Inject   | Dedicated timer loop sends frames indefinitely or with countdown | 1 (Vehicle) |
+| Read-Only     | Decode frame → update state (no send)                            | 1 (Vehicle) |
+| Config-Only   | Update state + persist (no CAN interaction)                      | —           |
 
 ### Transmission Safety
 
 `txPaused` gates **all** transmission paths when OTA update is detected:
 
-| Layer | Effect |
-| ----- | ------ |
+| Layer                   | Effect                                            |
+| ----------------------- | ------------------------------------------------- |
 | HW4/HW3/Legacy handlers | Pass frames through unmodified (no FSD injection) |
-| `startBurst()` | Refuses to start new burst |
-| `burstTick()` | Cancels active burst (`burstRemaining = 0`) |
-| `summonTick()` | Cancels summon (`summonRemaining = 0`) |
-| `preconditionTick()` | Returns immediately |
-| `nagKillerShouldEcho()` | Returns false |
+| `startBurst()`          | Refuses to start new burst                        |
+| `burstTick()`           | Cancels active burst (`burstRemaining = 0`)       |
+| `summonTick()`          | Cancels summon (`summonRemaining = 0`)            |
+| `preconditionTick()`    | Returns immediately                               |
+| `nagKillerShouldEcho()` | Returns false                                     |
 
 ### Burst Architecture (`infra/burst.h`)
 
@@ -65,15 +65,15 @@ NOT used by: summon (dynamic frame per tick), precondition (indefinite heartbeat
 
 `features()` returns a `Features` struct based on `s.variant`:
 
-| Feature | HW4 | HW3 | Legacy |
-| ------- | --- | --- | ------ |
-| fsd | yes | yes | yes |
-| fsdForce | yes | yes | yes |
-| offset | **yes** | **yes** | no |
-| profile | yes | yes | yes |
-| nag | yes | yes | yes |
-| isaChime | **yes** | no | no |
-| summon | yes | yes | **no** |
+| Feature  | HW4     | HW3     | Legacy |
+| -------- | ------- | ------- | ------ |
+| fsd      | yes     | yes     | yes    |
+| fsdForce | yes     | yes     | yes    |
+| offset   | **yes** | **yes** | no     |
+| profile  | yes     | yes     | yes    |
+| nag      | yes     | yes     | yes    |
+| isaChime | **yes** | no      | no     |
+| summon   | yes     | yes     | **no** |
 
 Features not in this table use explicit variant checks or have no gate.
 
@@ -718,39 +718,39 @@ Effect: txPaused gates ALL transmission (see Transmission Safety table above).
 
 ## Pattern Compliance Matrix
 
-| # | Feature | Gate | State | Save | Filters | LogReset | Bus |
-| - | ------- | ---- | ----- | ---- | ------- | -------- | --- |
-| 1 | fsd | features().fsd | ✅ | ✅ | ✅ | ✅ | 0 |
-| 2 | fsd:force | features().fsdForce | ✅ | ✅ | — | ✅ | — |
-| 3 | nag | features().nag | ✅ | ✅ | ✅ | ✅ | 0 |
-| 4 | isa-chime | HW4 + features().isaChime | ✅ | ✅ | ✅ | ✅ | 0 |
-| 5 | nagkiller | features().nag | ✅ | ✅ | — (static) | ✅ | 1 |
-| 6 | profile | features().profile | ✅ | ✅ | — | ✅ | — |
-| 7 | offset | features().offset | ✅ | ✅ | — | ✅ | — |
-| 8 | summon-inject | features().summon | ✅ | ✅ | — | ✅ | 1 |
-| 8 | summon (trigger) | summon + summonInject + hasCtrl | ✅ | — | — | — | 1 |
-| 9 | precondition | variant != LEGACY | ✅ | ✅ | — | — | 1 |
-| 10 | sentry | variant != LEGACY | — | — | — | — | 2 |
-| 11 | window | variant != LEGACY | — | — | — | — | 2 |
-| 12 | trunk/frunk/glove | variant != LEGACY | — | — | — | — | 1/2 |
-| 13 | charge | variant != LEGACY + hasCharge | — | — | — | — | 1 |
-| 14 | climate | variant != LEGACY + hasClimate | — | — | — | — | 1 |
-| 15 | pedal | variant != LEGACY + hasDrive | — | — | — | — | 1 |
-| 16 | regen | variant != LEGACY + hasDrive | — | — | — | — | 1 |
-| 17 | stop | variant != LEGACY + hasDrive | — | — | — | — | 1 |
-| 18 | lock/horn | hasCtrl | — | — | — | — | 1 |
-| 19 | light | hasCtrl | — | — | — | — | 1 |
-| 20 | mirror | hasCtrl | — | — | — | — | 1 |
-| 21 | seat | hasCtrl | — | — | — | — | 1 |
-| 22 | wiper | hasCtrl | — | — | — | — | 1 |
-| 23 | display | hasCtrl | — | — | — | — | 1 |
-| 24 | power | hasCtrl | — | — | — | — | 1 |
-| 25 | trackmode | variant != LEGACY | ✅ | ✅ | — | — | 1 |
-| 26 | banshield | none | ✅ | ✅ | — | — | — |
-| 27 | canclock | none | ✅ | ✅ | — | — | — |
-| 28 | variant | none | ✅ | ✅ | ✅ | — | — |
-| 29 | stream | none | ✅ | — | — | — | — |
-| 30 | can:raw | none | ✅ | — | ✅ | — | — |
+| #   | Feature           | Gate                            | State | Save | Filters    | LogReset | Bus |
+| --- | ----------------- | ------------------------------- | ----- | ---- | ---------- | -------- | --- |
+| 1   | fsd               | features().fsd                  | ✅    | ✅   | ✅         | ✅       | 0   |
+| 2   | fsd:force         | features().fsdForce             | ✅    | ✅   | —          | ✅       | —   |
+| 3   | nag               | features().nag                  | ✅    | ✅   | ✅         | ✅       | 0   |
+| 4   | isa-chime         | HW4 + features().isaChime       | ✅    | ✅   | ✅         | ✅       | 0   |
+| 5   | nagkiller         | features().nag                  | ✅    | ✅   | — (static) | ✅       | 1   |
+| 6   | profile           | features().profile              | ✅    | ✅   | —          | ✅       | —   |
+| 7   | offset            | features().offset               | ✅    | ✅   | —          | ✅       | —   |
+| 8   | summon-inject     | features().summon               | ✅    | ✅   | —          | ✅       | 1   |
+| 8   | summon (trigger)  | summon + summonInject + hasCtrl | ✅    | —    | —          | —        | 1   |
+| 9   | precondition      | variant != LEGACY               | ✅    | ✅   | —          | —        | 1   |
+| 10  | sentry            | variant != LEGACY               | —     | —    | —          | —        | 2   |
+| 11  | window            | variant != LEGACY               | —     | —    | —          | —        | 2   |
+| 12  | trunk/frunk/glove | variant != LEGACY               | —     | —    | —          | —        | 1/2 |
+| 13  | charge            | variant != LEGACY + hasCharge   | —     | —    | —          | —        | 1   |
+| 14  | climate           | variant != LEGACY + hasClimate  | —     | —    | —          | —        | 1   |
+| 15  | pedal             | variant != LEGACY + hasDrive    | —     | —    | —          | —        | 1   |
+| 16  | regen             | variant != LEGACY + hasDrive    | —     | —    | —          | —        | 1   |
+| 17  | stop              | variant != LEGACY + hasDrive    | —     | —    | —          | —        | 1   |
+| 18  | lock/horn         | hasCtrl                         | —     | —    | —          | —        | 1   |
+| 19  | light             | hasCtrl                         | —     | —    | —          | —        | 1   |
+| 20  | mirror            | hasCtrl                         | —     | —    | —          | —        | 1   |
+| 21  | seat              | hasCtrl                         | —     | —    | —          | —        | 1   |
+| 22  | wiper             | hasCtrl                         | —     | —    | —          | —        | 1   |
+| 23  | display           | hasCtrl                         | —     | —    | —          | —        | 1   |
+| 24  | power             | hasCtrl                         | —     | —    | —          | —        | 1   |
+| 25  | trackmode         | variant != LEGACY               | ✅    | ✅   | —          | —        | 1   |
+| 26  | banshield         | none                            | ✅    | ✅   | —          | —        | —   |
+| 27  | canclock          | none                            | ✅    | ✅   | —          | —        | —   |
+| 28  | variant           | none                            | ✅    | ✅   | ✅         | —        | —   |
+| 29  | stream            | none                            | ✅    | —    | —          | —        | —   |
+| 30  | can:raw           | none                            | ✅    | —    | ✅         | —        | —   |
 
 ---
 
@@ -784,5 +784,4 @@ handler/hw4.h   — HW4 FSD mux handler (mux 0/1/2 + ISA speed + follow dist)
 handler/hw3.h   — HW3 FSD mux handler (mux 0/1/2 + follow dist)
 handler/legacy.h — Legacy FSD handler (mux 0/1 + stalk profile)
 handler/dispatch/esp32.h — main loop dispatch (summonTick, preconditionTick, burstTick, nagKiller echo)
-handler/dispatch/uno.h   — Uno variant of dispatch
 ```

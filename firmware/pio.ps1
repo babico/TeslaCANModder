@@ -66,9 +66,6 @@ function Normalize-PlatformIOArgs([string[]]$rawArgs) {
   }
 
   if ($envIndex -ge 0 -and ($envIndex + 1) -lt $normalized.Count) {
-    if ($normalized[$envIndex + 1] -eq "uno") {
-      $normalized[$envIndex + 1] = "native"
-    }
     return ,$normalized.ToArray()
   }
 

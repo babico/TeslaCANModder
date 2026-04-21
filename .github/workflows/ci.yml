@@ -40,7 +40,7 @@ jobs:
             # and ring/log buffer regression coverage.
             - run: pio test -e native
             - name: Firmware size regression check
-              run: python scripts/check_firmware_size.py --env uno esp32
+              run: python scripts/check_firmware_size.py --env esp32
 
     # ── Shared Protocol Package ─────────────────────────────────────────────────
     protocol:

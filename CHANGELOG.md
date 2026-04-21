@@ -38,7 +38,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Multi-bus CAN architecture (Chassis, Vehicle, Body) with per-bus build flags
-- 7 PlatformIO firmware environments (native, uno, uno_bt, esp32, esp32_wifi, esp32_ble, esp32_wifi_ble)
+- 5 PlatformIO firmware environments (native, esp32, esp32_wifi, esp32_ble, esp32_wifi_ble)
 - Client app with dashboard, vehicle controls, CAN frame monitor, flasher, setup guide, BLE, and serial connectivity
 - CAN frame decoder (577 Tesla frames from mikegapinski dataset)
 - Debug CLI tools

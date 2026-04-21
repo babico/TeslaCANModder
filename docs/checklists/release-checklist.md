@@ -17,44 +17,44 @@ Pre-release checklist for TeslaCANModder. Every tagged release **must** pass all
 
 ## 1. CI Pipeline Gates
 
-| Gate | Requirement | Verified By | Evidence |
-| ----- | ------------ | ------------ | -------- |
-| Firmware native tests | All pass (`pio test -e native`) | CI `firmware` job | Pending CI run |
-| Firmware size regression | Within thresholds | CI `firmware` job | Pending CI run |
-| Protocol unit tests | All pass (`npm run test:protocol`) | CI `protocol` job | Attach latest CI run or local command output |
-| E2E / smoke coverage | All configured smoke checks pass | CI `e2e-smoke` job | Attach latest CI run or note if covered by another suite |
-| Client typecheck | Zero errors (`npm run typecheck:client`) | CI `client` job | Attach latest CI run or local command output |
-| Client unit tests | All pass (`npm run test:client`) | CI `client` job | Attach latest CI run or local command output |
-| Client browser export build | Succeeds | release workflow | Pending CI run |
-| Tools tests | All pass (`npm run test:tools`) | CI `tools` job | Attach latest CI run or local command output |
-| Docker build | Succeeds | CI `docker` job | Pending CI run |
-| Docker smoke test | Heartbeat healthy | CI `docker-smoke` job | Pending CI run |
-| Security audit | No medium+ vulnerabilities | CI `security-audit` job | Pending CI run |
-| License check | All deps in allowlist | CI `security-audit` job | Pending CI run |
-| Markdown lint | Zero errors | CI `markdown-lint` job | Pending CI run |
-| Workflow lint | Zero errors | CI `workflow-lint` job | Pending CI run |
+| Gate                        | Requirement                              | Verified By             | Evidence                                                 |
+| --------------------------- | ---------------------------------------- | ----------------------- | -------------------------------------------------------- |
+| Firmware native tests       | All pass (`pio test -e native`)          | CI `firmware` job       | Pending CI run                                           |
+| Firmware size regression    | Within thresholds                        | CI `firmware` job       | Pending CI run                                           |
+| Protocol unit tests         | All pass (`npm run test:protocol`)       | CI `protocol` job       | Attach latest CI run or local command output             |
+| E2E / smoke coverage        | All configured smoke checks pass         | CI `e2e-smoke` job      | Attach latest CI run or note if covered by another suite |
+| Client typecheck            | Zero errors (`npm run typecheck:client`) | CI `client` job         | Attach latest CI run or local command output             |
+| Client unit tests           | All pass (`npm run test:client`)         | CI `client` job         | Attach latest CI run or local command output             |
+| Client browser export build | Succeeds                                 | release workflow        | Pending CI run                                           |
+| Tools tests                 | All pass (`npm run test:tools`)          | CI `tools` job          | Attach latest CI run or local command output             |
+| Docker build                | Succeeds                                 | CI `docker` job         | Pending CI run                                           |
+| Docker smoke test           | Heartbeat healthy                        | CI `docker-smoke` job   | Pending CI run                                           |
+| Security audit              | No medium+ vulnerabilities               | CI `security-audit` job | Pending CI run                                           |
+| License check               | All deps in allowlist                    | CI `security-audit` job | Pending CI run                                           |
+| Markdown lint               | Zero errors                              | CI `markdown-lint` job  | Pending CI run                                           |
+| Workflow lint               | Zero errors                              | CI `workflow-lint` job  | Pending CI run                                           |
 
 ## 2. Manual Verification
 
-| Check | Owner | Done? |
-| ------ | ------ | ------ |
-| Flash `uno` firmware on test board — boot JSON valid | Engineer | ☐ |
-| Flash `esp32_wifi_ble` firmware — boot JSON valid | Engineer | ☐ |
-| Browser client connects to device via Web Serial | Engineer | ☐ |
-| Client app BLE scan finds ESP32 device | Engineer | ☐ |
-| Command round-trip: FSD on → ack received | Engineer | ☐ |
-| Frame streaming: frames appear in dashboard | Engineer | ☐ |
-| EEPROM/NVS persistence: settings survive reboot | Engineer | ☐ |
+| Check                                                  | Owner    | Done? |
+| ------------------------------------------------------ | -------- | ----- |
+| Flash `esp32` firmware on test board — boot JSON valid | Engineer | ☐     |
+| Flash `esp32_wifi_ble` firmware — boot JSON valid      | Engineer | ☐     |
+| Browser client connects to device via Web Serial       | Engineer | ☐     |
+| Client app BLE scan finds ESP32 device                 | Engineer | ☐     |
+| Command round-trip: FSD on → ack received              | Engineer | ☐     |
+| Frame streaming: frames appear in dashboard            | Engineer | ☐     |
+| EEPROM/NVS persistence: settings survive reboot        | Engineer | ☐     |
 
 ## 3. Version Alignment
 
-| Component | Version File | Current |
-| ---------- | ------------ | -------- |
-| Root | `package.json` → `version` | — |
-| Protocol | `packages/protocol/package.json` → `version` | — |
-| Client | `client/package.json` → `version` | — |
-| Tools | `tools/package.json` → `version` | — |
-| Firmware | `firmware/platformio.ini` comment or build flag | — |
+| Component | Version File                                    | Current |
+| --------- | ----------------------------------------------- | ------- |
+| Root      | `package.json` → `version`                      | —       |
+| Protocol  | `packages/protocol/package.json` → `version`    | —       |
+| Client    | `client/package.json` → `version`               | —       |
+| Tools     | `tools/package.json` → `version`                | —       |
+| Firmware  | `firmware/platformio.ini` comment or build flag | —       |
 
 All component versions must be aligned before release. Use `npm version <type>` at root.
 
@@ -62,27 +62,25 @@ The release automation reads the root `package.json` version and only auto-tags 
 
 ## 4. Documentation
 
-| Check | Done? |
-| ------ | ------ |
-| CHANGELOG.md updated with release notes | ☐ |
-| Breaking changes documented with migration guide | ☐ |
-| New commands/features documented in `docs/reference/commands.md` | ☐ |
-| Hardware wiring changes documented in `docs/guides/hardware-setup.md` | ☐ |
-| README.md version badge updated | ☐ |
-| THIRD_PARTY_LICENSES updated if deps changed | ☐ |
+| Check                                                                 | Done? |
+| --------------------------------------------------------------------- | ----- |
+| CHANGELOG.md updated with release notes                               | ☐     |
+| Breaking changes documented with migration guide                      | ☐     |
+| New commands/features documented in `docs/reference/commands.md`      | ☐     |
+| Hardware wiring changes documented in `docs/guides/hardware-setup.md` | ☐     |
+| README.md version badge updated                                       | ☐     |
+| THIRD_PARTY_LICENSES updated if deps changed                          | ☐     |
 
 ## 5. Release Artifacts
 
-| Artifact | Format | Location |
-| --------- | ------- | --------- |
-| Arduino Uno firmware | `.hex` | GitHub Release attachment |
-| Arduino Uno + BT firmware | `.hex` | GitHub Release attachment |
-| ESP32 firmware (serial) | `.bin` | GitHub Release attachment |
-| ESP32 WiFi firmware | `.bin` | GitHub Release attachment |
-| ESP32 BLE firmware | `.bin` | GitHub Release attachment |
-| ESP32 WiFi+BLE firmware | `.bin` | GitHub Release attachment |
-| Browser client | Docker image | ghcr.io or Docker Hub |
-| Protocol package | npm (private) | npm workspace |
+| Artifact                | Format        | Location                  |
+| ----------------------- | ------------- | ------------------------- |
+| ESP32 firmware (serial) | `.bin`        | GitHub Release attachment |
+| ESP32 WiFi firmware     | `.bin`        | GitHub Release attachment |
+| ESP32 BLE firmware      | `.bin`        | GitHub Release attachment |
+| ESP32 WiFi+BLE firmware | `.bin`        | GitHub Release attachment |
+| Browser client          | Docker image  | ghcr.io or Docker Hub     |
+| Protocol package        | npm (private) | npm workspace             |
 
 ## 6. Rollback Plan
 
@@ -93,24 +91,24 @@ The release automation reads the root `package.json` version and only auto-tags 
 
 ### 6.1 Rollback Drill Evidence (Required)
 
-| Drill | Expected Result | Evidence Link / Artifact | Owner | Done? |
-| ----- | ---------------- | ------------------------- | ----- | ----- |
-| Firmware rollback drill (`vN` -> `vN-1`) | Board boots cleanly and reports expected variant/features | Release note link + console capture | Firmware owner | ☐ Awaiting hardware |
-| Unified client rollback drill | `client/` starts and core tabs remain functional after rollback | Command output, screenshot set, or QA note for reverted snapshot | Client owner | ☐ |
-| Export compatibility drill | New exports remain readable by existing tools/docs expectations | Sample artifacts + verification note | Tools/Docs owner | ☐ |
-| Container rollback drill | Previous image starts healthy and serves expected API/UI | Image digest + health output | DevOps owner | ☐ Awaiting docker deployment |
+| Drill                                    | Expected Result                                                 | Evidence Link / Artifact                                         | Owner            | Done?                        |
+| ---------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------- | ---------------------------- |
+| Firmware rollback drill (`vN` -> `vN-1`) | Board boots cleanly and reports expected variant/features       | Release note link + console capture                              | Firmware owner   | ☐ Awaiting hardware          |
+| Unified client rollback drill            | `client/` starts and core tabs remain functional after rollback | Command output, screenshot set, or QA note for reverted snapshot | Client owner     | ☐                            |
+| Export compatibility drill               | New exports remain readable by existing tools/docs expectations | Sample artifacts + verification note                             | Tools/Docs owner | ☐                            |
+| Container rollback drill                 | Previous image starts healthy and serves expected API/UI        | Image digest + health output                                     | DevOps owner     | ☐ Awaiting docker deployment |
 
 Rollback is not considered validated until all drills above are checked with evidence.
 
 ## 7. Go / No-Go Sign-off
 
-| Area | Sign-off Owner | Status | Notes |
-| ---- | -------------- | ------ | ----- |
-| Firmware quality gate | Firmware owner | ☐ | |
-| Protocol + tooling gate | Protocol owner | ☐ | |
-| Unified client gate | Client owner | ☐ | |
-| Docs gate | Docs owner | ☐ | |
-| Rollback drill gate | Release owner | ☐ | |
+| Area                    | Sign-off Owner | Status | Notes |
+| ----------------------- | -------------- | ------ | ----- |
+| Firmware quality gate   | Firmware owner | ☐      |       |
+| Protocol + tooling gate | Protocol owner | ☐      |       |
+| Unified client gate     | Client owner   | ☐      |       |
+| Docs gate               | Docs owner     | ☐      |       |
+| Rollback drill gate     | Release owner  | ☐      |       |
 
 Release decision:
 
@@ -127,11 +125,11 @@ Command:
 node tools/debug.js drive-context --port COM5 --drive-duration 60000 --drive-min-samples 10 --drive-expect-full --drive-output artifacts/drive-context-report.json --drive-note-output artifacts/drive-context-note.txt
 ```
 
-| Task | Required report gate | Required evidence |
-| ---- | -------------------- | ----------------- |
-| Turn + blind-spot indicators | `closureReadiness.d05 === true` | report JSON + scenario notes for 14.1-14.5 |
-| Door / frunk / trunk open-state signals | `closureReadiness.d11 === true` | report JSON + scenario notes for 14.6-14.10 |
-| Cruise / map / max-speed context | `closureReadiness.d13 === true` | report JSON + scenario notes for 14.11-14.14 |
+| Task                                    | Required report gate            | Required evidence                            |
+| --------------------------------------- | ------------------------------- | -------------------------------------------- |
+| Turn + blind-spot indicators            | `closureReadiness.d05 === true` | report JSON + scenario notes for 14.1-14.5   |
+| Door / frunk / trunk open-state signals | `closureReadiness.d11 === true` | report JSON + scenario notes for 14.6-14.10  |
+| Cruise / map / max-speed context        | `closureReadiness.d13 === true` | report JSON + scenario notes for 14.11-14.14 |
 
 Global gate:
 

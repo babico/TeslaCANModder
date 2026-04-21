@@ -2,9 +2,8 @@
 
 This folder documents JSON line outputs emitted by serial backends in:
 
-- `hardware/lib/io/serial/common.h`
-- `hardware/lib/io/serial/esp32.h`
-- `hardware/lib/io/serial/uno.h`
+- `firmware/lib/io/serial/common.h`
+- `firmware/lib/io/serial/esp32.h`
 
 ## Files
 

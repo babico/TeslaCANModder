@@ -8,7 +8,7 @@ against defined thresholds. Exits non-zero if any threshold is exceeded.
 Usage:
     python scripts/check_firmware_size.py [--env ENV ...]
 
-Without args, checks: uno, esp32
+Without args, checks: esp32
 """
 
 import subprocess
@@ -18,22 +18,9 @@ import argparse
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
 # Flash and RAM limits per board (bytes)
-# Arduino Uno: 32256 bytes flash, 2048 bytes RAM
 # ESP32: 1310720 bytes flash (1.25 MB), 327680 bytes RAM (320 KB)
 
 THRESHOLDS = {
-    "uno": {
-        "flash_max": 30000,       # ~93% of 32256 — new features add ~2KB
-        "ram_max": 1950,          # ~95% of 2048 — BMS/state fields added
-        "flash_total": 32256,
-        "ram_total": 2048,
-    },
-    "uno_bt": {
-        "flash_max": 31000,       # ~96% — BT + new features
-        "ram_max": 1980,          # ~97%
-        "flash_total": 32256,
-        "ram_total": 2048,
-    },
     "esp32": {
         "flash_max": 1100000,     # ~84% of 1310720 — new features add overhead
         "ram_max": 300000,        # ~92% of 327680
@@ -85,32 +72,17 @@ def build_and_check(env: str) -> bool:
         print(output[-2000:] if len(output) > 2000 else output)
         return False
 
-    # Parse size from PlatformIO output
-    # AVR format:  "Program: NNNNN bytes (XX.X% Full)"  /  "Data: NNNNN bytes (XX.X% Full)"
-    # ESP32 format: various, but pio run -v prints avr-size or esptool output
-
+    # Parse size from PlatformIO output (esptool output for ESP32)
     flash_used = None
     ram_used = None
 
-    # Try AVR-style output (Arduino Uno)
-    flash_match = re.search(r'Program:\s+(\d+)\s+bytes', output)
-    data_match = re.search(r'Data:\s+(\d+)\s+bytes', output)
+    esp_flash = re.search(r'Flash:\s+\[=*\s*\]\s+[\d.]+%\s+\(used\s+(\d+)\s+bytes', output)
+    if esp_flash:
+        flash_used = int(esp_flash.group(1))
 
-    if flash_match:
-        flash_used = int(flash_match.group(1))
-    if data_match:
-        ram_used = int(data_match.group(1))
-
-    # Try ESP32-style output (esptool)
-    if flash_used is None:
-        esp_flash = re.search(r'Flash:\s+\[=*\s*\]\s+[\d.]+%\s+\(used\s+(\d+)\s+bytes', output)
-        if esp_flash:
-            flash_used = int(esp_flash.group(1))
-
-    if ram_used is None:
-        esp_ram = re.search(r'RAM:\s+\[=*\s*\]\s+[\d.]+%\s+\(used\s+(\d+)\s+bytes', output)
-        if esp_ram:
-            ram_used = int(esp_ram.group(1))
+    esp_ram = re.search(r'RAM:\s+\[=*\s*\]\s+[\d.]+%\s+\(used\s+(\d+)\s+bytes', output)
+    if esp_ram:
+        ram_used = int(esp_ram.group(1))
 
     ok = True
 
@@ -139,8 +111,8 @@ def build_and_check(env: str) -> bool:
 
 def main():
     parser = argparse.ArgumentParser(description="Check firmware resource usage")
-    parser.add_argument("--env", nargs="+", default=["uno", "esp32"],
-                        help="Environments to check (default: uno esp32)")
+    parser.add_argument("--env", nargs="+", default=["esp32"],
+                        help="Environments to check (default: esp32)")
     args = parser.parse_args()
 
     failed = []

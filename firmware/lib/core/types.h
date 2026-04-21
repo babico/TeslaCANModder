@@ -180,7 +180,6 @@ struct State
   SummonDirection summonDirection;
   SummonMode summonMode;
 
-#if !defined(BOARD_COMPACT_AVR)
   // Additional CAN frame caching for advanced features
   uint8_t lastClimate[5];
   bool hasClimate;
@@ -272,8 +271,6 @@ struct State
   // 0x132 expanded
   float bmsChargeTimeToFull;  // Hours to full charge
 
-#endif
-
   // Steering mode monitoring (read-only from 0x370 EPAS_sysStatus)
   uint8_t steeringMode; // 0=FAIL_SAFE, 1=COMFORT, 2=STANDARD, 3=SPORT
   bool hasSteeringMode; // At least one 0x370 frame decoded
@@ -294,7 +291,6 @@ struct State
   // D-05 safety cues (read-only from CAN)
   bool turnSignalLeft;      // Turn indicator active (from 0x3F5)
   bool turnSignalRight;     // Turn indicator active (from 0x3F5)
-#if !defined(BOARD_COMPACT_AVR)
   uint8_t bsmLeftLevel;     // 0=none, 1=warning1, 2=warning2 (from 0x399)
   uint8_t bsmRightLevel;    // 0=none, 1=warning1, 2=warning2 (from 0x399)
 
@@ -313,7 +309,6 @@ struct State
   float accSpeedLimitKph;
   float mapSpeedLimitKph;
   float maxSpeedKph;
-#endif
 
   // OTA safety check
   bool otaInProgress; // true when Tesla OTA detected on 0x318
@@ -328,11 +323,9 @@ struct State
   uint8_t canClockReqMHz; // requested profile: 0=auto, otherwise 8/12/16/20
   uint8_t canClockMHz;    // active profile after fallback: 8/16/20
 
-#if !defined(BOARD_COMPACT_AVR)
   // GTW autopilot tier readback (from 0x7FF mux=2)
   int8_t gtwAutopilotTier; // -1=unknown, 0=NONE, 1=HIGHWAY, 2=ENHANCED, 3=SELF_DRIVING, 4=BASIC
   bool gtwAutopilotSeen;
-#endif
 
   // Preconditioning — persisted
   bool preconditionEnabled;
@@ -356,7 +349,6 @@ struct State
   uint8_t banThreatLevel;     // 0=none, 1-5=escalating threat levels
   uint16_t banDetectionCount; // cumulative ban threat events
 
-#if !defined(BOARD_COMPACT_AVR)
   unsigned long banThreatMs;  // timestamp of last threat detected
 
   // GTW Shield — 0x7FF snapshot defense (hypery11 pattern)
@@ -367,7 +359,6 @@ struct State
   bool gtwSnapshotValid[8];  // per-mux: has this mux been captured?
   bool gtwShieldArmed;       // true = actively blocking any change
   uint32_t gtwShieldBlocks;  // counter: frames blocked since arm
-#endif
 
   // Enhanced Autopilot — unlocks EAP/Summon by setting bit46 on mux=1
   bool enhancedAutopilot;    // persisted
@@ -378,7 +369,6 @@ struct State
   // TLSSC Restore — spoof DAS_autopilot tier to SELF_DRIVING on 0x331
   bool tlsscRestore;         // persisted
 
-#if !defined(BOARD_COMPACT_AVR)
   // TPMS — Tire Pressure Monitoring (read-only from 0x219)
   float tpmsPressure[4];      // FL, FR, RL, RR (bar)
   int8_t tpmsTemp[4];         // FL, FR, RL, RR (°C)
@@ -388,7 +378,6 @@ struct State
   uint8_t driveModeOverride;  // 0=none, 1=chill, 2=standard, 3=performance
   uint8_t currentDriveMode;   // Current readback from DI_steer (0-3)
   unsigned long driveModeLastMs;
-#endif
 
   // Region detection (from 0x398)
   uint8_t regionCode;         // 0=unknown, 1=NA, 2=EU, 3=CN, 4=APAC, 5=ME
@@ -405,7 +394,6 @@ struct State
   // Steering input for natural nag-killer modulation
   float steeringAngle;        // degrees, + = right (from 0x129)
 
-#if !defined(BOARD_COMPACT_AVR)
   // Turn signals (3-blink lane change)
   // No persistent state — momentary burst only
 
@@ -475,7 +463,6 @@ struct State
   // WiFi API authentication (NVS-persisted)
   char apiKey[33];             // 32-char hex key + NUL, generated on first boot
   bool apiKeyRequired;         // true = require X-API-Key header on mutable endpoints
-#endif
 
   State() : variant(HW4), fsdEnabled(false), fsdForceEnabled(false), nagSuppress(false),
             speedProfile(1), profileOverride(false),
@@ -484,7 +471,6 @@ struct State
             lastFrameMs(0), chassisOnline(false), standby(false), lastReinitMs(0),
             summonRemaining(0), summonLastMs(0), hasCtrl(false),
             summonDirection(SUMMON_FORWARD), summonMode(SUMMON_STOP),
-#if !defined(BOARD_COMPACT_AVR)
             hasClimate(false), hasCharge(false), hasDrive(false),
             bmsVoltage(0), bmsCurrent(0), bmsPower(0), bmsSoc(0),
             bmsTempMin(0), bmsTempMax(0), bmsWhPerKm(0), hasBms(false),
@@ -509,14 +495,12 @@ struct State
             bmsThermistorTMax(0), bmsThermistorTMin(0),
             bmsModelTMax(0), bmsModelTMin(0),
             bmsChargeTimeToFull(0),
-#endif
             steeringMode(0), hasSteeringMode(false),
             nagKillerEnabled(false), nagKillerMode(NAG_KILLER_LEGACY),
             dasHandsOnState(0), dasSeen(false),
             naturalNagLastMs(0), naturalNagIntervalMs(200),
             alcAutoConfirmEnabled(false), dasLaneChangeState(0), alcLastConfirmMs(0),
             turnSignalLeft(false), turnSignalRight(false),
-#if !defined(BOARD_COMPACT_AVR)
             bsmLeftLevel(0), bsmRightLevel(0),
             doorFrontLeftOpen(false), doorFrontRightOpen(false),
             doorRearLeftOpen(false), doorRearRightOpen(false),
@@ -524,28 +508,20 @@ struct State
             frunkOpen(false), trunkOpen(false),
             cruiseSetSpeedKph(0), accSpeedLimitKph(0),
             mapSpeedLimitKph(0), maxSpeedKph(0),
-#endif
             otaInProgress(false), txPaused(false),
             detectedHW(0), hwAutoDetected(false), variantAutoDetect(true),
             canClockReqMHz(BOARD_CAN_CLOCK_MHZ), canClockMHz(BOARD_CAN_CLOCK_MHZ),
-#if !defined(BOARD_COMPACT_AVR)
             gtwAutopilotTier(-1), gtwAutopilotSeen(false),
-#endif
             preconditionEnabled(false), precondLastMs(0),
             trackModeEnabled(false),
             burstBus(0), burstRemaining(0), burstDelayMs(0), burstLastMs(0),
             ctrlBus(0),
             banShieldEnabled(false), banThreatLevel(0), banDetectionCount(0),
-#if !defined(BOARD_COMPACT_AVR)
             banThreatMs(0), gtwShieldArmed(false), gtwShieldBlocks(0),
-#endif
             enhancedAutopilot(false), evdEnabled(false), tlsscRestore(false),
-#if !defined(BOARD_COMPACT_AVR)
             hasTpms(false), driveModeOverride(0), currentDriveMode(0), driveModeLastMs(0),
-#endif
             regionCode(0), regionSpoofCode(0), hasRegion(false), chineseGatewayLocked(false),
             eceR79Bypass(false), rateLimitEnabled(false),
-#if !defined(BOARD_COMPACT_AVR)
             seatbeltEmulation(false), seatbeltLastMs(0),
             wiperPersistEnabled(false), savedWiperSpeed(0),
             mirrorAutoFoldEnabled(false), vehicleLockedState(false),
@@ -562,24 +538,20 @@ struct State
             platformSwRelease(0), platformSwPatch(0), platformFsdProto(0),
             platformSwCompat(0), platformResolved(false),
             apiKeyRequired(false),
-#endif
             steeringAngle(0)
   {
     for (uint8_t i = 0; i < 8; i++)
       lastCtrl[i] = 0;
-#if !defined(BOARD_COMPACT_AVR)
     for (uint8_t i = 0; i < 5; i++)
       lastClimate[i] = 0;
     for (uint8_t i = 0; i < 5; i++)
       lastCharge[i] = 0;
     for (uint8_t i = 0; i < 8; i++)
       lastDrive[i] = 0;
-#endif
     burstFrame.id = 0;
     burstFrame.dlc = 0;
     for (uint8_t i = 0; i < 8; i++)
       burstFrame.data[i] = 0;
-#if !defined(BOARD_COMPACT_AVR)
     for (uint8_t i = 0; i < 8; i++) {
       gtwSnapshotValid[i] = false;
       for (uint8_t j = 0; j < 8; j++)
@@ -591,7 +563,6 @@ struct State
     }
     mqttHost[0] = '\0';
     apiKey[0] = '\0';
-#endif
   }
 
   Features features() const { return getFeatures(variant); }

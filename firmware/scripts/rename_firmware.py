@@ -1,6 +1,5 @@
 """
-Post-build script: copies firmware to build/firmware/<env_name>.<ext>
-Uno → .hex, ESP32 → .bin
+Post-build script: copies firmware to build/firmware/<env_name>.bin
 """
 import shutil, os
 Import("env")
@@ -10,16 +9,9 @@ def copy_firmware(source, target, env):
     fw_dir = os.path.join(env["PROJECT_DIR"], "build", "firmware")
     os.makedirs(fw_dir, exist_ok=True)
 
-    # Determine source path and extension
     src = str(source[0])
-    if env_name.startswith("esp32"):
-        ext = ".bin"
-    else:
-        ext = ".hex"
-
-    dst = os.path.join(fw_dir, f"{env_name}{ext}")
+    dst = os.path.join(fw_dir, f"{env_name}.bin")
     shutil.copy2(src, dst)
-    print(f"  Firmware copied -> build/firmware/{env_name}{ext}")
+    print(f"  Firmware copied -> build/firmware/{env_name}.bin")
 
-env.AddPostAction("$BUILD_DIR/firmware.hex", copy_firmware)
 env.AddPostAction("$BUILD_DIR/firmware.bin", copy_firmware)

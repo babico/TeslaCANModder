@@ -1,9 +1,5 @@
 #pragma once
-#ifdef __AVR__
-#  include <string.h>
-#else
-#  include <cstring>
-#endif
+#include <cstring>
 
 // ── Boolean Command Parser ──────────────────────────────────────────────────
 // Shared utility for on/off style commands

@@ -49,7 +49,7 @@ This checklist is meant for review and regression discipline. It is not a generi
 
 ## 4. Stream and I/O protocol review
 
-- Any change to transmitted frames was checked against `firmware/lib/io/serial/esp32.h` and `firmware/lib/io/serial/uno.h`.
+- Any change to transmitted frames was checked against `firmware/lib/io/serial/esp32.h`.
 - If frame message shape changed, the client-side transport and parsing layers were reviewed at the same time.
 - `boot` and `status` still describe capability changes accurately.
 - Stream output still preserves `dir`, `id`, `dlc`, `d`, and any required metadata fields.

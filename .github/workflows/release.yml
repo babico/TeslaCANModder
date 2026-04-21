@@ -63,7 +63,7 @@ jobs:
                 working-directory: firmware
         strategy:
             matrix:
-                env: [uno, uno_bt, esp32, esp32_wifi, esp32_ble, esp32_wifi_ble]
+                env: [esp32, esp32_wifi, esp32_ble, esp32_wifi_ble]
         steps:
             - uses: actions/checkout@v6
               with:

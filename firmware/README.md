@@ -1,16 +1,8 @@
 # TeslaCANModder Hardware Firmware
 
-Firmware for Tesla CAN bus modification supporting Arduino Uno and ESP32-S DevKit. Supports runtime variant switching (HW4/HW3/Legacy) with full client control.
+Firmware for Tesla CAN bus modification supporting ESP32-S DevKit. Supports runtime variant switching (HW4/HW3/Legacy) with full client control.
 
 ## Hardware Requirements
-
-### Arduino Uno
-
-- Arduino Uno R3 (CH340 or ATmega16U2)
-- MCP2515 CAN module with TJA1050 transceiver (8 MHz crystal) × 1–3
-- HC-05 Bluetooth module (optional)
-- 9V-36V to 5V/3A USB converter
-- Tesla X179 connector
 
 ### ESP32-S DevKit
 
@@ -21,36 +13,11 @@ Firmware for Tesla CAN bus modification supporting Arduino Uno and ESP32-S DevKi
 
 ## Wiring
 
-### MCP2515
-
-- VCC → 5V
-- GND → GND
-- CS → D10
-- INT → D2
-- SCK/MISO/MOSI → SPI pins
-
-### HC-05 (Optional)
-
-- RX → D4
-- TX → D5 (via 1kΩ + 2kΩ voltage divider)
-- VCC → 3.3V regulator
-- GND → GND
-
-### X179 Power & CAN
-
-- Pin 1 → Converter VIN+
-- Pin 20 → Converter VIN-
-- Converter USB → Arduino USB
-- Pin 13 → MCP2515 CAN-H
-- Pin 14 → MCP2515 CAN-L
+See [docs/guides/hardware-setup.md](../docs/guides/hardware-setup.md) for full ESP32 + MCP2515 wiring (per-bus CS/INT, SPI sharing, X179 connector pinout).
 
 ## Build
 
 ```powershell
-# Arduino Uno
-.\.pio.ps1 run -e uno           # Serial only
-.\.pio.ps1 run -e uno_bt        # Serial + HC-05 Bluetooth
-
 # ESP32
 .\.pio.ps1 run -e esp32         # Serial only
 .\.pio.ps1 run -e esp32_wifi    # WiFi REST API
@@ -62,15 +29,8 @@ $env:PLATFORMIO_BUILD_FLAGS = "-DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
 .\.pio.ps1 run -e esp32_wifi
 
 # Upload
-.\pio.ps1 run -e uno -t upload
+.\pio.ps1 run -e esp32 -t upload
 ```
-
-## Memory Usage
-
-| Build | RAM | Flash |
-| ----- | --- | ----- |
-| USB + Bluetooth | 1558 bytes (76%) | 11150 bytes (35%) |
-| USB only | 1378 bytes (67%) | 9668 bytes (30%) |
 
 ## Features
 
@@ -92,7 +52,7 @@ $env:PLATFORMIO_BUILD_FLAGS = "-DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
 
 ## Commands
 
-All commands are newline-terminated ASCII over USB or Bluetooth.
+All commands are newline-terminated ASCII over USB, BLE, or WiFi.
 
 ### System
 
@@ -224,7 +184,7 @@ JSON messages over serial (115200 baud):
 ### Boot
 
 ```json
-{"t":"boot","hw":"ArduinoUnoR3CH340","variant":"hw4","cap":"usb+bluetooth",...}
+{"t":"boot","hw":"ESP32S_DevKit","variant":"hw4","cap":"usb+wifi+ble",...}
 ```
 
 ### Status (every 500ms)
@@ -274,8 +234,7 @@ hardware/
 │       ├── wifi/          - WiFi REST API + dashboard (ESP32)
 │       └── ble/           - BLE GATT service (ESP32)
 ├── src/
-│   ├── esp32/main.cpp
-│   └── uno/main.cpp
+│   └── esp32/main.cpp
 └── platformio.ini         - Build configuration
 ```
 
@@ -287,7 +246,7 @@ hardware/
 - **forward.h** - Forward declarations for cross-layer references
 - **config/** - Hardware pin assignments per platform
 - **driver/** - Low-level MCP2515 SPI communication per platform
-- **persist/** - Settings save/load (NVS on ESP32, EEPROM on Uno)
+- **persist/** - Settings save/load (NVS on ESP32)
 
 **Infrastructure (infra/):**
 

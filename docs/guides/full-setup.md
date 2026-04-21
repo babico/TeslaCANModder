@@ -28,17 +28,15 @@ This is the canonical setup path for TeslaCANModder across firmware, transport, 
 
 ## Step 1: Build Firmware Artifact
 
-Choose your board and target environment, then build firmware.
+Choose your target environment, then build firmware.
 
 ```powershell
-cd hardware
-.\.pio.ps1 run -e uno
+cd firmware
 .\.pio.ps1 run -e esp32_wifi_ble
 ```
 
-Expected artifact examples:
+Expected artifact example:
 
-- Arduino Uno: `firmware/.pio/build/uno/firmware.hex`
 - ESP32: `firmware/.pio/build/esp32_wifi_ble/firmware.bin`
 
 ## Step 2: Flash Firmware (Unified Flasher Paths)
@@ -66,18 +64,18 @@ npm run web
 Use the debug CLI to flash and perform basic serial boot verification.
 
 ```bash
-node tools/debug.js flash --port COM5 --hex firmware/.pio/build/uno/firmware.hex
+node tools/debug.js flash --port COM5 --hex firmware/.pio/build/esp32_wifi_ble/firmware.bin
 ```
 
 Optional chip erase (factory reset style):
 
 ```bash
-node tools/debug.js flash --port COM5 --hex firmware/.pio/build/uno/firmware.hex --erase
+node tools/debug.js flash --port COM5 --hex firmware/.pio/build/esp32_wifi_ble/firmware.bin --erase
 ```
 
 CLI flasher behavior:
 
-- Resolves avrdude from PlatformIO-managed paths first, then PATH.
+- Resolves esptool from PlatformIO-managed paths first, then PATH.
 - Flashes and attempts verification.
 - Reopens serial and checks for boot/status output.
 
@@ -129,22 +127,22 @@ If not ready, use `closureChecklist.missingScenarioIds` to target missing ESP32-
 
 ## Setup Decision Matrix
 
-| Scenario | Recommended Path | Why |
-| --- | --- | --- |
-| First board setup | Browser flasher | Lowest friction, visual path |
-| Repeat bench flashing | CLI Flasher | Fast, scriptable, easy to log |
-| Release evidence run | CLI Flasher + drive-context strict mode | Deterministic artifact output |
-| Multi-board lab workflow | CLI Flasher | Repeatability and automation |
+| Scenario                 | Recommended Path                        | Why                           |
+| ------------------------ | --------------------------------------- | ----------------------------- |
+| First board setup        | Browser flasher                         | Lowest friction, visual path  |
+| Repeat bench flashing    | CLI Flasher                             | Fast, scriptable, easy to log |
+| Release evidence run     | CLI Flasher + drive-context strict mode | Deterministic artifact output |
+| Multi-board lab workflow | CLI Flasher                             | Repeatability and automation  |
 
 ## Common Failure Modes
 
-| Symptom | Likely Cause | Fix |
-| --- | --- | --- |
-| Board not detected | Charge-only USB cable or driver missing | Use data cable, install CH340/CP210x driver |
-| Flash fails immediately | Wrong port or avrdude not available | Verify COM port and PlatformIO toolchain |
-| ESP32 upload hangs | BOOT timing issue | Hold BOOT during upload start |
-| No status after flash | Baud mismatch or board reset loop | Verify 115200 and power integrity |
-| Strict drive-context fails | Missing run scenarios | Re-run targeted ESP32-14 scenarios from report |
+| Symptom                    | Likely Cause                            | Fix                                            |
+| -------------------------- | --------------------------------------- | ---------------------------------------------- |
+| Board not detected         | Charge-only USB cable or driver missing | Use data cable, install CH340/CP210x driver    |
+| Flash fails immediately    | Wrong port or esptool not available     | Verify COM port and PlatformIO toolchain       |
+| ESP32 upload hangs         | BOOT timing issue                       | Hold BOOT during upload start                  |
+| No status after flash      | Baud mismatch or board reset loop       | Verify 115200 and power integrity              |
+| Strict drive-context fails | Missing run scenarios                   | Re-run targeted ESP32-14 scenarios from report |
 
 ## Related Docs
 
