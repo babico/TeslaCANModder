@@ -1,4 +1,7 @@
 {
+  "config": {
+    "MD007": { "indent": 4 }
+  },
   "ignores": [
     "legacy/**",
     "**/node_modules/**",
