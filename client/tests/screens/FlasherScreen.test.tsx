@@ -6,6 +6,7 @@ jest.mock("react-native", () => ({
 	Text: () => null,
 	Pressable: () => null,
 	ScrollView: () => null,
+	Linking: { openURL: jest.fn(async () => true) },
 	StyleSheet: { create: <T extends Record<string, unknown>>(o: T) => o, absoluteFillObject: {} },
 	useWindowDimensions: () => ({ width: 800, height: 600 }),
 	Platform: { OS: "web" },

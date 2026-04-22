@@ -73,14 +73,14 @@ The release automation reads the root `package.json` version and only auto-tags 
 
 ## 5. Release Artifacts
 
-| Artifact                | Format        | Location                  |
-| ----------------------- | ------------- | ------------------------- |
-| ESP32 firmware (serial) | `.bin`        | GitHub Release attachment |
-| ESP32 WiFi firmware     | `.bin`        | GitHub Release attachment |
-| ESP32 BLE firmware      | `.bin`        | GitHub Release attachment |
-| ESP32 WiFi+BLE firmware | `.bin`        | GitHub Release attachment |
-| Browser client          | Docker image  | ghcr.io or Docker Hub     |
-| Protocol package        | npm (private) | npm workspace             |
+| Artifact                | Format        | Location                                          |
+| ----------------------- | ------------- | ------------------------------------------------- |
+| ESP32 firmware (serial) | `.bin`        | GitHub Release attachment (`esp32*.bin`)          |
+| ESP32 WiFi firmware     | `.bin`        | GitHub Release attachment (`esp32_wifi*.bin`)     |
+| ESP32 BLE firmware      | `.bin`        | GitHub Release attachment (`esp32_ble*.bin`)      |
+| ESP32 WiFi+BLE firmware | `.bin`        | GitHub Release attachment (`esp32_wifi_ble*.bin`) |
+| Browser client          | Docker image  | ghcr.io or Docker Hub                             |
+| Protocol package        | npm (private) | npm workspace                                     |
 
 ## 6. Rollback Plan
 

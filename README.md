@@ -17,6 +17,10 @@ cd firmware
 .\.pio.ps1 run -e esp32 -t upload  # Flash to board
 ```
 
+Stable `.bin` artifacts are also published by GitHub Actions on each tagged release.
+The flasher screen downloads the matching release asset directly, using names like
+`esp32.bin`, `esp32_wifi.bin`, and `esp32_wifi_ble_vehicle_body.bin`.
+
 CAN bus selection is controlled via build flags (FSD always on):
 
 ```powershell
@@ -39,7 +43,7 @@ Open <http://localhost:5173> and click "Connect USB"
 
 - **Hardware Firmware** - ESP32-S firmware with per-bus feature gating
 - **Client App** - Expo-based client for browser, iOS, and Android targets
-- **Docker Support** - Build firmware and run the browser client in containers
+- **Docker Support** - Run the browser client in containers
 
 ## Hardware
 

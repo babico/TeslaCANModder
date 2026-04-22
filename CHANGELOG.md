@@ -11,7 +11,6 @@ All notable changes to this project will be documented in this file.
 - TypeScript migration for the unified client workspace
 - `.editorconfig` for consistent formatting
 - `CONTRIBUTING.md` with setup guide and coding standards
-- `.env.example` files for client and hardware services
 - `.github/workflows/ci.yml` CI/CD pipeline
 - Unified client redesign with shared design system
 - Component and hook tests for the client workspace
@@ -27,11 +26,13 @@ All notable changes to this project will be documented in this file.
 - WiFi defaults now overridable via build flags (`#ifndef` guards)
 - Client imports shared protocol package instead of local copies
 - Browser support now ships from the Expo client instead of a standalone web workspace
+- Flasher downloads prebuilt GitHub Release binaries published by Actions instead of calling a local firmware build server
 
 ### Removed
 
 - Legacy standalone native app workspace
 - Legacy standalone browser app workspace
+- Local firmware build server Docker/service path
 
 ## [1.0.0] — 2026-04-10
 

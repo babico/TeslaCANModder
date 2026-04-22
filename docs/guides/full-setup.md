@@ -21,14 +21,23 @@ This is the canonical setup path for TeslaCANModder across firmware, transport, 
 
 - Node.js 18+
 - npm workspaces installed from repository root (`npm install`)
-- PlatformIO available for firmware builds (`firmware/.pio.ps1`)
+- GitHub release access for prebuilt firmware assets, or PlatformIO available for local builds (`firmware/.pio.ps1`)
 - Chrome or Edge for Web Serial flows
 - Data-capable USB cable
 - Correct MCP2515 crystal profile in hardware (8 MHz modules recommended)
 
-## Step 1: Build Firmware Artifact
+## Step 1: Get Firmware Artifact
 
-Choose your target environment, then build firmware.
+Preferred path: download the release binary built by GitHub Actions for your target connectivity and bus profile.
+
+Common release asset names:
+
+- `esp32.bin` — USB serial, chassis bus only
+- `esp32_wifi.bin` — USB serial + WiFi, chassis bus only
+- `esp32_ble_vehicle.bin` — USB serial + BLE, chassis + vehicle buses
+- `esp32_wifi_ble_vehicle_body.bin` — USB serial + WiFi + BLE, chassis + vehicle + body buses
+
+If you need a local custom build instead, choose your target environment and compile manually.
 
 ```powershell
 cd firmware
@@ -55,8 +64,8 @@ npm run web
 
 1. Open `http://localhost:5173` in Chrome/Edge.
 1. Open Flasher tab.
-1. Select board target and firmware variant.
-1. Run flash and wait for completion.
+1. Select connectivity and CAN bus profile.
+1. Download the matching GitHub Release binary or run flash and wait for completion.
 1. If ESP32 stalls, hold BOOT during upload start.
 
 ### Path B: CLI Flasher (tools command)

@@ -1,55 +1,50 @@
 services:
-  firmware:
-    build:
-      context: .
-      dockerfile: firmware/Dockerfile
-    ports:
-      - "8100:8100"
-    volumes:
-      - .:/app
-    healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health')\""]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+    client:
+        build:
+            context: .
+            dockerfile: client/Dockerfile
+            target: dev
+        ports:
+            - "4173:4173"
+        volumes:
+            - .:/app
+        command:
+            [
+                "npm",
+                "run",
+                "web",
+                "-w",
+                "@teslacanmodder/client",
+                "--",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "4173",
+            ]
+        healthcheck:
+            test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:4173/ >/dev/null 2>&1 || exit 1"]
+            interval: 15s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
 
-  client:
-    build:
-      context: .
-      dockerfile: client/Dockerfile
-      target: dev
-    ports:
-      - "4173:4173"
-    volumes:
-      - .:/app
-    command: ["npm", "run", "web", "-w", "@teslacanmodder/client", "--", "--host", "0.0.0.0", "--port", "4173"]
-    depends_on:
-      - firmware
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:4173/ >/dev/null 2>&1 || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-
-  client-prod:
-    build:
-      context: .
-      dockerfile: client/Dockerfile
-      target: production
-    ports:
-      - "8080:8080"
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /var/cache/nginx
-      - /var/run
-    security_opt:
-      - no-new-privileges:true
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+    client-prod:
+        build:
+            context: .
+            dockerfile: client/Dockerfile
+            target: production
+        ports:
+            - "8080:8080"
+        read_only: true
+        tmpfs:
+            - /tmp
+            - /var/cache/nginx
+            - /var/run
+        security_opt:
+            - no-new-privileges:true
+        healthcheck:
+            test: ["CMD-SHELL", "curl -f http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
+            interval: 15s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
