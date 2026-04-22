@@ -19,7 +19,7 @@ cd firmware
 
 Stable `.bin` artifacts are also published by GitHub Actions on each tagged release.
 The flasher screen downloads the matching release asset directly, using names like
-`esp32.bin`, `esp32_wifi.bin`, and `esp32_wifi_ble_vehicle_body.bin`.
+`esp32.bin`, `esp32_no_can.bin`, `esp32_vehicle_only.bin`, and `esp32_wifi_ble_vehicle_body.bin`.
 
 CAN bus selection is controlled via build flags (FSD always on):
 

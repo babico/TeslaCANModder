@@ -20,7 +20,7 @@ const CONNECTION_ESP32: ConnectionOption[] = [
 ];
 
 const BUS_OPTIONS = [
-	{ key: "chassis", label: "Chassis", desc: "X179 pins 13-14", locked: true },
+	{ key: "chassis", label: "Chassis", desc: "X179 pins 13-14" },
 	{ key: "vehicle", label: "Vehicle", desc: "X179 pins 9-10" },
 	{ key: "body", label: "Body", desc: "X179 pins 2-3" },
 ] as const;
@@ -60,14 +60,15 @@ function resolveEnvironment(connection: Record<string, number>): string {
 }
 
 function resolveAssetName(env: string, buses: Record<BusKey, number>): string {
-	const filenameParts = [env];
-	if (buses.vehicle) {
-		filenameParts.push("vehicle");
+	const enabled = BUS_OPTIONS.filter((bus) => buses[bus.key]).map((bus) => bus.key);
+	if (enabled.length === 0) {
+		return `${env}_no_can.bin`;
 	}
-	if (buses.body) {
-		filenameParts.push("body");
+	if (buses.chassis) {
+		const nonChassis = enabled.filter((key) => key !== "chassis");
+		return nonChassis.length === 0 ? `${env}.bin` : `${env}_${nonChassis.join("_")}.bin`;
 	}
-	return `${filenameParts.join("_")}.bin`;
+	return `${env}_${enabled.join("_")}_only.bin`;
 }
 
 async function downloadReleaseBinary(env: string, buses: Record<BusKey, number>): Promise<string> {
@@ -116,6 +117,10 @@ export function FlasherScreen() {
 
 	const environment = useMemo(() => resolveEnvironment(connection), [connection]);
 	const assetName = useMemo(() => resolveAssetName(environment, buses), [environment, buses]);
+	const busSummary = useMemo(() => {
+		const enabledLabels = BUS_OPTIONS.filter((bus) => buses[bus.key]).map((bus) => bus.label);
+		return enabledLabels.length > 0 ? enabledLabels.join(" + ") : "No CAN lanes enabled";
+	}, [buses]);
 	const buildFlags = useMemo(() => {
 		const flags: string[] = [];
 		if (buses.chassis) flags.push("-DBUS_CHASSIS_ACTIVE=1");
@@ -132,9 +137,6 @@ export function FlasherScreen() {
 	};
 
 	const toggleBus = (key: BusKey) => {
-		if (key === "chassis") {
-			return;
-		}
 		setBuses((current) => ({ ...current, [key]: current[key] ? 0 : 1 }));
 	};
 
@@ -162,7 +164,12 @@ export function FlasherScreen() {
 		};
 
 		const sendFlashCommand = async (): Promise<void> => {
-			const flashCommand = JSON.stringify({ cmd: "flash", env: environment });
+			const flashCommand = JSON.stringify({
+				cmd: "flash",
+				env: environment,
+				asset: assetName,
+				buses,
+			});
 			const result = await sharedConnection.controller.runRawCommand(flashCommand);
 			if (!result.ok) {
 				throw new Error(result.error ?? "Flash command failed.");
@@ -185,13 +192,13 @@ export function FlasherScreen() {
 			sharedConnection.pauseFrameFeed(true);
 
 			setStatus("flashing");
-			setMessage(`Flashing ${environment}...`);
-			addLog(`> Flash started: ${environment}`);
+			setMessage(`Flashing ${assetName}...`);
+			addLog(`> Flash started: ${assetName}`);
 			await sendFlashCommand();
 
 			addLog("✓ Flash completed successfully");
 			setStatus("done");
-			setMessage(`${environment} flashed successfully.`);
+			setMessage(`${assetName} flashed successfully.`);
 		} catch (error) {
 			const errorMsg = error instanceof Error ? error.message : "Flash failed.";
 			addLog(`✗ Error: ${errorMsg}`);
@@ -277,11 +284,7 @@ export function FlasherScreen() {
 							<Pressable
 								key={bus.key}
 								onPress={() => toggleBus(bus.key)}
-								style={[
-									styles.chip,
-									active ? styles.chipActive : undefined,
-									bus.key === "chassis" ? styles.chipLocked : undefined,
-								]}
+								style={[styles.chip, active ? styles.chipActive : undefined]}
 							>
 								<Text
 									style={[
@@ -308,11 +311,7 @@ export function FlasherScreen() {
 
 			<View style={styles.panel}>
 				<Text style={styles.panelTitle}>Build and Flash</Text>
-				<Text style={styles.summaryLine}>
-					{["Chassis", buses.vehicle ? "Vehicle" : null, buses.body ? "Body" : null]
-						.filter(Boolean)
-						.join(" + ")}
-				</Text>
+				<Text style={styles.summaryLine}>{busSummary}</Text>
 				<Text style={styles.resolvedLine}>GitHub Release asset: {assetName}</Text>
 				<View style={styles.actionsRow}>
 					<Pressable

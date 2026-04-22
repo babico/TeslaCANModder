@@ -63,71 +63,40 @@ jobs:
                 working-directory: firmware
         strategy:
             matrix:
-                include:
-                    - env: esp32
+                env: [esp32, esp32_wifi, esp32_ble, esp32_wifi_ble]
+                profile:
+                    - chassis: 1
                       vehicle: 0
                       body: 0
-                      artifact: esp32.bin
-                    - env: esp32
+                      suffix: ""
+                    - chassis: 1
                       vehicle: 1
                       body: 0
-                      artifact: esp32_vehicle.bin
-                    - env: esp32
+                      suffix: _vehicle
+                    - chassis: 1
                       vehicle: 0
                       body: 1
-                      artifact: esp32_body.bin
-                    - env: esp32
+                      suffix: _body
+                    - chassis: 1
                       vehicle: 1
                       body: 1
-                      artifact: esp32_vehicle_body.bin
-                    - env: esp32_wifi
-                      vehicle: 0
-                      body: 0
-                      artifact: esp32_wifi.bin
-                    - env: esp32_wifi
-                      vehicle: 1
-                      body: 0
-                      artifact: esp32_wifi_vehicle.bin
-                    - env: esp32_wifi
-                      vehicle: 0
-                      body: 1
-                      artifact: esp32_wifi_body.bin
-                    - env: esp32_wifi
-                      vehicle: 1
-                      body: 1
-                      artifact: esp32_wifi_vehicle_body.bin
-                    - env: esp32_ble
+                      suffix: _vehicle_body
+                    - chassis: 0
                       vehicle: 0
                       body: 0
-                      artifact: esp32_ble.bin
-                    - env: esp32_ble
+                      suffix: _no_can
+                    - chassis: 0
                       vehicle: 1
                       body: 0
-                      artifact: esp32_ble_vehicle.bin
-                    - env: esp32_ble
+                      suffix: _vehicle_only
+                    - chassis: 0
                       vehicle: 0
                       body: 1
-                      artifact: esp32_ble_body.bin
-                    - env: esp32_ble
+                      suffix: _body_only
+                    - chassis: 0
                       vehicle: 1
                       body: 1
-                      artifact: esp32_ble_vehicle_body.bin
-                    - env: esp32_wifi_ble
-                      vehicle: 0
-                      body: 0
-                      artifact: esp32_wifi_ble.bin
-                    - env: esp32_wifi_ble
-                      vehicle: 1
-                      body: 0
-                      artifact: esp32_wifi_ble_vehicle.bin
-                    - env: esp32_wifi_ble
-                      vehicle: 0
-                      body: 1
-                      artifact: esp32_wifi_ble_body.bin
-                    - env: esp32_wifi_ble
-                      vehicle: 1
-                      body: 1
-                      artifact: esp32_wifi_ble_vehicle_body.bin
+                      suffix: _vehicle_body_only
         steps:
             - uses: actions/checkout@v6
               with:
@@ -149,19 +118,19 @@ jobs:
             - run: pip install platformio
             - name: Build firmware binary
               env:
-                  PLATFORMIO_BUILD_FLAGS: -DBUS_CHASSIS_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=${{ matrix.vehicle }} -DBUS_BODY_ACTIVE=${{ matrix.body }}
+                  PLATFORMIO_BUILD_FLAGS: -DBUS_CHASSIS_ACTIVE=${{ matrix.profile.chassis }} -DBUS_VEHICLE_ACTIVE=${{ matrix.profile.vehicle }} -DBUS_BODY_ACTIVE=${{ matrix.profile.body }}
               run: pio run -e ${{ matrix.env }}
             - name: Collect firmware binary
               run: |
                   mkdir -p ../release-artifacts
                   src="build/firmware/${{ matrix.env }}.bin"
-                  dst="../release-artifacts/${{ matrix.artifact }}"
+                  dst="../release-artifacts/${{ matrix.env }}${{ matrix.profile.suffix }}.bin"
                   test -f "$src"
                   cp "$src" "$dst"
             - uses: actions/upload-artifact@v4
               with:
-                  name: firmware-${{ matrix.artifact }}
-                  path: release-artifacts/${{ matrix.artifact }}
+                  name: firmware-${{ matrix.env }}${{ matrix.profile.suffix }}.bin
+                  path: release-artifacts/${{ matrix.env }}${{ matrix.profile.suffix }}.bin
                   retention-days: 5
 
     # ── Create GitHub Release ───────────────────────────────────────────────────

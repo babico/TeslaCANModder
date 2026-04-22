@@ -33,6 +33,8 @@ Preferred path: download the release binary built by GitHub Actions for your tar
 Common release asset names:
 
 - `esp32.bin` — USB serial, chassis bus only
+- `esp32_no_can.bin` — USB serial, no CAN lanes enabled
+- `esp32_vehicle_only.bin` — USB serial, vehicle bus only
 - `esp32_wifi.bin` — USB serial + WiFi, chassis bus only
 - `esp32_ble_vehicle.bin` — USB serial + BLE, chassis + vehicle buses
 - `esp32_wifi_ble_vehicle_body.bin` — USB serial + WiFi + BLE, chassis + vehicle + body buses
