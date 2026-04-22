@@ -127,7 +127,7 @@ jobs:
                   dst="../release-artifacts/${{ matrix.env }}${{ matrix.profile.suffix }}.bin"
                   test -f "$src"
                   cp "$src" "$dst"
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v7
               with:
                   name: firmware-${{ matrix.env }}${{ matrix.profile.suffix }}.bin
                   path: release-artifacts/${{ matrix.env }}${{ matrix.profile.suffix }}.bin
