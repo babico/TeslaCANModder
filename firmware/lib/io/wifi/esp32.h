@@ -11,6 +11,7 @@
 // Forward declarations
 void sendLog(const char* msg);
 void sendLog(const __FlashStringHelper* msg);
+static void sendJsonResponse(int code, const String& json);
 
 #if BOARD_ENABLE_BLE
   // BLE forward declarations (defined in ble/esp32.h, included via serial/esp32.h)
@@ -581,25 +582,26 @@ void wifiInit(State& s) {
   }
 
   // Register routes
-  server.collectHeaders("X-API-Key");
-  server.on(\"/\", HTTP_GET, handleRoot);
-  server.on(\"/api/ping\", HTTP_GET, handleGetPing);
-  server.on(\"/api/auth/verify\", HTTP_GET, []() {
+  const char* headerKeys[] = {"X-API-Key"};
+  server.collectHeaders(headerKeys, 1);
+    server.on("/", HTTP_GET, handleRoot);
+    server.on("/api/ping", HTTP_GET, handleGetPing);
+    server.on("/api/auth/verify", HTTP_GET, []() {
     if (!requireAuth()) return;
-    sendJsonResponse(200, \"{\\\"ok\\\":true}\");
+      sendJsonResponse(200, "{\"ok\":true}");
   });
-  server.on(\"/api/auth/verify\", HTTP_OPTIONS, handleOptions);
-  server.on(\"/api/auth/key\", HTTP_GET, []() {
+    server.on("/api/auth/verify", HTTP_OPTIONS, handleOptions);
+    server.on("/api/auth/key", HTTP_GET, []() {
     // Only available from dashboard (same origin) — returns current API key
-    if (!restState) { sendJsonResponse(500, \"{\\\"error\\\":\\\"not initialized\\\"}\"); return; }
+      if (!restState) { sendJsonResponse(500, "{\"error\":\"not initialized\"}"); return; }
     StaticJsonDocument<128> doc;
-    doc[\"key\"] = restState->apiKey;
-    doc[\"required\"] = restState->apiKeyRequired;
+      doc["key"] = restState->apiKey;
+      doc["required"] = restState->apiKeyRequired;
     String out;
     serializeJson(doc, out);
     sendJsonResponse(200, out);
   });
-  server.on(\"/api/auth/key\", HTTP_OPTIONS, handleOptions);
+    server.on("/api/auth/key", HTTP_OPTIONS, handleOptions);
   server.on("/api/status", HTTP_GET, handleGetStatus);
   server.on("/api/command", HTTP_POST, handlePostCommand);
   server.on("/api/command", HTTP_OPTIONS, handleOptions);

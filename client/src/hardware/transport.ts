@@ -7,6 +7,8 @@ export interface CommandTransport {
 	send(command: string): Promise<unknown>;
 	/** Fetch current board status; resolves with parsed status payload. */
 	status(): Promise<unknown>;
+	/** Release any underlying resources such as serial ports or BLE sessions. */
+	close?(): Promise<void>;
 	/** Human-readable transport type label, used for diagnostics / UI. */
 	readonly transportType: TransportType;
 }
@@ -66,6 +68,10 @@ export class UnsupportedTransport implements CommandTransport {
 
 	status(): Promise<unknown> {
 		return Promise.reject(new Error("No transport available: cannot read status"));
+	}
+
+	close(): Promise<void> {
+		return Promise.resolve();
 	}
 }
 
@@ -161,6 +167,10 @@ export class HttpCommandTransport implements CommandTransport {
 
 		return parseResponseBody(response);
 	}
+
+	close(): Promise<void> {
+		return Promise.resolve();
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -180,6 +190,8 @@ export interface IBlePeripheral {
 	writeAndRead(command: string): Promise<string>;
 	/** Read current board status from the notify/status characteristic. */
 	readStatus(): Promise<string>;
+	/** Disconnect and release the current BLE session if supported. */
+	disconnect?(): Promise<void> | void;
 	/** Whether the peripheral is currently connected. */
 	readonly isConnected: boolean;
 }
@@ -242,6 +254,10 @@ export class BleCommandTransport implements CommandTransport {
 		const raw = await this.withTimeout(this.peripheral.readStatus());
 		return parseTextResponse(raw);
 	}
+
+	async close(): Promise<void> {
+		await this.peripheral.disconnect?.();
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -260,6 +276,8 @@ export interface ISerialPort {
 	 * the next available line response.
 	 */
 	writeLine(line: string): Promise<string>;
+	/** Close the port and release any held streams if supported. */
+	close?(): Promise<void>;
 	/** Whether the port is currently open. */
 	readonly isOpen: boolean;
 }
@@ -284,6 +302,7 @@ export type BluetoothSerialTransportConfig = SerialTransportConfig;
  */
 export interface IBluetoothSerialPort {
 	writeLine(line: string): Promise<string>;
+	close?(): Promise<void>;
 	readonly isOpen: boolean;
 }
 
@@ -330,6 +349,10 @@ export class SerialCommandTransport implements CommandTransport {
 	async status(): Promise<unknown> {
 		return this.send(this.statusCommand);
 	}
+
+	async close(): Promise<void> {
+		await this.port.close?.();
+	}
 }
 
 export class BluetoothSerialCommandTransport implements CommandTransport {
@@ -374,6 +397,10 @@ export class BluetoothSerialCommandTransport implements CommandTransport {
 
 	async status(): Promise<unknown> {
 		return this.send(this.statusCommand);
+	}
+
+	async close(): Promise<void> {
+		await this.port.close?.();
 	}
 }
 

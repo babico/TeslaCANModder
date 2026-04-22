@@ -10,6 +10,7 @@
 	],
 	"scripts": {
 		"sync:client-docs": "node tools/generate-client-docs.cjs",
+		"smoke:firmware:release-matrix": "node scripts/release-matrix-smoke.mjs",
 		"build:protocol": "npm run build -w @teslacanmodder/protocol",
 		"test:all": "npm run build:protocol && npm run test:protocol && npm run test:client && npm run test:tools && npm run test:firmware",
 		"test:protocol": "npm test -w @teslacanmodder/protocol",

@@ -51,12 +51,17 @@ pio run -e esp32_wifi_ble
 # Build with Vehicle + Body buses enabled
 PLATFORMIO_BUILD_FLAGS="-DBUS_CHASSIS_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1" pio run -e esp32_wifi
 
+# Smoke the full release artifact matrix locally
+npm run smoke:firmware:release-matrix
+
 # Build and upload
 pio run -e esp32_wifi -t upload
 
 # Run native tests
 pio test -e native
 ```
+
+The smoke sweep mirrors the GitHub release matrix, rebuilds each bus profile, and copies the merged `.bin` outputs to `firmware/build/release-matrix-smoke/` together with a `report.json` manifest.
 
 ## Flashing via Web UI
 

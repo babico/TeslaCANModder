@@ -443,10 +443,15 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
         return document.getElementById(id);
       }
 
+      function escapeHtml(str) {
+        if (str == null) return "";
+        return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+      }
+
       function appendLog(text) {
         const box = $("logBox");
         const stamp = new Date().toLocaleTimeString();
-        box.innerHTML = `[${stamp}] ${text}<br>` + box.innerHTML;
+        box.innerHTML = `[${escapeHtml(stamp)}] ${escapeHtml(text)}<br>` + box.innerHTML;
       }
 
       function toast(m) {
@@ -582,16 +587,16 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
       }
 
       function renderWifi() {
-        let h = "<b>Mode:</b> " + (W.mode || "?").toUpperCase();
-        h += " &nbsp; <b>IP:</b> " + (W.ip || "N/A");
+        let h = "<b>Mode:</b> " + escapeHtml((W.mode || "?").toUpperCase());
+        h += " &nbsp; <b>IP:</b> " + escapeHtml(W.ip || "N/A");
         if (W.mode === "sta") {
-          h += "<br><b>SSID:</b> " + (W.ssid || "N/A");
-          h += " &nbsp; <b>RSSI:</b> " + (W.rssi || "?") + " dBm";
+          h += "<br><b>SSID:</b> " + escapeHtml(W.ssid || "N/A");
+          h += " &nbsp; <b>RSSI:</b> " + escapeHtml(W.rssi || "?") + " dBm";
           h += "<br><b>Status:</b> " + (W.connected ? "Connected" : "Disconnected");
         } else {
-          h += "<br><b>SSID:</b> " + (W.ssid || "N/A");
-          h += " &nbsp; <b>Clients:</b> " + (W.clients || 0);
-          h += "<br><b>Channel:</b> " + (W.channel || "?");
+          h += "<br><b>SSID:</b> " + escapeHtml(W.ssid || "N/A");
+          h += " &nbsp; <b>Clients:</b> " + escapeHtml(W.clients || 0);
+          h += "<br><b>Channel:</b> " + escapeHtml(W.channel || "?");
         }
         $("wifiSt").innerHTML = h;
         document.querySelectorAll("#wifiModeSeg button").forEach((b) => b.classList.toggle("on", b.textContent.toLowerCase() === W.mode));
@@ -609,18 +614,18 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
       function renderBle() {
         let h = "<b>Status:</b> " + (B.enabled ? "Enabled" : "Disabled");
         h += " &nbsp; <b>Connected:</b> " + (B.connected ? "Yes" : "No");
-        if (B.deviceName) h += "<br><b>Device:</b> " + B.deviceName;
+        if (B.deviceName) h += "<br><b>Device:</b> " + escapeHtml(B.deviceName);
         $("bleSt").innerHTML = h;
         $("bleTg").checked = !!B.enabled;
       }
 
       function render() {
-        let h = "<b>Variant:</b> " + (S.variant || "?");
+        let h = "<b>Variant:</b> " + escapeHtml(S.variant || "?");
         h += " &nbsp; <b>CAN:</b> " + (S.chassisOnline ? "Online" : "Offline");
         h += "<br><b>FSD:</b> " + (S.fsd ? "ON" : "OFF");
         h += " &nbsp; <b>Nag:</b> " + (S.nag ? "ON" : "OFF");
         h += " &nbsp; <b>Mirror Auto:</b> " + (S.mirrorAutoFold ? "ON" : "OFF");
-        const pn = ["Chill", "Normal", "Hurry", "Max", "Sloth"][S.profile] || S.profile;
+        const pn = ["Chill", "Normal", "Hurry", "Max", "Sloth"][S.profile] || escapeHtml(S.profile);
         h += "<br><b>Profile:</b> " + pn + (S.profilePin ? " (pinned)" : " (auto)");
         h += " &nbsp; <b>ISA:</b> " + (S.isaChime ? "Suppressed" : "Normal");
         h += "<br><b>Uptime:</b> " + Math.floor((S.uptime || 0) / 1000) + "s";

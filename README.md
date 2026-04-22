@@ -17,8 +17,9 @@ cd firmware
 .\.pio.ps1 run -e esp32 -t upload  # Flash to board
 ```
 
-Stable `.bin` artifacts are also published by GitHub Actions on each tagged release.
-The flasher screen downloads the matching release asset directly, using names like
+Local builds also emit merged flash-ready images under `firmware/build/firmware/`.
+Stable `.bin` artifacts are published by GitHub Actions on each tagged release.
+The flasher screen downloads the matching release asset directly and can flash it over Web Serial in Chrome/Edge, using names like
 `esp32.bin`, `esp32_no_can.bin`, `esp32_vehicle_only.bin`, and `esp32_wifi_ble_vehicle_body.bin`.
 
 CAN bus selection is controlled via build flags (FSD always on):
@@ -37,7 +38,7 @@ npm install
 npm run web
 ```
 
-Open <http://localhost:5173> and click "Connect USB"
+Open the Expo web URL shown in the terminal in Chrome or Edge.
 
 ## What's Included
 
@@ -186,7 +187,7 @@ stop:creep, stop:roll, stop:hold
 
 ## Browser Support
 
-- ✅ Desktop Chrome/Edge - Full support (flashing + control)
+- ✅ Desktop Chrome/Edge - Web Serial flashing + runtime control
 - ✅ Android Chrome - Runtime control via Bluetooth
 - ⚠️ Other browsers - Guide mode only
 

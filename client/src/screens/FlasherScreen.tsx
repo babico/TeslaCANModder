@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { colors, font, radius, spacing } from "../design/tokens";
+import { flashMergedEspReleaseImage, supportsBrowserEspFlash } from "../hardware/webEspFlasher";
 import { useBoardConnection } from "../state/BoardConnectionContext";
 
 type StatusType = "idle" | "building" | "connecting" | "flashing" | "done" | "error";
@@ -32,6 +33,10 @@ type ReleaseAsset = {
 	browser_download_url: string;
 };
 
+type ResolvedReleaseAsset = ReleaseAsset & {
+	tag_name?: string;
+};
+
 type GitHubRelease = {
 	tag_name?: string;
 	assets?: ReleaseAsset[];
@@ -47,6 +52,7 @@ function isSerialFamilyTransport(type: string): boolean {
 function resolveEnvironment(connection: Record<string, number>): string {
 	const wifiEnabled = connection.wifi ? 1 : 0;
 	const bleEnabled = connection.ble ? 1 : 0;
+
 	if (wifiEnabled && bleEnabled) {
 		return "esp32_wifi_ble";
 	}
@@ -71,7 +77,10 @@ function resolveAssetName(env: string, buses: Record<BusKey, number>): string {
 	return `${env}_${enabled.join("_")}_only.bin`;
 }
 
-async function downloadReleaseBinary(env: string, buses: Record<BusKey, number>): Promise<string> {
+async function resolveReleaseAsset(
+	env: string,
+	buses: Record<BusKey, number>,
+): Promise<ResolvedReleaseAsset> {
 	const assetName = resolveAssetName(env, buses);
 	const response = await fetch(LATEST_RELEASE_ENDPOINT, {
 		headers: { Accept: "application/vnd.github+json" },
@@ -87,6 +96,15 @@ async function downloadReleaseBinary(env: string, buses: Record<BusKey, number>)
 		const tagText = release.tag_name ? ` (${release.tag_name})` : "";
 		throw new Error(`${assetName} is not attached to the latest GitHub release${tagText}.`);
 	}
+
+	return {
+		...asset,
+		tag_name: release.tag_name,
+	};
+}
+
+async function downloadReleaseBinary(env: string, buses: Record<BusKey, number>): Promise<string> {
+	const asset = await resolveReleaseAsset(env, buses);
 
 	if (Platform.OS === "web") {
 		const anchor = document.createElement("a");
@@ -110,7 +128,11 @@ export function FlasherScreen() {
 		wifi: 0,
 		ble: 0,
 	});
-	const [buses, setBuses] = useState<Record<BusKey, number>>({ chassis: 1, vehicle: 0, body: 0 });
+	const [buses, setBuses] = useState<Record<BusKey, number>>({
+		chassis: 1,
+		vehicle: 0,
+		body: 0,
+	});
 	const [status, setStatus] = useState<StatusType>("idle");
 	const [message, setMessage] = useState("");
 	const [flashLog, setFlashLog] = useState<string[]>([]);
@@ -157,53 +179,71 @@ export function FlasherScreen() {
 	const handleFlash = async () => {
 		setFlashLog([]);
 		setStatus("connecting");
-		setMessage("Preparing dedicated flasher session...");
+		setMessage("Preparing browser flasher session...");
 
 		const addLog = (line: string) => {
 			setFlashLog((current) => [...current, line].slice(-80));
 		};
 
-		const sendFlashCommand = async (): Promise<void> => {
-			const flashCommand = JSON.stringify({
-				cmd: "flash",
-				env: environment,
-				asset: assetName,
-				buses,
-			});
-			const result = await sharedConnection.controller.runRawCommand(flashCommand);
-			if (!result.ok) {
-				throw new Error(result.error ?? "Flash command failed.");
-			}
-
-			if (result.responseText?.trim()) {
-				addLog(`[board] ${result.responseText.trim()}`);
-			}
-		};
+		let lastLoggedProgress = -1;
 
 		try {
-			const activeTransport = sharedConnection.controller.activeTransportType;
-			if (!isSerialFamilyTransport(activeTransport)) {
+			if (Platform.OS !== "web" || !supportsBrowserEspFlash()) {
 				throw new Error(
-					"Shared USB serial must already be connected. Open shared connection first, then start flash.",
+					"USB flashing requires the web client in Chrome or Edge with Web Serial enabled.",
 				);
 			}
-			addLog("> Reusing active shared USB serial connection");
-			addLog("> Pausing shared frame feed for dedicated flashing...");
+
+			const activeTransport = sharedConnection.controller.activeTransportType;
+			if (isSerialFamilyTransport(activeTransport)) {
+				addLog("> Closing shared serial session before flashing...");
+				await sharedConnection.disconnectTransport();
+			}
+
+			addLog("> Resolving latest merged release image...");
+			const releaseAsset = await resolveReleaseAsset(environment, buses);
+			addLog(
+				releaseAsset.tag_name
+					? `> Release asset: ${releaseAsset.name} from ${releaseAsset.tag_name}`
+					: `> Release asset: ${releaseAsset.name}`,
+			);
+			addLog("> Pausing shared frame feed while Web Serial flashing is active...");
 			sharedConnection.pauseFrameFeed(true);
 
 			setStatus("flashing");
-			setMessage(`Flashing ${assetName}...`);
-			addLog(`> Flash started: ${assetName}`);
-			await sendFlashCommand();
+			setMessage(`Flashing ${releaseAsset.name} over Web Serial...`);
+			addLog(`> Flash started: ${releaseAsset.name}`);
 
-			addLog("✓ Flash completed successfully");
+			await flashMergedEspReleaseImage({
+				assetName: releaseAsset.name,
+				assetUrl: releaseAsset.browser_download_url,
+				onLog(line) {
+					addLog(`[flasher] ${line}`);
+				},
+				onProgress(written, total) {
+					if (total <= 0) {
+						return;
+					}
+
+					const percent = Math.floor((written / total) * 100);
+					if (percent === lastLoggedProgress || (percent % 10 !== 0 && percent !== 100)) {
+						return;
+					}
+
+					lastLoggedProgress = percent;
+					addLog(`> Progress: ${percent}% (${written}/${total} bytes)`);
+				},
+			});
+
+			addLog("> Flash completed successfully");
+			addLog("> Reconnect from Monitor after reboot to verify status output");
 			setStatus("done");
-			setMessage(`${assetName} flashed successfully.`);
+			setMessage(`${releaseAsset.name} flashed successfully over Web Serial.`);
 		} catch (error) {
-			const errorMsg = error instanceof Error ? error.message : "Flash failed.";
-			addLog(`✗ Error: ${errorMsg}`);
+			const errorMessage = error instanceof Error ? error.message : "Flash failed.";
+			addLog(`> Error: ${errorMessage}`);
 			setStatus("error");
-			setMessage(errorMsg);
+			setMessage(errorMessage);
 		} finally {
 			sharedConnection.pauseFrameFeed(false);
 			addLog("> Flasher session released; shared feed resumed");
@@ -217,7 +257,7 @@ export function FlasherScreen() {
 				<Text style={styles.title}>Flasher Workspace</Text>
 				<Text style={styles.subtitle}>
 					Select connectivity and CAN bus profile, then download the matching GitHub
-					Actions release binary or flash over USB.
+					release image or flash it directly over Web Serial.
 				</Text>
 			</View>
 
@@ -228,7 +268,7 @@ export function FlasherScreen() {
 						<Text style={[styles.segmentTitle, styles.segmentTitleActive]}>
 							ESP32-S DevKit
 						</Text>
-						<Text style={styles.segmentDetail}>MCP2515 x1-3 · WiFi · BLE · NVS</Text>
+						<Text style={styles.segmentDetail}>MCP2515 x1-3 / WiFi / BLE / NVS</Text>
 					</View>
 				</View>
 				<Text style={styles.resolvedLine}>Latest release asset: {assetName}</Text>
@@ -349,7 +389,7 @@ export function FlasherScreen() {
 								? "Connecting..."
 								: status === "flashing"
 									? "Flashing..."
-									: "Flash via USB"}
+									: "Flash via Web Serial"}
 						</Text>
 					</Pressable>
 				</View>
@@ -378,8 +418,8 @@ export function FlasherScreen() {
 						showsVerticalScrollIndicator
 						nestedScrollEnabled
 					>
-						{flashLog.map((line, idx) => (
-							<Text key={idx} style={styles.flashConsoleText}>
+						{flashLog.map((line, index) => (
+							<Text key={index} style={styles.flashConsoleText}>
 								{line}
 							</Text>
 						))}
@@ -394,7 +434,10 @@ export function FlasherScreen() {
 					<Text style={styles.codeText}>
 						PLATFORMIO_BUILD_FLAGS="{buildFlags}" pio run -e {environment}
 					</Text>
-					<Text style={styles.codeText}>pio run -e {environment} -t upload</Text>
+					<Text style={styles.codeText}>
+						node ../tools/debug.js flash --port COM5 --hex build/firmware/{environment}
+						.bin
+					</Text>
 				</View>
 			</View>
 		</ScrollView>

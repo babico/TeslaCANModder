@@ -29,6 +29,7 @@ This is the canonical setup path for TeslaCANModder across firmware, transport, 
 ## Step 1: Get Firmware Artifact
 
 Preferred path: download the release binary built by GitHub Actions for your target connectivity and bus profile.
+These release assets are merged flash-ready ESP32 images.
 
 Common release asset names:
 
@@ -48,7 +49,7 @@ cd firmware
 
 Expected artifact example:
 
-- ESP32: `firmware/.pio/build/esp32_wifi_ble/firmware.bin`
+- ESP32: `firmware/build/firmware/esp32_wifi_ble.bin`
 
 ## Step 2: Flash Firmware (Unified Flasher Paths)
 
@@ -64,10 +65,11 @@ npm install
 npm run web
 ```
 
-1. Open `http://localhost:5173` in Chrome/Edge.
+1. Open the Expo web URL shown in the terminal in Chrome/Edge.
 1. Open Flasher tab.
 1. Select connectivity and CAN bus profile.
 1. Download the matching GitHub Release binary or run flash and wait for completion.
+1. If a shared serial monitor session is already open, the flasher closes it before requesting Web Serial access.
 1. If ESP32 stalls, hold BOOT during upload start.
 
 ### Path B: CLI Flasher (tools command)
@@ -75,19 +77,19 @@ npm run web
 Use the debug CLI to flash and perform basic serial boot verification.
 
 ```bash
-node tools/debug.js flash --port COM5 --hex firmware/.pio/build/esp32_wifi_ble/firmware.bin
+node tools/debug.js flash --port COM5 --hex firmware/build/firmware/esp32_wifi_ble.bin
 ```
 
 Optional chip erase (factory reset style):
 
 ```bash
-node tools/debug.js flash --port COM5 --hex firmware/.pio/build/esp32_wifi_ble/firmware.bin --erase
+node tools/debug.js flash --port COM5 --hex firmware/build/firmware/esp32_wifi_ble.bin --erase
 ```
 
 CLI flasher behavior:
 
-- Resolves esptool from PlatformIO-managed paths first, then PATH.
-- Flashes and attempts verification.
+- Resolves esptool from PlatformIO-managed paths first, then falls back to `python -m esptool`.
+- Flashes merged release images at `0x0`, or expands raw PlatformIO `firmware.bin` output into the full ESP32 boot layout.
 - Reopens serial and checks for boot/status output.
 
 ## Step 3: First Connection and Variant Set

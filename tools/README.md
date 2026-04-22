@@ -36,7 +36,7 @@ Keep phone and PC on the same network.
 | `smoke`         | Protocol health-check (default)                    |
 | `watch`         | Live CAN frame / state monitor                     |
 | `test`          | FSD & profile round-trip tests                     |
-| `flash`         | Flash firmware via avrdude                         |
+| `flash`         | Flash ESP32 firmware via esptool                   |
 | `scan`          | Discover active CAN IDs                            |
 | `dump`          | Record frames to JSONL / CSV                       |
 | `replay`        | Replay a recorded JSONL dump                       |
@@ -73,34 +73,35 @@ Additional script:
 
 ### flash
 
-| Flag      | Default | Description                |
-| --------- | ------- | -------------------------- |
-| `--hex`   | —       | Path to .hex firmware file |
-| `--erase` | `false` | Chip-erase before flash    |
+| Flag      | Default | Description                          |
+| --------- | ------- | ------------------------------------ |
+| `--hex`   | —       | Path to merged `.bin` firmware image |
+| `--erase` | `false` | Chip-erase before flash              |
 
 Recommended flash workflow:
 
-1. Build firmware first in `hardware/` (PlatformIO).
+1. Build firmware first in `firmware/` (PlatformIO).
 2. Confirm the target COM port is free.
-3. Run flash command with explicit `.hex` path.
+3. Run flash command with an explicit merged `.bin` path.
 4. Verify serial boot/status output after flashing.
 
 Example:
 
 ```bash
-node tools/debug.js flash --port COM5 --hex firmware/.pio/build/esp32/firmware.bin
+node tools/debug.js flash --port COM5 --hex firmware/build/firmware/esp32.bin
 ```
 
 With chip erase:
 
 ```bash
-node tools/debug.js flash --port COM5 --hex firmware/.pio/build/esp32/firmware.bin --erase
+node tools/debug.js flash --port COM5 --hex firmware/build/firmware/esp32.bin --erase
 ```
 
 Notes:
 
-- Flash command uses avrdude from PlatformIO package paths when present.
-- If avrdude is not found, install PlatformIO or add avrdude to PATH.
+- Flash command uses esptool from PlatformIO package paths when present.
+- If a raw PlatformIO `firmware.bin` path is provided, the command flashes the full ESP32 boot image layout when the sibling bootloader/partition files are present.
+- If esptool is not found, install PlatformIO or make `python -m esptool` available.
 - Flash command attempts post-flash serial verification and prints latest status summary when available.
 
 ### test
@@ -195,7 +196,7 @@ tools/
     ├── smoke.js          # Protocol health-check
     ├── watch.js          # Live frame monitor with bit-diff
     ├── test.js           # FSD / profile round-trip tests
-    ├── flash.js          # Firmware flashing via avrdude
+    ├── flash.js          # ESP32 firmware flashing via esptool
     ├── scan.js           # CAN ID discovery
     ├── dump.js           # Frame recording
     ├── replay.js         # Frame playback

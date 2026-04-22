@@ -1,16 +1,16 @@
 {
-  "extends": "expo/tsconfig.base",
-  "compilerOptions": {
-    "strict": true,
-    "target": "ES2022",
-    "moduleResolution": "Bundler",
-    "module": "ESNext",
-    "moduleDetection": "force",
-    "useUnknownInCatchVariables": true,
-    "jsx": "react-jsx",
-    "baseUrl": ".",
-    "types": ["react", "react-native", "jest"]
-  },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
-  "exclude": ["node_modules"]
+	"extends": "expo/tsconfig.base",
+	"compilerOptions": {
+		"strict": true,
+		"target": "ES2022",
+		"moduleResolution": "Bundler",
+		"module": "ESNext",
+		"moduleDetection": "force",
+		"useUnknownInCatchVariables": true,
+		"jsx": "react-jsx",
+		"baseUrl": ".",
+		"types": ["react", "react-native", "jest", "w3c-web-serial"]
+	},
+	"include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
+	"exclude": ["node_modules"]
 }
