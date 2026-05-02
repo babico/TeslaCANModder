@@ -62,7 +62,7 @@ jobs:
 
             - name: Start release workflow on created tag
               if: steps.tag.outputs.created == 'true'
-              uses: actions/github-script@v8
+              uses: actions/github-script@v9
               env:
                   TAG_NAME: ${{ steps.tag.outputs.tag }}
               with:
