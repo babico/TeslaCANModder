@@ -171,7 +171,7 @@ function validateManifest(manifest) {
 	}
 }
 
-function formatAjvErrors(errors) {
+function _formatAjvErrors(errors) {
 	if (!errors || errors.length === 0) {
 		return "unknown validation error";
 	}
@@ -258,4 +258,4 @@ for (const [messageType, schemaRef] of requiredMappings) {
 	}
 }
 
-console.log("Validated unified serial-output.schema.json contract.");
+console.warn("Validated unified serial-output.schema.json contract.");

@@ -3,8 +3,7 @@
  * Encapsulates the logic for building consistent export provenance and row formats.
  */
 
-import type { BoardState, CanFrame } from "@teslacanmodder/protocol";
-import type { DecoderDataset } from "@teslacanmodder/protocol";
+import type { BoardState, CanFrame, DecoderDataset } from "@teslacanmodder/protocol";
 
 export interface ExportRow {
 	ts: string;

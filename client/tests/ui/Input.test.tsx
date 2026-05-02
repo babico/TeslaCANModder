@@ -1,4 +1,5 @@
 import React from "react";
+import { TextInput } from "react-native";
 import { render, fireEvent } from "@testing-library/react-native";
 import { Input } from "../../src/ui/Input";
 
@@ -20,7 +21,6 @@ describe("Input", () => {
 	it("forwards onChangeText", () => {
 		const onChangeText = jest.fn();
 		const { UNSAFE_getByType } = render(<Input onChangeText={onChangeText} />);
-		const { TextInput } = require("react-native");
 		fireEvent.changeText(UNSAFE_getByType(TextInput), "hello");
 		expect(onChangeText).toHaveBeenCalledWith("hello");
 	});

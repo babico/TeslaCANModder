@@ -30,7 +30,7 @@ function hasIndexedDb(): boolean {
 	);
 }
 
-function openDb(): Promise<any> {
+function openDb(): Promise<IDBDatabase> {
 	return new Promise((resolve, reject) => {
 		const indexedDb = (globalThis as { indexedDB?: IDBFactory }).indexedDB;
 		if (!indexedDb) {

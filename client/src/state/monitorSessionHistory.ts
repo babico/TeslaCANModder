@@ -3,8 +3,6 @@
  * Encapsulates logic for building, filtering, and managing session records.
  */
 
-import type { CanFrame } from "@teslacanmodder/protocol";
-
 /**
  * Represents a single command execution history entry.
  */
