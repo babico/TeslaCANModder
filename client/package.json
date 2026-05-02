@@ -20,7 +20,7 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"esptool-js": "^0.6.0",
-		"expo": "~54.0.33",
+		"expo": "~55.0.19",
 		"markdown-it": "^14.1.1",
 		"markdown-it-abbr": "^2.0.0",
 		"markdown-it-deflist": "^3.0.0",
