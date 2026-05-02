@@ -21,43 +21,57 @@
 // 0x115: Front motor RPM (dual motor)
 //   Byte[4:5] = RPM * 1, signed 16-bit
 
-inline float decodeVehicleSpeed(const uint8_t* data) {
-  int16_t raw = (int16_t)((data[2] << 8) | data[3]);
-  return raw / 100.0f;
+inline float decodeVehicleSpeed(const uint8_t *data)
+{
+	int16_t raw = (int16_t)((data[2] << 8) | data[3]);
+	return raw / 100.0f;
 }
 
-inline uint8_t decodeGearState(const uint8_t* data) {
-  return (data[0] >> 1) & 0x07;
+inline uint8_t decodeGearState(const uint8_t *data)
+{
+	return (data[0] >> 1) & 0x07;
 }
 
-inline uint8_t decodeAccelPedal(const uint8_t* data) {
-  return data[1];
+inline uint8_t decodeAccelPedal(const uint8_t *data)
+{
+	return data[1];
 }
 
-inline float decodeSteeringAngle(const uint8_t* data) {
-  int16_t raw = (int16_t)((data[0] << 8) | data[1]);
-  return raw / 10.0f;
+inline float decodeSteeringAngle(const uint8_t *data)
+{
+	int16_t raw = (int16_t)((data[0] << 8) | data[1]);
+	return raw / 10.0f;
 }
 
-inline int16_t decodeMotorRpm(const uint8_t* data) {
-  return (int16_t)((data[4] << 8) | data[5]);
+inline int16_t decodeMotorRpm(const uint8_t *data)
+{
+	return (int16_t)((data[4] << 8) | data[5]);
 }
 
-inline const char* gearName(uint8_t gear) {
-  switch (gear) {
-    case 1: return "P";
-    case 2: return "R";
-    case 3: return "N";
-    case 4: return "D";
-    default: return "?";
-  }
+inline const char *gearName(uint8_t gear)
+{
+	switch (gear)
+	{
+	case 1:
+		return "P";
+	case 2:
+		return "R";
+	case 3:
+		return "N";
+	case 4:
+		return "D";
+	default:
+		return "?";
+	}
 }
 
-inline bool execPowertrainCmd(const char* cmd, State& s) {
-  if (strcmp(cmd, "powertrain") == 0) {
-    // Handled in serial — just signals we want to print telemetry
-    (void)s;
-    return true;
-  }
-  return false;
+inline bool execPowertrainCmd(const char *cmd, State &s)
+{
+	if (strcmp(cmd, "powertrain") == 0)
+	{
+		// Handled in serial — just signals we want to print telemetry
+		(void)s;
+		return true;
+	}
+	return false;
 }

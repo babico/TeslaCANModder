@@ -1,26 +1,26 @@
 {
-  "name": "@teslacanmodder/protocol",
-  "version": "2.0.0",
-  "private": true,
-  "type": "module",
-  "description": "Shared protocol types, commands, decoder, and parser for TeslaCANModder",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
-  "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.js"
-  },
-  "devDependencies": {
-    "@jest/globals": "^29.7.0",
-    "@types/jest": "^30.0.0",
-    "jest": "^30.3.0",
-    "ts-jest": "^29.1.0",
-    "typescript": "~6.0.2"
-  }
+	"name": "@teslacanmodder/protocol",
+	"version": "2.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Shared protocol types, commands, decoder, and parser for TeslaCANModder",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.js"
+	},
+	"devDependencies": {
+		"@jest/globals": "^29.7.0",
+		"@types/jest": "^30.0.0",
+		"jest": "^30.3.0",
+		"ts-jest": "^29.1.0",
+		"typescript": "~6.0.2"
+	}
 }

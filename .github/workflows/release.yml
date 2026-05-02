@@ -52,7 +52,9 @@ jobs:
             # Security
             - run: npm run audit:ci
             - name: License check
-              run: npx license-checker --production --excludePrivatePackages --onlyAllow "MIT;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;BlueOak-1.0.0;Python-2.0;GPL-3.0;GPL-3.0-or-later;GPL-3.0-only" --summary
+              run: npx license-checker --production --excludePrivatePackages --onlyAllow
+                  "MIT;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;BlueOak-1.0.0;Python-2.0;GPL-3.0;GPL-3.0-or-later;GPL-3.0-only"
+                  --summary
 
     # ── Build Firmware Artifacts ────────────────────────────────────────────────
     build-firmware:
@@ -108,7 +110,7 @@ jobs:
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
                   rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: git config --global submodule.recurse false
-            - uses: actions/cache@v4
+            - uses: actions/cache@v5
               with:
                   path: ~/.platformio
                   key: pio-release-${{ matrix.env }}-${{ hashFiles('firmware/platformio.ini') }}
@@ -118,7 +120,9 @@ jobs:
             - run: pip install platformio
             - name: Build firmware binary
               env:
-                  PLATFORMIO_BUILD_FLAGS: -DBUS_CHASSIS_ACTIVE=${{ matrix.profile.chassis }} -DBUS_VEHICLE_ACTIVE=${{ matrix.profile.vehicle }} -DBUS_BODY_ACTIVE=${{ matrix.profile.body }}
+                  PLATFORMIO_BUILD_FLAGS: -DBUS_CHASSIS_ACTIVE=${{ matrix.profile.chassis }}
+                      -DBUS_VEHICLE_ACTIVE=${{ matrix.profile.vehicle }}
+                      -DBUS_BODY_ACTIVE=${{ matrix.profile.body }}
               run: pio run -e ${{ matrix.env }}
             - name: Collect firmware binary
               run: |

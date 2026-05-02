@@ -1,210 +1,34 @@
-# TeslaCANModder Hardware Firmware
+# Hardware Reference
 
-Firmware for Tesla CAN bus modification supporting ESP32-S DevKit. Supports runtime variant switching (HW4/HW3/Legacy) with full client control.
+`hardware/` is a reference snapshot and scratch area, not the shipping firmware workspace.
 
-## Hardware Requirements
+## Status
 
-### ESP32-S DevKit
+- Active release firmware lives in `firmware/`.
+- CI, release artifacts, and PlatformIO commands target `firmware/`.
+- Files here are useful for comparison, archived experiments, and test references only.
 
-- ESP32-S DevKit (30-pin or 38-pin) — Built-in WiFi + BLE
-- MCP2515 CAN module with TJA1050 transceiver (8 MHz crystal) × 1–3
-- 9V-36V to 5V/3A Buck converter
-- Tesla X179 connector
+## Contents
 
-## Wiring
+| Path             | Purpose                                       |
+| ---------------- | --------------------------------------------- |
+| `hardware/lib/`  | Archived headers and implementation fragments |
+| `hardware/test/` | Reference tests tied to the archived layout   |
 
-See [docs/guides/hardware-setup.md](../docs/guides/hardware-setup.md) for full ESP32 + MCP2515 wiring (per-bus CS/INT, SPI sharing, X179 connector pinout).
+## Guidance
 
-## Build
+- Add new shipping firmware work under `firmware/`.
+- Update wiring and setup docs under `docs/guides/`.
+- Treat this folder as read-only unless you are intentionally reconciling old experiments into the active firmware tree.
 
-```powershell
-# ESP32
-.\.pio.ps1 run -e esp32         # Serial only
-.\.pio.ps1 run -e esp32_wifi    # WiFi REST API
-.\.pio.ps1 run -e esp32_ble     # BLE
-.\.pio.ps1 run -e esp32_wifi_ble # WiFi + BLE
-
-# Enable extra CAN buses (FSD is always on)
-$env:PLATFORMIO_BUILD_FLAGS = "-DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
-.\.pio.ps1 run -e esp32_wifi
-
-# Upload
-.\pio.ps1 run -e esp32 -t upload
-```
-
-## Features
-
-### Variants
-
-- `hw4` - HW4 (2026.2.3+) with ISA chime control
-- `hw3` - HW3 with speed offset control
-- `legacy` - Pre-HW3 vehicles
-
-### Controls (All OFF by default)
-
-- FSD enable/disable
-- Nag suppression
-- Speed profile (0-4)
-- Speed offset (HW3: 0-100%)
-- ISA chime suppression (HW4)
-- CAN frame streaming
-- Raw CAN listen mode
-
-## Commands
-
-All commands are newline-terminated ASCII over USB, BLE, or WiFi.
-
-### System
-
-- `ping` - Health check
-- `status` - Full state dump
-- `stream:on` / `stream:off` - Enable or disable CAN frame streaming
-- `can:raw:on` / `can:raw:off` - Enable or disable raw CAN listen mode
-
-### Variant
-
-- `variant:hw4` / `variant:hw3` / `variant:legacy`
-
-### FSD / Feature Controls
-
-- `fsd:on` / `fsd:off` / `fsd:toggle`
-- `nag:on` / `nag:off` / `nag:toggle`
-- `profile:0` to `profile:4` (or `sp:0` to `sp:4`)
-- `profile:auto` - Track stalk input instead of user override
-- `offset:auto` - Track HW3 UI speed offset instead of user override
-- `offset:0` to `offset:100` (HW3 only)
-- `isa-chime:on` / `isa-chime:off` / `isa-chime:toggle` (HW4 only)
-
-### Summon
-
-- `summon` - Start summon using the last known direction
-- `summon:forward` / `summon:fwd`
-- `summon:reverse` / `summon:rev`
-- `summon:stop`
-
-### Mirrors
-
-- `mirror:fold`
-- `mirror:unfold`
-- `mirror:heat`
-- `mirror:autofold`
-- `mirror:dip`
-
-### Locks
-
-- `lock`
-- `unlock`
-- `lock:child`
-- `horn`
-
-### Trunk / Frunk
-
-- `frunk:open` / `frunk`
-- `frunk:close`
-- `trunk:open` / `trunk`
-- `trunk:close`
-- `glovebox`
-
-### Lighting
-
-- `light:fog:front`
-- `light:fog:rear`
-- `light:highbeam:auto`
-- `light:ambient`
-- `light:home`
-- `light:dome:off`
-- `light:dome:on`
-- `light:dome:auto`
-
-### Wipers
-
-- `wiper:off`
-- `wiper:1`
-- `wiper:2`
-- `wiper:3`
-
-### Seats
-
-- `seat:fl:0` to `seat:fl:3`
-- `seat:fr:0` to `seat:fr:3`
-- `seat:rl:0` to `seat:rl:3`
-- `seat:rr:0` to `seat:rr:3`
-- `seat:rc:0` to `seat:rc:3`
-
-### Display
-
-- `maindisplay:0` to `maindisplay:127`
-
-### Power
-
-- `power:acc:on`
-- `power:acc:off`
-- `power:off`
-- `power:ready`
-
-### Windows
-
-- `window:vent:N` (N = 0..100)
-- `vent:open`
-- `vent:close`
-
-### Sentry
-
-- `sentry:on`
-- `sentry:off`
-
-### Climate
-
-- `climate:keep`
-- `climate:off`
-
-### Charge
-
-- `charge:start`
-- `charge:stop`
-- `charge:port` / `chargeport`
-
-### Drive Configuration
-
-- `pedal:standard` / `pedal:std`
-- `pedal:chill`
-- `pedal:sport`
-- `regen:off`
-- `regen:low`
-- `regen:standard` / `regen:std`
-- `regen:max`
-- `stop:creep`
-- `stop:roll`
-- `stop:hold`
-
-## Protocol
-
-JSON messages over serial (115200 baud):
-
-### Boot
-
-```json
-{"t":"boot","hw":"ESP32S_DevKit","variant":"hw4","cap":"usb+wifi+ble",...}
-```
-
-### Status (every 500ms)
-
-```json
-{"t":"status","variant":"hw4","fsd":0,"sp":1,"offset":0,"isaChime":0,"nag":0,...}
-```
-
-### Frame (when streaming)
-
-```json
-{"t":"frame","dir":"rx","id":1021,"dlc":8,"d":"0102030405060708",...}
-```
+````
 
 ### Ack/Error
 
 ```json
 {"t":"ack","cmd":"fsd:on"}
 {"t":"error","msg":"Invalid variant"}
-```
+````
 
 ## Code Structure
 

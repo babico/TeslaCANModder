@@ -17,33 +17,33 @@ export type GaugeMode = "simple" | "power" | "perf";
 
 const MODES: GaugeMode[] = ["simple", "power", "perf"];
 const MODE_LABELS: Record<GaugeMode, string> = {
-  simple: "Simple",
-  power:  "Power",
-  perf:   "Perf",
+	simple: "Simple",
+	power: "Power",
+	perf: "Perf",
 };
 
 let cachedMode: GaugeMode = "simple";
 
 export interface GaugeModeState {
-  mode: GaugeMode;
-  modeLabel: string;
-  cycleMode: () => void;
+	mode: GaugeMode;
+	modeLabel: string;
+	cycleMode: () => void;
 }
 
 export function useGaugeMode(): GaugeModeState {
-  const [mode, setMode] = useState<GaugeMode>(cachedMode);
+	const [mode, setMode] = useState<GaugeMode>(cachedMode);
 
-  const cycleMode = useCallback(() => {
-    setMode(prev => {
-      const next = MODES[(MODES.indexOf(prev) + 1) % MODES.length];
-      cachedMode = next;
-      return next;
-    });
-  }, []);
+	const cycleMode = useCallback(() => {
+		setMode((prev) => {
+			const next = MODES[(MODES.indexOf(prev) + 1) % MODES.length];
+			cachedMode = next;
+			return next;
+		});
+	}, []);
 
-  return {
-    mode,
-    modeLabel: MODE_LABELS[mode],
-    cycleMode,
-  };
+	return {
+		mode,
+		modeLabel: MODE_LABELS[mode],
+		cycleMode,
+	};
 }

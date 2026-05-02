@@ -1,0 +1,19 @@
+{
+	"editor.detectIndentation": false,
+	"editor.insertSpaces": false,
+	"editor.tabSize": 4,
+	"files.eol": "\n",
+	"prettier.useTabs": true,
+	"prettier.tabWidth": 4,
+	"files.associations": {
+		"*.h": "cpp"
+	},
+	"[markdown]": {
+		"editor.insertSpaces": true,
+		"editor.tabSize": 2
+	},
+	"[yaml]": {
+		"editor.insertSpaces": true,
+		"editor.tabSize": 4
+	}
+}

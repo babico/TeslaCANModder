@@ -1,15 +1,15 @@
 {
-  "expo": {
-    "name": "Tesla CAN Modder",
-    "slug": "tesla-can-modder",
-    "scheme": "teslacanmodder",
-    "version": "2.0.0",
-    "jsEngine": "jsc",
-    "orientation": "default",
-    "platforms": ["ios", "android", "web"],
-    "userInterfaceStyle": "automatic",
-    "web": {
-      "bundler": "metro"
-    }
-  }
+	"expo": {
+		"name": "Tesla CAN Modder",
+		"slug": "tesla-can-modder",
+		"scheme": "teslacanmodder",
+		"version": "2.0.0",
+		"jsEngine": "jsc",
+		"orientation": "default",
+		"platforms": ["ios", "android", "web"],
+		"userInterfaceStyle": "automatic",
+		"web": {
+			"bundler": "metro"
+		}
+	}
 }

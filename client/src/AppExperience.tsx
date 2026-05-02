@@ -1,69 +1,33 @@
 import { lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import {
-	FlatList,
-	Pressable,
-	ScrollView,
-	StyleSheet,
-	Switch,
-	Text,
-	TextInput,
-	View,
-	useWindowDimensions,
-} from "react-native";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
 	buildDecoderIndex,
 	describeDecodedFrame,
-	formatAutopilotTier,
-	formatDriveMode,
-	formatFwCompat,
-	formatGear,
-	formatPressurePsi,
-	formatSteeringMode,
-	formatUptime,
-	formatVehicleModel,
 	initialBoardState,
 	type BoardState,
-	type CanFrame,
 	type DecoderDataset,
 } from "@teslacanmodder/protocol";
 
-import {
-	ALL_COMMANDS,
-	DEFAULT_CONNECTION,
-	HardwareController,
-	type CommandName,
-} from "./hardware/controller";
+import { ALL_COMMANDS, type CommandName } from "./hardware/controller";
 import legacyMcu2Payload from "./assets/can-decoder/legacy_mcu2.json";
 import legacyMcu3Payload from "./assets/can-decoder/legacy_mcu3.json";
 import legacyModelSXIntelPayload from "./assets/can-decoder/legacy_modelsx_intel.json";
 import legacyModelSXAmdPayload from "./assets/can-decoder/legacy_modelsx_amd.json";
 import {
-	MONITOR_TRANSPORT_OPTIONS,
 	buildMonitorTransportStatus,
 	getMonitorTransportExecutionPolicy,
 	getMonitorTransportOption,
 	type MonitorTransportType,
 } from "./hardware/transportPresentation";
-import { buildApplyTransportMessage } from "./hardware/monitorTransportMessages";
 import {
 	buildMonitorTransportGateSnapshot,
 	getAutoPollPolicy,
 } from "./hardware/monitorPollingPolicy";
 import { connectRuntimeBlePeripheral, requestRuntimeSerialPort } from "./hardware/runtimeAdapters";
-import {
-	buildMonitorControlState,
-	resolveQuickActionBlockReason,
-} from "./hardware/monitorControlState";
 import { reduceBoardPayload } from "./state/board";
-import { getCommandGate } from "./state/commandGating";
-import {
-	commandBusReducer,
-	generateCommandId,
-	initialCommandBusState,
-	type CommandLifecycleEntry,
-} from "./state/commandBus";
+import { commandBusReducer, generateCommandId, initialCommandBusState } from "./state/commandBus";
 import { buildExportProvenance } from "./state/monitorExport";
 import {
 	buildDiagnosticsEvents,
@@ -81,8 +45,8 @@ import { applyFrameViewingPipeline, type BusFilterType } from "./state/monitorFr
 import {
 	buildCommandExecutionResult,
 	resolveCommandExecutionReadiness,
-	type CommandExecutionResult,
 } from "./state/monitorCommandExecution";
+import { getCommandGate } from "./state/commandGating";
 import { useBoardConnection } from "./state/BoardConnectionContext";
 import { DashboardScreen, ControlsScreen, ConsoleScreen } from "./screens";
 const DocsScreen = lazy(() =>
@@ -93,17 +57,8 @@ const FlasherScreen = lazy(() =>
 );
 import { ConnectionHeader } from "./components/ConnectionHeader";
 import { MenuHeader } from "./components/MenuHeader";
-import { TelemetryPanel } from "./components/TelemetryPanel";
-import { IntegrationPanel } from "./components/IntegrationPanel";
-import { UtilityPanel } from "./components/UtilityPanel";
 import { colors } from "./design/tokens";
 import { type AppTabRoute, useAppRouteState } from "./state/appRoute";
-import type { HardwareConnectionConfig } from "./types/controls";
-
-type Preset = {
-	name: string;
-	connection: HardwareConnectionConfig;
-};
 
 type HistoryEntry = {
 	id: string;
@@ -151,14 +106,6 @@ type LegacyDecodedPayload = {
 	frames?: LegacyDecodedFrame[];
 };
 
-type StressValidationResult = {
-	totalFrames: number;
-	filteredFrames: number;
-	renderedFrames: number;
-	elapsedMs: number;
-	passed: boolean;
-};
-
 const EXPORT_SCHEMA_VERSION = "monitor-export.v1";
 
 const LEGACY_DECODED_DATASET_SOURCES: Array<{
@@ -190,50 +137,9 @@ const LEGACY_DECODED_DATASET_SOURCES: Array<{
 
 const DEFAULT_DECODER_DATASET_ID = LEGACY_DECODED_DATASET_SOURCES[0]?.id ?? "";
 
-const CONNECTION_PRESETS: Preset[] = [
-	{ name: "Vehicle AP", connection: DEFAULT_CONNECTION },
-	{
-		name: "Local Bridge",
-		connection: {
-			baseUrl: "http://localhost:8080",
-			commandPath: "/api/command",
-			statusPath: "/api/status",
-		},
-	},
-	{
-		name: "Lab Rig",
-		connection: {
-			baseUrl: "http://192.168.10.20",
-			commandPath: "/api/command",
-			statusPath: "/api/status",
-		},
-	},
-];
-
 const POLL_SECONDS = [0, 2, 5, 10];
-const FEATURE_TOGGLES: Array<{ key: keyof BoardState; label: string }> = [
-	{ key: "fsd", label: "FSD" },
-	{ key: "nag", label: "Nag" },
-	{ key: "nagKiller", label: "Nag Killer" },
-	{ key: "precondition", label: "Precondition" },
-	{ key: "trackMode", label: "Track Mode" },
-	{ key: "txPaused", label: "TX Paused" },
-	{ key: "otaInProgress", label: "OTA Guard" },
-	{ key: "mqttConnected", label: "MQTT" },
-	{ key: "teslaBleConnected", label: "Tesla BLE" },
-	{ key: "hasTpms", label: "TPMS" },
-];
 
 const BUS_FILTERS = ["all", "0", "1", "2"] as const;
-const DIAGNOSTICS_CATEGORIES: DiagnosticsCategory[] = [
-	"all",
-	"command",
-	"board",
-	"snapshot",
-	"system",
-];
-const FRAME_WINDOW_OPTIONS = [25, 50, 100, 200] as const;
-const FRAME_SAMPLE_OPTIONS = [1, 2, 5] as const;
 
 type BusFilter = (typeof BUS_FILTERS)[number];
 
@@ -326,19 +232,15 @@ function verifyExportIntegrity(
 }
 
 export default function AppExperience() {
-	const { width } = useWindowDimensions();
-	const isWide = width >= 980;
 	const connection = useBoardConnection();
 	const controller = connection.controller;
 	const baseUrl = connection.baseUrl;
 	const commandPath = connection.commandPath;
 	const statusPath = connection.statusPath;
 	const selectedTransportType = connection.selectedTransportType;
-	const [selectedCommand, setSelectedCommand] = useState<CommandName>(ALL_COMMANDS[0].name);
-	const [argsInput, setArgsInput] = useState("");
-	const [commandFilter, setCommandFilter] = useState("");
+	const [_selectedCommand, _setSelectedCommand] = useState<CommandName>(ALL_COMMANDS[0].name);
 	const [autoPoll, setAutoPoll] = useState(false);
-	const [pollIndex, setPollIndex] = useState(2);
+	const [pollIndex, _setPollIndex] = useState(2);
 	const [lastResult, setLastResult] = useState("Ready");
 	const [statusText, setStatusText] = useState("No status fetched");
 	const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -353,12 +255,11 @@ export default function AppExperience() {
 	const [busFilter, setBusFilter] = useState<BusFilter>("all");
 	const [frameFeedPaused, setFrameFeedPaused] = useState(false);
 	const [boardInfoFeedPaused, setBoardInfoFeedPaused] = useState(false);
-	const [decodeFrames, setDecodeFrames] = useState(true);
+	const [decodeFrames, _setDecodeFrames] = useState(true);
 	const [frameSnapshots, setFrameSnapshots] = useState<FrameSnapshot[]>([]);
 	const [frameWindowSize, setFrameWindowSize] = useState<number>(50);
 	const [frameSampleStep, setFrameSampleStep] = useState<number>(1);
 	const [decoderDatasetId, setDecoderDatasetId] = useState<string>(DEFAULT_DECODER_DATASET_ID);
-	const [stressValidation, setStressValidation] = useState<StressValidationResult | null>(null);
 	const [diagnosticsQuery, setDiagnosticsQuery] = useState("");
 	const [diagnosticsCategory, setDiagnosticsCategory] = useState<DiagnosticsCategory>("all");
 	const [diagnosticsArchive, setDiagnosticsArchive] = useState<
@@ -385,7 +286,6 @@ export default function AppExperience() {
 		transportExecutionPolicy.ready,
 		transportExecutionPolicy.blockReason,
 	);
-	const isSelectedTransportReady = transportGateSnapshot.canExecuteCommands;
 	const canFetchStatus = transportGateSnapshot.canFetchStatus;
 
 	const legacyDecoderDatasets = useMemo(
@@ -405,22 +305,6 @@ export default function AppExperience() {
 	);
 
 	const allDecoderDatasets = useMemo(() => legacyDecoderDatasets, [legacyDecoderDatasets]);
-
-	const selected =
-		ALL_COMMANDS.find((entry) => entry.name === selectedCommand) ?? ALL_COMMANDS[0];
-	const selectedGate = getCommandGate(selected.name, boardState);
-	const monitorControlState = buildMonitorControlState({
-		selectedCommandAvailable: selectedGate.available,
-		selectedCommandReason: selectedGate.reason,
-		transportCanExecuteCommands: isSelectedTransportReady,
-		transportCanFetchStatus: canFetchStatus,
-		transportCommandBlockReason: transportGateSnapshot.commandBlockReason,
-		transportStatusBlockReason: transportGateSnapshot.statusBlockReason,
-	});
-	const quickActions = ALL_COMMANDS.filter((entry) => entry.argCount === 0).slice(0, 6);
-	const filteredCommands = ALL_COMMANDS.filter((entry) =>
-		entry.name.toLowerCase().includes(commandFilter.trim().toLowerCase()),
-	);
 
 	const visibleFrames = useMemo(
 		() =>
@@ -669,24 +553,6 @@ export default function AppExperience() {
 		}));
 	};
 
-	const applyConnection = async () => {
-		await connection.applyConnection();
-
-		pushDiagnosticsArchive(
-			"system",
-			"Transport Applied",
-			`type=${selectedTransportType} base=${baseUrl} commandPath=${commandPath}`,
-		);
-		setLastResult(
-			buildApplyTransportMessage(
-				selectedTransportType,
-				selectedTransportOption,
-				baseUrl,
-				commandPath,
-			),
-		);
-	};
-
 	const ensureSharedTransportReady = async (): Promise<void> => {
 		if (selectedTransportType === "http") {
 			connection.controller.connectViaRestApi({
@@ -824,12 +690,6 @@ export default function AppExperience() {
 		} finally {
 			setBleConfigBusy(false);
 		}
-	};
-
-	const usePreset = (preset: Preset) => {
-		connection.applyPreset({ name: preset.name, connection: preset.connection });
-		pushDiagnosticsArchive("system", "Preset Applied", preset.name);
-		setLastResult(`Preset applied: ${preset.name}`);
 	};
 
 	const pushHistory = (entry: Omit<HistoryEntry, "id" | "ts">) => {
@@ -1133,54 +993,6 @@ export default function AppExperience() {
 			dir: frame.dir,
 			data: frame.data,
 		}));
-	};
-
-	const runMonitorStressValidation = () => {
-		const syntheticCount = 5000;
-		const syntheticFrames: CanFrame[] = Array.from({ length: syntheticCount }, (_, idx) => {
-			const bus = idx % 3;
-			return {
-				key: `stress-${idx}`,
-				id: 0x100 + (idx % 512),
-				dir: idx % 2 === 0 ? "tx" : "rx",
-				bus,
-				busName: bus === 0 ? "Chassis" : bus === 1 ? "Vehicle" : "Body",
-				dlc: 8,
-				data: `${(idx % 256).toString(16).padStart(2, "0").toUpperCase()} 00 11 22 33 44 55 66`,
-				ts: `${idx}`,
-			};
-		});
-
-		const startedAt = Date.now();
-
-		// Use the same frame viewing pipeline for consistent filtering behavior
-		const processed = applyFrameViewingPipeline({
-			frames: syntheticFrames,
-			busFilter: busFilter as BusFilterType,
-			textFilter: frameFilter,
-			windowSize: frameWindowSize,
-			sampleStep: frameSampleStep,
-		});
-
-		const elapsedMs = Date.now() - startedAt;
-		const passed = elapsedMs <= 80;
-		const result: StressValidationResult = {
-			totalFrames: syntheticCount,
-			filteredFrames: syntheticCount, // Note: we can't easily get filtered count from pipeline
-			renderedFrames: processed.length,
-			elapsedMs,
-			passed,
-		};
-
-		setStressValidation(result);
-		setLastResult(
-			`Stress validation ${passed ? "passed" : "failed"}: ${result.totalFrames} frames processed in ${result.elapsedMs}ms (rendered=${result.renderedFrames}).`,
-		);
-		pushHistory({
-			command: "monitor:stress-validate",
-			ok: passed,
-			response: `total=${result.totalFrames} filtered=${result.filteredFrames} rendered=${result.renderedFrames} ms=${result.elapsedMs}`,
-		});
 	};
 
 	const exportVisibleFramesJson = () => {
@@ -1733,77 +1545,6 @@ export default function AppExperience() {
 			{/* Separate menu header (bottom navigation) */}
 			<MenuHeader tabs={TABS} activeTab={activeTab} onSelectTab={navigateToTab} />
 		</SafeAreaView>
-	);
-}
-
-function MonitorFeaturePill({ title, detail }: { title: string; detail: string }) {
-	return (
-		<View style={styles.monitorFeaturePill}>
-			<Text style={styles.monitorFeatureTitle}>{title}</Text>
-			<Text style={styles.monitorFeatureDetail}>{detail}</Text>
-		</View>
-	);
-}
-
-function SectionHeader({ title, detail }: { title: string; detail: string }) {
-	return (
-		<View style={styles.sectionHeader}>
-			<Text style={styles.sectionTitle}>{title}</Text>
-			<Text style={styles.sectionDetail}>{detail}</Text>
-		</View>
-	);
-}
-
-function ActionButton({
-	title,
-	onPress,
-	variant = "primary",
-	disabled = false,
-}: {
-	title: string;
-	onPress: () => void;
-	variant?: "primary" | "secondary";
-	disabled?: boolean;
-}) {
-	return (
-		<Pressable
-			onPress={disabled ? undefined : onPress}
-			style={({ pressed }) => [
-				styles.button,
-				variant === "secondary" ? styles.buttonSecondary : undefined,
-				disabled ? styles.buttonDisabled : undefined,
-				pressed && !disabled ? styles.chipPressed : undefined,
-			]}
-		>
-			<Text
-				style={[
-					styles.buttonText,
-					variant === "secondary" ? styles.buttonTextSecondary : undefined,
-					disabled ? styles.buttonTextDisabled : undefined,
-				]}
-			>
-				{title}
-			</Text>
-		</Pressable>
-	);
-}
-
-function MetricCard({ label, value, detail }: { label: string; value: string; detail: string }) {
-	return (
-		<View style={styles.metricCard}>
-			<Text style={styles.metricLabel}>{label}</Text>
-			<Text style={styles.metricValue}>{value}</Text>
-			<Text style={styles.metricDetail}>{detail}</Text>
-		</View>
-	);
-}
-
-function StatBlock({ label, value }: { label: string; value: string }) {
-	return (
-		<View style={styles.statBlock}>
-			<Text style={styles.statLabel}>{label}</Text>
-			<Text style={styles.statValue}>{value}</Text>
-		</View>
 	);
 }
 

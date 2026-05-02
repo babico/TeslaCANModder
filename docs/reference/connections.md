@@ -179,15 +179,15 @@ Notes:
 
 ## Quick Status Matrix
 
-| Integration | Primary Enable | Key Connected Field(s) |
-| ----------- | -------------- | ---------------------- |
-| MQTT | `mqtt:on` | `mqttConnected` |
-| Tesla BLE | `teslable:on` | `teslaBleConnected`, `teslaBleAuth` |
-| Home Assistant | `ha:on` | `haConnected`, `haEntities` |
-| ESP-NOW | `espnow:on` | `espNowPeers` |
-| GVRET | `gvret:on` | `gvretClients` |
-| ScanMyTesla | `smt:on` | `scanMyTesla` |
-| ELM327 | `elm327:on` | `elm327` |
+| Integration    | Primary Enable | Key Connected Field(s)              |
+| -------------- | -------------- | ----------------------------------- |
+| MQTT           | `mqtt:on`      | `mqttConnected`                     |
+| Tesla BLE      | `teslable:on`  | `teslaBleConnected`, `teslaBleAuth` |
+| Home Assistant | `ha:on`        | `haConnected`, `haEntities`         |
+| ESP-NOW        | `espnow:on`    | `espNowPeers`                       |
+| GVRET          | `gvret:on`     | `gvretClients`                      |
+| ScanMyTesla    | `smt:on`       | `scanMyTesla`                       |
+| ELM327         | `elm327:on`    | `elm327`                            |
 
 ## Related References
 

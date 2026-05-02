@@ -9,8 +9,8 @@ import type { HardwareConnectionConfig } from "../types/controls";
  * Represents a named connection preset that can be quickly applied.
  */
 export interface Preset {
-  name: string;
-  connection: HardwareConnectionConfig;
+	name: string;
+	connection: HardwareConnectionConfig;
 }
 
 /**
@@ -18,7 +18,7 @@ export interface Preset {
  * Used to construct the connection config when a preset is applied.
  */
 export interface ApplyPresetInput {
-  preset: Preset;
+	preset: Preset;
 }
 
 /**
@@ -26,9 +26,9 @@ export interface ApplyPresetInput {
  * Contains the config to connect with and a confirmation message.
  */
 export interface ApplyPresetResult {
-  config: HardwareConnectionConfig;
-  transportType: "http";
-  confirmationMessage: string;
+	config: HardwareConnectionConfig;
+	transportType: "http";
+	confirmationMessage: string;
 }
 
 /**
@@ -36,22 +36,22 @@ export interface ApplyPresetResult {
  * Returns the config and confirmation message for UI display.
  */
 export function applyPreset(input: ApplyPresetInput): ApplyPresetResult {
-  return {
-    config: input.preset.connection,
-    transportType: "http",
-    confirmationMessage: `Preset applied: ${input.preset.name}`,
-  };
+	return {
+		config: input.preset.connection,
+		transportType: "http",
+		confirmationMessage: `Preset applied: ${input.preset.name}`,
+	};
 }
 
 export interface ConnectionState {
-  baseUrl: string;
-  commandPath: string;
-  statusPath: string;
+	baseUrl: string;
+	commandPath: string;
+	statusPath: string;
 }
 
 export interface UpdateConnectionStateInput {
-  current: ConnectionState;
-  updates: Partial<HardwareConnectionConfig>;
+	current: ConnectionState;
+	updates: Partial<HardwareConnectionConfig>;
 }
 
 /**
@@ -59,18 +59,18 @@ export interface UpdateConnectionStateInput {
  * Returns new connection state and confirmation message.
  */
 export function updateConnectionState(input: UpdateConnectionStateInput): ConnectionState {
-  const { current, updates } = input;
-  return {
-    baseUrl: updates.baseUrl ?? current.baseUrl,
-    commandPath: updates.commandPath ?? current.commandPath,
-    statusPath: updates.statusPath ?? current.statusPath,
-  };
+	const { current, updates } = input;
+	return {
+		baseUrl: updates.baseUrl ?? current.baseUrl,
+		commandPath: updates.commandPath ?? current.commandPath,
+		statusPath: updates.statusPath ?? current.statusPath,
+	};
 }
 
 export interface ConnectionValidationInput {
-  baseUrl: string;
-  commandPath: string;
-  statusPath: string;
+	baseUrl: string;
+	commandPath: string;
+	statusPath: string;
 }
 
 /**
@@ -78,17 +78,17 @@ export interface ConnectionValidationInput {
  * Returns true if all required fields are present and non-empty.
  */
 export function validateConnectionConfig(input: ConnectionValidationInput): boolean {
-  return (
-    input.baseUrl.trim().length > 0 &&
-    input.commandPath.trim().length > 0 &&
-    input.statusPath.trim().length > 0
-  );
+	return (
+		input.baseUrl.trim().length > 0 &&
+		input.commandPath.trim().length > 0 &&
+		input.statusPath.trim().length > 0
+	);
 }
 
 export interface BuildApplyConnectionMessageInput {
-  baseUrl: string;
-  commandPath: string;
-  statusPath: string;
+	baseUrl: string;
+	commandPath: string;
+	statusPath: string;
 }
 
 /**
@@ -96,40 +96,40 @@ export interface BuildApplyConnectionMessageInput {
  * Indicates transport type and connection details.
  */
 export function buildApplyConnectionMessage(input: BuildApplyConnectionMessageInput): string {
-  return `Applied HTTP connection: ${input.baseUrl}${input.commandPath}`;
+	return `Applied HTTP connection: ${input.baseUrl}${input.commandPath}`;
 }
 
 /**
  * Default/fallback preset for quick access to vehicle AP.
  */
 export const DEFAULT_PRESET: Preset = {
-  name: "Vehicle AP",
-  connection: {
-    baseUrl: "http://192.168.4.1",
-    commandPath: "/api/command",
-    statusPath: "/api/status",
-  },
+	name: "Vehicle AP",
+	connection: {
+		baseUrl: "http://192.168.4.1",
+		commandPath: "/api/command",
+		statusPath: "/api/status",
+	},
 };
 
 /**
  * Common lab development presets for testing.
  */
 export const LAB_PRESETS: Preset[] = [
-  DEFAULT_PRESET,
-  {
-    name: "Local Bridge",
-    connection: {
-      baseUrl: "http://localhost:8080",
-      commandPath: "/api/command",
-      statusPath: "/api/status",
-    },
-  },
-  {
-    name: "Lab Rig",
-    connection: {
-      baseUrl: "http://192.168.10.20",
-      commandPath: "/api/command",
-      statusPath: "/api/status",
-    },
-  },
+	DEFAULT_PRESET,
+	{
+		name: "Local Bridge",
+		connection: {
+			baseUrl: "http://localhost:8080",
+			commandPath: "/api/command",
+			statusPath: "/api/status",
+		},
+	},
+	{
+		name: "Lab Rig",
+		connection: {
+			baseUrl: "http://192.168.10.20",
+			commandPath: "/api/command",
+			statusPath: "/api/status",
+		},
+	},
 ];

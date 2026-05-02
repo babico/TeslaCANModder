@@ -9,56 +9,72 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-void saveSettings(const State&) {}
+void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
-void applyFilters(State&) {}
+void applyFilters(State &) {}
 #include "feature/regen.h"
 
-static State makeState() { State s = {}; s.variant = HW4; s.hasDrive = true; return s; }
+static State makeState()
+{
+	State s = {};
+	s.variant = HW4;
+	s.hasDrive = true;
+	return s;
+}
 void setUp() {}
 void tearDown() {}
 
-void test_regen_off() {
-  State s = makeState();
-  TEST_ASSERT_TRUE(execRegenCmd("regen:off", s));
-  TEST_ASSERT_EQUAL_UINT8(0, s.burstFrame.data[2]);
+void test_regen_off()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execRegenCmd("regen:off", s));
+	TEST_ASSERT_EQUAL_UINT8(0, s.burstFrame.data[2]);
 }
-void test_regen_low() {
-  State s = makeState();
-  TEST_ASSERT_TRUE(execRegenCmd("regen:low", s));
-  TEST_ASSERT_EQUAL_UINT8(50, s.burstFrame.data[2]);
+void test_regen_low()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execRegenCmd("regen:low", s));
+	TEST_ASSERT_EQUAL_UINT8(50, s.burstFrame.data[2]);
 }
-void test_regen_standard() {
-  State s = makeState();
-  TEST_ASSERT_TRUE(execRegenCmd("regen:standard", s));
-  TEST_ASSERT_EQUAL_UINT8(100, s.burstFrame.data[2]);
+void test_regen_standard()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execRegenCmd("regen:standard", s));
+	TEST_ASSERT_EQUAL_UINT8(100, s.burstFrame.data[2]);
 }
-void test_regen_std_alias() {
-  State s = makeState();
-  TEST_ASSERT_TRUE(execRegenCmd("regen:std", s));
+void test_regen_std_alias()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execRegenCmd("regen:std", s));
 }
-void test_regen_max() {
-  State s = makeState();
-  TEST_ASSERT_TRUE(execRegenCmd("regen:max", s));
-  TEST_ASSERT_EQUAL_UINT8(200, s.burstFrame.data[2]);
+void test_regen_max()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execRegenCmd("regen:max", s));
+	TEST_ASSERT_EQUAL_UINT8(200, s.burstFrame.data[2]);
 }
-void test_regen_legacy_blocks() {
-  State s = makeState(); s.variant = LEGACY;
-  TEST_ASSERT_FALSE(execRegenCmd("regen:max", s));
+void test_regen_legacy_blocks()
+{
+	State s = makeState();
+	s.variant = LEGACY;
+	TEST_ASSERT_FALSE(execRegenCmd("regen:max", s));
 }
-void test_regen_no_drive_blocks() {
-  State s = makeState(); s.hasDrive = false;
-  TEST_ASSERT_FALSE(execRegenCmd("regen:max", s));
+void test_regen_no_drive_blocks()
+{
+	State s = makeState();
+	s.hasDrive = false;
+	TEST_ASSERT_FALSE(execRegenCmd("regen:max", s));
 }
 
-int main(int, char**) {
-  UNITY_BEGIN();
-  RUN_TEST(test_regen_off);
-  RUN_TEST(test_regen_low);
-  RUN_TEST(test_regen_standard);
-  RUN_TEST(test_regen_std_alias);
-  RUN_TEST(test_regen_max);
-  RUN_TEST(test_regen_legacy_blocks);
-  RUN_TEST(test_regen_no_drive_blocks);
-  return UNITY_END();
+int main(int, char **)
+{
+	UNITY_BEGIN();
+	RUN_TEST(test_regen_off);
+	RUN_TEST(test_regen_low);
+	RUN_TEST(test_regen_standard);
+	RUN_TEST(test_regen_std_alias);
+	RUN_TEST(test_regen_max);
+	RUN_TEST(test_regen_legacy_blocks);
+	RUN_TEST(test_regen_no_drive_blocks);
+	return UNITY_END();
 }

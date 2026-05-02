@@ -15,38 +15,38 @@ const KMH_TO_MPH = 0.621371;
 let cachedUnit: SpeedUnit = "kmh";
 
 function convertSpeed(speedKmh: number, unit: SpeedUnit): number {
-  return unit === "mph" ? speedKmh * KMH_TO_MPH : speedKmh;
+	return unit === "mph" ? speedKmh * KMH_TO_MPH : speedKmh;
 }
 
 function unitLabel(unit: SpeedUnit): string {
-  return unit === "mph" ? "mph" : "km/h";
+	return unit === "mph" ? "mph" : "km/h";
 }
 
 interface SpeedUnitResult {
-  unit: SpeedUnit;
-  /** Cycles km/h → mph → km/h */
-  cycleUnit: () => void;
-  /** Convert a raw km/h value to the active unit */
-  convert: (speedKmh: number) => number;
-  /** Display label for the active unit */
-  label: string;
+	unit: SpeedUnit;
+	/** Cycles km/h → mph → km/h */
+	cycleUnit: () => void;
+	/** Convert a raw km/h value to the active unit */
+	convert: (speedKmh: number) => number;
+	/** Display label for the active unit */
+	label: string;
 }
 
 export function useSpeedUnit(): SpeedUnitResult {
-  const [unit, setUnit] = useState<SpeedUnit>(cachedUnit);
+	const [unit, setUnit] = useState<SpeedUnit>(cachedUnit);
 
-  const cycleUnit = useCallback(() => {
-    setUnit((prev) => {
-      const next: SpeedUnit = prev === "kmh" ? "mph" : "kmh";
-      cachedUnit = next;
-      return next;
-    });
-  }, []);
+	const cycleUnit = useCallback(() => {
+		setUnit((prev) => {
+			const next: SpeedUnit = prev === "kmh" ? "mph" : "kmh";
+			cachedUnit = next;
+			return next;
+		});
+	}, []);
 
-  return {
-    unit,
-    cycleUnit,
-    convert: (speedKmh: number) => convertSpeed(speedKmh, unit),
-    label: unitLabel(unit),
-  };
+	return {
+		unit,
+		cycleUnit,
+		convert: (speedKmh: number) => convertSpeed(speedKmh, unit),
+		label: unitLabel(unit),
+	};
 }

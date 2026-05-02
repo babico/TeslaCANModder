@@ -24,7 +24,7 @@ The ESP32 uses **3× MCP2515 modules over SPI** for all CAN buses.
 
 > No external Bluetooth module needed! ESP32 has built-in BLE (Bluetooth Low Energy). WiFi and BLE can operate simultaneously.
 
-### Wiring — MCP2515 #1 (Bus 0: FSD)
+### Wiring — MCP2515 #1 (Chassis bus)
 
 | MCP2515 #1 | ESP32    | Notes                              |
 | ---------- | -------- | ---------------------------------- |
@@ -38,7 +38,7 @@ The ESP32 uses **3× MCP2515 modules over SPI** for all CAN buses.
 
 Connect CAN-H/CAN-L to **X179 pins 13/14** (FSD / Autopilot CAN).
 
-### Wiring — MCP2515 #2 (Bus 1: Vehicle Control)
+### Wiring — MCP2515 #2 (Vehicle bus)
 
 | MCP2515 #2 | ESP32    | Notes              |
 | ---------- | -------- | ------------------ |
@@ -52,7 +52,7 @@ Connect CAN-H/CAN-L to **X179 pins 13/14** (FSD / Autopilot CAN).
 
 Connect CAN-H/CAN-L to **X179 pins 9/10** (Vehicle Control CAN).
 
-### Wiring — MCP2515 #3 (Bus 2: Body Control)
+### Wiring — MCP2515 #3 (Body bus)
 
 | MCP2515 #3 | ESP32    | Notes              |
 | ---------- | -------- | ------------------ |

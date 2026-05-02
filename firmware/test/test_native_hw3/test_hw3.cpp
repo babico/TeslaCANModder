@@ -5,7 +5,7 @@
 #include <cstring>
 
 class __FlashStringHelper;
-#define F(s) (reinterpret_cast<const __FlashStringHelper*>(s))
+#define F(s) (reinterpret_cast<const __FlashStringHelper *>(s))
 
 #define BUS_CHASSIS_ACTIVE 1
 #define BUS_VEHICLE_ACTIVE 1
@@ -26,179 +26,310 @@ class __FlashStringHelper;
 
 #include "support/helpers.h"
 
-static State makeState() {
-  State s = {};
-  s.variant = HW3;
-  s.speedProfile = 1;
-  s.fsdEnabled = true;
-  s.nagSuppress = true;
-  return s;
+static State makeState()
+{
+	State s = {};
+	s.variant = HW3;
+	s.speedProfile = 1;
+	s.fsdEnabled = true;
+	s.nagSuppress = true;
+	return s;
 }
 
-void setUp() {
-  stub_send_count = 0;
-  resetHW3LogFlags();
+void setUp()
+{
+	stub_send_count = 0;
+	resetHW3LogFlags();
 }
 void tearDown() {}
 
 // ── Follow Distance → Profile ────────────────────────────────────────────────
 
-void test_hw3_follow_distance_1_sets_profile_2() {
-  State s = makeState();
-  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-  f.data[5] = 0b00100000; // fd=1
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
-  TEST_ASSERT_EQUAL(0, stub_send_count);
+void test_hw3_follow_distance_1_sets_profile_2()
+{
+	State s = makeState();
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	f.data[5] = 0b00100000; // fd=1
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
+	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-void test_hw3_follow_distance_2_sets_profile_1() {
-  State s = makeState();
-  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-  f.data[5] = 0b01000000;
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
+void test_hw3_follow_distance_2_sets_profile_1()
+{
+	State s = makeState();
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	f.data[5] = 0b01000000;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
 }
 
-void test_hw3_follow_distance_3_sets_profile_0() {
-  State s = makeState();
-  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-  f.data[5] = 0b01100000;
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL_INT(0, s.speedProfile);
+void test_hw3_follow_distance_3_sets_profile_0()
+{
+	State s = makeState();
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	f.data[5] = 0b01100000;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL_INT(0, s.speedProfile);
 }
 
-void test_hw3_follow_distance_0_keeps_default() {
-  State s = makeState();
-  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-  f.data[5] = 0x00; // fd=0 → maps to -1 (no change)
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
+void test_hw3_follow_distance_0_keeps_default()
+{
+	State s = makeState();
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	f.data[5] = 0x00; // fd=0 → maps to -1 (no change)
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
 }
 
-void test_hw3_follow_dist_pinned_unchanged() {
-  State s = makeState();
-  s.profileOverride = true;
-  s.speedProfile = 2;
-  Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-  f.data[5] = 0b01100000;
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
+void test_hw3_follow_dist_pinned_unchanged()
+{
+	State s = makeState();
+	s.profileOverride = true;
+	s.speedProfile = 2;
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	f.data[5] = 0b01100000;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
 }
 
 // ── FSD Mux 0 ────────────────────────────────────────────────────────────────
 
-void test_hw3_fsd_mux0_sends_with_bit46() {
-  State s = makeState();
-  Frame f = makeFrame(CAN_ID_FSD_MUX);
-  f.data[0] = 0x00;
-  f.data[4] = 0x40;
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL(1, stub_send_count);
-  TEST_ASSERT_EQUAL_HEX8(0x40, stub_sends[0].f.data[5] & 0x40);
+void test_hw3_fsd_mux0_sends_with_bit46()
+{
+	State s = makeState();
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x00;
+	f.data[4] = 0x40;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(1, stub_send_count);
+	TEST_ASSERT_EQUAL_HEX8(0x40, stub_sends[0].f.data[5] & 0x40);
 }
 
-void test_hw3_fsd_mux0_no_send_when_disabled() {
-  State s = makeState();
-  s.fsdEnabled = false;
-  Frame f = makeFrame(CAN_ID_FSD_MUX);
-  f.data[0] = 0x00;
-  f.data[4] = 0x40;
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL(0, stub_send_count);
+void test_hw3_fsd_mux0_no_send_when_disabled()
+{
+	State s = makeState();
+	s.fsdEnabled = false;
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x00;
+	f.data[4] = 0x40;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-void test_hw3_fsd_mux0_no_send_when_ui_not_selected() {
-  State s = makeState();
-  Frame f = makeFrame(CAN_ID_FSD_MUX);
-  f.data[0] = 0x00;
-  f.data[4] = 0x00;
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL(0, stub_send_count);
+void test_hw3_fsd_mux0_no_send_when_ui_not_selected()
+{
+	State s = makeState();
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x00;
+	f.data[4] = 0x00;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw3_fsd_mux0_blocked_when_ap_gate_closed()
+{
+	State s = makeState();
+	s.apInjectionGateEnabled = true;
+	s.apGateApActive = false;
+	s.apGateParked = false;
+	s.apGateSummoning = false;
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x00;
+	f.data[4] = 0x40;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(0, stub_send_count);
+}
+
+void test_hw3_fsd_mux0_allows_when_ap_gate_open_by_park()
+{
+	State s = makeState();
+	s.apInjectionGateEnabled = true;
+	s.apGateApActive = false;
+	s.apGateParked = true;
+	s.apGateSummoning = false;
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x00;
+	f.data[4] = 0x40;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(1, stub_send_count);
 }
 
 // ── Nag Mux 1 ────────────────────────────────────────────────────────────────
 
-void test_hw3_nag_mux1_clears_bit19() {
-  State s = makeState();
-  Frame f = makeFrame(CAN_ID_FSD_MUX);
-  f.data[0] = 0x01;
-  setBit(f, 19, true);
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL(1, stub_send_count);
-  TEST_ASSERT_FALSE((stub_sends[0].f.data[2] >> 3) & 0x01);
+void test_hw3_nag_mux1_clears_bit19()
+{
+	State s = makeState();
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x01;
+	setBit(f, 19, true);
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(1, stub_send_count);
+	TEST_ASSERT_FALSE((stub_sends[0].f.data[2] >> 3) & 0x01);
 }
 
-void test_hw3_nag_mux1_no_send_when_disabled() {
-  State s = makeState();
-  s.nagSuppress = false;
-  Frame f = makeFrame(CAN_ID_FSD_MUX);
-  f.data[0] = 0x01;
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL(0, stub_send_count);
+void test_hw3_nag_mux1_no_send_when_disabled()
+{
+	State s = makeState();
+	s.nagSuppress = false;
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x01;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
 // ── Speed Offset Mux 2 ──────────────────────────────────────────────────────
 
-void test_hw3_mux2_sends_when_fsd_enabled() {
-  State s = makeState();
-  s.speedOffset = 25;
-  Frame f = makeFrame(CAN_ID_FSD_MUX);
-  f.data[0] = 0x02;
-  f.data[4] = 0x40; // FSD selected
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL(1, stub_send_count);
+void test_hw3_mux2_sends_when_fsd_enabled()
+{
+	State s = makeState();
+	s.speedOffset = 25;
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x02;
+	f.data[4] = 0x40; // FSD selected
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(1, stub_send_count);
 }
 
-void test_hw3_mux2_no_send_when_fsd_disabled() {
-  State s = makeState();
-  s.fsdEnabled = false;
-  Frame f = makeFrame(CAN_ID_FSD_MUX);
-  f.data[0] = 0x02;
-  f.data[4] = 0x00;
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL(0, stub_send_count);
+void test_hw3_mux2_no_send_when_fsd_disabled()
+{
+	State s = makeState();
+	s.fsdEnabled = false;
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x02;
+	f.data[4] = 0x00;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
 // ── Misc ─────────────────────────────────────────────────────────────────────
 
-void test_hw3_ignores_unrelated_id() {
-  State s = makeState();
-  Frame f = makeFrame(999);
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL(0, stub_send_count);
+void test_hw3_ignores_unrelated_id()
+{
+	State s = makeState();
+	Frame f = makeFrame(999);
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-void test_hw3_sends_on_bus_0() {
-  State s = makeState();
-  Frame f = makeFrame(CAN_ID_FSD_MUX);
-  f.data[0] = 0x00;
-  f.data[4] = 0x40;
-  handleHW3(f, s);
-  TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_sends[0].bus);
+void test_hw3_sends_on_bus_0()
+{
+	State s = makeState();
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x00;
+	f.data[4] = 0x40;
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_sends[0].bus);
 }
 
-int main() {
-  UNITY_BEGIN();
+// ── P2-08: Parity toggles (mirror of hw4 tests) ──────────────────────────────
 
-  RUN_TEST(test_hw3_follow_distance_1_sets_profile_2);
-  RUN_TEST(test_hw3_follow_distance_2_sets_profile_1);
-  RUN_TEST(test_hw3_follow_distance_3_sets_profile_0);
-  RUN_TEST(test_hw3_follow_distance_0_keeps_default);
-  RUN_TEST(test_hw3_follow_dist_pinned_unchanged);
+void test_hw3_assist_nav_sets_bits_13_48_49()
+{
+	State s = makeState();
+	s.assistNavEnable = true;
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(1, stub_send_count);
+	// bit 13 = byte 1 bit 5
+	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[1] & 0x20);
+	// bit 48 = byte 6 bit 0
+	TEST_ASSERT_EQUAL_HEX8(0x01, stub_sends[0].f.data[6] & 0x01);
+	// bit 49 = byte 6 bit 1
+	TEST_ASSERT_EQUAL_HEX8(0x02, stub_sends[0].f.data[6] & 0x02);
+}
 
-  RUN_TEST(test_hw3_fsd_mux0_sends_with_bit46);
-  RUN_TEST(test_hw3_fsd_mux0_no_send_when_disabled);
-  RUN_TEST(test_hw3_fsd_mux0_no_send_when_ui_not_selected);
+void test_hw3_assist_nav_blocked_when_ap_gate_closed()
+{
+	State s = makeState();
+	s.assistNavEnable = true;
+	s.apInjectionGateEnabled = true;
+	s.apGateApActive = false;
+	s.apGateParked = false;
+	s.apGateSummoning = false;
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(0, stub_send_count);
+}
 
-  RUN_TEST(test_hw3_nag_mux1_clears_bit19);
-  RUN_TEST(test_hw3_nag_mux1_no_send_when_disabled);
+void test_hw3_assist_hands_off_sets_bit14()
+{
+	State s = makeState();
+	s.assistHandsOff = true;
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(1, stub_send_count);
+	// bit 14 = byte 1 bit 6
+	TEST_ASSERT_EQUAL_HEX8(0x40, stub_sends[0].f.data[1] & 0x40);
+}
 
-  RUN_TEST(test_hw3_mux2_sends_when_fsd_enabled);
-  RUN_TEST(test_hw3_mux2_no_send_when_fsd_disabled);
+void test_hw3_assist_dev_mode_sets_bit5()
+{
+	State s = makeState();
+	s.assistDevMode = true;
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(1, stub_send_count);
+	// bit 5 = byte 0 bit 5
+	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[0] & 0x20);
+}
 
-  RUN_TEST(test_hw3_ignores_unrelated_id);
-  RUN_TEST(test_hw3_sends_on_bus_0);
+void test_hw3_assist_tel_off_clears_bit43()
+{
+	State s = makeState();
+	s.assistTelemetryOff = true;
+	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
+	f.data[5] = 0xFF; // set all bits, including bit 43 (byte 5 bit 3)
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(1, stub_send_count);
+	// bit 43 = byte 5 bit 3 — must be cleared
+	TEST_ASSERT_EQUAL_HEX8(0x00, stub_sends[0].f.data[5] & 0x08);
+}
 
-  return UNITY_END();
+void test_hw3_lane_graph_sets_bit45_on_mux1()
+{
+	State s = makeState();
+	s.laneGraphEnable = true;
+	Frame f = makeFrame(CAN_ID_FSD_MUX);
+	f.data[0] = 0x01; // mux selector = 1
+	f.data[4] = 0x40; // keep bit 46 set so nag mux1 fires
+	handleHW3(f, s);
+	TEST_ASSERT_EQUAL(1, stub_send_count);
+	// bit 45 = byte 5 bit 5
+	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[5] & 0x20);
+}
+
+int main()
+{
+	UNITY_BEGIN();
+
+	RUN_TEST(test_hw3_follow_distance_1_sets_profile_2);
+	RUN_TEST(test_hw3_follow_distance_2_sets_profile_1);
+	RUN_TEST(test_hw3_follow_distance_3_sets_profile_0);
+	RUN_TEST(test_hw3_follow_distance_0_keeps_default);
+	RUN_TEST(test_hw3_follow_dist_pinned_unchanged);
+
+	RUN_TEST(test_hw3_fsd_mux0_sends_with_bit46);
+	RUN_TEST(test_hw3_fsd_mux0_no_send_when_disabled);
+	RUN_TEST(test_hw3_fsd_mux0_no_send_when_ui_not_selected);
+	RUN_TEST(test_hw3_fsd_mux0_blocked_when_ap_gate_closed);
+	RUN_TEST(test_hw3_fsd_mux0_allows_when_ap_gate_open_by_park);
+
+	RUN_TEST(test_hw3_nag_mux1_clears_bit19);
+	RUN_TEST(test_hw3_nag_mux1_no_send_when_disabled);
+
+	RUN_TEST(test_hw3_mux2_sends_when_fsd_enabled);
+	RUN_TEST(test_hw3_mux2_no_send_when_fsd_disabled);
+
+	RUN_TEST(test_hw3_ignores_unrelated_id);
+	RUN_TEST(test_hw3_sends_on_bus_0);
+
+	RUN_TEST(test_hw3_assist_nav_sets_bits_13_48_49);
+	RUN_TEST(test_hw3_assist_nav_blocked_when_ap_gate_closed);
+	RUN_TEST(test_hw3_assist_hands_off_sets_bit14);
+	RUN_TEST(test_hw3_assist_dev_mode_sets_bit5);
+	RUN_TEST(test_hw3_assist_tel_off_clears_bit43);
+	RUN_TEST(test_hw3_lane_graph_sets_bit45_on_mux1);
+
+	return UNITY_END();
 }

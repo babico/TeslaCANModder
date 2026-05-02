@@ -14,10 +14,13 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-unsigned long millis() { return 0; }
-void saveSettings(const State&) {}
+unsigned long millis()
+{
+	return 0;
+}
+void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
-void applyFilters(State&) {}
+void applyFilters(State &) {}
 
 #include "feature/regen.h"
 #include "feature/precondition.h"
@@ -32,84 +35,102 @@ void applyFilters(State&) {}
 void setUp() {}
 void tearDown() {}
 
-static State hw4State() {
-  State s = {};
-  s.variant = HW4;
-  s.hasDrive = true; s.hasCtrl = true; s.hasCharge = true; s.hasClimate = true;
-  return s;
+static State hw4State()
+{
+	State s = {};
+	s.variant = HW4;
+	s.hasDrive = true;
+	s.hasCtrl = true;
+	s.hasCharge = true;
+	s.hasClimate = true;
+	return s;
 }
-static State legacyState() {
-  State s = hw4State();
-  s.variant = LEGACY;
-  return s;
-}
-
-void test_legacy_blocks_regen() {
-  State s = legacyState();
-  TEST_ASSERT_FALSE(execRegenCmd("regen:max", s));
-}
-void test_legacy_blocks_precondition() {
-  State s = legacyState();
-  TEST_ASSERT_FALSE(execPreconditionCmd("precondition:on", s));
-}
-void test_legacy_blocks_trackmode() {
-  State s = legacyState();
-  TEST_ASSERT_FALSE(execTrackModeCmd("trackmode:on", s));
-}
-void test_legacy_blocks_window_vent() {
-  State s = legacyState();
-  TEST_ASSERT_FALSE(execWindowCmd("window:vent:open", s));
-}
-void test_legacy_blocks_stop_modes() {
-  State s = legacyState();
-  TEST_ASSERT_FALSE(execStopCmd("stop:hold", s));
-}
-void test_legacy_blocks_charge() {
-  State s = legacyState();
-  TEST_ASSERT_FALSE(execChargeCmd("charge:start", s));
-}
-void test_legacy_blocks_sentry() {
-  State s = legacyState();
-  TEST_ASSERT_FALSE(execSentryCmd("sentry:on", s));
-}
-void test_legacy_blocks_trunk() {
-  State s = legacyState();
-  TEST_ASSERT_FALSE(execTrunkCmd("trunk:open", s));
-}
-void test_legacy_blocks_climate_keep() {
-  State s = legacyState();
-  TEST_ASSERT_FALSE(execClimateCmd("climate:keep", s));
+static State legacyState()
+{
+	State s = hw4State();
+	s.variant = LEGACY;
+	return s;
 }
 
-void test_hw4_allows_all_modern_features() {
-  State s = hw4State();
-  TEST_ASSERT_TRUE(execRegenCmd("regen:max", s));
-  TEST_ASSERT_TRUE(execPreconditionCmd("precondition:on", s));
-  TEST_ASSERT_TRUE(execTrackModeCmd("trackmode:on", s));
-  TEST_ASSERT_TRUE(execWindowCmd("window:vent:open", s));
-  TEST_ASSERT_TRUE(execStopCmd("stop:hold", s));
-  TEST_ASSERT_TRUE(execChargeCmd("charge:start", s));
-  TEST_ASSERT_TRUE(execSentryCmd("sentry:on", s));
+void test_legacy_blocks_regen()
+{
+	State s = legacyState();
+	TEST_ASSERT_FALSE(execRegenCmd("regen:max", s));
 }
-void test_hw3_also_allows_modern_features() {
-  State s = hw4State(); s.variant = HW3;
-  TEST_ASSERT_TRUE(execRegenCmd("regen:standard", s));
-  TEST_ASSERT_TRUE(execPreconditionCmd("precondition:off", s));
-  TEST_ASSERT_TRUE(execTrackModeCmd("trackmode:off", s));
+void test_legacy_blocks_precondition()
+{
+	State s = legacyState();
+	TEST_ASSERT_FALSE(execPreconditionCmd("precondition:on", s));
+}
+void test_legacy_blocks_trackmode()
+{
+	State s = legacyState();
+	TEST_ASSERT_FALSE(execTrackModeCmd("trackmode:on", s));
+}
+void test_legacy_blocks_window_vent()
+{
+	State s = legacyState();
+	TEST_ASSERT_FALSE(execWindowCmd("window:vent:open", s));
+}
+void test_legacy_blocks_stop_modes()
+{
+	State s = legacyState();
+	TEST_ASSERT_FALSE(execStopCmd("stop:hold", s));
+}
+void test_legacy_blocks_charge()
+{
+	State s = legacyState();
+	TEST_ASSERT_FALSE(execChargeCmd("charge:start", s));
+}
+void test_legacy_blocks_sentry()
+{
+	State s = legacyState();
+	TEST_ASSERT_FALSE(execSentryCmd("sentry:on", s));
+}
+void test_legacy_blocks_trunk()
+{
+	State s = legacyState();
+	TEST_ASSERT_FALSE(execTrunkCmd("trunk:open", s));
+}
+void test_legacy_blocks_climate_keep()
+{
+	State s = legacyState();
+	TEST_ASSERT_FALSE(execClimateCmd("climate:keep", s));
 }
 
-int main(int, char**) {
-  UNITY_BEGIN();
-  RUN_TEST(test_legacy_blocks_regen);
-  RUN_TEST(test_legacy_blocks_precondition);
-  RUN_TEST(test_legacy_blocks_trackmode);
-  RUN_TEST(test_legacy_blocks_window_vent);
-  RUN_TEST(test_legacy_blocks_stop_modes);
-  RUN_TEST(test_legacy_blocks_charge);
-  RUN_TEST(test_legacy_blocks_sentry);
-  RUN_TEST(test_legacy_blocks_trunk);
-  RUN_TEST(test_legacy_blocks_climate_keep);
-  RUN_TEST(test_hw4_allows_all_modern_features);
-  RUN_TEST(test_hw3_also_allows_modern_features);
-  return UNITY_END();
+void test_hw4_allows_all_modern_features()
+{
+	State s = hw4State();
+	TEST_ASSERT_TRUE(execRegenCmd("regen:max", s));
+	TEST_ASSERT_TRUE(execPreconditionCmd("precondition:on", s));
+	TEST_ASSERT_TRUE(execTrackModeCmd("trackmode:on", s));
+	TEST_ASSERT_TRUE(execWindowCmd("window:vent:open", s));
+	TEST_ASSERT_TRUE(execStopCmd("stop:hold", s));
+	TEST_ASSERT_TRUE(execChargeCmd("charge:start", s));
+	TEST_ASSERT_TRUE(execSentryCmd("sentry:on", s));
+}
+void test_hw3_also_allows_modern_features()
+{
+	State s = hw4State();
+	s.variant = HW3;
+	TEST_ASSERT_TRUE(execRegenCmd("regen:standard", s));
+	TEST_ASSERT_TRUE(execPreconditionCmd("precondition:off", s));
+	TEST_ASSERT_TRUE(execTrackModeCmd("trackmode:off", s));
+}
+
+int main(int, char **)
+{
+	UNITY_BEGIN();
+	RUN_TEST(test_legacy_blocks_regen);
+	RUN_TEST(test_legacy_blocks_precondition);
+	RUN_TEST(test_legacy_blocks_trackmode);
+	RUN_TEST(test_legacy_blocks_window_vent);
+	RUN_TEST(test_legacy_blocks_stop_modes);
+	RUN_TEST(test_legacy_blocks_charge);
+	RUN_TEST(test_legacy_blocks_sentry);
+	RUN_TEST(test_legacy_blocks_trunk);
+	RUN_TEST(test_legacy_blocks_climate_keep);
+	RUN_TEST(test_hw4_allows_all_modern_features);
+	RUN_TEST(test_hw3_also_allows_modern_features);
+	return UNITY_END();
 }

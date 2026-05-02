@@ -50,9 +50,9 @@ icon: 🔍
 - Must flash a matching firmware variant (1-CAN or 3-CAN)
 - Boot log shows "MCP2515 #N not detected" if wiring is wrong
 - Check SPI lines are shared correctly between modules
-- Bus 0: CS → GPIO 15, INT → GPIO 34
-- Bus 1: CS → GPIO 27, INT → GPIO 35
-- Bus 2: CS → GPIO 26, INT → GPIO 33
+- Chassis bus: CS → GPIO 15, INT → GPIO 34
+- Vehicle bus: CS → GPIO 27, INT → GPIO 35
+- Body bus: CS → GPIO 26, INT → GPIO 33
 
 ## WiFi Not Connecting
 
@@ -134,5 +134,5 @@ icon: 🔍
 
 - Vehicle commands require **3 CAN buses** connected
 - Error "Waiting for 0x273 frame" means the control frame hasn't been cached yet
-- Drive the vehicle briefly to generate CAN traffic on Bus 1
-- Verify Bus 1 (GPIO 27/35) and Bus 2 (GPIO 26/33) are wired correctly
+- Drive the vehicle briefly to generate CAN traffic on the Vehicle bus
+- Verify the Vehicle bus (GPIO 27/35) and Body bus (GPIO 26/33) are wired correctly

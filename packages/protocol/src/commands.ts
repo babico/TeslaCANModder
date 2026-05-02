@@ -20,7 +20,14 @@ export type PressType = (typeof VALID_PRESS_TYPES)[number];
 
 /** Valid button actions for remapping. */
 export const VALID_BUTTON_ACTIONS = [
-	"none", "trunk", "frunk", "sentry", "horn", "fold", "hazard", "recirc",
+	"none",
+	"trunk",
+	"frunk",
+	"sentry",
+	"horn",
+	"fold",
+	"hazard",
+	"recirc",
 ] as const;
 export type ButtonAction = (typeof VALID_BUTTON_ACTIONS)[number];
 
@@ -37,24 +44,15 @@ export const COMMAND_RANGES = {
 	haInterval: { min: 500, max: 60000 },
 } as const;
 
-function assertRange(
-	name: string,
-	value: number,
-	min: number,
-	max: number,
-): void {
+function assertRange(name: string, value: number, min: number, max: number): void {
 	if (!Number.isInteger(value) || value < min || value > max) {
-		throw new RangeError(
-			`${name} must be an integer between ${min} and ${max}, got ${value}`,
-		);
+		throw new RangeError(`${name} must be an integer between ${min} and ${max}, got ${value}`);
 	}
 }
 
 function assertVariant(v: string): asserts v is Variant {
 	if (!(VALID_VARIANTS as readonly string[]).includes(v)) {
-		throw new RangeError(
-			`variant must be one of ${VALID_VARIANTS.join(", ")}, got "${v}"`,
-		);
+		throw new RangeError(`variant must be one of ${VALID_VARIANTS.join(", ")}, got "${v}"`);
 	}
 }
 
@@ -76,9 +74,7 @@ function assertRegionSpoofCode(c: string): asserts c is RegionSpoofCode {
 
 function assertButtonName(b: string): asserts b is ButtonName {
 	if (!(VALID_BUTTONS as readonly string[]).includes(b)) {
-		throw new RangeError(
-			`button must be one of ${VALID_BUTTONS.join(", ")}, got "${b}"`,
-		);
+		throw new RangeError(`button must be one of ${VALID_BUTTONS.join(", ")}, got "${b}"`);
 	}
 }
 
@@ -102,6 +98,13 @@ export const commands = {
 	// System
 	ping: () => "ping",
 	status: () => "status",
+	statusLive: (on: boolean) => (on ? "status:live:on" : "status:live:off"),
+	statusLiveQuery: () => "status:live",
+	statusCompact: () => "status:compact",
+	statusMeta: () => "status:meta",
+	statusState: () => "status:state",
+	statusFeatures: () => "status:features",
+	statusCan: () => "status:can",
 	variant: (v: string) => {
 		assertVariant(v);
 		return `variant:${v}`;
@@ -116,12 +119,7 @@ export const commands = {
 
 	// Speed Profile
 	profile: (p: number) => {
-		assertRange(
-			"profile",
-			p,
-			COMMAND_RANGES.profile.min,
-			COMMAND_RANGES.profile.max,
-		);
+		assertRange("profile", p, COMMAND_RANGES.profile.min, COMMAND_RANGES.profile.max);
 		return `profile:${p}`;
 	},
 	profileAuto: () => "profile:auto",
@@ -130,12 +128,7 @@ export const commands = {
 
 	// Speed Offset (auto-routes to HW4 range 0-63 or legacy range 0-100 based on detected HW)
 	offset: (o: number) => {
-		assertRange(
-			"offset",
-			o,
-			COMMAND_RANGES.offset.min,
-			COMMAND_RANGES.offset.max,
-		);
+		assertRange("offset", o, COMMAND_RANGES.offset.min, COMMAND_RANGES.offset.max);
 		return `offset:${o}`;
 	},
 	offsetAuto: () => "offset:auto",
@@ -145,8 +138,7 @@ export const commands = {
 	isaChime: (on: boolean) => (on ? "isa-chime:on" : "isa-chime:off"),
 
 	// Summon
-	summonInject: (on: boolean) =>
-		on ? "summon-inject:on" : "summon-inject:off",
+	summonInject: (on: boolean) => (on ? "summon-inject:on" : "summon-inject:off"),
 	summon: () => "summon",
 	summonForward: () => "summon:forward",
 	summonReverse: () => "summon:reverse",
@@ -158,9 +150,7 @@ export const commands = {
 	canClockAuto: () => "canclock:auto",
 	canClock: (mhz: number) => {
 		if (![8, 12, 16, 20].includes(mhz)) {
-			throw new RangeError(
-				`canClockMHz must be one of 8, 12, 16, 20, got ${mhz}`,
-			);
+			throw new RangeError(`canClockMHz must be one of 8, 12, 16, 20, got ${mhz}`);
 		}
 		return `canclock:${mhz}`;
 	},
@@ -185,10 +175,11 @@ export const commands = {
 	tlssc: (on: boolean) => (on ? "tlssc:on" : "tlssc:off"),
 	eap: (on: boolean) => (on ? "eap:on" : "eap:off"),
 	evd: (on: boolean) => (on ? "evd:on" : "evd:off"),
+	apGate: (on: boolean) => (on ? "apgate:on" : "apgate:off"),
+	apGateStatus: () => "apgate:status",
 
 	// Preconditioning
-	precondition: (on: boolean) =>
-		on ? "precondition:on" : "precondition:off",
+	precondition: (on: boolean) => (on ? "precondition:on" : "precondition:off"),
 
 	// Track Mode
 	trackMode: (on: boolean) => (on ? "trackmode:on" : "trackmode:off"),
@@ -231,48 +222,23 @@ export const commands = {
 
 	// Seat Heating
 	seatFL: (level: number) => {
-		assertRange(
-			"seatFL",
-			level,
-			COMMAND_RANGES.seat.min,
-			COMMAND_RANGES.seat.max,
-		);
+		assertRange("seatFL", level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max);
 		return `seat:fl:${level}`;
 	},
 	seatFR: (level: number) => {
-		assertRange(
-			"seatFR",
-			level,
-			COMMAND_RANGES.seat.min,
-			COMMAND_RANGES.seat.max,
-		);
+		assertRange("seatFR", level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max);
 		return `seat:fr:${level}`;
 	},
 	seatRL: (level: number) => {
-		assertRange(
-			"seatRL",
-			level,
-			COMMAND_RANGES.seat.min,
-			COMMAND_RANGES.seat.max,
-		);
+		assertRange("seatRL", level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max);
 		return `seat:rl:${level}`;
 	},
 	seatRR: (level: number) => {
-		assertRange(
-			"seatRR",
-			level,
-			COMMAND_RANGES.seat.min,
-			COMMAND_RANGES.seat.max,
-		);
+		assertRange("seatRR", level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max);
 		return `seat:rr:${level}`;
 	},
 	seatRC: (level: number) => {
-		assertRange(
-			"seatRC",
-			level,
-			COMMAND_RANGES.seat.min,
-			COMMAND_RANGES.seat.max,
-		);
+		assertRange("seatRC", level, COMMAND_RANGES.seat.min, COMMAND_RANGES.seat.max);
 		return `seat:rc:${level}`;
 	},
 
@@ -370,12 +336,10 @@ export const commands = {
 	airRecirc: (on: boolean) => (on ? "airecirc:on" : "airecirc:off"),
 
 	// Wiper speed persistence
-	wiperPersist: (on: boolean) =>
-		on ? "wiperpersist:on" : "wiperpersist:off",
+	wiperPersist: (on: boolean) => (on ? "wiperpersist:on" : "wiperpersist:off"),
 
 	// Mirror auto-fold on lock
-	mirrorAutoFold: (on: boolean) =>
-		on ? "mirror:autofold:on" : "mirror:autofold:off",
+	mirrorAutoFold: (on: boolean) => (on ? "mirror:autofold:on" : "mirror:autofold:off"),
 
 	// Powertrain telemetry query
 	powertrain: () => "powertrain",
@@ -394,9 +358,7 @@ export const commands = {
 	mqtt: (on: boolean) => (on ? "mqtt:on" : "mqtt:off"),
 	mqttBroker: (host: string) => {
 		if (!host || host.length > 63)
-			throw new RangeError(
-				`MQTT broker host must be 1-63 chars, got "${host}"`,
-			);
+			throw new RangeError(`MQTT broker host must be 1-63 chars, got "${host}"`);
 		return `mqtt:broker:${host}`;
 	},
 	mqttPort: (port: number) => {
@@ -406,9 +368,7 @@ export const commands = {
 	},
 	mqttInterval: (ms: number) => {
 		if (!Number.isInteger(ms) || ms < 100 || ms > 60000)
-			throw new RangeError(
-				`MQTT interval must be 100-60000 ms, got ${ms}`,
-			);
+			throw new RangeError(`MQTT interval must be 100-60000 ms, got ${ms}`);
 		return `mqtt:interval:${ms}`;
 	},
 
@@ -466,9 +426,7 @@ export const commands = {
 	haDiscovery: () => "ha:discovery",
 	haInterval: (ms: number) => {
 		if (!Number.isInteger(ms) || ms < 500 || ms > 60000)
-			throw new RangeError(
-				`HA polling interval must be 500-60000 ms, got ${ms}`,
-			);
+			throw new RangeError(`HA polling interval must be 500-60000 ms, got ${ms}`);
 		return `ha:interval:${ms}`;
 	},
 

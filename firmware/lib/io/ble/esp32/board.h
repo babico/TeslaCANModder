@@ -1,0 +1,10 @@
+#pragma once
+#include <NimBLEDevice.h>
+#include <atomic>
+#include "core/config/esp32/board.h"
+#include "core/types.h"
+#include "uuids.h"
+#include "state.h"
+#include "callbacks.h"
+#include "init.h"
+#include "print.h"

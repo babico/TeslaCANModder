@@ -6,7 +6,7 @@
  * per variant, that all features default to OFF, and that variant
  * selection (including manual override) works correctly.
  */
-import { commands, VALID_VARIANTS, COMMAND_RANGES } from '../../src/commands.js';
+import { commands, VALID_VARIANTS, COMMAND_RANGES } from "../../src/commands.js";
 
 // ── Feature availability matrix (mirrors firmware getFeatures()) ─────────────
 // true = feature available for this variant
@@ -92,158 +92,159 @@ const FIRMWARE_DEFAULTS: DefaultState = {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-describe('Variant feature availability', () => {
-	describe.each(['hw4', 'hw3', 'legacy'] as const)('variant: %s', (variant) => {
+describe("Variant feature availability", () => {
+	describe.each(["hw4", "hw3", "legacy"] as const)("variant: %s", (variant) => {
 		const features = FEATURE_MATRIX[variant];
 
-		it('FSD available', () => {
+		it("FSD available", () => {
 			expect(features.fsd).toBe(true);
-			expect(commands.fsd(true)).toBe('fsd:on');
+			expect(commands.fsd(true)).toBe("fsd:on");
 		});
 
-		it('FSD Force available', () => {
+		it("FSD Force available", () => {
 			expect(features.fsdForce).toBe(true);
-			expect(commands.fsdForce(true)).toBe('fsd:force:on');
+			expect(commands.fsdForce(true)).toBe("fsd:force:on");
 		});
 
-		it('nag available', () => {
+		it("nag available", () => {
 			expect(features.nag).toBe(true);
-			expect(commands.nag(true)).toBe('nag:on');
+			expect(commands.nag(true)).toBe("nag:on");
 		});
 
-		it('profile available', () => {
+		it("profile available", () => {
 			expect(features.profile).toBe(true);
-			expect(commands.profile(0)).toBe('profile:0');
+			expect(commands.profile(0)).toBe("profile:0");
 		});
 
-		it(`offset ${features.offset ? 'available' : 'NOT available'}`, () => {
-			expect(features.offset).toBe(variant !== 'legacy');
+		it(`offset ${features.offset ? "available" : "NOT available"}`, () => {
+			expect(features.offset).toBe(variant !== "legacy");
 		});
 
-		it(`isaChime ${features.isaChime ? 'available' : 'NOT available'}`, () => {
-			expect(features.isaChime).toBe(variant === 'hw4');
+		it(`isaChime ${features.isaChime ? "available" : "NOT available"}`, () => {
+			expect(features.isaChime).toBe(variant === "hw4");
 		});
 
-		it(`summon ${features.summon ? 'available' : 'NOT available'}`, () => {
-			expect(features.summon).toBe(variant !== 'legacy');
+		it(`summon ${features.summon ? "available" : "NOT available"}`, () => {
+			expect(features.summon).toBe(variant !== "legacy");
 		});
 	});
 
-	it('feature matrix covers all valid non-auto variants', () => {
+	it("feature matrix covers all valid non-auto variants", () => {
 		const matrixKeys = Object.keys(FEATURE_MATRIX).sort();
-		const expectedKeys = VALID_VARIANTS.filter(v => v !== 'auto').slice().sort();
+		const expectedKeys = VALID_VARIANTS.filter((v) => v !== "auto")
+			.slice()
+			.sort();
 		expect(matrixKeys).toEqual(expectedKeys);
 	});
 });
 
-describe('All features default OFF', () => {
-	it('fsdEnabled defaults to false', () => {
+describe("All features default OFF", () => {
+	it("fsdEnabled defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.fsdEnabled).toBe(false);
 	});
 
-	it('fsdForceEnabled defaults to false', () => {
+	it("fsdForceEnabled defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.fsdForceEnabled).toBe(false);
 	});
 
-	it('nagSuppress defaults to false', () => {
+	it("nagSuppress defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.nagSuppress).toBe(false);
 	});
 
-	it('isaChimeSuppress defaults to false', () => {
+	it("isaChimeSuppress defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.isaChimeSuppress).toBe(false);
 	});
 
-	it('summonInject defaults to false', () => {
+	it("summonInject defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.summonInject).toBe(false);
 	});
 
-	it('nagKillerEnabled defaults to false', () => {
+	it("nagKillerEnabled defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.nagKillerEnabled).toBe(false);
 	});
 
-	it('preconditionEnabled defaults to false', () => {
+	it("preconditionEnabled defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.preconditionEnabled).toBe(false);
 	});
 
-	it('trackModeEnabled defaults to false', () => {
+	it("trackModeEnabled defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.trackModeEnabled).toBe(false);
 	});
 
-	it('banShieldEnabled defaults to false', () => {
+	it("banShieldEnabled defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.banShieldEnabled).toBe(false);
 	});
 
-	it('streamEnabled defaults to false', () => {
+	it("streamEnabled defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.streamEnabled).toBe(false);
 	});
 
-	it('rawCanListen defaults to false', () => {
+	it("rawCanListen defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.rawCanListen).toBe(false);
 	});
 
-	it('profileOverride defaults to false', () => {
+	it("profileOverride defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.profileOverride).toBe(false);
 	});
 
-	it('offsetOverride defaults to false', () => {
+	it("offsetOverride defaults to false", () => {
 		expect(FIRMWARE_DEFAULTS.offsetOverride).toBe(false);
 	});
 
-	it('speedOffset defaults to 0', () => {
+	it("speedOffset defaults to 0", () => {
 		expect(FIRMWARE_DEFAULTS.speedOffset).toBe(0);
 	});
 
-	it('speedProfile defaults to 1 (Normal)', () => {
+	it("speedProfile defaults to 1 (Normal)", () => {
 		expect(FIRMWARE_DEFAULTS.speedProfile).toBe(1);
 	});
 });
 
-describe('Manual variant selection', () => {
-	it('variant:hw4 is a valid command', () => {
-		expect(commands.variant('hw4')).toBe('variant:hw4');
+describe("Manual variant selection", () => {
+	it("variant:hw4 is a valid command", () => {
+		expect(commands.variant("hw4")).toBe("variant:hw4");
 	});
 
-	it('variant:hw3 is a valid command', () => {
-		expect(commands.variant('hw3')).toBe('variant:hw3');
+	it("variant:hw3 is a valid command", () => {
+		expect(commands.variant("hw3")).toBe("variant:hw3");
 	});
 
-	it('variant:legacy is a valid command', () => {
-		expect(commands.variant('legacy')).toBe('variant:legacy');
+	it("variant:legacy is a valid command", () => {
+		expect(commands.variant("legacy")).toBe("variant:legacy");
 	});
 
-	it('variant:auto re-enables auto-detection', () => {
-		expect(commands.variant('auto')).toBe('variant:auto');
+	it("variant:auto re-enables auto-detection", () => {
+		expect(commands.variant("auto")).toBe("variant:auto");
 	});
 
-	it('rejects invalid variant', () => {
-		expect(() => commands.variant('hw5')).toThrow(RangeError);
-		expect(() => commands.variant('')).toThrow(RangeError);
-		expect(() => commands.variant('HW4')).toThrow(RangeError); // case-sensitive
+	it("rejects invalid variant", () => {
+		expect(() => commands.variant("hw5")).toThrow(RangeError);
+		expect(() => commands.variant("")).toThrow(RangeError);
+		expect(() => commands.variant("HW4")).toThrow(RangeError); // case-sensitive
 	});
 
-	it('VALID_VARIANTS includes all accepted values', () => {
-		expect(VALID_VARIANTS).toContain('hw3');
-		expect(VALID_VARIANTS).toContain('hw4');
-		expect(VALID_VARIANTS).toContain('legacy');
-		expect(VALID_VARIANTS).toContain('auto');
+	it("VALID_VARIANTS includes all accepted values", () => {
+		expect(VALID_VARIANTS).toContain("hw3");
+		expect(VALID_VARIANTS).toContain("hw4");
+		expect(VALID_VARIANTS).toContain("legacy");
+		expect(VALID_VARIANTS).toContain("auto");
 		expect(VALID_VARIANTS).toHaveLength(4);
 	});
 });
 
-describe('Offset range by variant', () => {
-	it('HW3 offset range is 0-100', () => {
+describe("Offset range by variant", () => {
+	it("HW3 offset range is 0-100", () => {
 		expect(COMMAND_RANGES.offset.min).toBe(0);
 		expect(COMMAND_RANGES.offset.max).toBe(100);
-		expect(commands.offset(100)).toBe('offset:100');
+		expect(commands.offset(100)).toBe("offset:100");
 		expect(() => commands.offset(101)).toThrow(RangeError);
 	});
 
-	it('offset:off disables override', () => {
-		expect(commands.offsetOff()).toBe('offset:off');
+	it("offset:off disables override", () => {
+		expect(commands.offsetOff()).toBe("offset:off");
 	});
 
-	it('offset:auto enables auto-tracking', () => {
-		expect(commands.offsetAuto()).toBe('offset:auto');
+	it("offset:auto enables auto-tracking", () => {
+		expect(commands.offsetAuto()).toBe("offset:auto");
 	});
 });
-

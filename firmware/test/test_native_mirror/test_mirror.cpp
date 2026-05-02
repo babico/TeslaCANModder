@@ -9,49 +9,82 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-void saveSettings(const State&) {}
+void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
-void applyFilters(State&) {}
+void applyFilters(State &) {}
 #include "feature/mirror.h"
 
-static State makeState() { State s = {}; s.variant = HW4; s.hasCtrl = true; return s; }
+static State makeState()
+{
+	State s = {};
+	s.variant = HW4;
+	s.hasCtrl = true;
+	return s;
+}
 void setUp() {}
 void tearDown() {}
 
-void test_mirror_fold() { State s = makeState(); TEST_ASSERT_TRUE(execMirrorCmd("mirror:fold", s)); }
-void test_mirror_unfold() { State s = makeState(); TEST_ASSERT_TRUE(execMirrorCmd("mirror:unfold", s)); }
-void test_mirror_heat() { State s = makeState(); TEST_ASSERT_TRUE(execMirrorCmd("mirror:heat", s)); }
-void test_mirror_autofold_now() { State s = makeState(); TEST_ASSERT_TRUE(execMirrorCmd("mirror:autofold", s)); }
-void test_mirror_dip() { State s = makeState(); TEST_ASSERT_TRUE(execMirrorCmd("mirror:dip", s)); }
-void test_mirror_no_ctrl() {
-  State s = makeState(); s.hasCtrl = false;
-  TEST_ASSERT_FALSE(execMirrorCmd("mirror:fold", s));
+void test_mirror_fold()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execMirrorCmd("mirror:fold", s));
 }
-void test_mirror_unknown() {
-  State s = makeState();
-  TEST_ASSERT_FALSE(execMirrorCmd("mirror:foo", s));
+void test_mirror_unfold()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execMirrorCmd("mirror:unfold", s));
 }
-void test_mirror_autofold_persist_on() {
-  State s = makeState();
-  TEST_ASSERT_TRUE(execMirrorAutoFoldCmd("mirror:autofold:on", s));
-  TEST_ASSERT_TRUE(s.mirrorAutoFoldEnabled);
+void test_mirror_heat()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execMirrorCmd("mirror:heat", s));
 }
-void test_mirror_autofold_persist_off() {
-  State s = makeState(); s.mirrorAutoFoldEnabled = true;
-  TEST_ASSERT_TRUE(execMirrorAutoFoldCmd("mirror:autofold:off", s));
-  TEST_ASSERT_FALSE(s.mirrorAutoFoldEnabled);
+void test_mirror_autofold_now()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execMirrorCmd("mirror:autofold", s));
+}
+void test_mirror_dip()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execMirrorCmd("mirror:dip", s));
+}
+void test_mirror_no_ctrl()
+{
+	State s = makeState();
+	s.hasCtrl = false;
+	TEST_ASSERT_FALSE(execMirrorCmd("mirror:fold", s));
+}
+void test_mirror_unknown()
+{
+	State s = makeState();
+	TEST_ASSERT_FALSE(execMirrorCmd("mirror:foo", s));
+}
+void test_mirror_autofold_persist_on()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execMirrorAutoFoldCmd("mirror:autofold:on", s));
+	TEST_ASSERT_TRUE(s.mirrorAutoFoldEnabled);
+}
+void test_mirror_autofold_persist_off()
+{
+	State s = makeState();
+	s.mirrorAutoFoldEnabled = true;
+	TEST_ASSERT_TRUE(execMirrorAutoFoldCmd("mirror:autofold:off", s));
+	TEST_ASSERT_FALSE(s.mirrorAutoFoldEnabled);
 }
 
-int main(int, char**) {
-  UNITY_BEGIN();
-  RUN_TEST(test_mirror_fold);
-  RUN_TEST(test_mirror_unfold);
-  RUN_TEST(test_mirror_heat);
-  RUN_TEST(test_mirror_autofold_now);
-  RUN_TEST(test_mirror_dip);
-  RUN_TEST(test_mirror_no_ctrl);
-  RUN_TEST(test_mirror_unknown);
-  RUN_TEST(test_mirror_autofold_persist_on);
-  RUN_TEST(test_mirror_autofold_persist_off);
-  return UNITY_END();
+int main(int, char **)
+{
+	UNITY_BEGIN();
+	RUN_TEST(test_mirror_fold);
+	RUN_TEST(test_mirror_unfold);
+	RUN_TEST(test_mirror_heat);
+	RUN_TEST(test_mirror_autofold_now);
+	RUN_TEST(test_mirror_dip);
+	RUN_TEST(test_mirror_no_ctrl);
+	RUN_TEST(test_mirror_unknown);
+	RUN_TEST(test_mirror_autofold_persist_on);
+	RUN_TEST(test_mirror_autofold_persist_off);
+	return UNITY_END();
 }

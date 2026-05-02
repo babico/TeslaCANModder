@@ -36,6 +36,14 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	// System
 	"ping",
 	"status",
+	"status:live:on",
+	"status:live:off",
+	"status:live",
+	"status:compact",
+	"status:meta",
+	"status:state",
+	"status:features",
+	"status:can",
 
 	// Variant
 	"variant:hw4",
@@ -190,6 +198,11 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"gtwshield:arm",
 	"gtwshield:disarm",
 	"gtwshield:reset",
+	"apgate:on",
+	"apgate:off",
+	"apgate:status",
+	"eap:on",
+	"eap:off",
 	"ratelimit:on",
 	"ratelimit:off",
 	"tpms",
@@ -341,6 +354,7 @@ function extractProtocolCommands(): string[] {
 			if (
 				key === "fsd" ||
 				key === "fsdForce" ||
+				key === "statusLive" ||
 				key === "nag" ||
 				key === "isaChime" ||
 				key === "nagKiller" ||
@@ -366,7 +380,9 @@ function extractProtocolCommands(): string[] {
 				key === "teslaBle" ||
 				key === "homeAssistant" ||
 				key === "bleEncrypt" ||
-				key === "alc"
+				key === "alc" ||
+				key === "apGate" ||
+				key === "eap"
 			) {
 				cmds.push((fn as (b: boolean) => string)(true));
 				cmds.push((fn as (b: boolean) => string)(false));

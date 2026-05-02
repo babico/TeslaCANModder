@@ -48,12 +48,12 @@ nag:off    # Disable nag suppression
 
 Controls the FSD speed profile (aggressiveness), mapped from follow distance stalk position:
 
-| Profile | Description |
-| -------- | ------------ |
-| 0 | Most aggressive |
-| 1 | Moderate-aggressive |
-| 2 | Moderate-conservative |
-| 3 | Most conservative |
+| Profile | Description           |
+| ------- | --------------------- |
+| 0       | Most aggressive       |
+| 1       | Moderate-aggressive   |
+| 2       | Moderate-conservative |
+| 3       | Most conservative     |
 
 ```bash
 profile:0      # Set to most aggressive
@@ -91,7 +91,7 @@ Sends summon CAN frames via the 0x273 (UI_vehicleControl) frame on the Vehicle C
 
 ```bash
 summon:forward   # Summon forward
-summon:reverse   # Summon reverse  
+summon:reverse   # Summon reverse
 summon:stop      # Stop summon
 ```
 
@@ -152,14 +152,14 @@ trackmode:off     # Disable Track Mode
 
 Reads real-time battery management system data from the CAN bus. The dashboard displays:
 
-| Metric | CAN ID | Description |
-| ------ | ------ | ----------- |
-| Voltage | 0x132 | Pack voltage (raw × 0.01V) |
-| Current | 0x132 | Pack current (signed, raw × 0.1A) |
-| Power | — | Calculated (V × A × 0.001 kW) |
-| State of Charge | 0x292 | SoC (10-bit, raw × 0.1%) |
-| Temp Min/Max | 0x312 | Cell temperatures (byte − 40 °C) |
-| Wh/km | 0x33A | Energy consumption (raw × 0.1 Wh/km) |
+| Metric          | CAN ID | Description                          |
+| --------------- | ------ | ------------------------------------ |
+| Voltage         | 0x132  | Pack voltage (raw × 0.01V)           |
+| Current         | 0x132  | Pack current (signed, raw × 0.1A)    |
+| Power           | —      | Calculated (V × A × 0.001 kW)        |
+| State of Charge | 0x292  | SoC (10-bit, raw × 0.1%)             |
+| Temp Min/Max    | 0x312  | Cell temperatures (byte − 40 °C)     |
+| Wh/km           | 0x33A  | Energy consumption (raw × 0.1 Wh/km) |
 
 ```bash
 bms   # Query current BMS telemetry snapshot
@@ -188,25 +188,25 @@ Provides a unified vehicle identity hierarchy: **Model → Hardware Generation �
 
 Decoded from CAN ID 0x398 (GTW_carConfig):
 
-| Value | Model |
-| ----- | ----- |
-| 0 | UNKNOWN |
-| 1 | Model 3 |
-| 2 | Model Y |
-| 3 | Model S |
-| 4 | Model X |
-| 5 | Cybertruck |
+| Value | Model      |
+| ----- | ---------- |
+| 0     | UNKNOWN    |
+| 1     | Model 3    |
+| 2     | Model Y    |
+| 3     | Model S    |
+| 4     | Model X    |
+| 5     | Cybertruck |
 
 ### Hardware Generation
 
 Mapped from the existing `Variant` enum:
 
-| Value | Generation | Description |
-| ----- | ---------- | ----------- |
-| 0 | HW_UNKNOWN | Not yet detected |
-| 1 | HW_LEGACY | Pre-HW3 (RP2040-based builds) |
-| 2 | HW_3 | Autopilot HW 3.0 |
-| 3 | HW_4 | Autopilot HW 4.0 |
+| Value | Generation | Description                   |
+| ----- | ---------- | ----------------------------- |
+| 0     | HW_UNKNOWN | Not yet detected              |
+| 1     | HW_LEGACY  | Pre-HW3 (RP2040-based builds) |
+| 2     | HW_3       | Autopilot HW 3.0              |
+| 3     | HW_4       | Autopilot HW 4.0              |
 
 ### Software Version
 
@@ -216,22 +216,22 @@ Parsed from CAN ID 0x392 (GTW_fwVersion) as `YYYY.WW.release[.patch]`. The firmw
 
 The FSD protocol version is automatically determined from hardware generation and software version:
 
-| Protocol | Condition |
-| -------- | --------- |
-| V12 | HW3 or Legacy (any software version) |
-| V14 | HW4 with software ≥ 2026.2.9 |
-| V13 | HW4 with software < 2026.2.9 |
+| Protocol | Condition                            |
+| -------- | ------------------------------------ |
+| V12      | HW3 or Legacy (any software version) |
+| V14      | HW4 with software ≥ 2026.2.9         |
+| V13      | HW4 with software < 2026.2.9         |
 
 ### Software Compatibility
 
 Checks the detected software version against known-good ranges:
 
-| Level | Meaning |
-| ----- | ------- |
-| OK | Within tested range |
+| Level    | Meaning                          |
+| -------- | -------------------------------- |
+| OK       | Within tested range              |
 | UNTESTED | Newer than latest tested version |
-| TOO_OLD | Older than minimum supported |
-| TOO_NEW | Reserved |
+| TOO_OLD  | Older than minimum supported     |
+| TOO_NEW  | Reserved                         |
 
 ### Platform Capabilities
 
@@ -250,11 +250,11 @@ At boot, the firmware probes each MCP2515 SPI CAN controller to verify hardware 
 
 ### Bus Mapping
 
-| Index | Bus | Function |
-| ----- | --- | -------- |
-| 0 | Chassis | EPAS, suspension (via X179) |
-| 1 | Vehicle | Powertrain, drive systems |
-| 2 | Body | Comfort, lighting, HVAC |
+| Index | Bus     | Function                    |
+| ----- | ------- | --------------------------- |
+| 0     | Chassis | EPAS, suspension (via X179) |
+| 1     | Vehicle | Powertrain, drive systems   |
+| 2     | Body    | Comfort, lighting, HVAC     |
 
 ### Health Report
 
@@ -291,15 +291,15 @@ Switches MCP2515 bitrate timing profile at runtime and reapplies filters after r
 
 In addition to the basic BMS telemetry (voltage, current, SoC, temps, Wh/km), the firmware now decodes enhanced battery data from additional CAN frames:
 
-| Metric | CAN ID | Mux | Description |
-| ------ | ------ | --- | ----------- |
-| Nominal Full Pack | 0x352 | 0 | Full pack capacity (bytes 2–3, raw × 0.02 kWh) |
-| Nominal Remaining | 0x352 | 0 | Remaining energy (bytes 4–5, raw × 0.02 kWh) |
-| Ideal Remaining | 0x352 | 0 | Ideal remaining energy (bytes 6–7, raw × 0.02 kWh) |
-| Cell Voltage Max | 0x332 | 1 | Highest cell voltage (12-bit, raw × 0.002 V) |
-| Cell Voltage Min | 0x332 | 1 | Lowest cell voltage (12-bit, raw × 0.002 V) |
-| Max Regen Power | 0x252 | — | Maximum regen power limit (bytes 0–1, raw × 0.01 kW) |
-| Max Discharge Power | 0x252 | — | Maximum discharge power limit (bytes 2–3, raw × 0.01 kW) |
+| Metric              | CAN ID | Mux | Description                                              |
+| ------------------- | ------ | --- | -------------------------------------------------------- |
+| Nominal Full Pack   | 0x352  | 0   | Full pack capacity (bytes 2–3, raw × 0.02 kWh)           |
+| Nominal Remaining   | 0x352  | 0   | Remaining energy (bytes 4–5, raw × 0.02 kWh)             |
+| Ideal Remaining     | 0x352  | 0   | Ideal remaining energy (bytes 6–7, raw × 0.02 kWh)       |
+| Cell Voltage Max    | 0x332  | 1   | Highest cell voltage (12-bit, raw × 0.002 V)             |
+| Cell Voltage Min    | 0x332  | 1   | Lowest cell voltage (12-bit, raw × 0.002 V)              |
+| Max Regen Power     | 0x252  | —   | Maximum regen power limit (bytes 0–1, raw × 0.01 kW)     |
+| Max Discharge Power | 0x252  | —   | Maximum discharge power limit (bytes 2–3, raw × 0.01 kW) |
 
 Enhanced data appears automatically once these CAN frames are received. The `hasEnhancedBms` flag in the status payload indicates availability.
 
@@ -307,15 +307,15 @@ Enhanced data appears automatically once these CAN frames are received. The `has
 
 Reads the current EPAS steering tune mode from CAN ID 0x370 (EPAS_sysStatus), byte[0] bits [7:4]:
 
-| Value | Mode |
-| ----- | ---- |
-| 0 | FAIL_SAFE |
-| 1 | COMFORT |
-| 2 | STANDARD |
-| 3 | SPORT |
-| 4 | RWD_COMFORT |
-| 5 | RWD_SPORT |
-| 6 | RWD_SPORT+ |
+| Value | Mode        |
+| ----- | ----------- |
+| 0     | FAIL_SAFE   |
+| 1     | COMFORT     |
+| 2     | STANDARD    |
+| 3     | SPORT       |
+| 4     | RWD_COMFORT |
+| 5     | RWD_SPORT   |
+| 6     | RWD_SPORT+  |
 
 The steering mode is extracted from the same 0x370 frame used by the Nag Killer feature. The `hasSteeringMode` flag indicates when a steering mode value has been received.
 
@@ -404,14 +404,14 @@ ecer79:off   # Disable ECE R79 bypass
 
 Automatically detects the vehicle's market region from CAN ID 0x398 (GTW_carConfig). The low nibble of byte 0 contains the region code:
 
-| Code | Region |
-| ---- | ------ |
-| 0 | Unknown |
-| 1 | North America (NA) |
-| 2 | Europe (EU) |
-| 3 | China (CN) |
-| 4 | Asia-Pacific (APAC) |
-| 5 | Middle East (ME) |
+| Code | Region              |
+| ---- | ------------------- |
+| 0    | Unknown             |
+| 1    | North America (NA)  |
+| 2    | Europe (EU)         |
+| 3    | China (CN)          |
+| 4    | Asia-Pacific (APAC) |
+| 5    | Middle East (ME)    |
 
 Chinese market vehicles may have gateway restrictions that prevent certain CAN modifications.
 
@@ -423,10 +423,10 @@ Triggers a 3-blink lane change signal by injecting CAN ID 0x3F5 (VCFRONT_vehicle
 
 | Value | Signal |
 | ----- | ------ |
-| 0 | Off |
-| 1 | Left |
-| 2 | Right |
-| 3 | Hazard |
+| 0     | Off    |
+| 1     | Left   |
+| 2     | Right  |
+| 3     | Hazard |
 
 ```bash
 turn:left3    # 3-blink left
@@ -489,14 +489,14 @@ mirror:autofold:off   # Disable mirror auto-fold
 
 Read-only decode of motor and drivetrain CAN signals for performance monitoring:
 
-| Signal | CAN ID | Decoding |
-| ------ | ------ | -------- |
-| Vehicle Speed | 0x257 | Byte[2:3] signed int16, ÷100 → km/h |
-| Gear State | 0x118 | Byte[0] bits[3:1] → 1=P, 2=R, 3=N, 4=D |
-| Accelerator Pedal | 0x118 | Byte[1] → 0–100% |
-| Steering Angle | 0x129 | Byte[0:1] signed int16, ÷10 → degrees |
-| Rear Motor RPM | 0x106 | Byte[4:5] signed int16 |
-| Front Motor RPM | 0x115 | Byte[4:5] signed int16 (0 if single motor) |
+| Signal            | CAN ID | Decoding                                   |
+| ----------------- | ------ | ------------------------------------------ |
+| Vehicle Speed     | 0x257  | Byte[2:3] signed int16, ÷100 → km/h        |
+| Gear State        | 0x118  | Byte[0] bits[3:1] → 1=P, 2=R, 3=N, 4=D     |
+| Accelerator Pedal | 0x118  | Byte[1] → 0–100%                           |
+| Steering Angle    | 0x129  | Byte[0:1] signed int16, ÷10 → degrees      |
+| Rear Motor RPM    | 0x106  | Byte[4:5] signed int16                     |
+| Front Motor RPM   | 0x115  | Byte[4:5] signed int16 (0 if single motor) |
 
 ```bash
 powertrain   # Query current powertrain telemetry
@@ -510,15 +510,15 @@ Generates synthetic CAN frames for testing without a real vehicle. When enabled,
 
 **Simulated signals:**
 
-| Signal | Value |
-| ------ | ----- |
-| BMS Voltage | ~375V |
-| BMS Current | ~5A |
-| BMS SoC | 70% |
+| Signal             | Value          |
+| ------------------ | -------------- |
+| BMS Voltage        | ~375V          |
+| BMS Current        | ~5A            |
+| BMS SoC            | 70%            |
 | TPMS (all 4 tires) | 2.5 bar / 25°C |
-| Vehicle Speed | 60–61 km/h |
-| Gear | D (Drive) |
-| Accelerator Pedal | 15% |
+| Vehicle Speed      | 60–61 km/h     |
+| Gear               | D (Drive)      |
+| Accelerator Pedal  | 15%            |
 
 Frames are **never transmitted on the physical CAN bus** — they only feed the internal `handleMessage()` decode pipeline. Safe for bench testing.
 
@@ -531,16 +531,16 @@ simu:stop    # Stop CAN simulation
 
 Decodes real-time tire pressure and temperature from CAN ID 0x219:
 
-| Byte | Field | Formula |
-| ---- | ----- | ------- |
-| 0 | FL pressure | raw × 0.025 bar |
-| 1 | FR pressure | raw × 0.025 bar |
-| 2 | RL pressure | raw × 0.025 bar |
-| 3 | RR pressure | raw × 0.025 bar |
-| 4 | FL temperature | raw − 40 °C |
-| 5 | FR temperature | raw − 40 °C |
-| 6 | RL temperature | raw − 40 °C |
-| 7 | RR temperature | raw − 40 °C |
+| Byte | Field          | Formula         |
+| ---- | -------------- | --------------- |
+| 0    | FL pressure    | raw × 0.025 bar |
+| 1    | FR pressure    | raw × 0.025 bar |
+| 2    | RL pressure    | raw × 0.025 bar |
+| 3    | RR pressure    | raw × 0.025 bar |
+| 4    | FL temperature | raw − 40 °C     |
+| 5    | FR temperature | raw − 40 °C     |
+| 6    | RL temperature | raw − 40 °C     |
+| 7    | RR temperature | raw − 40 °C     |
 
 ```bash
 tpms   # Query current TPMS data
@@ -565,12 +565,12 @@ singleshot:off   # Disable one-shot TX (normal retransmit)
 
 Read-only decode of the gateway firmware version from CAN ID 0x392 (multiplexed). Evaluates whether the detected firmware is compatible with the current mod features.
 
-| Compat Level | Meaning |
-| ------------ | ------- |
-| UNKNOWN | Not yet decoded |
-| OK | Firmware ≥ 2024, fully compatible |
-| WARN | Older firmware, may have reduced compatibility |
-| FAIL | Known incompatible firmware |
+| Compat Level | Meaning                                        |
+| ------------ | ---------------------------------------------- |
+| UNKNOWN      | Not yet decoded                                |
+| OK           | Firmware ≥ 2024, fully compatible              |
+| WARN         | Older firmware, may have reduced compatibility |
+| FAIL         | Known incompatible firmware                    |
 
 ```bash
 fwcompat    # Query firmware version and compatibility
@@ -603,14 +603,14 @@ mqtt:interval:2000         # Set publish interval in ms (100–60000)
 
 Automatically identifies the vehicle model and year from CAN ID 0x398 (GTW_carConfig). Decoded platform ID maps to vehicle model.
 
-| Model ID | Vehicle |
-| -------- | ------- |
-| 0 | Unknown |
-| 1 | Model 3 |
-| 2 | Model Y |
-| 3 | Model S |
-| 4 | Model X |
-| 5 | Cybertruck |
+| Model ID | Vehicle    |
+| -------- | ---------- |
+| 0        | Unknown    |
+| 1        | Model 3    |
+| 2        | Model Y    |
+| 3        | Model S    |
+| 4        | Model X    |
+| 5        | Cybertruck |
 
 ```bash
 vehicle    # Query vehicle model and year
@@ -643,7 +643,7 @@ log    # Dump ring buffer contents
 
 ## Vehicle Commands ( 3 CAN required )
 
-These commands require a 3-CAN build and send frames on the Vehicle Control bus (Bus 1):
+These commands require a 3-CAN build and send frames on the Vehicle bus:
 
 ### Lock & Horn
 
@@ -732,36 +732,36 @@ Controls vehicle power states via CAN ID 0x273.
 
 ## Feature Availability by Variant
 
-| Feature | HW4 | HW3 | Legacy |
-| -------- | ---- | ---- | ------- |
-| FSD Enable | ✅ | ✅ | ✅ |
-| Nag Suppress | ✅ | ✅ | ✅ |
-| Speed Profile | ✅ | ✅ | ✅ (limited) |
-| Speed Offset | ✅ (0–63) | ✅ (0–100) | ❌ |
-| ISA Chime | ✅ | ❌ | ❌ |
-| Nag Killer (EPAS) | ✅ | ✅ | ❌ |
-| Preconditioning | ✅ | ✅ | ❌ |
-| Track Mode | ✅ | ✅ | ❌ |
-| BMS Telemetry | ✅ | ✅ | ❌ |
-| OTA Safety | ✅ | ✅ | ❌ |
-| Auto HW Detect | ✅ | ✅ | ❌ |
-| Summon | ✅ | ✅ | ❌ |
-| Vehicle Commands | ✅ | ✅ | ❌ |
-| Seat Heating | ✅ | ✅ | ❌ |
-| Wiper Control | ✅ | ✅ | ❌ |
-| Display Brightness | ✅ | ✅ | ❌ |
-| Power Control | ✅ | ✅ | ❌ |
-| CAN Error Monitor | ✅ | ✅ | ✅ |
-| Drive Mode Override | ✅ | ✅ | ❌ |
-| ECE R79 Bypass | ✅ | ✅ | ❌ |
-| TPMS Monitoring | ✅ | ✅ | ❌ |
-| Region Detection | ✅ | ✅ | ❌ |
-| Rate Limiting | ✅ | ✅ | ✅ |
-| Single-Shot TX | ✅ | ✅ | ✅ |
-| FW Version Compat | ✅ | ✅ | ❌ |
-| MQTT Bridge | ✅ | ✅ | ❌ |
-| Vehicle Identification | ✅ | ✅ | ❌ |
-| Ring Buffer | ✅ | ✅ | ❌ |
+| Feature                | HW4       | HW3        | Legacy       |
+| ---------------------- | --------- | ---------- | ------------ |
+| FSD Enable             | ✅        | ✅         | ✅           |
+| Nag Suppress           | ✅        | ✅         | ✅           |
+| Speed Profile          | ✅        | ✅         | ✅ (limited) |
+| Speed Offset           | ✅ (0–63) | ✅ (0–100) | ❌           |
+| ISA Chime              | ✅        | ❌         | ❌           |
+| Nag Killer (EPAS)      | ✅        | ✅         | ❌           |
+| Preconditioning        | ✅        | ✅         | ❌           |
+| Track Mode             | ✅        | ✅         | ❌           |
+| BMS Telemetry          | ✅        | ✅         | ❌           |
+| OTA Safety             | ✅        | ✅         | ❌           |
+| Auto HW Detect         | ✅        | ✅         | ❌           |
+| Summon                 | ✅        | ✅         | ❌           |
+| Vehicle Commands       | ✅        | ✅         | ❌           |
+| Seat Heating           | ✅        | ✅         | ❌           |
+| Wiper Control          | ✅        | ✅         | ❌           |
+| Display Brightness     | ✅        | ✅         | ❌           |
+| Power Control          | ✅        | ✅         | ❌           |
+| CAN Error Monitor      | ✅        | ✅         | ✅           |
+| Drive Mode Override    | ✅        | ✅         | ❌           |
+| ECE R79 Bypass         | ✅        | ✅         | ❌           |
+| TPMS Monitoring        | ✅        | ✅         | ❌           |
+| Region Detection       | ✅        | ✅         | ❌           |
+| Rate Limiting          | ✅        | ✅         | ✅           |
+| Single-Shot TX         | ✅        | ✅         | ✅           |
+| FW Version Compat      | ✅        | ✅         | ❌           |
+| MQTT Bridge            | ✅        | ✅         | ❌           |
+| Vehicle Identification | ✅        | ✅         | ❌           |
+| Ring Buffer            | ✅        | ✅         | ❌           |
 
 ## NVS Persistence
 

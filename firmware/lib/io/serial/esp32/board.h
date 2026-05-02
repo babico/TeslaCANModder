@@ -1,0 +1,11 @@
+#pragma once
+#include <Arduino.h>
+#include "core/config/esp32/board.h"
+#include "core/types.h"
+#include "infra/can.h"
+#include "features.h"
+#include "state.h"
+#include "output.h"
+#include "messages.h"
+#include "commands.h"
+#include "loop.h"

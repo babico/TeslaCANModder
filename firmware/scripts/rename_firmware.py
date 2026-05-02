@@ -2,10 +2,21 @@
 Post-build script: create a flash-ready merged ESP32 image at
 build/firmware/<env_name>.bin.
 """
+
 import os
 import subprocess
+from typing import Any
 
+try:
+    from SCons.Script import Import  # type: ignore[import-not-found]
+except ModuleNotFoundError:
+    def Import(*_args: str) -> None:
+        return None
+
+
+env: Any = globals().get("env")
 Import("env")
+env = globals().get("env", env)
 
 
 FLASH_SEGMENTS = (
@@ -27,7 +38,9 @@ def merge_firmware(source, target, env):
     framework_dir = platform.get_package_dir("framework-arduinoespressif32")
     esptool_dir = platform.get_package_dir("tool-esptoolpy")
     if not framework_dir or not esptool_dir:
-        raise RuntimeError("ESP32 framework and esptool packages are required to merge firmware images")
+        raise RuntimeError(
+            "ESP32 framework and esptool packages are required to merge firmware images"
+        )
 
     segment_args = []
     for address, filename in FLASH_SEGMENTS:
@@ -61,4 +74,5 @@ def merge_firmware(source, target, env):
     print(f"  Firmware merged -> build/firmware/{env_name}.bin")
 
 
-env.AddPostAction("$BUILD_DIR/firmware.bin", merge_firmware)
+if env is not None:
+    env.AddPostAction("$BUILD_DIR/firmware.bin", merge_firmware)

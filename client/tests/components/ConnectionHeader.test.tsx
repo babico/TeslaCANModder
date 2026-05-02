@@ -1,11 +1,7 @@
-// ConnectionHeader's full integration is exercised in tests/components/headers.test.tsx.
-// This file adds a focused smoke test that the module is exportable in isolation.
 import React from "react";
-import TestRenderer from "react-test-renderer";
+import { render } from "@testing-library/react-native";
 
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
-const boardConnState = {
+const mockBoardConnState = {
 	selectedTransportType: "http",
 	isSelectedTransportReady: false,
 	connectionBusy: false,
@@ -21,25 +17,9 @@ const boardConnState = {
 	applyPreset: jest.fn(),
 };
 
-jest.mock("react-native", () => {
-	const View = (props: any) => React.createElement("View", props, props.children);
-	const Text = (props: any) => React.createElement("Text", props, props.children);
-	const TextInput = (props: any) => React.createElement("TextInput", props, props.children);
-	const Pressable = (props: any) => React.createElement("Pressable", props, props.children);
-	const ScrollView = (props: any) => React.createElement("ScrollView", props, props.children);
-	return {
-		View,
-		Text,
-		TextInput,
-		Pressable,
-		ScrollView,
-		StyleSheet: { create: <T extends Record<string, unknown>>(o: T) => o, absoluteFillObject: {} },
-	};
-});
-
 jest.mock("../../src/ui/Sheet", () => ({
 	Sheet: ({ children, visible }: any) =>
-		visible ? React.createElement("Sheet", null, children) : null,
+		visible ? children : null,
 }));
 
 jest.mock("../../src/state/BoardConnectionContext", () => ({
@@ -53,21 +33,14 @@ jest.mock("../../src/state/BoardConnectionContext", () => ({
 			},
 		},
 	],
-	useBoardConnection: () => boardConnState,
+	useBoardConnection: () => mockBoardConnState,
 }));
 
 import { ConnectionHeader } from "../../src/components/ConnectionHeader";
 
 describe("ConnectionHeader (smoke)", () => {
 	it("renders title with board context", () => {
-		let r!: TestRenderer.ReactTestRenderer;
-		TestRenderer.act(() => {
-			r = TestRenderer.create(React.createElement(ConnectionHeader));
-		});
-		const t = r.root
-			.findAll((n) => (n.type as any) === "Text")
-			.map((n) => String(n.props.children).replace(/,/g, " "))
-			.join(" ");
-		expect(t).toContain("Tesla CAN Modder");
+		const { getByText } = render(React.createElement(ConnectionHeader));
+		expect(getByText(/Tesla CAN Modder/)).toBeTruthy();
 	});
 });

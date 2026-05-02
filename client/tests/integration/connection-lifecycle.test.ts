@@ -11,10 +11,7 @@ jest.mock("@teslacanmodder/protocol", () => ({
 	},
 }));
 
-import {
-	DEFAULT_CONNECTION,
-	HardwareController,
-} from "../../src/hardware/controller";
+import { DEFAULT_CONNECTION, HardwareController } from "../../src/hardware/controller";
 
 describe("connection lifecycle integration", () => {
 	function makeBle(response = "OK") {

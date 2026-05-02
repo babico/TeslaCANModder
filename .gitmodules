@@ -244,6 +244,6 @@
 [submodule "legacy/EzeLLM-fsd-spoofing"]
 	path = legacy/EzeLLM-fsd-spoofing
 	url = https://github.com/EzeLLM/fsd-spoofing
-[submodule "legacy/ev-open-can-tools-ev-open-can-tools-plugins"]
+[submodule "legacy/ev-open-can-tools-plugins"]
 	path = legacy/ev-open-can-tools-ev-open-can-tools-plugins
 	url = https://github.com/ev-open-can-tools/ev-open-can-tools-plugins

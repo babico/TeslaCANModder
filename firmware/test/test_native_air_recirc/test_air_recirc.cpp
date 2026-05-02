@@ -10,33 +10,43 @@
 
 #include "core/types.h"
 #include "infra/burst.h"
-void saveSettings(const State&) {}
+void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
-void applyFilters(State&) {}
+void applyFilters(State &) {}
 #include "feature/air_recirc.h"
 
-static State makeState() { State s = {}; s.variant = HW4; s.hasClimate = true; return s; }
+static State makeState()
+{
+	State s = {};
+	s.variant = HW4;
+	s.hasClimate = true;
+	return s;
+}
 void setUp() {}
 void tearDown() {}
 
-void test_airecirc_on() {
-  State s = makeState();
-  TEST_ASSERT_TRUE(execAirRecircCmd("airecirc:on", s));
+void test_airecirc_on()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execAirRecircCmd("airecirc:on", s));
 }
-void test_airecirc_off() {
-  State s = makeState();
-  TEST_ASSERT_TRUE(execAirRecircCmd("airecirc:off", s));
+void test_airecirc_off()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(execAirRecircCmd("airecirc:off", s));
 }
-void test_airecirc_unknown() {
-  State s = makeState();
-  TEST_ASSERT_FALSE(execAirRecircCmd("airecirc:maybe", s));
-  TEST_ASSERT_FALSE(execAirRecircCmd("foo", s));
+void test_airecirc_unknown()
+{
+	State s = makeState();
+	TEST_ASSERT_FALSE(execAirRecircCmd("airecirc:maybe", s));
+	TEST_ASSERT_FALSE(execAirRecircCmd("foo", s));
 }
 
-int main(int, char**) {
-  UNITY_BEGIN();
-  RUN_TEST(test_airecirc_on);
-  RUN_TEST(test_airecirc_off);
-  RUN_TEST(test_airecirc_unknown);
-  return UNITY_END();
+int main(int, char **)
+{
+	UNITY_BEGIN();
+	RUN_TEST(test_airecirc_on);
+	RUN_TEST(test_airecirc_off);
+	RUN_TEST(test_airecirc_unknown);
+	return UNITY_END();
 }

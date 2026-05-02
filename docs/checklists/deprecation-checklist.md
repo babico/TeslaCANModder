@@ -11,7 +11,7 @@ order: 15
 
 Client consolidation is already complete. Keep this document as an ongoing guardrail so the repo does not drift back toward multiple app workspaces.
 
-Run this checklist whenever changes touch docs, Docker, CI, workspace metadata, or client-doc generation.
+Run this checklist whenever changes touch docs, Docker, CI, workspace metadata, or client docs asset loading.
 
 ## Decision
 
@@ -21,13 +21,13 @@ Run this checklist whenever changes touch docs, Docker, CI, workspace metadata, 
 
 ## Workspace Invariants
 
-| Invariant | Why it matters | Verified? |
-| --------- | -------------- | --------- |
-| Root `package.json` keeps only `client`, `tools`, and `packages/*` as active workspaces | Prevents parallel app surfaces from reappearing | ☐ |
-| Root docs describe `client/` as the primary app surface | Keeps setup and release guidance aligned with the codebase | ☐ |
-| CI and Docker use `client/` for browser/native app validation | Avoids stale build paths and hidden regressions | ☐ |
-| Generated in-app docs still sync from authored markdown before start/build/test | Prevents docs drift between repo markdown and rendered client docs | ☐ |
-| No removed app workspace paths remain in root configs or docs | Keeps maintenance and onboarding straightforward | ☐ |
+| Invariant                                                                                  | Why it matters                                               | Verified? |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | --------- |
+| Root `package.json` keeps only `client`, `tools`, and `packages/*` as active workspaces    | Prevents parallel app surfaces from reappearing              | ☐         |
+| Root docs describe `client/` as the primary app surface                                    | Keeps setup and release guidance aligned with the codebase   | ☐         |
+| CI and Docker use `client/` for browser/native app validation                              | Avoids stale build paths and hidden regressions              | ☐         |
+| In-app docs still render the raw `docs/` markdown tree without a parallel generated bundle | Prevents docs drift and avoids a second docs source of truth | ☐         |
+| No removed app workspace paths remain in root configs or docs                              | Keeps maintenance and onboarding straightforward             | ☐         |
 
 ## When To Run This Checklist
 
@@ -35,24 +35,24 @@ Run this checklist whenever changes touch docs, Docker, CI, workspace metadata, 
 - CI workflow changes
 - `docker-compose.yml` or release pipeline changes
 - Docs rewrites that mention browser/native app entry points
-- Client docs generation or docs bundle changes
+- Client docs asset loading or docs bundling changes
 
 ## Maintenance Checks
 
-| Check | Owner | Done? |
-| ----- | ----- | ----- |
-| Verify browser flows still run from `client/` (`npm run web -w @teslacanmodder/client`) | QA | ☐ |
-| Verify native targets still use the unified `client/` app shell | QA | ☐ |
-| Verify root docs and CONTRIBUTING mention the unified client workspace | Docs | ☐ |
-| Verify Docker and release docs reference `client/` outputs, not removed app paths | DevOps | ☐ |
-| Verify `npm install` still resolves a clean workspace graph | Engineer | ☐ |
-| Verify relevant tests still pass after workspace/config changes | CI | ☐ |
+| Check                                                                                   | Owner    | Done? |
+| --------------------------------------------------------------------------------------- | -------- | ----- |
+| Verify browser flows still run from `client/` (`npm run web -w @teslacanmodder/client`) | QA       | ☐     |
+| Verify native targets still use the unified `client/` app shell                         | QA       | ☐     |
+| Verify root docs and CONTRIBUTING mention the unified client workspace                  | Docs     | ☐     |
+| Verify Docker and release docs reference `client/` outputs, not removed app paths       | DevOps   | ☐     |
+| Verify `npm install` still resolves a clean workspace graph                             | Engineer | ☐     |
+| Verify relevant tests still pass after workspace/config changes                         | CI       | ☐     |
 
 ## Drift Response Plan
 
 1. Search the repo root for removed app workspace names or stale paths.
 2. Update root docs, CI, Docker, and release instructions to point back to `client/`.
-3. Regenerate the client docs bundle if the authored markdown changed.
+3. Verify the client docs screen still loads the raw `docs/` markdown files after the change.
 4. Re-run the relevant validation commands: `npm run test:client`, `npm run test:tools`, and any affected release/build steps.
 5. If drift is widespread, capture the cleanup as a focused maintenance PR instead of layering unrelated feature work into it.
 

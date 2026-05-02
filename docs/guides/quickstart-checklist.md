@@ -22,10 +22,7 @@ For a detailed narrative setup flow that includes both browser flasher and CLI f
 - [ ] **Board selected**: ESP32-S DevKit (1–3 bus USB/WiFi/BLE)
 - [ ] **MCP2515 module(s)** ready with **8 MHz crystal** — not 16 MHz
 - [ ] **Data-capable USB cable** — charge-only cables will not work
-- [ ] **Wiring complete** per [Hardware Setup](hardware-setup.md)
-    - ESP32 Bus 0: CS → GPIO 15, INT → GPIO 34, SPI → 18/19/23
-    - ESP32 Bus 1: CS → GPIO 27, INT → GPIO 35 _(optional)_
-    - ESP32 Bus 2: CS → GPIO 26, INT → GPIO 33 _(optional)_
+- [ ] **Wiring complete** per [Hardware Setup](hardware-setup.md): Chassis bus CS → GPIO 15, INT → GPIO 34, SPI → 18/19/23; Vehicle bus CS → GPIO 27, INT → GPIO 35 _(optional)_; Body bus CS → GPIO 26, INT → GPIO 33 _(optional)_
 - [ ] **CAN bus wires** ready for X179 connector (CAN-H / CAN-L)
 
 > **Stuck?** See [Troubleshooting → Board Not Connecting](../troubleshooting/debug-guide.md#board-not-connecting)
@@ -70,10 +67,7 @@ For a detailed narrative setup flow that includes both browser flasher and CLI f
 ## 5. Vehicle Installation
 
 - [ ] **Vehicle powered off** during installation
-- [ ] Connect CAN-H / CAN-L to X179 connector:
-    - FSD bus: Pins 13 (CAN-H) / 14 (CAN-L)
-    - Vehicle bus: Pins 9 / 10 _(ESP32 3-bus only)_
-    - Body bus: Pins 2 / 3 _(ESP32 3-bus only)_
+- [ ] Connect CAN-H / CAN-L to X179 connector: FSD bus pins 13 (CAN-H) / 14 (CAN-L); Vehicle bus pins 9 / 10 _(ESP32 3-bus only)_; Body bus pins 2 / 3 _(ESP32 3-bus only)_
 - [ ] Secure board and wiring — no loose connections
 - [ ] Power on vehicle — screen active
 - [ ] Console should show **CAN Active** and frame count increasing
@@ -85,8 +79,7 @@ For a detailed narrative setup flow that includes both browser flasher and CLI f
 ## 6. Feature Activation
 
 - [ ] All features start **OFF** by default — safe starting state
-- [ ] Enable **FSD**: Dashboard → Controls → FSD → Enable
-    - Requires FSD to be selected in the vehicle's UI first
+- [ ] Enable **FSD**: Dashboard → Controls → FSD → Enable; requires FSD to be selected in the vehicle's UI first
 - [ ] Enable **Nag Suppress**: Controls → Nag → Enable
 - [ ] Set **Speed Profile**: Controls → Speed Profile → pick one (or Auto)
 - [ ] _(Optional)_ Enable **Streaming** to see live CAN frames in Monitor tab

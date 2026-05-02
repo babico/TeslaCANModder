@@ -16,26 +16,33 @@
 
 // ── TLSSC Command ─────────────────────────────────────────────────────────────
 // tlssc:on|off
-bool executeTlsscCmd(const char* cmd, State& s) {
-  if (strncmp(cmd, "tlssc:", 6) == 0) {
-    if (!parseBoolCmd(cmd + 6, s.tlsscRestore, s.tlsscRestore)) return false;
-    saveSettings(s);
-    return true;
-  }
-  return false;
+bool executeTlsscCmd(const char *cmd, State &s)
+{
+	if (strncmp(cmd, "tlssc:", 6) == 0)
+	{
+		if (!parseBoolCmd(cmd + 6, s.tlsscRestore, s.tlsscRestore))
+			return false;
+		saveSettings(s);
+		return true;
+	}
+	return false;
 }
 
 // ── TLSSC Frame Handler ───────────────────────────────────────────────────────
 // Called for every 0x331 frame on the vehicle bus.
 // Returns true when frame was modified (caller should retransmit).
-bool handleTlssc(Frame& f, State& s) {
-  if (!s.tlsscRestore) return false;
-  if (f.dlc < 1) return false;
+bool handleTlssc(Frame &f, State &s)
+{
+	if (!s.tlsscRestore)
+		return false;
+	if (f.dlc < 1)
+		return false;
 
-  uint8_t original = f.data[0];
-  uint8_t modified = (original & 0xC0) | 0x1B;
-  if (modified == original) return false;
+	uint8_t original = f.data[0];
+	uint8_t modified = (original & 0xC0) | 0x1B;
+	if (modified == original)
+		return false;
 
-  f.data[0] = modified;
-  return true;
+	f.data[0] = modified;
+	return true;
 }

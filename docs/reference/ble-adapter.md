@@ -15,23 +15,23 @@ ESP32 firmware variants with BLE enabled (`esp32_ble`, `esp32_wifi_ble`) use **N
 
 ## Overview
 
-| Property | Value |
-| -------- | ----- |
-| Device Name | `TeslaCANModder` |
-| Protocol | BLE GATT (Nordic UART Service) |
-| Library | NimBLE-Arduino |
-| iOS Compatible | Yes |
-| Android Compatible | Yes |
-| Simultaneous WiFi | Yes |
+| Property           | Value                          |
+| ------------------ | ------------------------------ |
+| Device Name        | `TeslaCANModder`               |
+| Protocol           | BLE GATT (Nordic UART Service) |
+| Library            | NimBLE-Arduino                 |
+| iOS Compatible     | Yes                            |
+| Android Compatible | Yes                            |
+| Simultaneous WiFi  | Yes                            |
 
 ## Nordic UART Service (NUS)
 
 TeslaCANModder uses the Nordic UART Service UUIDs, which are widely supported by BLE terminal apps:
 
-| Characteristic | UUID | Direction |
-| ------------- | ---- | --------- |
-| **Service** | `6e400001-b5a3-f393-e0a9-e50e24dcca9e` | — |
-| **RX** (write) | `6e400002-b5a3-f393-e0a9-e50e24dcca9e` | Phone → Device |
+| Characteristic  | UUID                                   | Direction      |
+| --------------- | -------------------------------------- | -------------- |
+| **Service**     | `6e400001-b5a3-f393-e0a9-e50e24dcca9e` | —              |
+| **RX** (write)  | `6e400002-b5a3-f393-e0a9-e50e24dcca9e` | Phone → Device |
 | **TX** (notify) | `6e400003-b5a3-f393-e0a9-e50e24dcca9e` | Device → Phone |
 
 ## How to Connect

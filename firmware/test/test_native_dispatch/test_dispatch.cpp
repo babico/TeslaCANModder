@@ -94,11 +94,13 @@ void applyFilters(State& s) {
   if (s.rawCanListen) {
     driverSetBusFilters(0, nullptr, 0);
   } else {
-    uint32_t ids[6];
+    uint32_t ids[10];
     uint8_t count = 0;
+    bool isaAdded = false;
+    bool legacyMuxAdded = false;
     switch(s.variant) {
       case HW4:
-        if (s.isaChimeSuppress) ids[count++] = CAN_ID_ISA_SPEED;
+        if (s.isaChimeSuppress) { ids[count++] = CAN_ID_ISA_SPEED; isaAdded = true; }
         if (s.fsdEnabled) ids[count++] = CAN_ID_FOLLOW_DIST;
         if (s.fsdEnabled || s.nagSuppress) ids[count++] = CAN_ID_FSD_MUX;
         break;
@@ -108,8 +110,13 @@ void applyFilters(State& s) {
         break;
       case LEGACY:
         if (s.fsdEnabled) ids[count++] = CAN_ID_LEGACY_STALK;
-        if (s.fsdEnabled || s.nagSuppress) ids[count++] = CAN_ID_LEGACY_FSD_MUX;
+        if (s.fsdEnabled || s.nagSuppress) { ids[count++] = CAN_ID_LEGACY_FSD_MUX; legacyMuxAdded = true; }
         break;
+    }
+    // P2-06: Fallback variant detection
+    if (s.variantAutoDetect && !s.hwAutoDetected) {
+      if (!isaAdded) ids[count++] = CAN_ID_ISA_SPEED;
+      if (!legacyMuxAdded) ids[count++] = CAN_ID_LEGACY_FSD_MUX;
     }
     if (count > 0) {
       driverSetBusFilters(BUS_CHASSIS, ids, count);
@@ -141,6 +148,22 @@ void applyFilters(State& s) {
 void handleMessage(Frame& f, uint8_t bus, State& s) {
   // Bus 0 (FSD): variant-specific handler
   if (bus == BUS_CHASSIS) {
+    // P2-06: Fallback variant inference from distinctive frame presence
+    if (s.variantAutoDetect && !s.hwAutoDetected) {
+      if (f.id == CAN_ID_ISA_SPEED && s.variant != HW4) {
+        bool fromLegacy = (s.variant == LEGACY);
+        s.variant = HW4;
+        if (fromLegacy) s.speedProfile = 1; // P2-07
+        applyFilters(s);
+        resetHandlerLogFlags();
+        sendLog(F("Fallback: HW4 inferred from ISA_SPEED"));
+      } else if (f.id == CAN_ID_LEGACY_FSD_MUX && s.variant != LEGACY) {
+        s.variant = LEGACY;
+        applyFilters(s);
+        resetHandlerLogFlags();
+        sendLog(F("Fallback: LEGACY inferred from legacy mux frame"));
+      }
+    }
     switch(s.variant) {
       case HW4: handleHW4(f, s); break;
       case HW3: handleHW3(f, s); break;
@@ -182,7 +205,9 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
         if (s.variantAutoDetect) {
           Variant detected = (hw == 3) ? HW4 : HW3;
           if (s.variant != detected) {
+            bool fromLegacy = (s.variant == LEGACY);
             s.variant = detected;
+            if (fromLegacy) s.speedProfile = 1; // P2-07: reset stale legacy stalk profile
             applyFilters(s);
             resetHandlerLogFlags();
             sendLog(hw == 3 ? F("Auto-detected HW4") : F("Auto-detected HW3"));
@@ -236,6 +261,7 @@ static State makeState(Variant v = HW4) {
   State s = {};
   s.variant = v;
   s.speedProfile = 1;
+    s.variantAutoDetect = false; // P2-06: tests that need fallback set this explicitly
   return s;
 }
 
@@ -425,6 +451,27 @@ void test_apply_filters_isa_only_sets_isa_filter() {
   TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count); // only ISA_SPEED
 }
 
+// P2-06: when 0x398 has not been seen yet, include fallback discriminator IDs
+void test_apply_filters_fallback_adds_discriminator_ids_when_hw_unknown() {
+  State s = makeState(HW3);
+  s.variantAutoDetect = true;
+  s.hwAutoDetected = false;
+  applyFilters(s);
+  TEST_ASSERT_TRUE(stub_mcp_call_count >= 1);
+  TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
+  TEST_ASSERT_EQUAL(2, stub_mcp_calls[0].count); // ISA_SPEED + LEGACY_FSD_MUX
+}
+
+void test_apply_filters_no_fallback_ids_when_hw_already_detected() {
+  State s = makeState(HW3);
+  s.variantAutoDetect = true;
+  s.hwAutoDetected = true;
+  applyFilters(s);
+  TEST_ASSERT_TRUE(stub_mcp_call_count >= 1);
+  TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
+  TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count); // dummy filter only
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Summon Tick
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -565,6 +612,97 @@ void test_autodetect_invalid_hw_ignored() {
   TEST_ASSERT_FALSE(s.hwAutoDetected);
 }
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // P2-06: Fallback Variant Detection (from frame presence when 0x398 absent)
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  void test_fallback_isa_speed_infers_hw4_from_legacy() {
+    State s = makeState(LEGACY);
+    s.variantAutoDetect = true;
+    s.hwAutoDetected = false;
+    s.speedProfile = 2; // stale legacy stalk value
+    Frame f = makeFrame(CAN_ID_ISA_SPEED);
+    handleMessage(f, BUS_CHASSIS, s);
+    TEST_ASSERT_EQUAL(HW4, s.variant);
+    TEST_ASSERT_EQUAL(1, s.speedProfile); // P2-07: reset on Legacy→HW4
+    TEST_ASSERT_TRUE(log_call_count > 0);
+  }
+
+  void test_fallback_isa_speed_no_switch_if_already_hw4() {
+    State s = makeState(HW4);
+    s.variantAutoDetect = true;
+    s.hwAutoDetected = false;
+    Frame f = makeFrame(CAN_ID_ISA_SPEED);
+    handleMessage(f, BUS_CHASSIS, s);
+    TEST_ASSERT_EQUAL(HW4, s.variant); // unchanged
+    TEST_ASSERT_EQUAL(0, log_call_count); // no switch log
+  }
+
+  void test_fallback_legacy_mux_infers_legacy_from_hw4() {
+    State s = makeState(HW4);
+    s.variantAutoDetect = true;
+    s.hwAutoDetected = false;
+    Frame f = makeFrame(CAN_ID_LEGACY_FSD_MUX);
+    handleMessage(f, BUS_CHASSIS, s);
+    TEST_ASSERT_EQUAL(LEGACY, s.variant);
+    TEST_ASSERT_TRUE(log_call_count > 0);
+  }
+
+  void test_fallback_no_switch_when_hw_already_detected() {
+    State s = makeState(LEGACY);
+    s.variantAutoDetect = true;
+    s.hwAutoDetected = true; // 0x398 already seen
+    Frame f = makeFrame(CAN_ID_ISA_SPEED);
+    handleMessage(f, BUS_CHASSIS, s);
+    TEST_ASSERT_EQUAL(LEGACY, s.variant); // no change
+  }
+
+  void test_fallback_no_switch_when_autodetect_off() {
+    State s = makeState(LEGACY);
+    s.variantAutoDetect = false;
+    s.hwAutoDetected = false;
+    Frame f = makeFrame(CAN_ID_ISA_SPEED);
+    handleMessage(f, BUS_CHASSIS, s);
+    TEST_ASSERT_EQUAL(LEGACY, s.variant); // no change
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // P2-07: Legacy→HW3/HW4 speedProfile reset (via 0x398 or fallback)
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  void test_legacy_to_hw3_via_0x398_resets_speed_profile() {
+    State s = makeState(LEGACY);
+    s.variantAutoDetect = true;
+    s.speedProfile = 2;
+    Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
+    f.data[0] = 2 << 6; // hw=2 → HW3
+    handleMessage(f, BUS_VEHICLE, s);
+    TEST_ASSERT_EQUAL(HW3, s.variant);
+    TEST_ASSERT_EQUAL(1, s.speedProfile); // reset to default
+  }
+
+  void test_legacy_to_hw4_via_0x398_resets_speed_profile() {
+    State s = makeState(LEGACY);
+    s.variantAutoDetect = true;
+    s.speedProfile = 0;
+    Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
+    f.data[0] = 3 << 6; // hw=3 → HW4
+    handleMessage(f, BUS_VEHICLE, s);
+    TEST_ASSERT_EQUAL(HW4, s.variant);
+    TEST_ASSERT_EQUAL(1, s.speedProfile); // reset to default
+  }
+
+  void test_hw4_to_hw3_via_0x398_does_not_reset_speed_profile() {
+    State s = makeState(HW4);
+    s.variantAutoDetect = true;
+    s.speedProfile = 3; // user-set, NOT stale from legacy
+    Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
+    f.data[0] = 2 << 6; // hw=2 → HW3
+    handleMessage(f, BUS_VEHICLE, s);
+    TEST_ASSERT_EQUAL(HW3, s.variant);
+    TEST_ASSERT_EQUAL(3, s.speedProfile); // preserved
+  }
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // txPaused Safety
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -666,6 +804,8 @@ int main() {
   RUN_TEST(test_apply_filters_no_features_blocks_fsd_bus);
   RUN_TEST(test_apply_filters_nag_only_sets_mux_filter);
   RUN_TEST(test_apply_filters_isa_only_sets_isa_filter);
+  RUN_TEST(test_apply_filters_fallback_adds_discriminator_ids_when_hw_unknown);
+  RUN_TEST(test_apply_filters_no_fallback_ids_when_hw_already_detected);
 
   // Summon
   RUN_TEST(test_summon_tick_does_nothing_when_remaining_zero);
@@ -681,6 +821,18 @@ int main() {
   RUN_TEST(test_autodetect_disabled_no_variant_switch);
   RUN_TEST(test_autodetect_same_variant_no_log);
   RUN_TEST(test_autodetect_invalid_hw_ignored);
+
+    // P2-06: Fallback variant detection (frame presence when 0x398 absent)
+    RUN_TEST(test_fallback_isa_speed_infers_hw4_from_legacy);
+    RUN_TEST(test_fallback_isa_speed_no_switch_if_already_hw4);
+    RUN_TEST(test_fallback_legacy_mux_infers_legacy_from_hw4);
+    RUN_TEST(test_fallback_no_switch_when_hw_already_detected);
+    RUN_TEST(test_fallback_no_switch_when_autodetect_off);
+
+    // P2-07: Legacy→HW3/HW4 speedProfile reset
+    RUN_TEST(test_legacy_to_hw3_via_0x398_resets_speed_profile);
+    RUN_TEST(test_legacy_to_hw4_via_0x398_resets_speed_profile);
+    RUN_TEST(test_hw4_to_hw3_via_0x398_does_not_reset_speed_profile);
 
   // txPaused safety
   RUN_TEST(test_summon_tick_cancels_on_tx_paused);

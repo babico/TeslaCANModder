@@ -1,10 +1,10 @@
 {
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "rootDir": "src"
-  },
-  "include": ["src"],
-  "exclude": ["test"]
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"rootDir": "src"
+	},
+	"include": ["src"],
+	"exclude": ["test"]
 }

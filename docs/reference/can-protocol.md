@@ -17,63 +17,63 @@ TeslaCANModder communicates with the vehicle by intercepting and modifying CAN b
 
 The ESP32 3-CAN configuration maps to the Tesla X179 connector as follows:
 
-| Bus | MCP2515 | X179 Pins | Function | CAN Speed |
-| --- | ------- | --------- | -------- | --------- |
-| **0** | MCP2515 #1 | 13–14 | Chassis / Autopilot CAN | 500 kbps |
-| **1** | MCP2515 #2 | 9–10 | Vehicle Control CAN | 500 kbps |
-| **2** | MCP2515 #3 | 2–3 | Body Control CAN | 500 kbps |
+| Bus     | MCP2515    | X179 Pins | Function                | CAN Speed |
+| ------- | ---------- | --------- | ----------------------- | --------- |
+| Chassis | MCP2515 #1 | 13–14     | Chassis / Autopilot CAN | 500 kbps  |
+| Vehicle | MCP2515 #2 | 9–10      | Vehicle Control CAN     | 500 kbps  |
+| Body    | MCP2515 #3 | 2–3       | Body Control CAN        | 500 kbps  |
 
-> 1-CAN builds use only Bus 0 (Chassis). Vehicle and body commands require 3-CAN builds.
+> 1-CAN builds use only the Chassis bus. Vehicle and body commands require 3-CAN builds.
 
 ## CAN IDs
 
-| CAN ID | Hex | Name | Bus | Used By |
-| ------ | --- | ---- | --- | ------- |
-| 69 | 0x045 | Legacy stalk position | Chassis | Legacy |
-| 130 | 0x082 | UI_tripPlanning (preconditioning) | Vehicle | HW3, HW4 |
-| 281 | 0x119 | Window vent control | Vehicle | HW3, HW4 |
-| 306 | 0x132 | BMS_hvBusStatus (voltage/current) | Vehicle | HW3, HW4 |
-| 537 | 0x219 | TPMS tire pressure/temperature | Vehicle | HW3, HW4 |
-| 553 | 0x229 | EPAS_harness (CRC-protected) | Chassis | HW3, HW4 |
-| 585 | 0x249 | DI_steer (drive mode readback) | Chassis | HW3, HW4 |
-| 627 | 0x273 | UI_vehicleControl (summon, lock, etc.) | Vehicle | HW3, HW4 |
-| 644 | 0x284 | Sentry mode control | Vehicle | HW3, HW4 |
-| 658 | 0x292 | BMS_socStatus (state of charge) | Vehicle | HW3, HW4 |
-| 755 | 0x2F3 | Climate control | Vehicle | HW3, HW4 |
-| 786 | 0x312 | BMS_thermalStatus (cell temps) | Vehicle | HW3, HW4 |
-| 787 | 0x313 | UI_trackModeSettings | Vehicle | HW3, HW4 |
-| 792 | 0x318 | GTW_carState (OTA detection) | Vehicle | HW3, HW4 |
-| 819 | 0x333 | Charge control | Vehicle | HW3, HW4 |
-| 820 | 0x334 | Drive config (pedal/regen/stop/drive mode inject) | Vehicle | HW3, HW4 |
-| 826 | 0x33A | BMS_energyStatus (Wh/km) | Vehicle | HW3, HW4 |
-| 880 | 0x370 | EPAS_sysStatus (torque sensor) | Vehicle | HW3, HW4 |
-| 914 | 0x392 | GTW_version (gateway firmware version, muxed) | Vehicle | HW3, HW4 |
-| 920 | 0x398 | GTW_carConfig (auto HW detect, region, vehicle config) | Vehicle | HW3, HW4 |
-| 921 | 0x399 | ISA speed chime | Chassis | HW4 |
-| 923 | 0x39B | DAS_status (hands-on request state) | Vehicle | HW3, HW4 |
-| 2047 | 0x7FF | GTW_carConfig mux (autopilot tier readback) | Vehicle | HW3, HW4 |
-| 947 | 0x3B3 | Trunk/Glovebox control | Vehicle | HW3, HW4 |
-| 1006 | 0x3EE | Legacy FSD mux | Chassis | Legacy |
-| 1016 | 0x3F8 | Follow distance (profile mapping) | Chassis | HW3, HW4 |
-| 1021 | 0x3FD | FSD mux (FSD/nag/profile/offset/ECE R79) | Chassis | HW3, HW4 |
-| 262 | 0x106 | Rear motor RPM | Vehicle | HW3, HW4 |
-| 277 | 0x115 | Front motor RPM (dual motor) | Vehicle | HW3, HW4 |
-| 280 | 0x118 | DI_state (gear/accelerator pedal) | Vehicle | HW3, HW4 |
-| 297 | 0x129 | Steering angle sensor | Vehicle | HW3, HW4 |
-| 599 | 0x257 | Vehicle speed | Vehicle | HW3, HW4 |
-| 682 | 0x2AA | Air recirculation control | Vehicle | HW3, HW4 |
-| 1011 | 0x3F3 | VCRIGHT seatbelt status | Vehicle | HW3, HW4 |
-| 1013 | 0x3F5 | VCFRONT vehicle lights (turn signals) | Vehicle | HW3, HW4 |
+| CAN ID | Hex   | Name                                                   | Bus     | Used By  |
+| ------ | ----- | ------------------------------------------------------ | ------- | -------- |
+| 69     | 0x045 | Legacy stalk position                                  | Chassis | Legacy   |
+| 130    | 0x082 | UI_tripPlanning (preconditioning)                      | Vehicle | HW3, HW4 |
+| 281    | 0x119 | Window vent control                                    | Vehicle | HW3, HW4 |
+| 306    | 0x132 | BMS_hvBusStatus (voltage/current)                      | Vehicle | HW3, HW4 |
+| 537    | 0x219 | TPMS tire pressure/temperature                         | Vehicle | HW3, HW4 |
+| 553    | 0x229 | EPAS_harness (CRC-protected)                           | Chassis | HW3, HW4 |
+| 585    | 0x249 | DI_steer (drive mode readback)                         | Chassis | HW3, HW4 |
+| 627    | 0x273 | UI_vehicleControl (summon, lock, etc.)                 | Vehicle | HW3, HW4 |
+| 644    | 0x284 | Sentry mode control                                    | Vehicle | HW3, HW4 |
+| 658    | 0x292 | BMS_socStatus (state of charge)                        | Vehicle | HW3, HW4 |
+| 755    | 0x2F3 | Climate control                                        | Vehicle | HW3, HW4 |
+| 786    | 0x312 | BMS_thermalStatus (cell temps)                         | Vehicle | HW3, HW4 |
+| 787    | 0x313 | UI_trackModeSettings                                   | Vehicle | HW3, HW4 |
+| 792    | 0x318 | GTW_carState (OTA detection)                           | Vehicle | HW3, HW4 |
+| 819    | 0x333 | Charge control                                         | Vehicle | HW3, HW4 |
+| 820    | 0x334 | Drive config (pedal/regen/stop/drive mode inject)      | Vehicle | HW3, HW4 |
+| 826    | 0x33A | BMS_energyStatus (Wh/km)                               | Vehicle | HW3, HW4 |
+| 880    | 0x370 | EPAS_sysStatus (torque sensor)                         | Vehicle | HW3, HW4 |
+| 914    | 0x392 | GTW_version (gateway firmware version, muxed)          | Vehicle | HW3, HW4 |
+| 920    | 0x398 | GTW_carConfig (auto HW detect, region, vehicle config) | Vehicle | HW3, HW4 |
+| 921    | 0x399 | ISA speed chime                                        | Chassis | HW4      |
+| 923    | 0x39B | DAS_status (hands-on request state)                    | Vehicle | HW3, HW4 |
+| 2047   | 0x7FF | GTW_carConfig mux (autopilot tier readback)            | Vehicle | HW3, HW4 |
+| 947    | 0x3B3 | Trunk/Glovebox control                                 | Vehicle | HW3, HW4 |
+| 1006   | 0x3EE | Legacy FSD mux                                         | Chassis | Legacy   |
+| 1016   | 0x3F8 | Follow distance (profile mapping)                      | Chassis | HW3, HW4 |
+| 1021   | 0x3FD | FSD mux (FSD/nag/profile/offset/ECE R79)               | Chassis | HW3, HW4 |
+| 262    | 0x106 | Rear motor RPM                                         | Vehicle | HW3, HW4 |
+| 277    | 0x115 | Front motor RPM (dual motor)                           | Vehicle | HW3, HW4 |
+| 280    | 0x118 | DI_state (gear/accelerator pedal)                      | Vehicle | HW3, HW4 |
+| 297    | 0x129 | Steering angle sensor                                  | Vehicle | HW3, HW4 |
+| 599    | 0x257 | Vehicle speed                                          | Vehicle | HW3, HW4 |
+| 682    | 0x2AA | Air recirculation control                              | Vehicle | HW3, HW4 |
+| 1011   | 0x3F3 | VCRIGHT seatbelt status                                | Vehicle | HW3, HW4 |
+| 1013   | 0x3F5 | VCFRONT vehicle lights (turn signals)                  | Vehicle | HW3, HW4 |
 
 ## FSD Mux Frame (CAN ID 1021)
 
 The main FSD frame uses a multiplexer in the lower 3 bits of byte 0:
 
-| Mux ID | Function | Modified Bits |
-| ------ | -------- | ------------- |
-| **0** | FSD enable | bit 38 (FSD active), bit 46, bit 60 |
-| **1** | Nag suppress | bit 19 (nag flag cleared), bit 47 (HW4) |
-| **2** | Speed profile / offset | Profile bytes (HW4) or offset bytes (HW3) |
+| Mux ID | Function               | Modified Bits                             |
+| ------ | ---------------------- | ----------------------------------------- |
+| **0**  | FSD enable             | bit 38 (FSD active), bit 46, bit 60       |
+| **1**  | Nag suppress           | bit 19 (nag flag cleared), bit 47 (HW4)   |
+| **2**  | Speed profile / offset | Profile bytes (HW4) or offset bytes (HW3) |
 
 ### HW4 Handler
 
@@ -130,12 +130,12 @@ Safe mode reads `DAS_autopilotHandsOnState` from CAN ID `0x39B` and only emits s
 
 Battery management data is decoded from multiple CAN IDs:
 
-| CAN ID | Frame | Decoded Fields |
-| ------ | ----- | -------------- |
-| 0x132 | BMS_hvBusStatus | Voltage (bytes 0–1 × 0.01V), Current (bytes 2–3 signed × 0.1A) |
-| 0x292 | BMS_socStatus | State of Charge (bits 9:0 × 0.1%) |
-| 0x312 | BMS_thermalStatus | Temp min (byte 4 − 40°C), Temp max (byte 5 − 40°C) |
-| 0x33A | BMS_energyStatus | Energy consumption (bytes 0–1 × 0.1 Wh/km) |
+| CAN ID | Frame             | Decoded Fields                                                 |
+| ------ | ----------------- | -------------------------------------------------------------- |
+| 0x132  | BMS_hvBusStatus   | Voltage (bytes 0–1 × 0.01V), Current (bytes 2–3 signed × 0.1A) |
+| 0x292  | BMS_socStatus     | State of Charge (bits 9:0 × 0.1%)                              |
+| 0x312  | BMS_thermalStatus | Temp min (byte 4 − 40°C), Temp max (byte 5 − 40°C)             |
+| 0x33A  | BMS_energyStatus  | Energy consumption (bytes 0–1 × 0.1 Wh/km)                     |
 
 ## Preconditioning Frame
 
@@ -186,13 +186,13 @@ Used for summon, vehicle commands, seat heating, wiper, display, and power contr
 
 Five seats, each with 2-bit level (0=off, 1=low, 2=med, 3=high):
 
-| Seat | Byte | Bits | Mask |
-| ---- | ---- | ---- | ---- |
-| Front-left | 5 | 42–43 | 0x0C |
-| Front-right | 5 | 44–45 | 0x30 |
-| Rear-left | 5 | 46–47 | 0xC0 |
-| Rear-center | 6 | 48–49 | 0x03 |
-| Rear-right | 6 | 50–51 | 0x0C |
+| Seat        | Byte | Bits  | Mask |
+| ----------- | ---- | ----- | ---- |
+| Front-left  | 5    | 42–43 | 0x0C |
+| Front-right | 5    | 44–45 | 0x30 |
+| Rear-left   | 5    | 46–47 | 0xC0 |
+| Rear-center | 6    | 48–49 | 0x03 |
+| Rear-right  | 6    | 50–51 | 0x0C |
 
 ### Wiper
 
@@ -204,19 +204,19 @@ Byte 4 (bits 32–39) sets display brightness (0–127, factor 0.5). Sends 20-fr
 
 ### Power Control
 
-| Function | Byte | Bit | Value |
-| -------- | ---- | --- | ----- |
-| Accessory power | 0 | 0 | 1=on, 0=off |
-| Power off | 3 | 31 | 1=off |
-| Drive-ready | 7 | 62 | 1=enable |
+| Function        | Byte | Bit | Value       |
+| --------------- | ---- | --- | ----------- |
+| Accessory power | 0    | 0   | 1=on, 0=off |
+| Power off       | 3    | 31  | 1=off       |
+| Drive-ready     | 7    | 62  | 1=enable    |
 
 ## Frame Routing
 
 The dispatch system routes frames based on CAN ID and configured variant:
 
-1. **RX from Bus 0 (Chassis):** IDs 921, 1006, 1016, 1021, 69 → variant handler → modified frame sent back
-2. **RX from Bus 1 (Vehicle):** IDs 627, 0x082, 0x132, 0x292, 0x312, 0x313, 0x318, 0x33A, 0x370, 0x392, 0x398, 0x39B, 0x7FF → cached/decoded/intercepted
-3. **TX to Bus 1 (Vehicle):** Vehicle commands, preconditioning, track mode, nag killer echo
+1. **RX from the Chassis bus:** IDs 921, 1006, 1016, 1021, 69 → variant handler → modified frame sent back
+2. **RX from the Vehicle bus:** IDs 627, 0x082, 0x132, 0x292, 0x312, 0x313, 0x318, 0x33A, 0x370, 0x392, 0x398, 0x39B, 0x7FF → cached/decoded/intercepted
+3. **TX to the Vehicle bus:** Vehicle commands, preconditioning, track mode, nag killer echo
 4. **Streaming:** All received frames optionally forwarded to serial/BLE as JSON
 5. **OTA Guard:** TX automatically paused when 0x318 indicates OTA in progress
 
@@ -241,32 +241,32 @@ If no frames appear, check CAN-H/CAN-L connections and verify the vehicle is pow
 
 The same field uses different names across the firmware, JSON wire protocol, and TypeScript UI layer. This table maps the correspondence for contributors:
 
-| C++ (State) | JSON Key | TypeScript (boardState) |
-| ----------- | -------- | ----------------------- |
-| `fsdEnabled` | `fsd` | `fsd` |
-| `fsdForceEnabled` | `fsdForce` | `fsdForce` |
-| `nagSuppress` | `nag` | `nag` |
-| `isaChimeSuppress` | `isaChime` | `isaChime` |
-| `speedProfile` | `sp` | `profile` |
-| `profileOverride` | `spPin` | `profilePinned` |
-| `speedOffset` | `offset` | `offset` |
-| `offsetOverride` | `offPin` | `offsetPinned` |
-| `driveModeOverride` | `driveMode` | `driveMode` |
-| `currentDriveMode` | `currentDriveMode` | `currentDriveMode` |
-| `eceR79Bypass` | `eceR79` | `eceR79` |
-| `regionCode` | `regionCode` | `regionCode` |
-| `hasRegion` | `hasRegion` | `hasRegion` |
-| `chineseGatewayLocked` | `cnLocked` | `cnLocked` |
-| `rateLimitEnabled` | `rateLimit` | `rateLimit` |
-| `hasTpms` | `hasTpms` | `hasTpms` |
-| `tpmsPressure[0]` | `fl` | `tpmsPressureFL` |
-| `tpmsPressure[1]` | `fr` | `tpmsPressureFR` |
-| `tpmsPressure[2]` | `rl` | `tpmsPressureRL` |
-| `tpmsPressure[3]` | `rr` | `tpmsPressureRR` |
-| `tpmsTemp[0]` | `tfl` | `tpmsTempFL` |
-| `tpmsTemp[1]` | `tfr` | `tpmsTempFR` |
-| `tpmsTemp[2]` | `trl` | `tpmsTempRL` |
-| `tpmsTemp[3]` | `trr` | `tpmsTempRR` |
+| C++ (State)            | JSON Key           | TypeScript (boardState) |
+| ---------------------- | ------------------ | ----------------------- |
+| `fsdEnabled`           | `fsd`              | `fsd`                   |
+| `fsdForceEnabled`      | `fsdForce`         | `fsdForce`              |
+| `nagSuppress`          | `nag`              | `nag`                   |
+| `isaChimeSuppress`     | `isaChime`         | `isaChime`              |
+| `speedProfile`         | `sp`               | `profile`               |
+| `profileOverride`      | `spPin`            | `profilePinned`         |
+| `speedOffset`          | `offset`           | `offset`                |
+| `offsetOverride`       | `offPin`           | `offsetPinned`          |
+| `driveModeOverride`    | `driveMode`        | `driveMode`             |
+| `currentDriveMode`     | `currentDriveMode` | `currentDriveMode`      |
+| `eceR79Bypass`         | `eceR79`           | `eceR79`                |
+| `regionCode`           | `regionCode`       | `regionCode`            |
+| `hasRegion`            | `hasRegion`        | `hasRegion`             |
+| `chineseGatewayLocked` | `cnLocked`         | `cnLocked`              |
+| `rateLimitEnabled`     | `rateLimit`        | `rateLimit`             |
+| `hasTpms`              | `hasTpms`          | `hasTpms`               |
+| `tpmsPressure[0]`      | `fl`               | `tpmsPressureFL`        |
+| `tpmsPressure[1]`      | `fr`               | `tpmsPressureFR`        |
+| `tpmsPressure[2]`      | `rl`               | `tpmsPressureRL`        |
+| `tpmsPressure[3]`      | `rr`               | `tpmsPressureRR`        |
+| `tpmsTemp[0]`          | `tfl`              | `tpmsTempFL`            |
+| `tpmsTemp[1]`          | `tfr`              | `tpmsTempFR`            |
+| `tpmsTemp[2]`          | `trl`              | `tpmsTempRL`            |
+| `tpmsTemp[3]`          | `trr`              | `tpmsTempRR`            |
 
 ## CRC-8/OPENSAFETY
 
@@ -280,27 +280,27 @@ Certain Tesla CAN frames (0x229 EPAS_harness, 0x249 DI_steer, 0x370 EPAS_sysStat
 
 Tire pressure and temperature are decoded from 8 bytes:
 
-| Byte | Field | Formula |
-| ---- | ----- | ------- |
-| 0 | Front-left pressure | raw × 0.025 bar |
-| 1 | Front-right pressure | raw × 0.025 bar |
-| 2 | Rear-left pressure | raw × 0.025 bar |
-| 3 | Rear-right pressure | raw × 0.025 bar |
-| 4 | Front-left temperature | raw − 40 °C |
-| 5 | Front-right temperature | raw − 40 °C |
-| 6 | Rear-left temperature | raw − 40 °C |
-| 7 | Rear-right temperature | raw − 40 °C |
+| Byte | Field                   | Formula         |
+| ---- | ----------------------- | --------------- |
+| 0    | Front-left pressure     | raw × 0.025 bar |
+| 1    | Front-right pressure    | raw × 0.025 bar |
+| 2    | Rear-left pressure      | raw × 0.025 bar |
+| 3    | Rear-right pressure     | raw × 0.025 bar |
+| 4    | Front-left temperature  | raw − 40 °C     |
+| 5    | Front-right temperature | raw − 40 °C     |
+| 6    | Rear-left temperature   | raw − 40 °C     |
+| 7    | Rear-right temperature  | raw − 40 °C     |
 
 ## Drive Mode Injection (CAN ID 0x334)
 
 Drive mode override injects frames at 20 Hz to enforce the selected mode:
 
-| `data[1]` | Mode |
-| --------- | ---- |
-| 0 | Off (no injection) |
-| 1 | Chill |
-| 2 | Standard |
-| 3 | Performance |
+| `data[1]` | Mode               |
+| --------- | ------------------ |
+| 0         | Off (no injection) |
+| 1         | Chill              |
+| 2         | Standard           |
+| 3         | Performance        |
 
 The actual drive mode is read back from CAN ID 0x249 (DI_steer) for confirmation.
 
@@ -308,14 +308,14 @@ The actual drive mode is read back from CAN ID 0x249 (DI_steer) for confirmation
 
 The low nibble of byte 0 in GTW_carConfig contains the region code:
 
-| Code | Region |
-| ---- | ------ |
-| 0 | Unknown |
-| 1 | North America |
-| 2 | Europe |
-| 3 | China |
-| 4 | Asia-Pacific |
-| 5 | Middle East |
+| Code | Region        |
+| ---- | ------------- |
+| 0    | Unknown       |
+| 1    | North America |
+| 2    | Europe        |
+| 3    | China         |
+| 4    | Asia-Pacific  |
+| 5    | Middle East   |
 
 ## ECE R79 Bypass
 
@@ -325,40 +325,40 @@ Applied in mux 1 of the FSD frame (CAN ID 1021). Clears bit 20 (`data[2] &= ~0x1
 
 Multiplexed frame carrying the gateway firmware version. Used by the FW Version Compatibility feature.
 
-| Mux | Bytes | Field |
-| --- | ----- | ----- |
-| 0 | 1–2 | Firmware year (e.g. 2024) |
-| 0 | 3 | Release number (e.g. 44) |
-| 0 | 4 | Minor version |
-| 1 | 1–4 | Build number (uint32) |
+| Mux | Bytes | Field                     |
+| --- | ----- | ------------------------- |
+| 0   | 1–2   | Firmware year (e.g. 2024) |
+| 0   | 3     | Release number (e.g. 44)  |
+| 0   | 4     | Minor version             |
+| 1   | 1–4   | Build number (uint32)     |
 
 Mux ID is in byte[0] bits[3:0]. The firmware evaluates compatibility level:
 
-| Level | Meaning |
-| ----- | ------- |
-| 0 | UNKNOWN — not yet decoded |
-| 1 | OK — firmware year ≥ 2024, fully compatible |
-| 2 | WARN — older firmware, may have reduced compatibility |
-| 3 | FAIL — known incompatible firmware version |
+| Level | Meaning                                               |
+| ----- | ----------------------------------------------------- |
+| 0     | UNKNOWN — not yet decoded                             |
+| 1     | OK — firmware year ≥ 2024, fully compatible           |
+| 2     | WARN — older firmware, may have reduced compatibility |
+| 3     | FAIL — known incompatible firmware version            |
 
 ## Vehicle Config (CAN ID 0x398)
 
 In addition to region detection, 0x398 is used to identify the vehicle platform and model year.
 
-| Byte | Bits | Field |
-| ---- | ---- | ----- |
-| 1 | [7:4] | Platform ID |
-| 2 | [7:0] | Year offset (+ base year) |
+| Byte | Bits  | Field                     |
+| ---- | ----- | ------------------------- |
+| 1    | [7:4] | Platform ID               |
+| 2    | [7:0] | Year offset (+ base year) |
 
 Platform IDs:
 
-| ID | Vehicle |
-| -- | ------- |
-| 1 | Model 3 |
-| 2 | Model Y |
-| 3 | Model S |
-| 4 | Model X |
-| 5 | Cybertruck |
+| ID  | Vehicle    |
+| --- | ---------- |
+| 1   | Model 3    |
+| 2   | Model Y    |
+| 3   | Model S    |
+| 4   | Model X    |
+| 5   | Cybertruck |
 
 ## Ring Buffer Frame Distribution
 

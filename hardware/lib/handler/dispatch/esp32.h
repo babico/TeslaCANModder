@@ -24,7 +24,7 @@
 #include "feature/ban_shield.h"
 #include "feature/tlssc.h"
 #include "core/platform.h"
-#include "core/driver/esp32.h"
+#include "core/driver/esp32/board.h"
 #include "handler/hw4.h"
 #include "handler/hw3.h"
 #include "handler/legacy.h"

@@ -8,7 +8,6 @@
 		"moduleDetection": "force",
 		"useUnknownInCatchVariables": true,
 		"jsx": "react-jsx",
-		"baseUrl": ".",
 		"types": ["react", "react-native", "jest", "w3c-web-serial"]
 	},
 	"include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],

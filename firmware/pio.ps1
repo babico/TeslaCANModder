@@ -45,7 +45,7 @@ function Use-AsciiWorkspace([string]$path) {
   }
 }
 
-function Normalize-PlatformIOArgs([string[]]$rawArgs) {
+function Resolve-PlatformIOArgs([string[]]$rawArgs) {
   if ($rawArgs.Count -eq 0) {
     return ,$rawArgs
   }
@@ -77,7 +77,7 @@ function Normalize-PlatformIOArgs([string[]]$rawArgs) {
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $asciiWorkspace = Use-AsciiWorkspace $projectRoot
 $shortProjectRoot = Get-ShortPath $asciiWorkspace.Path
-$platformioArgs = Normalize-PlatformIOArgs $Args
+$platformioArgs = Resolve-PlatformIOArgs $Args
 $isTestCommand = $platformioArgs.Count -gt 0 -and $platformioArgs[0] -eq "test"
 $platformioExe = Join-Path $env:USERPROFILE ".platformio\penv\Scripts\platformio.exe"
 

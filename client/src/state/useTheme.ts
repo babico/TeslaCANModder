@@ -20,49 +20,47 @@ export type ThemeSource = "force" | "override" | "system" | "default";
 export type ThemeOverride = "dark" | "light" | null;
 
 export interface ThemeState {
-  isDark: boolean;
-  source: ThemeSource;
-  override: ThemeOverride;
-  setOverride: (v: ThemeOverride) => void;
+	isDark: boolean;
+	source: ThemeSource;
+	override: ThemeOverride;
+	setOverride: (v: ThemeOverride) => void;
 }
 
 // Module-level cache so override survives component remounts
 let cachedOverride: ThemeOverride = null;
 
 export function useTheme(forceNight?: boolean): ThemeState {
-  const [override, _setOverride] = useState<ThemeOverride>(cachedOverride);
-  const [systemDark, setSystemDark] = useState(
-    Appearance.getColorScheme() === "dark"
-  );
+	const [override, _setOverride] = useState<ThemeOverride>(cachedOverride);
+	const [systemDark, setSystemDark] = useState(Appearance.getColorScheme() === "dark");
 
-  useEffect(() => {
-    const sub = Appearance.addChangeListener(({ colorScheme }) => {
-      setSystemDark(colorScheme === "dark");
-    });
-    return () => sub.remove();
-  }, []);
+	useEffect(() => {
+		const sub = Appearance.addChangeListener(({ colorScheme }) => {
+			setSystemDark(colorScheme === "dark");
+		});
+		return () => sub.remove();
+	}, []);
 
-  const setOverride = (v: ThemeOverride) => {
-    cachedOverride = v;
-    _setOverride(v);
-  };
+	const setOverride = (v: ThemeOverride) => {
+		cachedOverride = v;
+		_setOverride(v);
+	};
 
-  let isDark: boolean;
-  let source: ThemeSource;
+	let isDark: boolean;
+	let source: ThemeSource;
 
-  if (forceNight) {
-    isDark = true;
-    source = "force";
-  } else if (override !== null) {
-    isDark = override === "dark";
-    source = "override";
-  } else if (systemDark) {
-    isDark = true;
-    source = "system";
-  } else {
-    isDark = false;
-    source = "default";
-  }
+	if (forceNight) {
+		isDark = true;
+		source = "force";
+	} else if (override !== null) {
+		isDark = override === "dark";
+		source = "override";
+	} else if (systemDark) {
+		isDark = true;
+		source = "system";
+	} else {
+		isDark = false;
+		source = "default";
+	}
 
-  return { isDark, source, override, setOverride };
+	return { isDark, source, override, setOverride };
 }

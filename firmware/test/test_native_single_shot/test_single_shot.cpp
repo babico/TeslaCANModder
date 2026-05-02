@@ -5,7 +5,7 @@
 #include <cstring>
 
 class __FlashStringHelper;
-#define F(s) (reinterpret_cast<const __FlashStringHelper*>(s))
+#define F(s) (reinterpret_cast<const __FlashStringHelper *>(s))
 
 #define BUS_CHASSIS_ACTIVE 1
 #define BUS_VEHICLE_ACTIVE 1
@@ -17,9 +17,9 @@ class __FlashStringHelper;
 #include "core/types.h"
 
 // ── Stubs ────────────────────────────────────────────────────────────────────
-void saveSettings(const State&) {}
-void sendLog(const char*) {}
-void sendLog(const __FlashStringHelper*) {}
+void saveSettings(const State &) {}
+void sendLog(const char *) {}
+void sendLog(const __FlashStringHelper *) {}
 
 #include "feature/single_shot.h"
 
@@ -28,37 +28,42 @@ void tearDown() {}
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
-void test_singleshot_on_enables() {
-  State s = {};
-  bool ok = execSingleShotCmd("singleshot:on", s);
-  TEST_ASSERT_TRUE(ok);
-  TEST_ASSERT_TRUE(s.singleShotTx);
+void test_singleshot_on_enables()
+{
+	State s = {};
+	bool ok = execSingleShotCmd("singleshot:on", s);
+	TEST_ASSERT_TRUE(ok);
+	TEST_ASSERT_TRUE(s.singleShotTx);
 }
 
-void test_singleshot_off_disables() {
-  State s = {};
-  s.singleShotTx = true;
-  bool ok = execSingleShotCmd("singleshot:off", s);
-  TEST_ASSERT_TRUE(ok);
-  TEST_ASSERT_FALSE(s.singleShotTx);
+void test_singleshot_off_disables()
+{
+	State s = {};
+	s.singleShotTx = true;
+	bool ok = execSingleShotCmd("singleshot:off", s);
+	TEST_ASSERT_TRUE(ok);
+	TEST_ASSERT_FALSE(s.singleShotTx);
 }
 
-void test_singleshot_unrelated_returns_false() {
-  State s = {};
-  bool ok = execSingleShotCmd("fsd:on", s);
-  TEST_ASSERT_FALSE(ok);
+void test_singleshot_unrelated_returns_false()
+{
+	State s = {};
+	bool ok = execSingleShotCmd("fsd:on", s);
+	TEST_ASSERT_FALSE(ok);
 }
 
-void test_singleshot_default_off() {
-  State s = {};
-  TEST_ASSERT_FALSE(s.singleShotTx);
+void test_singleshot_default_off()
+{
+	State s = {};
+	TEST_ASSERT_FALSE(s.singleShotTx);
 }
 
-int main() {
-  UNITY_BEGIN();
-  RUN_TEST(test_singleshot_on_enables);
-  RUN_TEST(test_singleshot_off_disables);
-  RUN_TEST(test_singleshot_unrelated_returns_false);
-  RUN_TEST(test_singleshot_default_off);
-  return UNITY_END();
+int main()
+{
+	UNITY_BEGIN();
+	RUN_TEST(test_singleshot_on_enables);
+	RUN_TEST(test_singleshot_off_disables);
+	RUN_TEST(test_singleshot_unrelated_returns_false);
+	RUN_TEST(test_singleshot_default_off);
+	return UNITY_END();
 }

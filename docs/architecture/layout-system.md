@@ -34,13 +34,13 @@ All variants share the same named zones. Their sizes and arrangements change per
 
 From `tokens.breakpoints`:
 
-| Name | Min Width (px) | Description |
-| ---- | -------------- | ----------- |
-| `phone` | 0 | Phone portrait, single column |
-| `phoneLS` | 568 | Phone landscape, compact two-column |
-| `cluster` | 480 | Embedded cluster display (fixed 480px width) |
-| `tablet` | 768 | Tablet, two-column + sidebar visible |
-| `desktop` | 980 | Desktop / wide — three columns |
+| Name      | Min Width (px) | Description                                  |
+| --------- | -------------- | -------------------------------------------- |
+| `phone`   | 0              | Phone portrait, single column                |
+| `phoneLS` | 568            | Phone landscape, compact two-column          |
+| `cluster` | 480            | Embedded cluster display (fixed 480px width) |
+| `tablet`  | 768            | Tablet, two-column + sidebar visible         |
+| `desktop` | 980            | Desktop / wide — three columns               |
 
 ---
 
@@ -184,11 +184,11 @@ From `tokens.breakpoints`:
 
 The `useGaugeMode()` hook returns one of: `"full"`, `"speed-only"`, `"numeric"`.
 
-| Mode | Speedometer Rendered | Notes |
-| ---- | ------------------- | ----- |
-| `full` | Arc + needle + legend zones | Default |
-| `speed-only` | Arc + needle, no zone legend | Compact cluster / embedded |
-| `numeric` | Large number + unit only | Accessibility preference or very low width |
+| Mode         | Speedometer Rendered         | Notes                                      |
+| ------------ | ---------------------------- | ------------------------------------------ |
+| `full`       | Arc + needle + legend zones  | Default                                    |
+| `speed-only` | Arc + needle, no zone legend | Compact cluster / embedded                 |
+| `numeric`    | Large number + unit only     | Accessibility preference or very low width |
 
 Gauge mode is independent of breakpoint but defaults per breakpoint:
 
@@ -202,13 +202,13 @@ Gauge mode is independent of breakpoint but defaults per breakpoint:
 
 Both light and dark themes use the same layout dimensions; only colours change.
 
-| Token group | Dark | Light |
-| ----------- | ---- | ----- |
-| `bg` | `navy900` (#0a1628) | `slate50` (#f8fafc) |
-| `bgCard` | `navy850` (#0d1e35) | `white` |
-| `value` | `white` | `slate900` |
-| `label` | `#8baec8` | `slate500` |
-| `dashPrimary` | `cyan400` | `cyan600` |
+| Token group   | Dark                | Light               |
+| ------------- | ------------------- | ------------------- |
+| `bg`          | `navy900` (#0a1628) | `slate50` (#f8fafc) |
+| `bgCard`      | `navy850` (#0d1e35) | `white`             |
+| `value`       | `white`             | `slate900`          |
+| `label`       | `#8baec8`           | `slate500`          |
+| `dashPrimary` | `cyan400`           | `cyan600`           |
 
 Switching is controlled by `useTheme()` which reads system preference + user override.
 
@@ -220,17 +220,17 @@ Switching is controlled by `useTheme()` which reads system preference + user ove
 
 2. **`LayoutConfig`** should contain:
 
-  ```ts
-   interface LayoutConfig {
-     gaugeSize:       number;       // speedometer diameter
-     showSidebar:     boolean;
-     showLeftPanel:   boolean;
-     showStatChips:   boolean;
-     densityTier:     keyof typeof density;
-     topRailHeight:   number;
-     lowerBandHeight: number;
-   }
-   ```
+```ts
+interface LayoutConfig {
+    gaugeSize: number; // speedometer diameter
+    showSidebar: boolean;
+    showLeftPanel: boolean;
+    showStatChips: boolean;
+    densityTier: keyof typeof density;
+    topRailHeight: number;
+    lowerBandHeight: number;
+}
+```
 
 1. All panel width values come from `tokens.spacing` or are hardcoded as local constants — never inline magic numbers in component JSX.
 

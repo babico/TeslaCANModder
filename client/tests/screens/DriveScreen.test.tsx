@@ -3,15 +3,6 @@ jest.mock("@teslacanmodder/protocol", () => ({
 	commands: {},
 }));
 
-jest.mock("react-native", () => ({
-	View: () => null,
-	Text: () => null,
-	ScrollView: () => null,
-	Pressable: () => null,
-	StyleSheet: { create: <T extends Record<string, unknown>>(o: T) => o, absoluteFillObject: {} },
-	useWindowDimensions: () => ({ width: 800, height: 600 }),
-}));
-
 jest.mock("react-native-svg", () => ({
 	__esModule: true,
 	default: () => null,

@@ -11,10 +11,6 @@ jest.mock("@teslacanmodder/protocol", () => ({
 	VALID_VARIANTS: [],
 }));
 
-jest.mock("react-native", () => ({
-	StyleSheet: { create: <T extends Record<string, unknown>>(o: T) => o, absoluteFillObject: {} },
-}));
-
 import * as BoardConnectionModule from "../../src/state/BoardConnectionContext";
 
 describe("BoardConnectionContext module", () => {

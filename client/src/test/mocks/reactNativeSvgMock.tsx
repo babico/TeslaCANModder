@@ -1,13 +1,13 @@
 import React from "react";
 
 interface MockProps {
-  children?: React.ReactNode;
+	children?: React.ReactNode;
 }
 
 function createMock(name: string) {
-  return function SvgMockComponent({ children }: MockProps) {
-    return React.createElement(name, null, children);
-  };
+	return function SvgMockComponent({ children }: MockProps) {
+		return React.createElement(name, null, children);
+	};
 }
 
 const Svg = createMock("Svg");

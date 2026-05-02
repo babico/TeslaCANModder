@@ -9,36 +9,47 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-void saveSettings(const State&) {}
+void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
-void applyFilters(State&) {}
+void applyFilters(State &) {}
 #include "feature/stream.h"
 
-static State makeState() { State s = {}; s.variant = HW4; return s; }
+static State makeState()
+{
+	State s = {};
+	s.variant = HW4;
+	return s;
+}
 void setUp() {}
 void tearDown() {}
 
-void test_stream_on_resets_count() {
-  State s = makeState(); s.streamCount = 99;
-  TEST_ASSERT_TRUE(executeStreamCmd("stream:on", s));
-  TEST_ASSERT_TRUE(s.streamEnabled);
-  TEST_ASSERT_EQUAL_UINT32(0, s.streamCount);
+void test_stream_on_resets_count()
+{
+	State s = makeState();
+	s.streamCount = 99;
+	TEST_ASSERT_TRUE(executeStreamCmd("stream:on", s));
+	TEST_ASSERT_TRUE(s.streamEnabled);
+	TEST_ASSERT_EQUAL_UINT32(0, s.streamCount);
 }
-void test_stream_off() {
-  State s = makeState(); s.streamEnabled = true;
-  TEST_ASSERT_TRUE(executeStreamCmd("stream:off", s));
-  TEST_ASSERT_FALSE(s.streamEnabled);
+void test_stream_off()
+{
+	State s = makeState();
+	s.streamEnabled = true;
+	TEST_ASSERT_TRUE(executeStreamCmd("stream:off", s));
+	TEST_ASSERT_FALSE(s.streamEnabled);
 }
-void test_stream_unknown() {
-  State s = makeState();
-  TEST_ASSERT_FALSE(executeStreamCmd("stream:bogus", s));
-  TEST_ASSERT_FALSE(executeStreamCmd("foo", s));
+void test_stream_unknown()
+{
+	State s = makeState();
+	TEST_ASSERT_FALSE(executeStreamCmd("stream:bogus", s));
+	TEST_ASSERT_FALSE(executeStreamCmd("foo", s));
 }
 
-int main(int, char**) {
-  UNITY_BEGIN();
-  RUN_TEST(test_stream_on_resets_count);
-  RUN_TEST(test_stream_off);
-  RUN_TEST(test_stream_unknown);
-  return UNITY_END();
+int main(int, char **)
+{
+	UNITY_BEGIN();
+	RUN_TEST(test_stream_on_resets_count);
+	RUN_TEST(test_stream_off);
+	RUN_TEST(test_stream_unknown);
+	return UNITY_END();
 }

@@ -75,7 +75,7 @@ Use the docs checklists as part of normal engineering review, not only at releas
 - `docs/checklists/can-review-checklist.md`: required when firmware changes can affect CAN frame mutation, routing, checksums, or transport-visible message shape.
 - `docs/checklists/release-checklist.md`: required before tagged releases and artifact publishing.
 - `docs/guides/quickstart-checklist.md`: review when changing setup, flashing, wiring, connection, or first-run flows.
-- `docs/checklists/deprecation-checklist.md`: review when changing workspaces, CI, Docker, or docs-bundle generation so the repo stays consolidated around `client/`.
+- `docs/checklists/deprecation-checklist.md`: review when changing workspaces, CI, Docker, or raw docs asset loading so the repo stays consolidated around `client/`.
 - `docs/checklists/testing-plan.md`: use its visual-regression section for UI-facing visual changes once the fixture + golden-image workflow is in place; until then, treat that section as the implementation plan for the workflow.
 
 ### Naming
@@ -89,7 +89,7 @@ Use the docs checklists as part of normal engineering review, not only at releas
 1. Create a feature branch from `main`
 2. Write tests for new functionality
 3. Ensure all tests pass: `npm run test:all`
-4. Ensure no lint errors: `npm run lint:all`
+4. Ensure lint and formatting checks pass: `npm run lint:all`
 5. Keep commits focused — one logical change per commit
 6. Open a PR with a clear description of changes
 

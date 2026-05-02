@@ -113,14 +113,14 @@ npm run -w @teslacanmodder/client test
 
 ## Benefits
 
-| Before | After |
-| --- | --- |
+| Before                       | After                           |
+| ---------------------------- | ------------------------------- |
 | 2000+ lines in AppExperience | <300 lines (just state & logic) |
-| Inline styles scattered | Encapsulated in component |
-| Single-form-factor layout | Responsive browser + mobile |
-| Single giant view | Organized tabs |
-| Hard to test UI | Pure state logic |
-| Monolithic code | Modular, reusable component |
+| Inline styles scattered      | Encapsulated in component       |
+| Single-form-factor layout    | Responsive browser + mobile     |
+| Single giant view            | Organized tabs                  |
+| Hard to test UI              | Pure state logic                |
+| Monolithic code              | Modular, reusable component     |
 
 ## Component Sections
 
@@ -139,7 +139,7 @@ See `MonitorScreenProps` interface in `MonitorScreen.tsx` for complete prop docu
 
 - [ ] Add `import { MonitorScreen } from "./components/MonitorScreen"`
 - [ ] Replace old Monitor tab rendering code
-- [ ] Delete old Monitor-specific styles  
+- [ ] Delete old Monitor-specific styles
 - [ ] Run typecheck (should pass)
 - [ ] Run tests (244 should pass)
 - [ ] Test Monitor tab in the browser target

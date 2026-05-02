@@ -1,0 +1,15 @@
+#pragma once
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ArduinoJson.h>
+#include <Preferences.h>
+#include "core/config/esp32/board.h"
+#include "core/types.h"
+#include "infra/log_ring.h"
+#include "dashboard.h"
+#include "state.h"
+#include "config.h"
+#include "auth.h"
+#include "routes.h"
+#include "ble_config.h"
+#include "init.h"

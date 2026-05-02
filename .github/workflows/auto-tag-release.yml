@@ -1,67 +1,75 @@
 name: Auto Tag Stable Release
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
 
 permissions:
-  actions: write
-  contents: write
+    actions: write
+    contents: write
 
 concurrency:
-  group: auto-tag-release-${{ github.ref }}
-  cancel-in-progress: true
+    group: auto-tag-release-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  auto-tag:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: false
+    auto-tag:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+                  submodules: false
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 22
 
-      - name: Create stable version tag from package.json
-        id: tag
-        shell: bash
-        run: |
-          VERSION="$(node -p "require('./package.json').version")"
+            - name: Create stable version tag from package.json
+              id: tag
+              shell: bash
+              run: |
+                  VERSION="$(node -p "require('./package.json').version")"
 
-          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "package.json version ${VERSION} is not a stable release version; skipping tag."
-            echo "created=false" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
+                  if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                    echo "package.json version ${VERSION} is not a stable release version; skipping tag."
+                    echo "created=false" >> "${GITHUB_OUTPUT}"
+                    exit 0
+                  fi
 
-          if ! grep -Fq "## [${VERSION}]" CHANGELOG.md; then
-            echo "CHANGELOG.md does not contain a ${VERSION} section; skipping tag."
-            echo "created=false" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
+                  if ! grep -Fq "## [${VERSION}]" CHANGELOG.md; then
+                    echo "CHANGELOG.md does not contain a ${VERSION} section; skipping tag."
+                    echo "created=false" >> "${GITHUB_OUTPUT}"
+                    exit 0
+                  fi
 
-          TAG="v${VERSION}"
-          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
-            echo "Tag ${TAG} already exists; skipping release dispatch."
-            echo "created=false" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
+                  TAG="v${VERSION}"
+                  if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+                    echo "Tag ${TAG} already exists; skipping release dispatch."
+                    echo "created=false" >> "${GITHUB_OUTPUT}"
+                    exit 0
+                  fi
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${TAG}" -m "Release ${TAG}"
-          git push origin "${TAG}"
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git tag -a "${TAG}" -m "Release ${TAG}"
+                  git push origin "${TAG}"
 
-          echo "created=true" >> "${GITHUB_OUTPUT}"
-          echo "tag=${TAG}" >> "${GITHUB_OUTPUT}"
+                  echo "created=true" >> "${GITHUB_OUTPUT}"
+                  echo "tag=${TAG}" >> "${GITHUB_OUTPUT}"
 
-      - name: Start release workflow on created tag
-        if: steps.tag.outputs.created == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run release.yml --ref "${{ steps.tag.outputs.tag }}"
+            - name: Start release workflow on created tag
+              if: steps.tag.outputs.created == 'true'
+              uses: actions/github-script@v8
+              env:
+                  TAG_NAME: ${{ steps.tag.outputs.tag }}
+              with:
+                  script: |
+                      await github.rest.actions.createWorkflowDispatch({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        workflow_id: "release.yml",
+                        ref: process.env.TAG_NAME,
+                      });

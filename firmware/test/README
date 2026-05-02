@@ -1,4 +1,3 @@
-
 This directory is intended for PlatformIO Test Runner and project tests.
 
 Unit Testing is a software testing method by which individual units of
@@ -8,9 +7,11 @@ determine whether they are fit for use. Unit testing finds problems early
 in the development cycle.
 
 More information about PlatformIO Unit Testing:
+
 - https://docs.platformio.org/en/latest/advanced/unit-testing/index.html
 
 The active firmware architecture is package-based and class-based:
+
 - canonical board control headers live in `hardware/lib/board/*`
 - canonical CAN headers live in `hardware/lib/can/*`
 - canonical driver classes live in `hardware/lib/drivers/runtime/*` and `hardware/lib/drivers/mcp2515/*`
@@ -22,6 +23,7 @@ The active firmware architecture is package-based and class-based:
 - one package class per header inside each variant folder
 
 When a change touches CAN-mutating logic, the minimum expected review bar is:
+
 - exact bit-level regression coverage for the changed field
 - short-frame/no-send coverage for every touched mutation path
 - cross-check against `docs/CAN_CONTROL_REVIEW_CHECKLIST.md`

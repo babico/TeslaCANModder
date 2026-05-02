@@ -21,60 +21,60 @@ import { useReducedMotion } from "./useReducedMotion";
 const USE_NATIVE_DRIVER = Platform.OS !== "web";
 
 export function useBlinkAnimation(
-  active: boolean,
-  cycleDuration: number = motion.signalBlink,
-  minOpacity: number = 0.15
+	active: boolean,
+	cycleDuration: number = motion.signalBlink,
+	minOpacity: number = 0.15,
 ): Animated.Value {
-  const anim = useRef(new Animated.Value(active ? 1 : 0)).current;
-  const reduced = useReducedMotion();
-  const loopRef = useRef<Animated.CompositeAnimation | null>(null);
+	const anim = useRef(new Animated.Value(active ? 1 : 0)).current;
+	const reduced = useReducedMotion();
+	const loopRef = useRef<Animated.CompositeAnimation | null>(null);
 
-  useEffect(() => {
-    if (loopRef.current) {
-      loopRef.current.stop();
-      loopRef.current = null;
-    }
+	useEffect(() => {
+		if (loopRef.current) {
+			loopRef.current.stop();
+			loopRef.current = null;
+		}
 
-    if (!active) {
-      Animated.timing(anim, {
-        toValue: 0,
-        duration: motion.duration.fast,
-        useNativeDriver: USE_NATIVE_DRIVER,
-      }).start();
-      return;
-    }
+		if (!active) {
+			Animated.timing(anim, {
+				toValue: 0,
+				duration: motion.duration.fast,
+				useNativeDriver: USE_NATIVE_DRIVER,
+			}).start();
+			return;
+		}
 
-    if (reduced) {
-      // No animation — just show solid
-      anim.setValue(1);
-      return;
-    }
+		if (reduced) {
+			// No animation — just show solid
+			anim.setValue(1);
+			return;
+		}
 
-    const half = cycleDuration / 2;
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: half,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(anim, {
-          toValue: minOpacity,
-          duration: half,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-      ])
-    );
-    loopRef.current = loop;
-    loop.start();
+		const half = cycleDuration / 2;
+		const loop = Animated.loop(
+			Animated.sequence([
+				Animated.timing(anim, {
+					toValue: 1,
+					duration: half,
+					useNativeDriver: USE_NATIVE_DRIVER,
+				}),
+				Animated.timing(anim, {
+					toValue: minOpacity,
+					duration: half,
+					useNativeDriver: USE_NATIVE_DRIVER,
+				}),
+			]),
+		);
+		loopRef.current = loop;
+		loop.start();
 
-    return () => {
-      loop.stop();
-      loopRef.current = null;
-    };
-  }, [active, reduced, cycleDuration, minOpacity, anim]);
+		return () => {
+			loop.stop();
+			loopRef.current = null;
+		};
+	}, [active, reduced, cycleDuration, minOpacity, anim]);
 
-  return anim;
+	return anim;
 }
 
 /**
@@ -82,7 +82,7 @@ export function useBlinkAnimation(
  * Wraps useBlinkAnimation with motion.warningPulse defaults and higher min opacity.
  */
 export function useWarningPulse(active: boolean): Animated.Value {
-  return useBlinkAnimation(active, motion.warningPulse, 0.4);
+	return useBlinkAnimation(active, motion.warningPulse, 0.4);
 }
 
 /**
@@ -90,7 +90,7 @@ export function useWarningPulse(active: boolean): Animated.Value {
  * min opacity 0.2 for maximum contrast.
  */
 export function useAlarmPulse(active: boolean): Animated.Value {
-  return useBlinkAnimation(active, motion.alarmPulse, 0.2);
+	return useBlinkAnimation(active, motion.alarmPulse, 0.2);
 }
 
 /**
@@ -102,20 +102,20 @@ export function useAlarmPulse(active: boolean): Animated.Value {
  *   // Map animVal to display coordinates via .interpolate()
  */
 export function useGaugeValue(value: number): Animated.Value {
-  const anim = useRef(new Animated.Value(value)).current;
-  const reduced = useReducedMotion();
+	const anim = useRef(new Animated.Value(value)).current;
+	const reduced = useReducedMotion();
 
-  useEffect(() => {
-    if (reduced) {
-      anim.setValue(value);
-      return;
-    }
-    Animated.timing(anim, {
-      toValue: value,
-      duration: motion.gaugeTransition,
-      useNativeDriver: false, // layout-driving animations need this false
-    }).start();
-  }, [value, reduced, anim]);
+	useEffect(() => {
+		if (reduced) {
+			anim.setValue(value);
+			return;
+		}
+		Animated.timing(anim, {
+			toValue: value,
+			duration: motion.gaugeTransition,
+			useNativeDriver: false, // layout-driving animations need this false
+		}).start();
+	}, [value, reduced, anim]);
 
-  return anim;
+	return anim;
 }

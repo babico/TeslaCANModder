@@ -11,31 +11,30 @@ import { useEffect, useState } from "react";
 import { AccessibilityInfo } from "react-native";
 
 export function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
+	const [reduced, setReduced] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+	useEffect(() => {
+		let cancelled = false;
 
-    // Initial query
-    AccessibilityInfo.isReduceMotionEnabled().then((value) => {
-      if (!cancelled) setReduced(value);
-    }).catch(() => {
-      // Platform may not support this — leave as false
-    });
+		// Initial query
+		AccessibilityInfo.isReduceMotionEnabled()
+			.then((value) => {
+				if (!cancelled) setReduced(value);
+			})
+			.catch(() => {
+				// Platform may not support this — leave as false
+			});
 
-    // Subscribe to changes
-    const subscription = AccessibilityInfo.addEventListener(
-      "reduceMotionChanged",
-      (value) => {
-        if (!cancelled) setReduced(value);
-      }
-    );
+		// Subscribe to changes
+		const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", (value) => {
+			if (!cancelled) setReduced(value);
+		});
 
-    return () => {
-      cancelled = true;
-      subscription.remove();
-    };
-  }, []);
+		return () => {
+			cancelled = true;
+			subscription.remove();
+		};
+	}, []);
 
-  return reduced;
+	return reduced;
 }

@@ -2,187 +2,161 @@
 
 [![CI](https://github.com/babico/TeslaCANModder/actions/workflows/ci.yml/badge.svg)](https://github.com/babico/TeslaCANModder/actions/workflows/ci.yml)
 
-Unified firmware, browser, and native client stack for Tesla CAN bus modification using ESP32-S DevKit.
+Tesla CAN firmware, client, protocol, and diagnostics tooling centered on ESP32-S DevKit hardware and the Tesla X179 connector.
+
+## Overview
+
+The active stack is split into four maintained areas:
+
+| Area                 | Purpose                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| `firmware/`          | PlatformIO ESP32 firmware with 1-3 MCP2515 buses, WiFi REST API, and BLE             |
+| `client/`            | Expo client for web, iOS, and Android, including the browser flasher and in-app docs |
+| `packages/protocol/` | Shared protocol types, commands, decoder data, and parsing helpers                   |
+| `tools/`             | Debug CLI and serial-to-HTTP bridge for bench work and validation                    |
+
+The documentation screen now renders raw markdown directly from `docs/`. There is no generated TypeScript docs bundle anymore.
 
 ## Quick Start
 
-### Hardware
+Install workspace dependencies:
+
+```bash
+npm install
+```
+
+Build firmware locally:
 
 ```powershell
 cd firmware
-.\.pio.ps1 run -e esp32         # ESP32, serial only
-.\.pio.ps1 run -e esp32_wifi    # ESP32 + WiFi REST API
-.\.pio.ps1 run -e esp32_ble     # ESP32 + BLE
-.\.pio.ps1 run -e esp32_wifi_ble # ESP32 + WiFi + BLE
-.\.pio.ps1 run -e esp32 -t upload  # Flash to board
-```
-
-Local builds also emit merged flash-ready images under `firmware/build/firmware/`.
-Stable `.bin` artifacts are published by GitHub Actions on each tagged release.
-The flasher screen downloads the matching release asset directly and can flash it over Web Serial in Chrome/Edge, using names like
-`esp32.bin`, `esp32_no_can.bin`, `esp32_vehicle_only.bin`, and `esp32_wifi_ble_vehicle_body.bin`.
-
-CAN bus selection is controlled via build flags (FSD always on):
-
-```powershell
-# Enable Vehicle + Body buses alongside FSD
-$env:PLATFORMIO_BUILD_FLAGS = "-DBUS_CHASSIS_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
+.\.pio.ps1 run -e esp32
 .\.pio.ps1 run -e esp32_wifi
+.\.pio.ps1 run -e esp32_ble
+.\.pio.ps1 run -e esp32_wifi_ble
 ```
 
-### Client
+Run the browser client:
 
 ```bash
-cd client
-npm install
-npm run web
+npm run web -w @teslacanmodder/client
 ```
 
-Open the Expo web URL shown in the terminal in Chrome or Edge.
+Open the Expo URL in Chrome or Edge for Web Serial flashing and runtime control.
 
-## What's Included
+## Firmware Targets
 
-- **Hardware Firmware** - ESP32-S firmware with per-bus feature gating
-- **Client App** - Expo-based client for browser, iOS, and Android targets
-- **Docker Support** - Run the browser client in containers
+Supported release environments:
 
-## Hardware
+- `esp32`: USB serial only
+- `esp32_wifi`: USB serial + WiFi REST API/dashboard
+- `esp32_ble`: USB serial + BLE
+- `esp32_wifi_ble`: USB serial + WiFi + BLE
 
-- **ESP32-S DevKit** — up to 3× MCP2515, built-in WiFi + BLE
-- MCP2515 CAN module (8 MHz crystal) + TJA1050 transceiver per bus
-- 9V-36V to 5V converter
-- Tesla X179 connector
+Bus lanes are controlled with build flags:
 
-### X179 CAN Bus Lanes
+| Bus     | X179 Pins | Build Flag           | Default |
+| ------- | --------- | -------------------- | ------- |
+| Chassis | 13-14     | `BUS_CHASSIS_ACTIVE` | On      |
+| Vehicle | 9-10      | `BUS_VEHICLE_ACTIVE` | Off     |
+| Body    | 2-3       | `BUS_BODY_ACTIVE`    | Off     |
 
-| Bus             | X179 Pins | Build Flag           | Default |
-| --------------- | --------- | -------------------- | ------- |
-| Chassis (Bus 0) | 13-14     | `BUS_CHASSIS_ACTIVE` | ON      |
-| Vehicle (Bus 1) | 9-10      | `BUS_VEHICLE_ACTIVE` | OFF     |
-| Body (Bus 2)    | 2-3       | `BUS_BODY_ACTIVE`    | OFF     |
+Example with all three lanes enabled:
 
-## Features
-
-### Runtime Variant Switching
-
-- HW4 (2026.2.3+) with ISA chime control
-- HW3 with speed offset control
-- Legacy for pre-HW3 vehicles
-
-### Controls (All OFF by default, user enables via client)
-
-- FSD enable/disable
-- Nag suppression
-- Speed profile (Chill / Normal / Hurry / Max / Sloth)
-- Speed offset (HW3: 0-100%)
-- ISA chime suppression (HW4)
-- ASS (Autopark Summon System) - Forward/Reverse/Stop
-- CAN frame streaming with per-bus lane labels
-- CAN frame decoder (577 known Tesla frames)
-- Per-bus vehicle controls (Vehicle bus: mirror/lock/climate/charge/drive, Body bus: window/sentry)
-
-## Memory Usage
-
-| Build           | RAM              | Flash             |
-| --------------- | ---------------- | ----------------- |
-| USB + Bluetooth | 1558 bytes (76%) | 11150 bytes (35%) |
-| USB only        | 1378 bytes (67%) | 9668 bytes (30%)  |
-
-## Protocol
-
-JSON messages over serial (115200 baud):
-
-- `boot` - Board initialization
-- `status` - State updates (every 500ms)
-- `frame` - CAN frames (when streaming)
-- `ack` / `error` - Command responses
-- `pong` - Ping response
-
-## Commands
-
-### Core FSD Controls
-
-```
-ping, status
-variant:hw4, variant:hw3, variant:legacy
-fsd:on, fsd:off
-nag:on, nag:off
-profile:0-4 (or sp:0-4)
-offset:0-100 (HW3 only)
-isa-chime:on, isa-chime:off (HW4 only)
-stream:on, stream:off
-can:raw:on, can:raw:off
+```powershell
+$env:PLATFORMIO_BUILD_FLAGS = "-DBUS_CHASSIS_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
+.\.pio.ps1 run -e esp32_wifi_ble
 ```
 
-### ASS Summon
+Tagged releases publish merged flash-ready ESP32 images through GitHub Actions. The client flasher consumes those release assets directly.
 
+## Common Validation
+
+```bash
+npm run test:all
+npm run lint:all
+npm run typecheck:client
 ```
-summon, summon:forward, summon:fwd
-summon:reverse, summon:rev
-summon:stop
+
+Firmware-only validation:
+
+```powershell
+cd firmware
+.\.pio.ps1 test -e native
 ```
 
-### Vehicle Control (0x273 UI_vehicleControl)
+## Documentation
 
-```
-# Mirror
-mirror:fold, mirror:unfold, mirror:heat
-mirror:autofold, mirror:dip
+Start here:
 
-# Lock
-lock, unlock, lock:child
+- `docs/README.md`
+- `docs/guides/getting-started.md`
+- `docs/guides/full-setup.md`
+- `docs/checklists/release-checklist.md`
+- `docs/architecture/unified-client-guide.md`
 
-# Trunk/Frunk
-frunk, frunk:open, frunk:close
-trunk, trunk:open, trunk:close
-glovebox, horn
+The client docs screen and the repo docs folder are the same source of truth.
 
-# Lighting (toggle switches)
-light:fog:front, light:fog:rear
-light:highbeam:auto, light:ambient, light:home
-light:dome:off, light:dome:on, light:dome:auto
+## Legacy Research
 
-# Wiper
-wiper:off, wiper:1, wiper:2, wiper:3
+`legacy/` contains archived upstream and community repositories used for comparison, reverse-engineering notes, and feature archaeology. Shipping code lives outside that tree.
 
-# Seat Heating (0-3: off/low/med/high)
-seat:fl:0, seat:fl:1, seat:fl:2, seat:fl:3
-seat:fr:0-3, seat:rl:0-3, seat:rr:0-3, seat:rc:0-3
+See:
+
+- `docs/legacy/README.md`
+- `docs/legacy/COMPARISON.md`
+- `THIRD_PARTY_LICENSES`
+
+## License
+
+GPL-3.0
 
 # Display (main center screen, 0-127)
+
 maindisplay:0-127
 
 # Power (vehicle state control)
+
 power:acc:on, power:acc:off, power:off, power:ready
+
 ```
 
 ### Advanced Features
 
 ```
+
 # Window Vent (0x119)
-window:vent:N        # N = 0..100
+
+window:vent:N # N = 0..100
 window:vent:open, vent:open
 window:vent:close, vent:close
 
 # Sentry Mode (0x284)
+
 sentry:on, sentry:off
 
 # Climate Control (0x2F3 - requires frame caching)
+
 climate:keep, climate:off
 
 # Charge Control (0x333 - requires frame caching)
+
 charge:start, charge:stop
 charge:port, chargeport
 
 # Drive Configuration (0x334 - requires frame caching)
+
 # Pedal Response
+
 pedal:standard, pedal:std, pedal:chill, pedal:sport
 
 # Regenerative Braking (0-200)
+
 regen:off, regen:low, regen:std, regen:max
 
 # Stop Mode
+
 stop:creep, stop:roll, stop:hold
+
 ```
 
 ## Browser Support
@@ -196,16 +170,18 @@ stop:creep, stop:roll, stop:hold
 This is an npm workspace monorepo:
 
 ```
-packages/protocol   — shared types, commands, decoder, parser (@teslacanmodder/protocol)
-firmware            — PlatformIO ESP32/Arduino firmware
-client              — React Native + Expo client app for browser, iOS, and Android
-tools               — CLI debug utilities
-```
+
+packages/protocol — shared types, commands, decoder, parser (@teslacanmodder/protocol)
+firmware — PlatformIO ESP32/Arduino firmware
+client — React Native + Expo client app for browser, iOS, and Android
+tools — CLI debug utilities
+
+````
 
 ```bash
 npm install          # install all workspaces
 npm run test:all     # run all tests (protocol + client + tools + firmware)
-```
+````
 
 ## Testing
 

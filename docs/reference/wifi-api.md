@@ -19,14 +19,14 @@ ESP32 firmware variants with WiFi enabled (`esp32_wifi`, `esp32_wifi_ble`) creat
 
 The ESP32 creates its own WiFi network:
 
-| Setting | Default Value |
-| -------- | ------------- |
-| SSID | `TeslaCANModder` |
-| Password | `T3SL@c@n123.` |
-| IP Address | `192.168.4.1` |
-| Port | `80` |
-| Channel | `6` |
-| Max Clients | `4` |
+| Setting     | Default Value    |
+| ----------- | ---------------- |
+| SSID        | `TeslaCANModder` |
+| Password    | `T3SL@c@n123.`   |
+| IP Address  | `192.168.4.1`    |
+| Port        | `80`             |
+| Channel     | `6`              |
+| Max Clients | `4`              |
 
 ### Station (STA) Mode
 
@@ -45,23 +45,23 @@ If STA connection fails, the device automatically falls back to AP mode.
 
 ### System
 
-| Method | Endpoint | Description |
-| ------ | -------- | ----------- |
-| `GET` | `/` | Embedded HTML dashboard |
-| `GET` | `/api/ping` | Health check — returns `{"t":"pong","v":1}` |
-| `GET` | `/api/status` | Full board state JSON |
-| `GET` | `/api/disable` | Emergency disable all injections |
+| Method | Endpoint       | Description                                 |
+| ------ | -------------- | ------------------------------------------- |
+| `GET`  | `/`            | Embedded HTML dashboard                     |
+| `GET`  | `/api/ping`    | Health check — returns `{"t":"pong","v":1}` |
+| `GET`  | `/api/status`  | Full board state JSON                       |
+| `GET`  | `/api/disable` | Emergency disable all injections            |
 
 ### Command Execution
 
-| Method | Endpoint | Description |
-| ------- | --------- | ------------ |
+| Method | Endpoint       | Description                |
+| ------ | -------------- | -------------------------- |
 | `POST` | `/api/command` | Execute any serial command |
 
 **Request body:**
 
 ```json
-{"cmd": "fsd:on"}
+{ "cmd": "fsd:on" }
 ```
 
 **Response:** Full board state JSON (same as `/api/status`).
@@ -70,21 +70,21 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ### WiFi Configuration
 
-| Method | Endpoint | Description |
-| ------- | --------- | ------------ |
-| `GET` | `/api/wifi/status` | Current WiFi status and configuration |
-| `POST` | `/api/wifi/config` | Change WiFi mode / credentials |
+| Method | Endpoint           | Description                           |
+| ------ | ------------------ | ------------------------------------- |
+| `GET`  | `/api/wifi/status` | Current WiFi status and configuration |
+| `POST` | `/api/wifi/config` | Change WiFi mode / credentials        |
 
 **GET `/api/wifi/status`** — AP mode response:
 
 ```json
 {
-  "mode": "ap",
-  "ssid": "TeslaCANModder",
-  "ip": "192.168.4.1",
-  "clients": 1,
-  "channel": 6,
-  "mac": "AA:BB:CC:DD:EE:FF"
+    "mode": "ap",
+    "ssid": "TeslaCANModder",
+    "ip": "192.168.4.1",
+    "clients": 1,
+    "channel": 6,
+    "mac": "AA:BB:CC:DD:EE:FF"
 }
 ```
 
@@ -92,13 +92,13 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ```json
 {
-  "mode": "sta",
-  "ssid": "MyHomeWiFi",
-  "ip": "192.168.1.42",
-  "rssi": -65,
-  "connected": true,
-  "gateway": "192.168.1.1",
-  "mac": "AA:BB:CC:DD:EE:FF"
+    "mode": "sta",
+    "ssid": "MyHomeWiFi",
+    "ip": "192.168.1.42",
+    "rssi": -65,
+    "connected": true,
+    "gateway": "192.168.1.1",
+    "mac": "AA:BB:CC:DD:EE:FF"
 }
 ```
 
@@ -106,9 +106,9 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ```json
 {
-  "mode": "sta",
-  "ssid": "MyHomeWiFi",
-  "password": "mypassword"
+    "mode": "sta",
+    "ssid": "MyHomeWiFi",
+    "password": "mypassword"
 }
 ```
 
@@ -116,9 +116,9 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ```json
 {
-  "mode": "ap",
-  "ssid": "CustomName",
-  "password": "mypassword8"
+    "mode": "ap",
+    "ssid": "CustomName",
+    "password": "mypassword8"
 }
 ```
 
@@ -126,25 +126,31 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ### BLE Control
 
-| Method | Endpoint | Description |
-| ------- | --------- | ------------ |
-| `GET` | `/api/ble/status` | BLE state (enabled, connected, device name) |
-| `POST` | `/api/ble/config` | Enable or disable BLE at runtime |
+| Method | Endpoint          | Description                                 |
+| ------ | ----------------- | ------------------------------------------- |
+| `GET`  | `/api/ble/status` | BLE state (enabled, connected, device name) |
+| `POST` | `/api/ble/config` | Enable or disable BLE at runtime            |
 
 ### TPMS & Diagnostics
 
-| Method | Endpoint | Description |
-| ------- | --------- | ------------ |
-| `GET` | `/api/tpms` | TPMS tire pressure & temperature JSON |
-| `GET` | `/api/log` | Debug ring buffer dump (last 256 events) |
+| Method | Endpoint    | Description                              |
+| ------ | ----------- | ---------------------------------------- |
+| `GET`  | `/api/tpms` | TPMS tire pressure & temperature JSON    |
+| `GET`  | `/api/log`  | Debug ring buffer dump (last 256 events) |
 
 **GET `/api/tpms`** response:
 
 ```json
 {
-  "ok": true,
-  "fl": 2.45, "fr": 2.50, "rl": 2.48, "rr": 2.47,
-  "tfl": 25, "tfr": 26, "trl": 24, "trr": 25
+    "ok": true,
+    "fl": 2.45,
+    "fr": 2.5,
+    "rl": 2.48,
+    "rr": 2.47,
+    "tfl": 25,
+    "tfr": 26,
+    "trl": 24,
+    "trr": 25
 }
 ```
 
@@ -154,8 +160,8 @@ Pressures are in bar, temperatures in °C. `ok` is `false` when no TPMS data has
 
 ```json
 [
-  {"ts": 12345, "msg": "FSD enabled"},
-  {"ts": 12400, "msg": "ECE R79 bypass active"}
+    { "ts": 12345, "msg": "FSD enabled" },
+    { "ts": 12400, "msg": "ECE R79 bypass active" }
 ]
 ```
 
@@ -163,16 +169,16 @@ Pressures are in bar, temperatures in °C. `ok` is `false` when no TPMS data has
 
 ```json
 {
-  "enabled": true,
-  "connected": false,
-  "deviceName": "TeslaCANModder"
+    "enabled": true,
+    "connected": false,
+    "deviceName": "TeslaCANModder"
 }
 ```
 
 **POST `/api/ble/config`** — Disable BLE:
 
 ```json
-{"enabled": false}
+{ "enabled": false }
 ```
 
 > BLE state is saved to NVS and persists across reboots.
@@ -265,20 +271,20 @@ The ESP32 serves a built-in HTML dashboard at `http://192.168.4.1/` with:
 
 The `/api/status` response now includes the following additional fields:
 
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `seatbeltEmulation` | boolean | Rear seatbelt emulation enabled |
-| `wiperPersist` | boolean | Wiper speed persistence enabled |
-| `mirrorAutoFold` | boolean | Mirror auto-fold on lock enabled |
-| `canSim` | boolean | CAN simulation mode active |
-| `hasPowertrain` | boolean | Powertrain telemetry data available |
-| `powertrain` | object | Powertrain data (when `hasPowertrain` is true) |
-| `powertrain.speed` | number | Vehicle speed (km/h) |
-| `powertrain.gear` | number | Gear state (1=P, 2=R, 3=N, 4=D) |
-| `powertrain.pedal` | number | Accelerator pedal (0–100%) |
-| `powertrain.steer` | number | Steering angle (degrees, ÷10) |
-| `powertrain.rpmR` | number | Rear motor RPM |
-| `powertrain.rpmF` | number | Front motor RPM |
+| Field               | Type    | Description                                    |
+| ------------------- | ------- | ---------------------------------------------- |
+| `seatbeltEmulation` | boolean | Rear seatbelt emulation enabled                |
+| `wiperPersist`      | boolean | Wiper speed persistence enabled                |
+| `mirrorAutoFold`    | boolean | Mirror auto-fold on lock enabled               |
+| `canSim`            | boolean | CAN simulation mode active                     |
+| `hasPowertrain`     | boolean | Powertrain telemetry data available            |
+| `powertrain`        | object  | Powertrain data (when `hasPowertrain` is true) |
+| `powertrain.speed`  | number  | Vehicle speed (km/h)                           |
+| `powertrain.gear`   | number  | Gear state (1=P, 2=R, 3=N, 4=D)                |
+| `powertrain.pedal`  | number  | Accelerator pedal (0–100%)                     |
+| `powertrain.steer`  | number  | Steering angle (degrees, ÷10)                  |
+| `powertrain.rpmR`   | number  | Rear motor RPM                                 |
+| `powertrain.rpmF`   | number  | Front motor RPM                                |
 
 ## CORS
 

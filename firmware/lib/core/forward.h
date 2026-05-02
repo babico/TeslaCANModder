@@ -6,11 +6,11 @@
 // Each function is defined by the platform-specific implementation file.
 
 // Defined by core/driver/<board>.h
-void driverSend(const Frame& f, uint8_t bus);
+void driverSend(const Frame &f, uint8_t bus);
 
 // Defined by core/persist/<board>.h
-void saveSettings(const State& s);
+void saveSettings(const State &s);
 
 // Defined by handler/dispatch/<board>.h
 void resetHandlerLogFlags();
-void applyFilters(State& s);
+void applyFilters(State &s);

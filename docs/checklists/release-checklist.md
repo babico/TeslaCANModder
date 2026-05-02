@@ -45,6 +45,11 @@ Pre-release checklist for TeslaCANModder. Every tagged release **must** pass all
 | Command round-trip: FSD on → ack received              | Engineer | ☐     |
 | Frame streaming: frames appear in dashboard            | Engineer | ☐     |
 | EEPROM/NVS persistence: settings survive reboot        | Engineer | ☐     |
+| AP gate blocks live mutation paths until open          | Engineer | ☐     |
+
+Additional required runtime-safety check:
+
+- [ ] High-risk actions show warnings and explicit confirmation before release sign-off
 
 ## 3. Version Alignment
 
@@ -67,6 +72,7 @@ The release automation reads the root `package.json` version and only auto-tags 
 | CHANGELOG.md updated with release notes                               | ☐     |
 | Breaking changes documented with migration guide                      | ☐     |
 | New commands/features documented in `docs/reference/commands.md`      | ☐     |
+| Experimental toggles documented in `docs/guides/security.md`          | ☐     |
 | Hardware wiring changes documented in `docs/guides/hardware-setup.md` | ☐     |
 | README.md version badge updated                                       | ☐     |
 | THIRD_PARTY_LICENSES updated if deps changed                          | ☐     |

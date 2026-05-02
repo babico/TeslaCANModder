@@ -22,25 +22,25 @@ import argparse
 
 THRESHOLDS = {
     "esp32": {
-        "flash_max": 1100000,     # ~84% of 1310720 — new features add overhead
-        "ram_max": 300000,        # ~92% of 327680
+        "flash_max": 1100000,  # ~84% of 1310720 — new features add overhead
+        "ram_max": 300000,  # ~92% of 327680
         "flash_total": 1310720,
         "ram_total": 327680,
     },
     "esp32_wifi": {
-        "flash_max": 1200000,     # WiFi + new features
+        "flash_max": 1200000,  # WiFi + new features
         "ram_max": 310000,
         "flash_total": 1310720,
         "ram_total": 327680,
     },
     "esp32_ble": {
-        "flash_max": 1200000,     # BLE + new features
+        "flash_max": 1200000,  # BLE + new features
         "ram_max": 310000,
         "flash_total": 1310720,
         "ram_total": 327680,
     },
     "esp32_wifi_ble": {
-        "flash_max": 1280000,     # WiFi + BLE + new features
+        "flash_max": 1280000,  # WiFi + BLE + new features
         "ram_max": 320000,
         "flash_total": 1310720,
         "ram_total": 327680,
@@ -76,11 +76,13 @@ def build_and_check(env: str) -> bool:
     flash_used = None
     ram_used = None
 
-    esp_flash = re.search(r'Flash:\s+\[=*\s*\]\s+[\d.]+%\s+\(used\s+(\d+)\s+bytes', output)
+    esp_flash = re.search(
+        r"Flash:\s+\[=*\s*\]\s+[\d.]+%\s+\(used\s+(\d+)\s+bytes", output
+    )
     if esp_flash:
         flash_used = int(esp_flash.group(1))
 
-    esp_ram = re.search(r'RAM:\s+\[=*\s*\]\s+[\d.]+%\s+\(used\s+(\d+)\s+bytes', output)
+    esp_ram = re.search(r"RAM:\s+\[=*\s*\]\s+[\d.]+%\s+\(used\s+(\d+)\s+bytes", output)
     if esp_ram:
         ram_used = int(esp_ram.group(1))
 
@@ -89,8 +91,10 @@ def build_and_check(env: str) -> bool:
     if flash_used is not None:
         pct = (flash_used / limits["flash_total"]) * 100
         status = "✓" if flash_used <= limits["flash_max"] else "✗ EXCEEDED"
-        print(f"  Flash: {flash_used:>8} / {limits['flash_total']:>8} bytes ({pct:.1f}%) "
-              f"[limit: {limits['flash_max']}] {status}")
+        print(
+            f"  Flash: {flash_used:>8} / {limits['flash_total']:>8} bytes ({pct:.1f}%) "
+            f"[limit: {limits['flash_max']}] {status}"
+        )
         if flash_used > limits["flash_max"]:
             ok = False
     else:
@@ -99,8 +103,10 @@ def build_and_check(env: str) -> bool:
     if ram_used is not None:
         pct = (ram_used / limits["ram_total"]) * 100
         status = "✓" if ram_used <= limits["ram_max"] else "✗ EXCEEDED"
-        print(f"  RAM:   {ram_used:>8} / {limits['ram_total']:>8} bytes ({pct:.1f}%) "
-              f"[limit: {limits['ram_max']}] {status}")
+        print(
+            f"  RAM:   {ram_used:>8} / {limits['ram_total']:>8} bytes ({pct:.1f}%) "
+            f"[limit: {limits['ram_max']}] {status}"
+        )
         if ram_used > limits["ram_max"]:
             ok = False
     else:
@@ -111,8 +117,12 @@ def build_and_check(env: str) -> bool:
 
 def main():
     parser = argparse.ArgumentParser(description="Check firmware resource usage")
-    parser.add_argument("--env", nargs="+", default=["esp32"],
-                        help="Environments to check (default: esp32)")
+    parser.add_argument(
+        "--env",
+        nargs="+",
+        default=["esp32"],
+        help="Environments to check (default: esp32)",
+    )
     args = parser.parse_args()
 
     failed = []
