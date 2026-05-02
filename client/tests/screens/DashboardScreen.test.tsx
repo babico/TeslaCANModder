@@ -20,15 +20,15 @@ jest.mock("../../src/components/UtilityPanel", () => ({
 import { DashboardScreen } from "../../src/screens/DashboardScreen";
 
 describe("DashboardScreen", () => {
-it("renders overview feature description copy", () => {
-const boardState = {
-chassisOnline: true,
-vehicleOnline: false,
-bodyOnline: false,
-vehicleSpeed: 48,
-} as any;
-	const { getByText, getAllByText } = render(<DashboardScreen boardState={boardState} />);
-	expect(getByText(/Telemetry shows vehicle health/)).toBeTruthy();
-	expect(getAllByText(/Dashboard/).length).toBeGreaterThan(0);
-});
+	it("renders overview feature description copy", () => {
+		const boardState = {
+			chassisOnline: true,
+			vehicleOnline: false,
+			bodyOnline: false,
+			vehicleSpeed: 48,
+		} as any;
+		const { getByText, getAllByText } = render(<DashboardScreen boardState={boardState} />);
+		expect(getByText(/Telemetry shows vehicle health/)).toBeTruthy();
+		expect(getAllByText(/Dashboard/).length).toBeGreaterThan(0);
+	});
 });

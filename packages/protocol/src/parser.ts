@@ -62,7 +62,10 @@ function normalizeFeatureFlags(features: JsonRecord | undefined): JsonRecord | u
 	return normalized;
 }
 
-function normalizeConnectivitySection(target: JsonRecord, connectivity: JsonRecord | undefined): void {
+function normalizeConnectivitySection(
+	target: JsonRecord,
+	connectivity: JsonRecord | undefined,
+): void {
 	assignIfDefined(target, "vehicleOnline", connectivity?.vehicleOnline);
 	assignIfDefined(target, "bodyOnline", connectivity?.bodyOnline);
 	assignIfDefined(target, "chassisOnline", connectivity?.chassisOnline);
@@ -287,7 +290,11 @@ function normalizeStatusCompactMessage(message: JsonRecord): JsonRecord {
 	normalizeStateSection(normalized, state);
 	normalizeFeaturesSection(normalized, features);
 	normalizeCanSection(normalized, can);
-	mergeObjectField(normalized, "stream", isJsonRecord(message.stream) ? message.stream : undefined);
+	mergeObjectField(
+		normalized,
+		"stream",
+		isJsonRecord(message.stream) ? message.stream : undefined,
+	);
 
 	return normalized;
 }

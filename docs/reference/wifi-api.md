@@ -79,12 +79,12 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ```json
 {
-    "mode": "ap",
-    "ssid": "TeslaCANModder",
-    "ip": "192.168.4.1",
-    "clients": 1,
-    "channel": 6,
-    "mac": "AA:BB:CC:DD:EE:FF"
+	"mode": "ap",
+	"ssid": "TeslaCANModder",
+	"ip": "192.168.4.1",
+	"clients": 1,
+	"channel": 6,
+	"mac": "AA:BB:CC:DD:EE:FF"
 }
 ```
 
@@ -92,13 +92,13 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ```json
 {
-    "mode": "sta",
-    "ssid": "MyHomeWiFi",
-    "ip": "192.168.1.42",
-    "rssi": -65,
-    "connected": true,
-    "gateway": "192.168.1.1",
-    "mac": "AA:BB:CC:DD:EE:FF"
+	"mode": "sta",
+	"ssid": "MyHomeWiFi",
+	"ip": "192.168.1.42",
+	"rssi": -65,
+	"connected": true,
+	"gateway": "192.168.1.1",
+	"mac": "AA:BB:CC:DD:EE:FF"
 }
 ```
 
@@ -106,9 +106,9 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ```json
 {
-    "mode": "sta",
-    "ssid": "MyHomeWiFi",
-    "password": "mypassword"
+	"mode": "sta",
+	"ssid": "MyHomeWiFi",
+	"password": "mypassword"
 }
 ```
 
@@ -116,9 +116,9 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ```json
 {
-    "mode": "ap",
-    "ssid": "CustomName",
-    "password": "mypassword8"
+	"mode": "ap",
+	"ssid": "CustomName",
+	"password": "mypassword8"
 }
 ```
 
@@ -142,15 +142,15 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ```json
 {
-    "ok": true,
-    "fl": 2.45,
-    "fr": 2.5,
-    "rl": 2.48,
-    "rr": 2.47,
-    "tfl": 25,
-    "tfr": 26,
-    "trl": 24,
-    "trr": 25
+	"ok": true,
+	"fl": 2.45,
+	"fr": 2.5,
+	"rl": 2.48,
+	"rr": 2.47,
+	"tfl": 25,
+	"tfr": 26,
+	"trl": 24,
+	"trr": 25
 }
 ```
 
@@ -160,8 +160,8 @@ Pressures are in bar, temperatures in °C. `ok` is `false` when no TPMS data has
 
 ```json
 [
-    { "ts": 12345, "msg": "FSD enabled" },
-    { "ts": 12400, "msg": "ECE R79 bypass active" }
+	{ "ts": 12345, "msg": "FSD enabled" },
+	{ "ts": 12400, "msg": "ECE R79 bypass active" }
 ]
 ```
 
@@ -169,9 +169,9 @@ Pressures are in bar, temperatures in °C. `ok` is `false` when no TPMS data has
 
 ```json
 {
-    "enabled": true,
-    "connected": false,
-    "deviceName": "TeslaCANModder"
+	"enabled": true,
+	"connected": false,
+	"deviceName": "TeslaCANModder"
 }
 ```
 

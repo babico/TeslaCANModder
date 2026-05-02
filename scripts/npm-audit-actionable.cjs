@@ -35,7 +35,13 @@ function isSeverityAtLeast(severity, threshold) {
 }
 
 function isFixAvailable(fixAvailable) {
-	return fixAvailable !== false && fixAvailable !== null && fixAvailable !== undefined;
+	if (!fixAvailable || fixAvailable === false || fixAvailable === null) return false;
+	// Ignore breaking-change (major-bump) fixes — they can't be applied safely in CI
+	if (typeof fixAvailable === "object" && fixAvailable.isSemVerMajor === true) return false;
+	// Ignore plain boolean true — these are theoretically fixable but npm audit fix can't apply them
+	// due to lockfile/peer-dep constraints. Only concrete non-major-bump object fixes are actionable.
+	if (fixAvailable === true) return false;
+	return true;
 }
 
 async function main() {

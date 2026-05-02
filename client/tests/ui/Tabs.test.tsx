@@ -18,9 +18,7 @@ describe("Tabs", () => {
 
 	it("calls onSelect for clicked tab", () => {
 		const onSelect = jest.fn();
-		const { getByText } = render(
-			<Tabs items={items} activeKey="a" onSelect={onSelect} />,
-		);
+		const { getByText } = render(<Tabs items={items} activeKey="a" onSelect={onSelect} />);
 		fireEvent.press(getByText("Beta"));
 		expect(onSelect).toHaveBeenCalledWith("b");
 	});

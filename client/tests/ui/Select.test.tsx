@@ -2,7 +2,7 @@ import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
 
 jest.mock("../../src/ui/Sheet", () => ({
-	Sheet: ({ visible, children }: any) => visible ? children : null,
+	Sheet: ({ visible, children }: any) => (visible ? children : null),
 }));
 
 import { Select } from "../../src/ui/Select";
@@ -27,7 +27,9 @@ describe("Select", () => {
 
 	it("opens sheet on press and fires onChange when option selected", () => {
 		const onChange = jest.fn();
-		const { getByText } = render(<Select options={options} onChange={onChange} placeholder="Pick…" />);
+		const { getByText } = render(
+			<Select options={options} onChange={onChange} placeholder="Pick…" />,
+		);
 		// Open the Select by pressing the trigger
 		fireEvent.press(getByText("Pick…"));
 		// Select first option from the open sheet
@@ -37,9 +39,7 @@ describe("Select", () => {
 
 	it("does not open when disabled", () => {
 		const onChange = jest.fn();
-		const { queryByText } = render(
-			<Select options={options} onChange={onChange} disabled />,
-		);
+		const { queryByText } = render(<Select options={options} onChange={onChange} disabled />);
 		expect(queryByText("One")).toBeNull();
 		expect(queryByText("Two")).toBeNull();
 	});

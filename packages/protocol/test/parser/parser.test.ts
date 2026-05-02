@@ -100,7 +100,7 @@ describe("parseSerialLine", () => {
 			hw: "ESP32",
 			drv: "native",
 			up: 1234,
-				nagKiller: 1,
+			nagKiller: 1,
 			stream: { on: 1, emitted: 7 },
 			rawCan: 1,
 			maxSpeed: 860,

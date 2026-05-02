@@ -175,41 +175,41 @@ Multiplexed FSD control frame. The firmware modifies different bitfields dependi
 
 Important AP-gate and auto-lane-change readback fields:
 
-| Location | Meaning | Firmware Use |
-| -------- | ------- | ------------ |
-| byte[0] bits[3:0] | DAS autopilot status | Determines whether AP is active for AP gate |
-| byte[4] bits[4:0] | `DAS_laneChangeState` | Drives ALC auto-confirm |
-| byte[5] bits[5:2] | `DAS_autopilotHandsOnState` | Used by nag killer state-aware behavior |
+| Location          | Meaning                     | Firmware Use                                |
+| ----------------- | --------------------------- | ------------------------------------------- |
+| byte[0] bits[3:0] | DAS autopilot status        | Determines whether AP is active for AP gate |
+| byte[4] bits[4:0] | `DAS_laneChangeState`       | Drives ALC auto-confirm                     |
+| byte[5] bits[5:2] | `DAS_autopilotHandsOnState` | Used by nag killer state-aware behavior     |
 
 ### 0x398 / 920 `CAN_ID_GTW_CAR_CFG`
 
 Gateway config fields used by detection and regional feature logic:
 
-| Location | Meaning | Firmware Use |
-| -------- | ------- | ------------ |
-| byte[0] bits[7:6] | Detected hardware generation | Auto-detects HW3 vs HW4 |
-| byte[2] bits[7:4] | Region code | Region detection and spoofing |
+| Location          | Meaning                      | Firmware Use                  |
+| ----------------- | ---------------------------- | ----------------------------- |
+| byte[0] bits[7:6] | Detected hardware generation | Auto-detects HW3 vs HW4       |
+| byte[2] bits[7:4] | Region code                  | Region detection and spoofing |
 
 ### 0x331 / 817 `CAN_ID_DAS_AP_CONFIG`
 
-| Location | Meaning | Firmware Use |
-| -------- | ------- | ------------ |
+| Location          | Meaning                | Firmware Use                                                               |
+| ----------------- | ---------------------- | -------------------------------------------------------------------------- |
 | byte[0] bits[5:0] | Autopilot tier payload | `tlssc:on` rewrites to `0x1B` (`SELF_DRIVING`) while preserving upper bits |
 
 ### 0x7FF / 2047 `CAN_ID_GTW_CONFIG_ETH`
 
-| Location | Meaning | Firmware Use |
-| -------- | ------- | ------------ |
+| Location                 | Meaning                | Firmware Use                                   |
+| ------------------------ | ---------------------- | ---------------------------------------------- |
 | mux 2, byte[5] bits[4:2] | Gateway autopilot tier | Readback for ban detection and tier monitoring |
 
 ### 0x3C2 / 962 `CAN_ID_VCLEFT_SWITCH`
 
 Palladium/yoke ALC confirmation injection:
 
-| Location | Meaning | Firmware Use |
-| -------- | ------- | ------------ |
-| byte[0] = `0x29` | Mux A selector | Required for valid button frame |
-| byte[6]/byte[7] | Left/right button masks | Auto Lane Change confirmation injection |
+| Location         | Meaning                 | Firmware Use                            |
+| ---------------- | ----------------------- | --------------------------------------- |
+| byte[0] = `0x29` | Mux A selector          | Required for valid button frame         |
+| byte[6]/byte[7]  | Left/right button masks | Auto Lane Change confirmation injection |
 
 ## DAS Hands-On States (from 0x39B byte[5] bits[5:2])
 

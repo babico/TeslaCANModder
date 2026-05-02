@@ -356,7 +356,8 @@
 				<div class="card col-6">
 					<div class="title">FSD Controls</div>
 					<div class="status-line" style="margin-bottom: 8px">
-						Driver-assist toggles for FSD behavior, nag handling, and speed-profile shaping.
+						Driver-assist toggles for FSD behavior, nag handling, and speed-profile
+						shaping.
 					</div>
 					<div class="row">
 						<span>FSD Enabled</span>
@@ -408,10 +409,12 @@
 				<div class="card col-6">
 					<div class="title">AP Injection Gate</div>
 					<div class="warning-box">
-						High-risk safety control. Disabling the gate can permit live-frame injection paths.
+						High-risk safety control. Disabling the gate can permit live-frame injection
+						paths.
 					</div>
 					<div class="status-line" style="margin-bottom: 8px">
-						Safety gate for write/injection paths. Closed gate blocks high-risk transmit actions.
+						Safety gate for write/injection paths. Closed gate blocks high-risk transmit
+						actions.
 					</div>
 					<div class="row">
 						<span>Gate Enabled</span>
@@ -427,7 +430,8 @@
 				<div class="card col-6">
 					<div class="title">Write Probe (TX to RX Confirmation)</div>
 					<div class="status-line" style="margin-bottom: 8px">
-						Sends a controlled command and verifies response echo plus follow-up status confirmation.
+						Sends a controlled command and verifies response echo plus follow-up status
+						confirmation.
 					</div>
 					<label class="label">Probe Command</label>
 					<select class="input" id="probeCmd">
@@ -445,18 +449,18 @@
 					<div style="margin-top: 8px">
 						<button class="btn" onclick="runWriteProbe()">Run Probe</button>
 					</div>
-					<div class="kv" id="probeSt" style="margin-top: 8px">
-						<b>Status:</b> idle
-					</div>
+					<div class="kv" id="probeSt" style="margin-top: 8px"><b>Status:</b> idle</div>
 				</div>
 
 				<div class="card col-6">
 					<div class="title">Vehicle Actions</div>
 					<div class="warning-box">
-						These commands affect a live vehicle. Confirm each action and use only when safe.
+						These commands affect a live vehicle. Confirm each action and use only when
+						safe.
 					</div>
 					<div class="status-line" style="margin-bottom: 8px">
-						One-shot cabin/body commands. Use carefully while connected to a live vehicle.
+						One-shot cabin/body commands. Use carefully while connected to a live
+						vehicle.
 					</div>
 					<div class="seg wide">
 						<button onclick="cmd('lock')">Lock</button>
@@ -573,14 +577,16 @@
 				<div class="card col-6 hidden-card" id="hiddenApCard">
 					<div class="title">Hidden AP Setting (Advanced)</div>
 					<div class="warning-box">
-						Experimental control. Keep disabled unless you understand EAP/Summon side effects.
+						Experimental control. Keep disabled unless you understand EAP/Summon side
+						effects.
 					</div>
 					<div class="row">
 						<span>Enhanced Autopilot (EAP bit 46)</span>
 						<label class="switch"
-							><input type="checkbox" id="hiddenApTg" onchange="toggleHiddenAp()" /><span
-								class="slider"
-							></span
+							><input
+								type="checkbox"
+								id="hiddenApTg"
+								onchange="toggleHiddenAp()" /><span class="slider"></span
 						></label>
 					</div>
 					<div class="kv" id="hiddenApSt">Hidden until revealed.</div>
@@ -702,7 +708,11 @@
 				const probeCmd = $("probeCmd").value;
 				const probeCfg = WRITE_PROBE_CASES[probeCmd];
 				if (!probeCfg) {
-					$("probeSt").innerHTML = probeStateHtml("FAILED", "Unknown probe command", false);
+					$("probeSt").innerHTML = probeStateHtml(
+						"FAILED",
+						"Unknown probe command",
+						false,
+					);
 					return;
 				}
 
@@ -1007,10 +1017,16 @@
 				$("mirrorAutoTg").checked = !!S.mirrorAutoFold;
 				$("apGateTg").checked = !!S.apGateEnabled;
 				$("apGateSt").innerHTML =
-					"<b>Gate:</b> " + (S.apGateOpen ? '<span style="color:var(--ok)">OPEN</span>' : '<span style="color:var(--accent)">CLOSED</span>') +
-					" &nbsp; <b>AP:</b> " + (S.apGateAp ? "ON" : "off") +
-					" &nbsp; <b>Park:</b> " + (S.apGatePark ? "ON" : "off") +
-					" &nbsp; <b>Summon:</b> " + (S.apGateSummon ? "ON" : "off");
+					"<b>Gate:</b> " +
+					(S.apGateOpen
+						? '<span style="color:var(--ok)">OPEN</span>'
+						: '<span style="color:var(--accent)">CLOSED</span>') +
+					" &nbsp; <b>AP:</b> " +
+					(S.apGateAp ? "ON" : "off") +
+					" &nbsp; <b>Park:</b> " +
+					(S.apGatePark ? "ON" : "off") +
+					" &nbsp; <b>Summon:</b> " +
+					(S.apGateSummon ? "ON" : "off");
 
 				if (hiddenApVisible) {
 					$("hiddenApTg").checked = !!S.enhancedAutopilot;

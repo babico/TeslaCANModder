@@ -17,9 +17,7 @@ describe("ControlsBlocks / TooltipBanner", () => {
 
 	it("calls onClose when dismissed", () => {
 		const onClose = jest.fn();
-		const { getByText } = render(
-			<TooltipBanner message="x" onClose={onClose} />,
-		);
+		const { getByText } = render(<TooltipBanner message="x" onClose={onClose} />);
 		fireEvent.press(getByText("✕"));
 		expect(onClose).toHaveBeenCalled();
 	});

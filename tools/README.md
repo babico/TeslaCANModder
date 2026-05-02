@@ -87,7 +87,7 @@ tools/
     └── drive-context.js  # Drive-context evidence capture
 ```
 
-## Testing
+## Running Tests
 
 ```bash
 npm test                 # runs jest

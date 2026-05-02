@@ -97,12 +97,12 @@ export function DashboardScreen({ boardState }: DashboardScreenProps) {
 						{headline.status} · {headline.speed}
 					</Text>
 					<Text style={styles.heroDescription}>
-						Telemetry shows vehicle health, Integrations tracks external links, and Utility
-						covers safety/feature helper states.
+						Telemetry shows vehicle health, Integrations tracks external links, and
+						Utility covers safety/feature helper states.
 					</Text>
 					<Text style={styles.warningText}>
-						High-risk actions should only be executed while parked or in a controlled test
-						environment.
+						High-risk actions should only be executed while parked or in a controlled
+						test environment.
 					</Text>
 				</View>
 

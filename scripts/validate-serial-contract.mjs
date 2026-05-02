@@ -27,7 +27,15 @@ const manifestSectionNames = new Set([
 const manifestFeatureKinds = new Set(["command", "query", "internal"]);
 const manifestMessageSectionKeys = new Set(["boot", "status"]);
 const manifestMessageKeys = new Set(["type", "command", "schemaRef", "sections", "notes"]);
-const manifestFeatureKeys = new Set(["id", "title", "kind", "commands", "outputTags", "statePaths", "notes"]);
+const manifestFeatureKeys = new Set([
+	"id",
+	"title",
+	"kind",
+	"commands",
+	"outputTags",
+	"statePaths",
+	"notes",
+]);
 const manifestTypePattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const manifestSchemaRefPattern = /^#\/\$defs\/[A-Za-z][A-Za-z0-9]*$/;
 const featureIdPattern = /^[A-Za-z][A-Za-z0-9]*$/;
@@ -101,13 +109,25 @@ function validateManifest(manifest) {
 	}
 
 	assertPlainObject(manifest.messageSections, "serial-output.schema.json messageSections");
-	assertNoExtraKeys(manifest.messageSections, manifestMessageSectionKeys, "serial-output.schema.json messageSections");
-	assertUniqueStringArray(manifest.messageSections.boot, "serial-output.schema.json messageSections.boot", {
-		allowedValues: manifestSectionNames,
-	});
-	assertUniqueStringArray(manifest.messageSections.status, "serial-output.schema.json messageSections.status", {
-		allowedValues: manifestSectionNames,
-	});
+	assertNoExtraKeys(
+		manifest.messageSections,
+		manifestMessageSectionKeys,
+		"serial-output.schema.json messageSections",
+	);
+	assertUniqueStringArray(
+		manifest.messageSections.boot,
+		"serial-output.schema.json messageSections.boot",
+		{
+			allowedValues: manifestSectionNames,
+		},
+	);
+	assertUniqueStringArray(
+		manifest.messageSections.status,
+		"serial-output.schema.json messageSections.status",
+		{
+			allowedValues: manifestSectionNames,
+		},
+	);
 
 	if (!Array.isArray(manifest.messages) || manifest.messages.length === 0) {
 		fail("serial-output.schema.json messages must be a non-empty array");
@@ -162,10 +182,14 @@ function validateManifest(manifest) {
 			assertUniqueStringArray(feature.commands, `${label}.commands`, { allowEmpty: true });
 		}
 		if (feature.outputTags !== undefined) {
-			assertUniqueStringArray(feature.outputTags, `${label}.outputTags`, { allowEmpty: true });
+			assertUniqueStringArray(feature.outputTags, `${label}.outputTags`, {
+				allowEmpty: true,
+			});
 		}
 		if (feature.statePaths !== undefined) {
-			assertUniqueStringArray(feature.statePaths, `${label}.statePaths`, { allowEmpty: true });
+			assertUniqueStringArray(feature.statePaths, `${label}.statePaths`, {
+				allowEmpty: true,
+			});
 		}
 		assertOptionalString(feature.notes, `${label}.notes`);
 	}
@@ -176,9 +200,7 @@ function _formatAjvErrors(errors) {
 		return "unknown validation error";
 	}
 
-	return errors
-		.map((error) => `${error.instancePath || "/"} ${error.message}`.trim())
-		.join("; ");
+	return errors.map((error) => `${error.instancePath || "/"} ${error.message}`.trim()).join("; ");
 }
 
 const serialSchema = await readJson(serialSchemaPath);
@@ -192,7 +214,7 @@ const schemaDefs = new Set(Object.keys(serialSchema.$defs ?? {}));
 const manifestMessageTypes = new Set();
 for (const message of manifest.messages) {
 	if (manifestMessageTypes.has(message.type)) {
-fail(`serial-output.schema.json contains duplicate message type "${message.type}"`);
+		fail(`serial-output.schema.json contains duplicate message type "${message.type}"`);
 	}
 
 	manifestMessageTypes.add(message.type);

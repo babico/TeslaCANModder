@@ -18,8 +18,7 @@ const mockBoardConnState = {
 };
 
 jest.mock("../../src/ui/Sheet", () => ({
-	Sheet: ({ children, visible }: any) =>
-		visible ? children : null,
+	Sheet: ({ children, visible }: any) => (visible ? children : null),
 }));
 
 jest.mock("../../src/state/BoardConnectionContext", () => ({

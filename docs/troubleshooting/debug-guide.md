@@ -40,10 +40,10 @@ icon: 🔍
 - Console shows "CAN bus silent" → wiring issue
 - Use `can:raw:on` to see all bus traffic (not just variant-specific IDs)
 - If CAN stays offline, try runtime clock profile fallback:
-  - `canclock:auto`
-  - `canclock:8`
-  - `canclock:16`
-  - `canclock:20`
+    - `canclock:auto`
+    - `canclock:8`
+    - `canclock:16`
+    - `canclock:20`
 
 ## MCP2515 Bus Not Detected
 

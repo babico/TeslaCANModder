@@ -936,15 +936,23 @@ function applyStatusState(prev: BoardState, msg: StatusStateMessage): BoardState
 	const state = msg.state;
 	const profile = typeof state?.profile === "number" ? state.profile : undefined;
 	const profilePinned =
-		typeof state?.profile === "object" && state.profile !== null ? state.profile.pinned : undefined;
+		typeof state?.profile === "object" && state.profile !== null
+			? state.profile.pinned
+			: undefined;
 	const offset = typeof state?.offset === "number" ? state.offset : undefined;
 	const offsetPinned =
-		typeof state?.offset === "object" && state.offset !== null ? state.offset.pinned : undefined;
+		typeof state?.offset === "object" && state.offset !== null
+			? state.offset.pinned
+			: undefined;
 
 	return {
 		...prev,
 		fsd:
-			msg.fsd !== undefined ? Boolean(msg.fsd) : state?.fsd !== undefined ? Boolean(state.fsd) : prev.fsd,
+			msg.fsd !== undefined
+				? Boolean(msg.fsd)
+				: state?.fsd !== undefined
+					? Boolean(state.fsd)
+					: prev.fsd,
 		fsdForce:
 			msg.fsdForce !== undefined
 				? Boolean(msg.fsdForce)
@@ -952,7 +960,11 @@ function applyStatusState(prev: BoardState, msg: StatusStateMessage): BoardState
 					? Boolean(state.fsdForce)
 					: prev.fsdForce,
 		nag:
-			msg.nag !== undefined ? Boolean(msg.nag) : state?.nag !== undefined ? Boolean(state.nag) : prev.nag,
+			msg.nag !== undefined
+				? Boolean(msg.nag)
+				: state?.nag !== undefined
+					? Boolean(state.nag)
+					: prev.nag,
 		nagKiller:
 			msg.nagKiller !== undefined
 				? Boolean(msg.nagKiller)
