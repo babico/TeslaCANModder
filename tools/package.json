@@ -12,7 +12,7 @@
 		"bridge": "node serial-http-bridge.js"
 	},
 	"devDependencies": {
-		"@jest/globals": "^29.7.0",
+		"@jest/globals": "^30.3.0",
 		"jest": "^30.3.0"
 	},
 	"peerDependencies": {
