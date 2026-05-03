@@ -98,6 +98,9 @@ void handleHW4(Frame &f, State &s)
 	// FSD mux handling
 	if (f.id == CAN_ID_FSD_MUX)
 	{
+		// AP-First mode (2026.14.x): suppress injection until AP is already active.
+		if (s.apFirstEnabled && s.dasApState < 2)
+			return;
 		uint8_t mux = readMuxID(f);
 		bool fsdAllowed = s.fsdEnabled && (s.fsdForceEnabled || isFSDSelectedInUI(f));
 

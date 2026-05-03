@@ -151,6 +151,8 @@ export interface BootMessage {
 	alcAutoConfirm?: number;
 	dasLaneChangeState?: number;
 	seatbeltEmulation?: number;
+	apFirst?: number;
+	dasApState?: number;
 	wiperPersist?: number;
 	mirrorAutoFold?: number;
 	canSim?: number;
@@ -248,6 +250,8 @@ export interface StatusMessage {
 	alcAutoConfirm?: number;
 	dasLaneChangeState?: number;
 	seatbeltEmulation?: number;
+	apFirst?: number;
+	dasApState?: number;
 	wiperPersist?: number;
 	mirrorAutoFold?: number;
 	canSim?: number;
@@ -727,6 +731,10 @@ export interface BoardState {
 	wiperPersist: boolean;
 	mirrorAutoFold: boolean;
 	canSim: boolean;
+
+	// AP-First mode (2026.14.x compatibility)
+	apFirstEnabled: boolean;
+	dasApState: number;
 
 	// Single-shot TX
 	singleShot: boolean;

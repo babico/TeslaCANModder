@@ -181,6 +181,8 @@ export const initialBoardState: BoardState = {
 	dasLaneChangeState: 0,
 
 	seatbeltEmulation: false,
+	apFirstEnabled: false,
+	dasApState: 0,
 	wiperPersist: false,
 	mirrorAutoFold: false,
 	canSim: false,
@@ -479,6 +481,8 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 			msg.seatbeltEmulation !== undefined
 				? Boolean(msg.seatbeltEmulation)
 				: prev.seatbeltEmulation,
+		apFirstEnabled: msg.apFirst !== undefined ? Boolean(msg.apFirst) : prev.apFirstEnabled,
+		dasApState: msg.dasApState ?? prev.dasApState,
 		wiperPersist:
 			msg.wiperPersist !== undefined ? Boolean(msg.wiperPersist) : prev.wiperPersist,
 		mirrorAutoFold:
@@ -699,6 +703,8 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 			msg.seatbeltEmulation !== undefined
 				? Boolean(msg.seatbeltEmulation)
 				: prev.seatbeltEmulation,
+		apFirstEnabled: msg.apFirst !== undefined ? Boolean(msg.apFirst) : prev.apFirstEnabled,
+		dasApState: msg.dasApState ?? prev.dasApState,
 		wiperPersist:
 			msg.wiperPersist !== undefined ? Boolean(msg.wiperPersist) : prev.wiperPersist,
 		mirrorAutoFold:

@@ -589,6 +589,29 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
+	// AP-First mode: ap-first:on / ap-first:off
+	// Delays 0x3FD injection until DAS_autopilotState >= 2 (AP/TACC already running).
+	// Required for Tesla 2026.14.x which blocks AP engagement if injection is already active.
+	// Source: hypery11/flipper-tesla-fsd v2.14.0 — AP-First mode (confirmed ev-open-can-tools #43)
+	if (strcmp(cmd, "ap-first:on") == 0)
+	{
+		s.apFirstEnabled = true;
+		saveSettings(s);
+		sendAck(cmd);
+		sendLog(F("AP-First ON - injection delayed until AP is active (2026.14.x compat)"));
+		sendStatus(s, now);
+		return;
+	}
+	if (strcmp(cmd, "ap-first:off") == 0)
+	{
+		s.apFirstEnabled = false;
+		saveSettings(s);
+		sendAck(cmd);
+		sendLog(F("AP-First OFF - injection starts immediately"));
+		sendStatus(s, now);
+		return;
+	}
+
 	// Enhanced Autopilot: eap:on / eap:off
 	// Sets bit46 on mux=1 to unlock EAP/Summon features
 	// Source: ev-open-can-tools + hypery11 enhanced_autopilot

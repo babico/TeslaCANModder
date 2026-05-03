@@ -282,6 +282,7 @@ struct State
 	bool nagKillerEnabled;
 	NagKillerMode nagKillerMode;
 	uint8_t dasHandsOnState; // DAS_autopilotHandsOnState (0x39B byte5 bits[5:2])
+	uint8_t dasApState;       // DAS_autopilotState (0x39B byte1 bits[7:4]): 0=UNAVAIL 1=AVAIL 2=ACTIVE_NOMINAL 3+=active
 	bool dasSeen;
 	unsigned long naturalNagLastMs; // Last natural nag injection timestamp
 	uint16_t naturalNagIntervalMs;	// Current non-linear interval between injections
@@ -399,6 +400,10 @@ struct State
 
 	// Left-Hand Drive mode — persisted
 	bool lhdEnabled; // true = clear UI_drivingSide bit on 0x3F8 (Beta/LHD.json)
+
+	// AP-First mode (2026.14.x compatibility) — persisted
+	// Suppresses 0x3FD injection until DAS_autopilotState >= 2 (AP is already running)
+	bool apFirstEnabled; // true = delay 0x3FD injection until AP/TACC is active
 
 	// Driver assist parity toggles (P2-01 to P2-05) — persisted
 	// All bits apply to 0x3F8 (UI_driverAssistControl) and 0x3FD mux1
@@ -530,6 +535,7 @@ struct State
 		  gtwShieldArmed(false), gtwShieldBlocks(0), enhancedAutopilot(false), evdEnabled(false), tlsscRestore(false),
 		  hasTpms(false), driveModeOverride(0), currentDriveMode(0), driveModeLastMs(0), regionCode(0),
 		  regionSpoofCode(0), hasRegion(false), chineseGatewayLocked(false), eceR79Bypass(false), lhdEnabled(false),
+		  dasApState(0), apFirstEnabled(false),
 		  assistNavEnable(false), assistHandsOff(false), assistDevMode(false), laneGraphEnable(false), assistTelemetryOff(false),
 		  seatbeltEmulation(false), seatbeltLastMs(0), wiperPersistEnabled(false),
 		  savedWiperSpeed(0), mirrorAutoFoldEnabled(false), vehicleLockedState(false), vehicleSpeed(0), gearState(0),

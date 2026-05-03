@@ -127,6 +127,14 @@ inline uint8_t readDASAutopilotStatus(const Frame &f)
 	return f.dlc >= 1 ? (f.data[0] & 0x0F) : 0;
 }
 
+// DAS_autopilotState from 0x39B byte1 bits[7:4].
+// 0=UNAVAIL 1=AVAIL 2=ACTIVE_NOMINAL 3=ACTIVE_MIN_DRIVER ...
+// Used by AP-First mode to delay 0x3FD injection until AP is running.
+inline uint8_t readDASAutopilotState(const Frame &f)
+{
+	return f.dlc >= 2 ? ((f.data[1] >> 4) & 0x0F) : 0;
+}
+
 inline bool isDASAutopilotActive(uint8_t status)
 {
 	return status >= 3 && status <= 5;

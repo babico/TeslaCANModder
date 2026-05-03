@@ -429,6 +429,7 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 		{
 			s.dasHandsOnState = readDasHandsOnState(f);
 			s.dasLaneChangeState = readDasLaneChangeState(f);
+			s.dasApState = readDASAutopilotState(f);
 			s.apGateApActive = isDASAutopilotActive(readDASAutopilotStatus(f));
 			s.dasSeen = true;
 			// ALC auto-confirm: inject stalk/button when lane change prompted
