@@ -197,21 +197,26 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
     }
 
     // Auto HW detection from GTW_carConfig
+    // Fix (hypery11 v2.11): hw=0/1 now maps to LEGACY (MCU2/HW1/HW2 retrofit)
     if (f.id == CAN_ID_GTW_CAR_CFG && f.dlc >= 1) {
       uint8_t hw = (f.data[0] >> 6) & 0x03;
-      if (hw == 2 || hw == 3) {
-        s.detectedHW = hw;
-        s.hwAutoDetected = true;
-        if (s.variantAutoDetect) {
-          Variant detected = (hw == 3) ? HW4 : HW3;
-          if (s.variant != detected) {
-            bool fromLegacy = (s.variant == LEGACY);
-            s.variant = detected;
-            if (fromLegacy) s.speedProfile = 1; // P2-07: reset stale legacy stalk profile
-            applyFilters(s);
-            resetHandlerLogFlags();
-            sendLog(hw == 3 ? F("Auto-detected HW4") : F("Auto-detected HW3"));
-          }
+      s.detectedHW = hw;
+      s.hwAutoDetected = true;
+      if (s.variantAutoDetect) {
+        Variant detected;
+        if (hw == 3) detected = HW4;
+        else if (hw == 2) detected = HW3;
+        else detected = LEGACY; // hw==0 or hw==1: MCU2/HW1 retrofit
+        if (s.variant != detected) {
+          bool fromLegacy = (s.variant == LEGACY);
+          s.variant = detected;
+          if (fromLegacy && detected != LEGACY)
+            s.speedProfile = 1; // P2-07: reset stale legacy stalk profile
+          applyFilters(s);
+          resetHandlerLogFlags();
+          if (detected == HW4) sendLog(F("Auto-detected HW4"));
+          else if (detected == HW3) sendLog(F("Auto-detected HW3"));
+          else sendLog(F("Auto-detected Legacy"));
         }
       }
       return;
@@ -603,13 +608,29 @@ void test_autodetect_same_variant_no_log() {
 }
 
 void test_autodetect_invalid_hw_ignored() {
+  // hw=1 now maps to LEGACY (MCU2 retrofit) — no longer "invalid"
+  // This test is renamed/kept for historical API compat but behavior changed (v2.11 port)
   State s = makeState(HW4);
   s.variantAutoDetect = true;
   Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-  f.data[0] = 1 << 6;  // hw=1 → not 2 or 3, ignored
+  f.data[0] = 1 << 6;  // hw=1 → Legacy (MCU2/HW1 retrofit)
   handleMessage(f, BUS_VEHICLE, s);
-  TEST_ASSERT_EQUAL(0, s.detectedHW); // unchanged
-  TEST_ASSERT_FALSE(s.hwAutoDetected);
+  TEST_ASSERT_EQUAL(1, s.detectedHW);
+  TEST_ASSERT_TRUE(s.hwAutoDetected);
+  TEST_ASSERT_EQUAL(LEGACY, s.variant); // fixed: was silently ignored before
+}
+
+void test_autodetect_legacy_hw0_switches_variant() {
+  // das_hw=0 → Legacy (MCU2/HW1 retrofit Model S/X)
+  State s = makeState(HW3);
+  s.variantAutoDetect = true;
+  Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
+  f.data[0] = 0 << 6;  // hw=0
+  handleMessage(f, BUS_VEHICLE, s);
+  TEST_ASSERT_EQUAL(0, s.detectedHW);
+  TEST_ASSERT_TRUE(s.hwAutoDetected);
+  TEST_ASSERT_EQUAL(LEGACY, s.variant);
+  TEST_ASSERT_TRUE(log_call_count > 0);
 }
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -821,6 +842,7 @@ int main() {
   RUN_TEST(test_autodetect_disabled_no_variant_switch);
   RUN_TEST(test_autodetect_same_variant_no_log);
   RUN_TEST(test_autodetect_invalid_hw_ignored);
+  RUN_TEST(test_autodetect_legacy_hw0_switches_variant);
 
     // P2-06: Fallback variant detection (frame presence when 0x398 absent)
     RUN_TEST(test_fallback_isa_speed_infers_hw4_from_legacy);

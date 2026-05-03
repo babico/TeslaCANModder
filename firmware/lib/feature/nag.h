@@ -41,6 +41,10 @@ inline void nagKillerModify(Frame &f)
 	// Zero the torque request in bytes 2-3 (tells EPAS no steering input needed)
 	f.data[2] = 0x00;
 	f.data[3] = 0x00;
+	// Set handsOnLevel=1 (DETECTED) in byte 4 bits[7:6].
+	// Fix (hypery11 v2.11): OR-ing 0x40 without clearing leaves level=3 unchanged on
+	// escalated frames. Mask first so any incoming level is replaced cleanly.
+	f.data[4] = (f.data[4] & ~0xC0u) | 0x40u;
 	// Recalculate checksum in byte 7 to match modified payload
 	f.data[7] = nagKillerChecksum(f.data);
 }
@@ -133,6 +137,8 @@ inline void nagKillerModifyNatural(Frame &f, float torqueNm)
 	int16_t raw = (int16_t)(torqueNm * 100.0f);
 	f.data[2] = (uint8_t)((raw >> 8) & 0xFF);
 	f.data[3] = (uint8_t)(raw & 0xFF);
+	// Set handsOnLevel=1 (DETECTED) in byte 4 bits[7:6] (same fix as legacy mode)
+	f.data[4] = (f.data[4] & ~0xC0u) | 0x40u;
 
 	// Recalculate checksum
 	f.data[7] = nagKillerChecksum(f.data);

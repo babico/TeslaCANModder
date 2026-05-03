@@ -721,45 +721,72 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 		}
 
 		// OTA safety check: detect Tesla OTA in progress
-		if (f.id == CAN_ID_GTW_CAR_STATE && f.dlc >= 1)
+		// GTW_updateInProgress: bits[1:0] of byte 6 (0=none,1=available,2=installing,3=scheduled)
+		// Fix (hypery11 v2.11): only pause TX when value=2 (installing); value=1 (available)
+		// caused false positives. Added 3-frame assert / 6-frame clear debounce.
+		if (f.id == CAN_ID_GTW_CAR_STATE && f.dlc >= 7)
 		{
-			bool otaActive = (f.data[0] & 0x01) != 0; // GTW_updateInProgress
-			if (otaActive && !s.otaInProgress)
+			static uint8_t otaAssertCnt = 0;
+			static uint8_t otaClearCnt  = 0;
+			bool installing = ((f.data[6] & 0x03) == 2);
+			if (installing)
 			{
-				s.otaInProgress = true;
-				s.txPaused = true;
-				sendLog(F("OTA detected - TX paused"));
+				otaAssertCnt = (otaAssertCnt < 3) ? otaAssertCnt + 1 : 3;
+				otaClearCnt  = 0;
+				if (otaAssertCnt >= 3 && !s.otaInProgress)
+				{
+					s.otaInProgress = true;
+					s.txPaused = true;
+					sendLog(F("OTA detected - TX paused"));
+				}
 			}
-			else if (!otaActive && s.otaInProgress)
+			else
 			{
-				s.otaInProgress = false;
-				s.txPaused = false;
-				sendLog(F("OTA complete - TX resumed"));
+				otaClearCnt  = (otaClearCnt < 6) ? otaClearCnt + 1 : 6;
+				otaAssertCnt = 0;
+				if (otaClearCnt >= 6 && s.otaInProgress)
+				{
+					s.otaInProgress = false;
+					s.txPaused = false;
+					sendLog(F("OTA complete - TX resumed"));
+				}
 			}
 			return;
 		}
 
 		// Auto HW detection from GTW_carConfig
+		// das_hw: 0/1=Legacy(MCU2/HW1/HW2 retrofit), 2=HW3, 3=HW4
+		// Fix (hypery11 v2.11): previously fell through for hw=0/1, silently
+		// skipping Legacy auto-detect for an entire class of vehicles.
 		if (f.id == CAN_ID_GTW_CAR_CFG && f.dlc >= 1)
 		{
 			uint8_t hw = (f.data[0] >> 6) & 0x03;
-			if (hw == 2 || hw == 3)
+			s.detectedHW = hw;
+			s.hwAutoDetected = true;
+			// Auto-switch variant if enabled (inspired by hypery11 detection)
+			if (s.variantAutoDetect)
 			{
-				s.detectedHW = hw;
-				s.hwAutoDetected = true;
-				// Auto-switch variant if enabled (inspired by hypery11 detection)
-				if (s.variantAutoDetect)
+				Variant detected;
+				if (hw == 3)
+					detected = HW4;
+				else if (hw == 2)
+					detected = HW3;
+				else
+					detected = LEGACY; // hw==0 or hw==1: MCU2/HW3 retrofit
+				if (s.variant != detected)
 				{
-					Variant detected = (hw == 3) ? HW4 : HW3;
-					if (s.variant != detected)
-					{
-						bool fromLegacy = (s.variant == LEGACY);
-						s.variant = detected;
-						if (fromLegacy) s.speedProfile = 1; // P2-07: reset stale legacy stalk profile
-						applyFilters(s);
-						resetHandlerLogFlags();
-						sendLog(hw == 3 ? F("Auto-detected HW4") : F("Auto-detected HW3"));
-					}
+					bool fromLegacy = (s.variant == LEGACY);
+					s.variant = detected;
+					if (fromLegacy && detected != LEGACY)
+						s.speedProfile = 1; // P2-07: reset stale legacy stalk profile
+					applyFilters(s);
+					resetHandlerLogFlags();
+					if (detected == HW4)
+						sendLog(F("Auto-detected HW4"));
+					else if (detected == HW3)
+						sendLog(F("Auto-detected HW3"));
+					else
+						sendLog(F("Auto-detected Legacy"));
 				}
 			}
 			return;
