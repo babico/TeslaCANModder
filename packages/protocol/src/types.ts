@@ -554,9 +554,22 @@ export interface PowertrainMessage {
 	speed: number; // vehicle speed * 100 (km/h)
 	gear: number; // gear state (0=inv, 1=P, 2=R, 3=N, 4=D)
 	pedal: number; // accelerator pedal % (0-100)
+	brake: number; // brake pedal state (0=off, 1=applied, 2=hard)
 	steer: number; // steering angle * 10 (degrees, + = right)
 	rpmR: number; // rear motor RPM
 	rpmF: number; // front motor RPM
+	wsFL: number; // front-left wheel speed * 100 (km/h)
+	wsFR: number; // front-right wheel speed * 100 (km/h)
+	wsRL: number; // rear-left wheel speed * 100 (km/h)
+	wsRR: number; // rear-right wheel speed * 100 (km/h)
+	hasWs: number; // 1 = wheel speed data available
+	rInvT: number; // rear inverter temperature °C
+	rStatT: number; // rear stator temperature °C
+	rHsT: number; // rear heatsink temperature °C
+	fInvT: number; // front inverter temperature °C (dual-motor only)
+	fStatT: number; // front stator temperature °C (dual-motor only)
+	fHsT: number; // front heatsink temperature °C (dual-motor only)
+	hasMotorT: number; // 1 = motor temperature data available
 	ok: number; // 1 = data available
 }
 
@@ -794,10 +807,27 @@ export interface BoardState {
 	vehicleSpeed: number;
 	gearState: number;
 	accelPedal: number;
+	brakePedalState: number;
 	steeringAngle: number;
 	rearMotorRpm: number;
 	frontMotorRpm: number;
 	hasPowertrain: boolean;
+
+	// Wheel speeds (0x175, ChassisBus)
+	wheelSpeedFL: number;
+	wheelSpeedFR: number;
+	wheelSpeedRL: number;
+	wheelSpeedRR: number;
+	hasWheelSpeeds: boolean;
+
+	// Motor / inverter temperatures
+	rearInvTemp: number;
+	rearStatorTemp: number;
+	rearHeatsinkTemp: number;
+	frontInvTemp: number;
+	frontStatorTemp: number;
+	frontHeatsinkTemp: number;
+	hasMotorTemps: boolean;
 
 	// BMS battery telemetry
 	bmsVoltage: number;

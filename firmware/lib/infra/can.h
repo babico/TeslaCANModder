@@ -93,6 +93,9 @@ inline bool busActive(uint8_t bus)
 #define CAN_ID_LEGACY_FSD_MUX 1006
 #define CAN_ID_FOLLOW_DIST 1016
 #define CAN_ID_FSD_MUX 1021
+#define CAN_ID_WHEEL_SPEED 0x175     // 373  - ID175WheelSpeed (FL/FR/RL/RR packed 13-bit LE, 0.04 km/h, ChassisBus)
+#define CAN_ID_REAR_INV_TEMPS 0x315  // 789  - ID315RearInverterTemps (rear inverter/stator/heatsink °C, VehicleBus)
+#define CAN_ID_FRONT_INV_TEMPS 0x376 // 886  - ID376FrontInverterTemps (front inverter/stator/heatsink °C, VehicleBus, dual-motor only)
 
 // ── Drive Checksum (shared by pedal, regen, stop) ────────────────────────────
 inline uint8_t driveChecksum(const uint8_t *data, uint8_t len)

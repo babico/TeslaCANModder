@@ -1238,15 +1238,101 @@
 					"type": "object",
 					"properties": {
 						"t": { "const": "powertrain" },
-						"speed": { "type": "integer" },
-						"gear": { "type": "integer" },
-						"pedal": { "type": "integer" },
-						"steer": { "type": "integer" },
-						"rpmR": { "type": "integer" },
-						"rpmF": { "type": "integer" },
+						"speed": {
+							"type": "integer",
+							"description": "Vehicle speed × 100 (km/h, signed)"
+						},
+						"gear": {
+							"type": "integer",
+							"description": "Gear state: 0=invalid 1=P 2=R 3=N 4=D"
+						},
+						"pedal": { "type": "integer", "description": "Accelerator pedal 0–100%" },
+						"brake": {
+							"type": "integer",
+							"description": "Brake pedal state: 0=off 1=applied 2=hard"
+						},
+						"steer": {
+							"type": "integer",
+							"description": "Steering angle × 10 degrees, + = right"
+						},
+						"rpmR": { "type": "integer", "description": "Rear motor RPM" },
+						"rpmF": {
+							"type": "integer",
+							"description": "Front motor RPM (0 on single-motor)"
+						},
+						"wsFL": {
+							"type": "integer",
+							"description": "Front-left wheel speed × 100 (km/h)"
+						},
+						"wsFR": {
+							"type": "integer",
+							"description": "Front-right wheel speed × 100 (km/h)"
+						},
+						"wsRL": {
+							"type": "integer",
+							"description": "Rear-left wheel speed × 100 (km/h)"
+						},
+						"wsRR": {
+							"type": "integer",
+							"description": "Rear-right wheel speed × 100 (km/h)"
+						},
+						"hasWs": {
+							"$ref": "#/$defs/Bool01",
+							"description": "Wheel speed data available"
+						},
+						"rInvT": {
+							"type": "integer",
+							"description": "Rear inverter temperature °C"
+						},
+						"rStatT": {
+							"type": "integer",
+							"description": "Rear stator temperature °C"
+						},
+						"rHsT": {
+							"type": "integer",
+							"description": "Rear heatsink temperature °C"
+						},
+						"fInvT": {
+							"type": "integer",
+							"description": "Front inverter temperature °C (dual-motor)"
+						},
+						"fStatT": {
+							"type": "integer",
+							"description": "Front stator temperature °C (dual-motor)"
+						},
+						"fHsT": {
+							"type": "integer",
+							"description": "Front heatsink temperature °C (dual-motor)"
+						},
+						"hasMotorT": {
+							"$ref": "#/$defs/Bool01",
+							"description": "Motor temperature data available"
+						},
 						"ok": { "$ref": "#/$defs/Bool01" }
 					},
-					"required": ["t", "speed", "gear", "pedal", "steer", "rpmR", "rpmF", "ok"],
+					"required": [
+						"t",
+						"speed",
+						"gear",
+						"pedal",
+						"brake",
+						"steer",
+						"rpmR",
+						"rpmF",
+						"wsFL",
+						"wsFR",
+						"wsRL",
+						"wsRR",
+						"hasWs",
+						"rInvT",
+						"rStatT",
+						"rHsT",
+						"fInvT",
+						"fStatT",
+						"fHsT",
+						"hasMotorT",
+						"ok"
+					],
 					"additionalProperties": false
 				}
 			]

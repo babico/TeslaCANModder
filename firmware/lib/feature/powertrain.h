@@ -37,6 +37,13 @@ inline uint8_t decodeAccelPedal(const uint8_t *data)
 	return data[1];
 }
 
+// DI_brakePedalState: bits[20:19] of DI_STATE (0x118), 2-bit value
+// 0=off, 1=applied, 2=hard applied. Return 0 or 1 (simple on/off).
+inline uint8_t decodeBrakePedalState(const uint8_t *data)
+{
+	return (data[2] >> 3) & 0x03;
+}
+
 inline float decodeSteeringAngle(const uint8_t *data)
 {
 	int16_t raw = (int16_t)((data[0] << 8) | data[1]);

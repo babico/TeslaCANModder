@@ -76,9 +76,26 @@ static String buildStateJson(State& s) {
     pt["speed"] = (int)(s.vehicleSpeed * 100);
     pt["gear"] = s.gearState;
     pt["pedal"] = s.accelPedal;
+    pt["brake"] = s.brakePedalState;
     pt["steer"] = (int)(s.steeringAngle * 10);
     pt["rpmR"] = s.rearMotorRpm;
     pt["rpmF"] = s.frontMotorRpm;
+  }
+  if (s.hasWheelSpeeds) {
+    JsonObject ws = doc.createNestedObject("wheelSpeeds");
+    ws["fl"] = (int)(s.wheelSpeedFL * 100);
+    ws["fr"] = (int)(s.wheelSpeedFR * 100);
+    ws["rl"] = (int)(s.wheelSpeedRL * 100);
+    ws["rr"] = (int)(s.wheelSpeedRR * 100);
+  }
+  if (s.hasMotorTemps) {
+    JsonObject mt = doc.createNestedObject("motorTemps");
+    mt["rInv"] = s.rearInvTemp;
+    mt["rStat"] = s.rearStatorTemp;
+    mt["rHs"] = s.rearHeatsinkTemp;
+    mt["fInv"] = s.frontInvTemp;
+    mt["fStat"] = s.frontStatorTemp;
+    mt["fHs"] = s.frontHeatsinkTemp;
   }
 
   JsonObject f = doc.createNestedObject("features");

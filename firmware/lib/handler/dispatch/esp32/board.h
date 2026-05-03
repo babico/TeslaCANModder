@@ -17,6 +17,8 @@
 #include "feature/wiper.h"
 #include "feature/mirror.h"
 #include "feature/powertrain.h"
+#include "feature/wheel_speeds.h"
+#include "feature/motor_temps.h"
 #include "feature/can_sim.h"
 #include "feature/fw_compat.h"
 #include "feature/vehicle_config.h"
@@ -52,11 +54,12 @@ void applyFilters(State &s)
 	}
 	else
 	{
-		uint32_t ids[12];
+		uint32_t ids[13];
 		uint8_t count = 0;
 		ids[count++] = CAN_ID_DAS_CONTROL;
 		ids[count++] = CAN_ID_DAS_STATUS2;
 		ids[count++] = CAN_ID_UI_GPS_SPEED;
+		ids[count++] = CAN_ID_WHEEL_SPEED; // wheel speed telemetry (read-only)
 		switch (s.variant)
 		{
 		case HW4:
@@ -148,7 +151,9 @@ void applyFilters(State &s)
 										  CAN_ID_FRONT_MOTOR,
 										  CAN_ID_SEATBELT_STATUS,
 										  CAN_ID_GTW_VERSION,
-										  CAN_ID_DAS_AP_CONFIG};
+									  CAN_ID_DAS_AP_CONFIG,
+									  CAN_ID_REAR_INV_TEMPS,
+									  CAN_ID_FRONT_INV_TEMPS};
 		driverSetBusFilters(BUS_VEHICLE, vehIds, sizeof(vehIds) / sizeof(vehIds[0]));
 	}
 #endif
@@ -285,6 +290,16 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 			s.mapSpeedLimitKph = decodeMapSpeedLimitKph(f);
 			if (s.mapSpeedLimitKph > s.maxSpeedKph)
 				s.maxSpeedKph = s.mapSpeedLimitKph;
+			return;
+		}
+		// Wheel speeds — all four wheels packed in one 8-byte frame (read-only telemetry)
+		if (f.id == CAN_ID_WHEEL_SPEED && f.dlc >= 7)
+		{
+			s.wheelSpeedFL = decodeWheelSpeedFL(f.data);
+			s.wheelSpeedFR = decodeWheelSpeedFR(f.data);
+			s.wheelSpeedRL = decodeWheelSpeedRL(f.data);
+			s.wheelSpeedRR = decodeWheelSpeedRR(f.data);
+			s.hasWheelSpeeds = true;
 			return;
 		}
 		// P2-06: Fallback variant inference from distinctive frame presence (when 0x398 absent)
@@ -658,10 +673,11 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 			s.hasPowertrain = true;
 			return;
 		}
-		if (f.id == CAN_ID_DI_STATE && f.dlc >= 2)
+		if (f.id == CAN_ID_DI_STATE && f.dlc >= 3)
 		{
 			s.gearState = decodeGearState(f.data);
 			s.accelPedal = decodeAccelPedal(f.data);
+			s.brakePedalState = decodeBrakePedalState(f.data);
 			s.apGateParked = (s.gearState == 1 || s.gearState == 0 || s.gearState == 5);
 			s.hasPowertrain = true;
 			return;
@@ -682,6 +698,24 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 		{
 			s.frontMotorRpm = decodeMotorRpm(f.data);
 			s.hasPowertrain = true;
+			return;
+		}
+		// Rear inverter / stator / heatsink temperatures (all models)
+		if (f.id == CAN_ID_REAR_INV_TEMPS && f.dlc >= 5)
+		{
+			s.rearInvTemp = decodeRearInvTemp(f.data);
+			s.rearStatorTemp = decodeRearStatorTemp(f.data);
+			s.rearHeatsinkTemp = decodeRearHeatsinkTemp(f.data);
+			s.hasMotorTemps = true;
+			return;
+		}
+		// Front inverter / stator / heatsink temperatures (dual-motor only)
+		if (f.id == CAN_ID_FRONT_INV_TEMPS && f.dlc >= 5)
+		{
+			s.frontInvTemp = decodeFrontInvTemp(f.data);
+			s.frontStatorTemp = decodeFrontStatorTemp(f.data);
+			s.frontHeatsinkTemp = decodeFrontHeatsinkTemp(f.data);
+			s.hasMotorTemps = true;
 			return;
 		}
 

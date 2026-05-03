@@ -430,12 +430,29 @@ struct State
 	bool vehicleLockedState;	// current known lock state
 
 	// Powertrain telemetry (read-only decode)
-	float vehicleSpeed;	   // km/h (signed, from 0x257)
-	uint8_t gearState;	   // 0=inv, 1=P, 2=R, 3=N, 4=D (from 0x118)
-	uint8_t accelPedal;	   // 0-100% (from 0x118)
-	int16_t rearMotorRpm;  // RPM (from 0x106)
-	int16_t frontMotorRpm; // RPM (from 0x115)
-	bool hasPowertrain;	   // At least one powertrain frame decoded
+	float vehicleSpeed;	      // km/h (signed, from 0x257)
+	uint8_t gearState;	      // 0=inv, 1=P, 2=R, 3=N, 4=D (from 0x118)
+	uint8_t accelPedal;	      // 0-100% (from 0x118)
+	uint8_t brakePedalState;  // 0=off 1=on (bits[20:19] of 0x118 DI_STATE)
+	int16_t rearMotorRpm;     // RPM (from 0x106)
+	int16_t frontMotorRpm;    // RPM (from 0x115)
+	bool hasPowertrain;	      // At least one powertrain frame decoded
+
+	// Wheel speeds (from 0x175, ChassisBus — 13-bit LE, scale 0.04 km/h)
+	float wheelSpeedFL; // km/h front-left
+	float wheelSpeedFR; // km/h front-right
+	float wheelSpeedRL; // km/h rear-left
+	float wheelSpeedRR; // km/h rear-right
+	bool hasWheelSpeeds;
+
+	// Motor / inverter temperatures
+	int8_t rearInvTemp;      // °C rear inverter (from 0x315 byte1 − 40)
+	int8_t rearStatorTemp;   // °C rear stator   (from 0x315 byte2 − 40)
+	int8_t rearHeatsinkTemp; // °C rear heatsink (from 0x315 byte4 − 40)
+	int8_t frontInvTemp;     // °C front inverter (from 0x376 byte1 − 40, dual-motor only)
+	int8_t frontStatorTemp;  // °C front stator   (from 0x376 byte2 − 40)
+	int8_t frontHeatsinkTemp;// °C front heatsink (from 0x376 byte4 − 40)
+	bool hasMotorTemps;
 
 	// CAN simulation mode
 	bool canSimEnabled; // true = generating synthetic CAN frames
@@ -516,7 +533,11 @@ struct State
 		  assistNavEnable(false), assistHandsOff(false), assistDevMode(false), laneGraphEnable(false), assistTelemetryOff(false),
 		  seatbeltEmulation(false), seatbeltLastMs(0), wiperPersistEnabled(false),
 		  savedWiperSpeed(0), mirrorAutoFoldEnabled(false), vehicleLockedState(false), vehicleSpeed(0), gearState(0),
-		  accelPedal(0), rearMotorRpm(0), frontMotorRpm(0), hasPowertrain(false), canSimEnabled(false), canSimLastMs(0),
+		  accelPedal(0), brakePedalState(0), rearMotorRpm(0), frontMotorRpm(0), hasPowertrain(false),
+		  wheelSpeedFL(0), wheelSpeedFR(0), wheelSpeedRL(0), wheelSpeedRR(0), hasWheelSpeeds(false),
+		  rearInvTemp(0), rearStatorTemp(0), rearHeatsinkTemp(0),
+		  frontInvTemp(0), frontStatorTemp(0), frontHeatsinkTemp(0), hasMotorTemps(false),
+		  canSimEnabled(false), canSimLastMs(0),
 		  canSimCounter(0), singleShotTx(false), fwYear(0), fwRelease(0), fwMinor(0), fwBuild(0), fwCompat(0),
 		  hasFwVersion(false), mqttEnabled(false), mqttPort(1883), mqttInterval(2000), mqttLastPublishMs(0),
 		  mqttConnected(false), vehicleModel(0), vehicleYear(0), hasVehicleConfig(false), platformModel(0),
