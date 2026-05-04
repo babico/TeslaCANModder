@@ -948,6 +948,16 @@
 			],
 			"additionalProperties": false
 		},
+		"CanBusValues": {
+			"type": "object",
+			"properties": {
+				"chassis": { "type": "integer" },
+				"vehicle": { "type": "integer" },
+				"body": { "type": "integer" }
+			},
+			"required": ["chassis", "vehicle", "body"],
+			"additionalProperties": false
+		},
 		"CanStatus": {
 			"type": "object",
 			"properties": {
@@ -958,24 +968,19 @@
 				"eapModCount": { "type": "integer" },
 				"txFailCount": { "type": "integer" },
 				"busOffCount": { "type": "integer" },
-				"framesChassis": { "type": "integer" },
-				"framesVehicle": { "type": "integer" },
-				"framesBody": { "type": "integer" },
-				"hzChassis": {
-					"type": "integer",
-					"description": "Chassis bus frame rate x10 (e.g. 456 = 45.6 Hz)"
+				"frames": { "$ref": "#/$defs/CanBusValues" },
+				"hz": {
+					"description": "Frame rate x10 per bus (e.g. 456 = 45.6 Hz)",
+					"$ref": "#/$defs/CanBusValues"
 				},
-				"hzVehicle": { "type": "integer", "description": "Vehicle bus frame rate x10" },
-				"hzBody": { "type": "integer", "description": "Body bus frame rate x10" },
-				"hzMinChassis": {
-					"type": "integer",
-					"description": "Chassis min Hz x10 observed (0 until first window)"
+				"hzMin": {
+					"description": "Min Hz x10 per bus observed (0 until first window)",
+					"$ref": "#/$defs/CanBusValues"
 				},
-				"hzMinVehicle": { "type": "integer", "description": "Vehicle min Hz x10 observed" },
-				"hzMinBody": { "type": "integer", "description": "Body min Hz x10 observed" },
-				"hzMaxChassis": { "type": "integer", "description": "Chassis max Hz x10 observed" },
-				"hzMaxVehicle": { "type": "integer", "description": "Vehicle max Hz x10 observed" },
-				"hzMaxBody": { "type": "integer", "description": "Body max Hz x10 observed" }
+				"hzMax": {
+					"description": "Max Hz x10 per bus observed",
+					"$ref": "#/$defs/CanBusValues"
+				}
 			},
 			"required": ["clockReqMHz", "clockMHz", "health"],
 			"additionalProperties": false

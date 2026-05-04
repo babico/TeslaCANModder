@@ -198,18 +198,26 @@ void sendBoot(State& s) {
        .num("eapModCount", (long)s.canDiag.eapModCount)
        .num("txFailCount", (long)s.canDiag.txFailCount)
        .num("busOffCount", (long)s.canDiag.busOffCount)
-       .num("framesChassis", (long)s.canDiag.bus[0].frames)
-       .num("framesVehicle", (long)s.canDiag.bus[1].frames)
-       .num("framesBody", (long)s.canDiag.bus[2].frames)
-       .num("hzChassis", (long)s.canDiag.bus[0].hz)
-       .num("hzVehicle", (long)s.canDiag.bus[1].hz)
-       .num("hzBody", (long)s.canDiag.bus[2].hz)
-       .num("hzMinChassis", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
-       .num("hzMinVehicle", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
-       .num("hzMinBody", (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin))
-       .num("hzMaxChassis", (long)s.canDiag.bus[0].hzMax)
-       .num("hzMaxVehicle", (long)s.canDiag.bus[1].hzMax)
-       .num("hzMaxBody", (long)s.canDiag.bus[2].hzMax);
+       .object("frames", [&](JsonLineBuilder::JsonObjectBuilder& fr) {
+         fr.num("chassis", (long)s.canDiag.bus[0].frames)
+           .num("vehicle", (long)s.canDiag.bus[1].frames)
+           .num("body",    (long)s.canDiag.bus[2].frames);
+       })
+       .object("hz", [&](JsonLineBuilder::JsonObjectBuilder& hz) {
+         hz.num("chassis", (long)s.canDiag.bus[0].hz)
+           .num("vehicle", (long)s.canDiag.bus[1].hz)
+           .num("body",    (long)s.canDiag.bus[2].hz);
+       })
+       .object("hzMin", [&](JsonLineBuilder::JsonObjectBuilder& hzMin) {
+         hzMin.num("chassis", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
+              .num("vehicle", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
+              .num("body",    (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin));
+       })
+       .object("hzMax", [&](JsonLineBuilder::JsonObjectBuilder& hzMax) {
+         hzMax.num("chassis", (long)s.canDiag.bus[0].hzMax)
+              .num("vehicle", (long)s.canDiag.bus[1].hzMax)
+              .num("body",    (long)s.canDiag.bus[2].hzMax);
+       });
     })
     .object("features", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.boolean("fsd", f.fsd)
@@ -403,18 +411,26 @@ void sendStatus(State& s, unsigned long now) {
        .num("eapModCount", (long)s.canDiag.eapModCount)
        .num("txFailCount", (long)s.canDiag.txFailCount)
        .num("busOffCount", (long)s.canDiag.busOffCount)
-       .num("framesChassis", (long)s.canDiag.bus[0].frames)
-       .num("framesVehicle", (long)s.canDiag.bus[1].frames)
-       .num("framesBody", (long)s.canDiag.bus[2].frames)
-       .num("hzChassis", (long)s.canDiag.bus[0].hz)
-       .num("hzVehicle", (long)s.canDiag.bus[1].hz)
-       .num("hzBody", (long)s.canDiag.bus[2].hz)
-       .num("hzMinChassis", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
-       .num("hzMinVehicle", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
-       .num("hzMinBody", (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin))
-       .num("hzMaxChassis", (long)s.canDiag.bus[0].hzMax)
-       .num("hzMaxVehicle", (long)s.canDiag.bus[1].hzMax)
-       .num("hzMaxBody", (long)s.canDiag.bus[2].hzMax);
+       .object("frames", [&](JsonLineBuilder::JsonObjectBuilder& fr) {
+         fr.num("chassis", (long)s.canDiag.bus[0].frames)
+           .num("vehicle", (long)s.canDiag.bus[1].frames)
+           .num("body",    (long)s.canDiag.bus[2].frames);
+       })
+       .object("hz", [&](JsonLineBuilder::JsonObjectBuilder& hz) {
+         hz.num("chassis", (long)s.canDiag.bus[0].hz)
+           .num("vehicle", (long)s.canDiag.bus[1].hz)
+           .num("body",    (long)s.canDiag.bus[2].hz);
+       })
+       .object("hzMin", [&](JsonLineBuilder::JsonObjectBuilder& hzMin) {
+         hzMin.num("chassis", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
+              .num("vehicle", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
+              .num("body",    (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin));
+       })
+       .object("hzMax", [&](JsonLineBuilder::JsonObjectBuilder& hzMax) {
+         hzMax.num("chassis", (long)s.canDiag.bus[0].hzMax)
+              .num("vehicle", (long)s.canDiag.bus[1].hzMax)
+              .num("body",    (long)s.canDiag.bus[2].hzMax);
+       });
     })
     .object("features", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.boolean("fsd", f.fsd)
