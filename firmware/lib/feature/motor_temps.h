@@ -19,10 +19,28 @@
 // All signals: raw byte value − 40 → temperature in °C.
 // Range: 0..255 raw → −40..+215 °C.
 
-inline int8_t decodeRearInvTemp(const uint8_t *d)      { return (int8_t)((int16_t)d[1] - 40); }
-inline int8_t decodeRearStatorTemp(const uint8_t *d)   { return (int8_t)((int16_t)d[2] - 40); }
-inline int8_t decodeRearHeatsinkTemp(const uint8_t *d) { return (int8_t)((int16_t)d[4] - 40); }
+inline int8_t decodeRearInvTemp(const uint8_t *d)
+{
+	return (int8_t)((int16_t)d[1] - 40);
+}
+inline int8_t decodeRearStatorTemp(const uint8_t *d)
+{
+	return (int8_t)((int16_t)d[2] - 40);
+}
+inline int8_t decodeRearHeatsinkTemp(const uint8_t *d)
+{
+	return (int8_t)((int16_t)d[4] - 40);
+}
 
-inline int8_t decodeFrontInvTemp(const uint8_t *d)      { return (int8_t)((int16_t)d[1] - 40); }
-inline int8_t decodeFrontStatorTemp(const uint8_t *d)   { return (int8_t)((int16_t)d[2] - 40); }
-inline int8_t decodeFrontHeatsinkTemp(const uint8_t *d) { return (int8_t)((int16_t)d[4] - 40); }
+inline int8_t decodeFrontInvTemp(const uint8_t *d)
+{
+	return (int8_t)((int16_t)d[1] - 40);
+}
+inline int8_t decodeFrontStatorTemp(const uint8_t *d)
+{
+	return (int8_t)((int16_t)d[2] - 40);
+}
+inline int8_t decodeFrontHeatsinkTemp(const uint8_t *d)
+{
+	return (int8_t)((int16_t)d[4] - 40);
+}
