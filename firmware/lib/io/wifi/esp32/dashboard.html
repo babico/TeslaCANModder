@@ -685,6 +685,11 @@
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ cmd: c }),
 				})
+					.then((r) => {
+						if (!r.ok) throw new Error(r.status);
+						// POST returns RpcResponse Ack — fetch updated state separately.
+						return fetch("/api/status");
+					})
 					.then((r) => r.json())
 					.then((d) => {
 						S = d;

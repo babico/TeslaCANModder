@@ -179,7 +179,7 @@ static void handlePostCommand() {
     return;
   }
 
-  // Validate command characters (same as serial parser)
+  // Validate that the extracted cmd method only contains allowed characters
   for (size_t i = 0; i < strlen(cmd); i++) {
     char c = cmd[i];
     bool valid = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
@@ -192,7 +192,11 @@ static void handlePostCommand() {
 
   executeCommand(cmd, *restState, millis());
 
-  sendJsonResponse(200, buildStateJson(*restState));
+  // Return RpcResponse (Ack) — same contract as serial/BLE.
+  // Clients that need updated state should call GET /api/status.
+  char ackJson[72];
+  snprintf(ackJson, sizeof(ackJson), "{\"t\":\"ack\",\"cmd\":\"%s\"}", cmd);
+  sendJsonResponse(200, String(ackJson));
 }
 
 static void handleGetPing() {

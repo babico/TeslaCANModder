@@ -348,6 +348,24 @@ void sendFrame(const Frame &f, const char *dir, uint8_t bus, unsigned long ms, S
 	line.end();
 }
 
+
+// ── Minimal RPC request parser ────────────────────────────────────────────────
+// Extracts the "cmd" value from a JSON object: {"cmd":"<method>"}
+static bool parseRpcCmd(const char *buf, char *out, uint8_t maxLen)
+{
+	const char *p = strstr(buf, "\"cmd\"");
+	if (!p) return false;
+	p += 5;
+	while (*p == ' ' || *p == ':') p++;
+	if (*p != '"') return false;
+	p++;
+	uint8_t i = 0;
+	while (*p && *p != '"' && i < (uint8_t)(maxLen - 1)) out[i++] = *p++;
+	if (*p != '"' || i == 0) return false;
+	out[i] = '\0';
+	return true;
+}
+
 // ── Character Handler ────────────────────────────────────────────────────────
 // Forward-declare executeCommand (defined in platform serial header after this include).
 void executeCommand(const char *cmd, State &s, unsigned long now);
@@ -362,14 +380,33 @@ void handleChar(char *buf, uint8_t &len, char c, State &s)
 		if (len > 0 && len < SERIAL_CMD_BUFFER_SIZE)
 		{
 			buf[len] = '\0';
-			executeCommand(buf, s, millis());
+			char rpcCmd[SERIAL_CMD_BUFFER_SIZE];
+			if (buf[0] == '{')
+			{
+				if (parseRpcCmd(buf, rpcCmd, sizeof(rpcCmd)))
+				{
+					executeCommand(rpcCmd, s, millis());
+				}
+				else
+				{
+					sendError(F("rpc: expected {\"cmd\":\"...\"}"));
+				}
+			}
+			else
+			{
+				sendError(F("rpc: expected json object"));
+			}
 		}
 		len = 0;
 		return;
 	}
 
+	// Accept all JSON structural characters in addition to the cmd method charset.
+	// The cmd value itself is validated by parseRpcCmd / executeCommand.
 	bool valid =
-		(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == ':' || c == '-' || c == '_';
+		(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+		c == ':' || c == '-' || c == '_' ||
+		c == '{' || c == '}' || c == '"' || c == ',' || c == ' ';
 	if (!valid)
 	{
 		len = 0;

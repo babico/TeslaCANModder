@@ -1,7 +1,12 @@
 #pragma once
 #include "features.h"
 
-static const uint8_t SERIAL_CMD_BUFFER_SIZE = 32;
+// RpcRequest JSON envelope {"cmd":"..."} needs room for the longest method string
+// plus ~10 bytes of JSON overhead. 64 bytes covers all defined RPC methods.
+#ifndef SERIAL_CMD_BUFFER_SIZE
+#  define SERIAL_CMD_BUFFER_SIZE 64
+#endif
+
 static char usbBuf[SERIAL_CMD_BUFFER_SIZE];
 static uint8_t usbLen = 0;
 #if BOARD_ENABLE_BLE
