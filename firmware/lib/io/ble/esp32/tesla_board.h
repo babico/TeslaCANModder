@@ -14,8 +14,8 @@
 
 #include <Preferences.h>
 #include "io/ble/esp32/ble_client.h"
-#include "tesla/ble/feature/key.h"
-#include "tesla/ble/handler/dispatch.h"
+#include "vehicle/ble/feature/key.h"
+#include "vehicle/ble/handler/dispatch.h"
 #include <stdint.h>
 #include <string.h>
 

@@ -74,11 +74,11 @@ struct struct_message {
 
 No direct CAN access — all CAN work is done by a separate transmitter device. The monitor receives pre-decoded metrics over ESP-NOW. Key CAN frame IDs tracked by the transmitter and surfaced in the UI:
 
-| CAN ID | Bus | Signal | Field |
-|--------|-----|--------|-------|
-| 0x3FD  | A (Chassis) | EAP FSD mux frame | `aFrames1021`, `aEapModified` |
-| 0x370  | B (Vehicle) | EPAS nag killer echo | `bFrames880`, `echoCount` |
-| 0x399  | B (Vehicle) | Blind spot monitor | `bFrames921` |
+| CAN ID | Bus         | Signal               | Field                         |
+| ------ | ----------- | -------------------- | ----------------------------- |
+| 0x3FD  | A (Chassis) | EAP FSD mux frame    | `aFrames1021`, `aEapModified` |
+| 0x370  | B (Vehicle) | EPAS nag killer echo | `bFrames880`, `echoCount`     |
+| 0x399  | B (Vehicle) | Blind spot monitor   | `bFrames921`                  |
 
 ## Relevance to Our Project
 

@@ -21,9 +21,9 @@
 
 #if BOARD_ENABLE_BLE
 
-#include "tesla/ble/feature/key.h"
-#include "tesla/ble/feature/session.h"
-#include "tesla/ble/msg.h"
+#include "vehicle/ble/feature/key.h"
+#include "vehicle/ble/feature/session.h"
+#include "vehicle/ble/msg.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
