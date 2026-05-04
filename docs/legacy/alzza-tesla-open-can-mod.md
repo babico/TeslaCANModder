@@ -3,12 +3,15 @@ title: alzza-tesla-open-can-mod
 description: A Korean-language fork/extension of the Tesla Open CAN Mod project, targeting HW3 EAP (Enhanced Autopilot) vehicles usin
 category: legacy
 folder: legacy
-tags: [legacy, community, external]
+tags: [legacy, community, external, archived]
 author: alzza
 repo: tesla-open-can-mod
+status: deleted
 ---
 
 # alzza-tesla-open-can-mod
+
+> **Repository deleted.** `https://github.com/alzza/tesla-open-can-mod` returned 404 as of May 2026. Content below is preserved from the last recorded state.
 
 ## Overview
 

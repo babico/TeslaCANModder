@@ -12,11 +12,11 @@ repo: tesla-fsd-can-mod
 
 ## Overview
 
-Arduino firmware for enabling Tesla Full Self-Driving (FSD) via CAN bus message interception. Runs on an Adafruit Feather or ESP32-C3 with an MCP2515 CAN controller. It listens for Autopilot-related CAN frames, sets FSD enable bits, maps follow-distance to speed profiles, and suppresses the hands-on-wheel nag.
+Arduino firmware for enabling Tesla Full Self-Driving (FSD) via CAN bus message interception. Runs on an ESP32-C3 Super Mini with an MCP2515 CAN controller via SPI. It listens for Autopilot-related CAN frames, sets FSD enable bits, maps follow-distance to speed profiles, and suppresses the hands-on-wheel nag. As of the most recent commit, Legacy and HW3 handler support has been removed — only HW4 is supported (hardcoded via `#define HW HW4`).
 
 ## Technical Details
 
-- **Platform**: ESP32-C3 Super Mini / Adafruit Feather M4 CAN (MCP2515-based)
+- **Platform**: ESP32-C3 Super Mini (Adafruit Feather support removed in latest commit)
 - **Language**: C++ (Arduino)
 - **CAN Interface**: MCP2515 via SPI at 500 kbit/s
 - **License**: GPL-3.0
@@ -27,7 +27,7 @@ Single-file firmware (`CanFeather.ino`):
 
 - `CarManagerBase` — Base struct with virtual `handelMessage()` for CAN frame processing
 - `HW4Handler` — Handles CAN IDs 1016 (follow-distance/speed profile) and 1021 (FSD enable bits, nag suppression, speed profile injection). Extends `CarManagerBase`
-- Hardware variant selection via `#define HW` preprocessor directive (LEGACY, HW3, HW4)
+- Hardware variant: **HW4 only** (`#define HW HW4` — Legacy/HW3 handlers removed in latest commit; note in-source comment: "HW4 since Version 2026.2.3 uses FSDV14, before that compile for HW3, even for HW4 vehicles")
 - SPI pin configuration for ESP32-C3 Super Mini (SCK=4, MISO=5, MOSI=6, CS=7)
 - Debug output over Serial at 115200 baud
 

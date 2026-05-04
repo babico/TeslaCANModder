@@ -12,7 +12,7 @@ repo: flipper-tesla-fsd
 
 ## Overview
 
-A comprehensive Tesla FSD region-gate bypass application for Flipper Zero (and ESP32) that enables the FSD UI toggle for users with active FSD subscriptions in regions where it's not exposed. Beyond FSD, it includes a nag killer, ISA speed chime suppression, OTA guard, battery preconditioning trigger, and a live BMS dashboard. This is one of the most feature-complete and well-documented Tesla CAN modification projects in the community.
+A comprehensive Tesla FSD region-gate bypass application for Flipper Zero (and ESP32) that enables the FSD UI toggle for users with active FSD subscriptions in regions where it's not exposed. Beyond FSD, it includes a nag killer (DAS-aware, with organic torque variation for anti-detection), ISA speed chime suppression, OTA guard, battery preconditioning trigger, a live BMS dashboard, TLSSC Restore (v2.10+, recovers stop-sign/traffic-light control on VIN-banned vehicles via `0x331` DAS config spoofing), Ban Shield (v2.9+, freezes `0x7FF` GTW_carConfig to block server-side bans), and AP-First mode (v2.14+, required for Tesla firmware 2026.14.x — delays `0x3FD` injection until Autopilot is engaged). This is one of the most feature-complete and well-documented Tesla CAN modification projects in the community.
 
 ## Technical Details
 
@@ -61,8 +61,9 @@ Extensive CAN bus integration with the most comprehensive CAN ID coverage seen i
 
 **Nag / Safety:**
 
-- `0x370 (880)` — EPAS3P_sysStatus: nag killer via counter+1 echo
+- `0x370 (880)` — EPAS3P_sysStatus: nag killer via counter+1 echo (with organic torque variation [1.00–2.40 Nm] to avoid flat-signal telemetry detection)
 - `0x399 (921)` — ISA speed chime suppression (HW4 only)
+- `0x39B (923)` — `DAS_status`: read `DAS_autopilotHandsOnState` (v2.8+) to gate nag echo only when DAS actively demands hands-on (states 2–7, 9–10); also read `DAS_autopilotState` for AP-First mode trigger (v2.14+)
 
 **BMS / Diagnostics:**
 
@@ -73,9 +74,10 @@ Extensive CAN bus integration with the most comprehensive CAN ID coverage seen i
 **Vehicle State:**
 
 - `0x398 (920)` — GTW_carConfig: HW version auto-detection
-- `0x7FF (2047)` — GTW_carConfig on Ethernet bus
+- `0x7FF (2047)` — GTW_carConfig on Ethernet bus; also used by Ban Shield (v2.9+) — captures healthy mux frames as baseline and re-transmits any changed frame to block server-side VIN bans
 - `0x318 (792)` — GTW_carState: OTA update detection (pauses TX)
 - `0x082 (130)` — UI_tripPlanning: battery precondition trigger
+- `0x331 (817)` — DAS_autopilotConfig: TLSSC Restore (v2.10+) — read-modify-retransmit at ~1 Hz, sets byte[0] lower 6 bits to 0x1B to restore TLSSC toggle on VIN-banned vehicles (confirmed on Palladium, HW4 Highland, Intel HW3)
 
 **Extras (40+ additional CAN IDs defined):**
 
@@ -98,3 +100,7 @@ Very high relevance — this is the most feature-complete CAN modification proje
   - CRC/checksum recalculation after frame modification
   - ESP32 web dashboard with WebSocket real-time push and REST API
   - Clean separation of CAN logic (`fsd_handler`) from platform-specific code (Flipper scenes, ESP32 WiFi)
+  - DAS-aware nag killer: gates echo on `0x39B` DAS_autopilotHandsOnState to reduce spurious bus traffic; uses organic torque variation to evade telemetry-based VIN bans
+  - TLSSC Restore (`0x331`): recovers Traffic Light and Stop Sign Control on banned vehicles via DAS config spoofing (v2.10+)
+  - Ban Shield (`0x7FF`): captures healthy GTW_carConfig baseline and retransmits to block server-side ban modifications in real time (v2.9+)
+  - AP-First mode: delays `0x3FD` injection until AP is engaged (reads `DAS_autopilotState` from `0x39B`) — required for Tesla firmware 2026.14.x (v2.14+)

@@ -29,10 +29,13 @@ The main Tesla Open CAN Mod project — a multi-platform firmware that intercept
 - `include/can_frame_types.h` — Portable CAN frame type definitions.
 - `include/can_helpers.h` — Bit manipulation utilities.
 - `include/drivers/` — Platform-specific CAN driver implementations:
+  - `can_driver.h` — Abstract CAN driver base interface
   - `mcp2515_driver.h` — MCP2515 SPI driver
   - `same51_driver.h` — ATSAME51 native CAN driver
   - `twai_driver.h` — ESP32 TWAI driver
+  - `mock_driver.h` — Mock driver for native unit tests (no hardware required)
 - `RP2040CAN.ino` — Arduino IDE–compatible sketch (same logic, for users who don't use PlatformIO).
+- `lib/` — Third-party library sources bundled for PlatformIO.
 - `test/` — Test files.
 - `guides/` — Additional documentation.
 
@@ -62,9 +65,10 @@ This is the primary upstream reference for our firmware. The driver abstraction 
 
 - **Reusability**: High
 - **Key Takeaways**:
-  - Driver abstraction pattern supporting MCP2515, ATSAME51, and ESP32 TWAI
+  - Driver abstraction pattern supporting MCP2515, ATSAME51, ESP32 TWAI, and mock (for testing)
   - Templated app logic that works across all platforms
   - Most complete public documentation of Tesla FSD CAN message structure
   - Both Arduino IDE and PlatformIO build support
   - 120Ω termination resistor must be removed when connecting to vehicle CAN bus
   - HW4 firmware version determines FSD version (v13 vs v14) — compile target must match
+  - Repository now auto-syncs daily from an upstream GitLab source via GitHub Actions workflow

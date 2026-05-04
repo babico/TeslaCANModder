@@ -12,7 +12,7 @@ repo: open-can-tools-ev-open-can-tools
 
 ## Overview
 
-This is the **upstream repository** that our Tesla-CAN-Mod project is forked from / closely tracks. It is a general-purpose, open-source CAN bus modification tool for Tesla vehicles that intercepts, modifies, and re-transmits CAN frames in real time to enable features like FSD region-gate bypass, nag suppression, speed profiles, ISA chime suppression, and emergency vehicle detection. It supports multiple hardware platforms and includes a WiFi web dashboard on ESP32 boards.
+This is the **upstream repository** that our Tesla-CAN-Mod project is forked from / closely tracks. It is a general-purpose, open-source CAN bus modification tool for Tesla vehicles that intercepts, modifies, and re-transmits CAN frames in real time to enable features like FSD region-gate bypass, nag suppression, speed profiles, ISA chime suppression, emergency vehicle detection, and Smart Summon compatibility. The current stable release is **v2.5.2** (April 2026), which includes the AP Injection Gate — a smart gate that opens injection only when Autopilot, Smart Summon, or Smart Park is active, required for Tesla firmware 2026.14.3+. It supports multiple hardware platforms and includes a WiFi web dashboard on ESP32 boards.
 
 ## Technical Details
 
@@ -29,6 +29,7 @@ This is the **upstream repository** that our Tesla-CAN-Mod project is forked fro
 - `include/drivers/` — Hardware abstraction: `mcp2515_driver.h`, `esp32_mcp2515_driver.h`, `same51_driver.h`, `twai_driver.h`
 - `include/can_frame_types.h`, `can_helpers.h` — CAN frame type definitions and bit manipulation helpers
 - `include/plugin_engine.h` — JSON-based runtime plugin system for custom CAN modifications
+- `include/log_buffer.h`, `shared_types.h` — Logging buffer and shared type definitions (added in 2.x series)
 - `include/web/` — WiFi web dashboard (ESP32 only) for real-time monitoring and OTA updates
 - `platformio_profile.h` — Compile-time feature selection (hardware variant, feature toggles)
 - `platformio.ini` — Build environments for each supported board
@@ -55,3 +56,5 @@ This **is** the canonical upstream for our Tesla-CAN-Mod firmware. The `firmware
   - WiFi dashboard with OTA update capability
   - Separation of CAN logic from hardware abstraction
   - HW3/HW4/Legacy handler pattern for different Tesla hardware generations
+  - AP Injection Gate (v2.5.x+): gates CAN injection on AP/Summon/Smart Park active state — required for Tesla firmware 2026.14.3+ which rejects always-on injection; uses `DI_autonomyControlActive` (CAN 0x118/280) and `UI_selfParkRequest` (CAN 0x3F8) as gate signals
+  - Current stable version: 2.5.2 (see `VERSION` file and `CHANGELOG.md`)

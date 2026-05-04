@@ -3,12 +3,15 @@ title: ylovex75-tesla-open-can-mod-release
 description: A comprehensive fork of Tesla-OPEN-CAN-MOD — an ESP32/ESP32-S3 CAN bus modification firmware for Tesla vehicles. It inte
 category: legacy
 folder: legacy
-tags: [legacy, community, external]
+tags: [legacy, community, external, archived]
 author: ylovex75
 repo: tesla-open-can-mod-release
+status: deleted
 ---
 
 # ylovex75-tesla-open-can-mod-release
+
+> **Repository deleted.** `https://github.com/ylovex75/tesla-open-can-mod-release` returned 404 as of May 2026. Content below is preserved from the last recorded state.
 
 ## Overview
 
