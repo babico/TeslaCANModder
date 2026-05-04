@@ -9,7 +9,7 @@
 #ifdef __INTELLISENSE__
 #include <Arduino.h>
 #include "core/types.h"
-#include "infra/can.h"
+#include "infra/can/bus.h"
 void printStr(const char *);
 void printStr(const __FlashStringHelper *);
 void printNum(long);

@@ -1,6 +1,6 @@
 #pragma once
 #include "ble_config.h"
-#include "infra/can_recorder.h"
+#include "infra/can/recorder.h"
 
 // ── WiFi Init & Tick ────────────────────────────────────────────────────────
 

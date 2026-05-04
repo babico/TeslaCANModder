@@ -1,9 +1,9 @@
 #pragma once
-#include "infra/can.h"
+#include "infra/can/bus.h"
 #include "infra/rate_limit.h"
-#include "infra/id_filter.h"
-#include "infra/log_ring.h"
-#include "infra/ring_buffer.h"
+#include "infra/can/id_filter.h"
+#include "infra/log/ring.h"
+#include "infra/can/ring_buffer.h"
 #include "feature/summon.h"
 #include "feature/bms.h"
 #include "feature/nag.h"

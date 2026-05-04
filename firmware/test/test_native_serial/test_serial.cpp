@@ -18,7 +18,7 @@
 
 // Provide types
 #include "core/types.h"
-#include "infra/can.h"
+#include "infra/can/bus.h"
 
 // ── Fake Serial / Arduino ───────────────────────────────────────────────────
 static std::string capturedOutput;

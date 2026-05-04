@@ -9,7 +9,7 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "infra/can.h"
+#include "infra/can/bus.h"
 #include "feature/drive_context.h"
 
 void setUp() {}

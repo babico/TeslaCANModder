@@ -2,7 +2,7 @@
 // ── Shared MCP2515 driver functions ─────────────────────────────────────────
 // Include AFTER platform-specific state is defined:
 //   mcpBus[], mcpFrameReady[], mcpAvailable[], mcpClockReqMHz, mcpClockMHz
-// Requires: <SPI.h>, <mcp2515.h>, "core/types.h", "infra/can.h"
+// Requires: <SPI.h>, <mcp2515.h>, "core/types.h", "infra/can/bus.h"
 
 static bool setBitrateForClock(MCP2515 &mcp, uint8_t mhz)
 {

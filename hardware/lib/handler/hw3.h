@@ -1,6 +1,6 @@
 #pragma once
 #include "core/forward.h"
-#include "infra/can.h"
+#include "infra/can/bus.h"
 #include "feature/profile.h"
 #include "feature/offsets.h"
 #include "feature/region.h"

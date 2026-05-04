@@ -5,7 +5,7 @@
 #include <Preferences.h>
 #include "core/config/esp32/board.h"
 #include "core/types.h"
-#include "infra/log_ring.h"
+#include "infra/log/ring.h"
 #include "dashboard.h"
 
 // Forward declarations

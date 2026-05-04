@@ -9,7 +9,7 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "infra/can_recorder.h"
+#include "infra/can/recorder.h"
 
 void setUp() {}
 void tearDown() {}

@@ -9,7 +9,7 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "infra/burst.h"
+#include "infra/can/burst.h"
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}

@@ -12,10 +12,10 @@
 #include "core/platform.h"
 #include "core/persist/esp32/board.h"
 #include "core/driver/esp32/board.h"
-#include "handler/dispatch/esp32/board.h"
+#include "handler/dispatch.h"
 #include "io/serial/esp32/board.h"
-#include "infra/ring_buffer.h"
-#include "infra/can_health.h"
+#include "infra/can/ring_buffer.h"
+#include "infra/can/health.h"
 
 #if BOARD_ENABLE_WIFI
 #include "io/wifi/esp32/board.h"

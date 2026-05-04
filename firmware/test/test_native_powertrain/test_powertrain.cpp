@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include "core/types.h"
-#include "infra/can.h"
+#include "infra/can/bus.h"
 #include "feature/powertrain.h"
 
 void setUp() {}

@@ -15,7 +15,7 @@ class __FlashStringHelper;
 #define BOARD_ENABLE_WIFI 0
 
 #include "core/types.h"
-#include "infra/can.h"
+#include "infra/can/bus.h"
 
 static int saveCount = 0;
 void saveSettings(const State &)
@@ -25,7 +25,7 @@ void saveSettings(const State &)
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
-#include "infra/parse.h"
+#include "infra/util/parse.h"
 #include "feature/tlssc.h"
 #include "support/helpers.h"
 

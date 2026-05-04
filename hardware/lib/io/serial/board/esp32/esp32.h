@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "core/config/esp32.h"
 #include "core/types.h"
-#include "infra/can.h"
+#include "infra/can/bus.h"
 
 // Forward declarations for logging (used by handlers included below)
 void sendLog(const char* msg);
@@ -12,7 +12,7 @@ void driverSetClockMHz(uint8_t mhz);
 uint8_t driverGetClockReqMHz();
 uint8_t driverGetClockMHz();
 
-#include "infra/parse.h"
+#include "infra/util/parse.h"
 #include "feature/stream.h"
 #include "feature/can_raw.h"
 #include "feature/can_clock.h"
@@ -29,7 +29,7 @@ uint8_t driverGetClockMHz();
 #include "feature/tpms.h"
 #include "feature/drive_mode.h"
 #include "feature/region.h"
-#include "infra/log_ring.h"
+#include "infra/log/ring.h"
 #if BUS_VEHICLE_ACTIVE
   #include "feature/mirror.h"
   #include "feature/lock.h"

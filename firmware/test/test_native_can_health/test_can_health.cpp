@@ -15,8 +15,8 @@ class __FlashStringHelper;
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "infra/can.h"
-#include "infra/can_health.h"
+#include "infra/can/bus.h"
+#include "infra/can/health.h"
 
 void setUp() {}
 void tearDown() {}

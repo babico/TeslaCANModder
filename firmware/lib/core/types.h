@@ -158,27 +158,24 @@ inline bool parseNagKillerMode(const char *name, NagKillerMode &out)
 // ride lengths (uint32_t frames wraps only after ~596 hours at peak bus load).
 struct CanBusStat
 {
-	uint32_t frames;        // total frames received (cumulative)
-	uint16_t hz;            // current frame rate × 10  (e.g. 456 → 45.6 Hz)
-	uint16_t hzMin;         // minimum Hz × 10 observed (0xFFFF until first window)
-	uint16_t hzMax;         // maximum Hz × 10 observed
-	uint16_t windowCount;   // frames counted in current 1-second window
+	uint32_t frames;		// total frames received (cumulative)
+	uint16_t hz;			// current frame rate × 10  (e.g. 456 → 45.6 Hz)
+	uint16_t hzMin;			// minimum Hz × 10 observed (0xFFFF until first window)
+	uint16_t hzMax;			// maximum Hz × 10 observed
+	uint16_t windowCount;	// frames counted in current 1-second window
 	uint32_t windowStartMs; // millis() when current window opened
-	CanBusStat()
-		: frames(0), hz(0), hzMin(0xFFFF), hzMax(0), windowCount(0), windowStartMs(0)
-	{
-	}
+	CanBusStat() : frames(0), hz(0), hzMin(0xFFFF), hzMax(0), windowCount(0), windowStartMs(0) {}
 };
 
 // All CAN-layer diagnostic counters in one place — three per-bus stat blocks
 // plus global intercept counters collected from every handler path.
 struct CanDiag
 {
-	CanBusStat bus[3];      // index: 0 = Chassis, 1 = Vehicle, 2 = Body
-	uint32_t nagEchoCount;  // nag-killer echoes sent (0x370, all modes)
-	uint32_t eapModCount;   // EAP frames modified for nag-suppress (mux=1)
-	uint32_t txFailCount;   // MCP2515 sendMessage() errors (accumulated)
-	uint32_t busOffCount;   // CAN bus-off events auto-recovered
+	CanBusStat bus[3];	   // index: 0 = Chassis, 1 = Vehicle, 2 = Body
+	uint32_t nagEchoCount; // nag-killer echoes sent (0x370, all modes)
+	uint32_t eapModCount;  // EAP frames modified for nag-suppress (mux=1)
+	uint32_t txFailCount;  // MCP2515 sendMessage() errors (accumulated)
+	uint32_t busOffCount;  // CAN bus-off events auto-recovered
 	CanDiag() : nagEchoCount(0), eapModCount(0), txFailCount(0), busOffCount(0) {}
 };
 
@@ -312,7 +309,7 @@ struct State
 	bool nagKillerEnabled;
 	NagKillerMode nagKillerMode;
 	uint8_t dasHandsOnState; // DAS_autopilotHandsOnState (0x39B byte5 bits[5:2])
-	uint8_t dasApState;       // DAS_autopilotState (0x39B byte1 bits[7:4]): 0=UNAVAIL 1=AVAIL 2=ACTIVE_NOMINAL 3+=active
+	uint8_t dasApState;		 // DAS_autopilotState (0x39B byte1 bits[7:4]): 0=UNAVAIL 1=AVAIL 2=ACTIVE_NOMINAL 3+=active
 	bool dasSeen;
 	unsigned long naturalNagLastMs; // Last natural nag injection timestamp
 	uint16_t naturalNagIntervalMs;	// Current non-linear interval between injections
@@ -350,9 +347,9 @@ struct State
 
 	// AP Injection Gate (phase 1 scaffold)
 	bool apInjectionGateEnabled; // true = gate writes until AP/Park/Summon conditions are met
-	bool apGateApActive;         // runtime AP-active signal
-	bool apGateParked;           // runtime parked signal
-	bool apGateSummoning;        // runtime summon signal
+	bool apGateApActive;		 // runtime AP-active signal
+	bool apGateParked;			 // runtime parked signal
+	bool apGateSummoning;		 // runtime summon signal
 
 	// Auto HW detection (from 0x398)
 	uint8_t detectedHW; // 0=unknown, 2=HW3, 3=HW4
@@ -437,10 +434,10 @@ struct State
 
 	// Driver assist parity toggles (P2-01 to P2-05) — persisted
 	// All bits apply to 0x3F8 (UI_driverAssistControl) and 0x3FD mux1
-	bool assistNavEnable;    // P2-01: bits 13+48+49 — UI_driveOnMapsEnable + UI_hasDriveOnNav + UI_followNavRouteEnable
-	bool assistHandsOff;     // P2-02: bit 14 — UI_handsOnRequirementDisable
-	bool assistDevMode;      // P2-03: bit 5  — UI_dasDeveloper
-	bool laneGraphEnable;    // P2-04: bit 45 on 0x3FD mux1 — lane visualization
+	bool assistNavEnable;	 // P2-01: bits 13+48+49 — UI_driveOnMapsEnable + UI_hasDriveOnNav + UI_followNavRouteEnable
+	bool assistHandsOff;	 // P2-02: bit 14 — UI_handsOnRequirementDisable
+	bool assistDevMode;		 // P2-03: bit 5  — UI_dasDeveloper
+	bool laneGraphEnable;	 // P2-04: bit 45 on 0x3FD mux1 — lane visualization
 	bool assistTelemetryOff; // P2-05: bit 43 cleared — UI_enableTripTelemetry off
 
 	// Steering input for natural nag-killer modulation
@@ -468,13 +465,13 @@ struct State
 	bool vehicleLockedState;	// current known lock state
 
 	// Powertrain telemetry (read-only decode)
-	float vehicleSpeed;	      // km/h (signed, from 0x257)
-	uint8_t gearState;	      // 0=inv, 1=P, 2=R, 3=N, 4=D (from 0x118)
-	uint8_t accelPedal;	      // 0-100% (from 0x118)
-	uint8_t brakePedalState;  // 0=off 1=on (bits[20:19] of 0x118 DI_STATE)
-	int16_t rearMotorRpm;     // RPM (from 0x106)
-	int16_t frontMotorRpm;    // RPM (from 0x115)
-	bool hasPowertrain;	      // At least one powertrain frame decoded
+	float vehicleSpeed;		 // km/h (signed, from 0x257)
+	uint8_t gearState;		 // 0=inv, 1=P, 2=R, 3=N, 4=D (from 0x118)
+	uint8_t accelPedal;		 // 0-100% (from 0x118)
+	uint8_t brakePedalState; // 0=off 1=on (bits[20:19] of 0x118 DI_STATE)
+	int16_t rearMotorRpm;	 // RPM (from 0x106)
+	int16_t frontMotorRpm;	 // RPM (from 0x115)
+	bool hasPowertrain;		 // At least one powertrain frame decoded
 
 	// Wheel speeds (from 0x175, ChassisBus — 13-bit LE, scale 0.04 km/h)
 	float wheelSpeedFL; // km/h front-left
@@ -484,12 +481,12 @@ struct State
 	bool hasWheelSpeeds;
 
 	// Motor / inverter temperatures
-	int8_t rearInvTemp;      // °C rear inverter (from 0x315 byte1 − 40)
-	int8_t rearStatorTemp;   // °C rear stator   (from 0x315 byte2 − 40)
-	int8_t rearHeatsinkTemp; // °C rear heatsink (from 0x315 byte4 − 40)
-	int8_t frontInvTemp;     // °C front inverter (from 0x376 byte1 − 40, dual-motor only)
-	int8_t frontStatorTemp;  // °C front stator   (from 0x376 byte2 − 40)
-	int8_t frontHeatsinkTemp;// °C front heatsink (from 0x376 byte4 − 40)
+	int8_t rearInvTemp;		  // °C rear inverter (from 0x315 byte1 − 40)
+	int8_t rearStatorTemp;	  // °C rear stator   (from 0x315 byte2 − 40)
+	int8_t rearHeatsinkTemp;  // °C rear heatsink (from 0x315 byte4 − 40)
+	int8_t frontInvTemp;	  // °C front inverter (from 0x376 byte1 − 40, dual-motor only)
+	int8_t frontStatorTemp;	  // °C front stator   (from 0x376 byte2 − 40)
+	int8_t frontHeatsinkTemp; // °C front heatsink (from 0x376 byte4 − 40)
 	bool hasMotorTemps;
 
 	// CAN simulation mode
@@ -568,15 +565,13 @@ struct State
 		  gtwShieldArmed(false), gtwShieldBlocks(0), enhancedAutopilot(false), evdEnabled(false), tlsscRestore(false),
 		  hasTpms(false), driveModeOverride(0), currentDriveMode(0), driveModeLastMs(0), regionCode(0),
 		  regionSpoofCode(0), hasRegion(false), chineseGatewayLocked(false), eceR79Bypass(false), lhdEnabled(false),
-		  dasApState(0), apFirstEnabled(false),
-		  assistNavEnable(false), assistHandsOff(false), assistDevMode(false), laneGraphEnable(false), assistTelemetryOff(false),
-		  seatbeltEmulation(false), seatbeltLastMs(0), wiperPersistEnabled(false),
-		  savedWiperSpeed(0), mirrorAutoFoldEnabled(false), vehicleLockedState(false), vehicleSpeed(0), gearState(0),
-		  accelPedal(0), brakePedalState(0), rearMotorRpm(0), frontMotorRpm(0), hasPowertrain(false),
-		  wheelSpeedFL(0), wheelSpeedFR(0), wheelSpeedRL(0), wheelSpeedRR(0), hasWheelSpeeds(false),
-		  rearInvTemp(0), rearStatorTemp(0), rearHeatsinkTemp(0),
-		  frontInvTemp(0), frontStatorTemp(0), frontHeatsinkTemp(0), hasMotorTemps(false),
-		  canSimEnabled(false), canSimLastMs(0),
+		  dasApState(0), apFirstEnabled(false), assistNavEnable(false), assistHandsOff(false), assistDevMode(false),
+		  laneGraphEnable(false), assistTelemetryOff(false), seatbeltEmulation(false), seatbeltLastMs(0),
+		  wiperPersistEnabled(false), savedWiperSpeed(0), mirrorAutoFoldEnabled(false), vehicleLockedState(false),
+		  vehicleSpeed(0), gearState(0), accelPedal(0), brakePedalState(0), rearMotorRpm(0), frontMotorRpm(0),
+		  hasPowertrain(false), wheelSpeedFL(0), wheelSpeedFR(0), wheelSpeedRL(0), wheelSpeedRR(0),
+		  hasWheelSpeeds(false), rearInvTemp(0), rearStatorTemp(0), rearHeatsinkTemp(0), frontInvTemp(0),
+		  frontStatorTemp(0), frontHeatsinkTemp(0), hasMotorTemps(false), canSimEnabled(false), canSimLastMs(0),
 		  canSimCounter(0), singleShotTx(false), fwYear(0), fwRelease(0), fwMinor(0), fwBuild(0), fwCompat(0),
 		  hasFwVersion(false), mqttEnabled(false), mqttPort(1883), mqttInterval(2000), mqttLastPublishMs(0),
 		  mqttConnected(false), vehicleModel(0), vehicleYear(0), hasVehicleConfig(false), platformModel(0),

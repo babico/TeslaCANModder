@@ -4,7 +4,7 @@
 #include <unity.h>
 #include <cstring>
 
-#include "infra/crc8.h"
+#include "infra/can/crc8.h"
 
 void setUp() {}
 void tearDown() {}
