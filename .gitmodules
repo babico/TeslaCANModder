@@ -43,9 +43,6 @@
 [submodule "legacy/Akisoft41-TeslapLX"]
 	path = legacy/Akisoft41-TeslapLX
 	url = https://github.com/Akisoft41/TeslapLX
-[submodule "legacy/alzza-tesla-open-can-mod"]
-	path = legacy/alzza-tesla-open-can-mod
-	url = https://github.com/alzza/tesla-open-can-mod
 [submodule "legacy/amzoo-TMS_2016_LOGS"]
 	path = legacy/amzoo-TMS_2016_LOGS
 	url = https://github.com/amzoo/TMS_2016_LOGS
@@ -226,9 +223,6 @@
 [submodule "legacy/wimaha-TeslaBleHttpProxy"]
 	path = legacy/wimaha-TeslaBleHttpProxy
 	url = https://github.com/wimaha/TeslaBleHttpProxy
-[submodule "legacy/ylovex75-tesla-open-can-mod-release"]
-	path = legacy/ylovex75-tesla-open-can-mod-release
-	url = https://github.com/ylovex75/tesla-open-can-mod-release
 [submodule "legacy/nicolozak-nag-killer"]
 	path = legacy/nicolozak-nag-killer
 	url = https://gitlab.com/nicolozak/nag-killer
