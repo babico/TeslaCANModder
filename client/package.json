@@ -35,8 +35,8 @@
 		"react-dom": "19.1.0",
 		"react-native": "0.81.5",
 		"react-native-markdown-display": "^7.0.2",
-		"react-native-safe-area-context": "~5.6.0",
-		"react-native-svg": "15.12.1",
+		"react-native-safe-area-context": "~5.7.0",
+		"react-native-svg": "15.15.4",
 		"react-native-web": "0.21.2",
 		"tailwind-merge": "^3.3.1"
 	},
@@ -52,7 +52,7 @@
 		"babel-preset-expo": "^54.0.10",
 		"jest": "^29.7.0",
 		"jest-expo": "~54.0.0",
-		"postcss": "^8.5.6",
+		"postcss": "^8.5.13",
 		"tailwindcss": "^3.4.17",
 		"typescript": "~5.9.2"
 	}
