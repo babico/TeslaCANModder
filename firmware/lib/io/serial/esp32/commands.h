@@ -1,6 +1,10 @@
 #pragma once
 #include "messages.h"
 
+#if BOARD_ENABLE_BLE
+#include "tesla/ble/esp32/tesla.h"
+#endif
+
 // ── Command Parser ───────────────────────────────────────────────────────────
 void executeCommand(const char *cmd, State &s, unsigned long now)
 {
@@ -861,6 +865,14 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		jsonLine().str("t", "platform").merge(platformRoot).mergeObject("canHealth", canHealthObject).end();
 		return;
 	}
+
+
+#if BOARD_ENABLE_BLE
+	if (strncmp(cmd, "tesla:", 6) == 0) {
+		Tesla::executeTeslaCommand(cmd + 6);
+		return;
+	}
+#endif
 
 	sendError(F("Unknown command"));
 }
