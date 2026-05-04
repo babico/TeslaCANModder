@@ -958,24 +958,24 @@
 				"eapModCount": { "type": "integer" },
 				"txFailCount": { "type": "integer" },
 				"busOffCount": { "type": "integer" },
-				"framesA": { "type": "integer" },
-				"framesB": { "type": "integer" },
-				"framesC": { "type": "integer" },
-				"hzA": {
+				"framesChassis": { "type": "integer" },
+				"framesVehicle": { "type": "integer" },
+				"framesBody": { "type": "integer" },
+				"hzChassis": {
 					"type": "integer",
-					"description": "Bus A frame rate x10 (e.g. 456 = 45.6 Hz)"
+					"description": "Chassis bus frame rate x10 (e.g. 456 = 45.6 Hz)"
 				},
-				"hzB": { "type": "integer", "description": "Bus B frame rate x10" },
-				"hzC": { "type": "integer", "description": "Bus C frame rate x10" },
-				"hzMinA": {
+				"hzVehicle": { "type": "integer", "description": "Vehicle bus frame rate x10" },
+				"hzBody": { "type": "integer", "description": "Body bus frame rate x10" },
+				"hzMinChassis": {
 					"type": "integer",
-					"description": "Bus A min Hz x10 observed (0 until first window)"
+					"description": "Chassis min Hz x10 observed (0 until first window)"
 				},
-				"hzMinB": { "type": "integer", "description": "Bus B min Hz x10 observed" },
-				"hzMinC": { "type": "integer", "description": "Bus C min Hz x10 observed" },
-				"hzMaxA": { "type": "integer", "description": "Bus A max Hz x10 observed" },
-				"hzMaxB": { "type": "integer", "description": "Bus B max Hz x10 observed" },
-				"hzMaxC": { "type": "integer", "description": "Bus C max Hz x10 observed" }
+				"hzMinVehicle": { "type": "integer", "description": "Vehicle min Hz x10 observed" },
+				"hzMinBody": { "type": "integer", "description": "Body min Hz x10 observed" },
+				"hzMaxChassis": { "type": "integer", "description": "Chassis max Hz x10 observed" },
+				"hzMaxVehicle": { "type": "integer", "description": "Vehicle max Hz x10 observed" },
+				"hzMaxBody": { "type": "integer", "description": "Body max Hz x10 observed" }
 			},
 			"required": ["clockReqMHz", "clockMHz", "health"],
 			"additionalProperties": false

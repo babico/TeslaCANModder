@@ -1,6 +1,9 @@
 #pragma once
 #include "output.h"
 
+// Bus index → JSON key name map (Chassis=0, Vehicle=1, Body=2)
+static const char* const kBusName[3] = { "chassis", "vehicle", "body" };
+
 inline const char* apGateReason(const State& s) {
   if (!s.apInjectionGateEnabled) return "disabled";
   if (s.apGateApActive) return "ap";
@@ -186,13 +189,7 @@ void sendBoot(State& s) {
        .num("clockMHz", s.canClockMHz)
        .object("health", [&](JsonLineBuilder::JsonObjectBuilder& health) {
          for (uint8_t i = 0; i < BUS_MAX; i++) {
-           char key[8];
-           key[0] = 'b';
-           key[1] = 'u';
-           key[2] = 's';
-           key[3] = (char)('0' + i);
-           key[4] = '\0';
-           health.object(key, [&](JsonLineBuilder::JsonObjectBuilder& bus) {
+           health.object(kBusName[i], [&](JsonLineBuilder::JsonObjectBuilder& bus) {
              bus.boolean("on", busActive(i)).boolean("det", mcpAvailable[i]);
            });
          }
@@ -201,18 +198,18 @@ void sendBoot(State& s) {
        .num("eapModCount", (long)s.canDiag.eapModCount)
        .num("txFailCount", (long)s.canDiag.txFailCount)
        .num("busOffCount", (long)s.canDiag.busOffCount)
-       .num("framesA", (long)s.canDiag.bus[0].frames)
-       .num("framesB", (long)s.canDiag.bus[1].frames)
-       .num("framesC", (long)s.canDiag.bus[2].frames)
-       .num("hzA", (long)s.canDiag.bus[0].hz)
-       .num("hzB", (long)s.canDiag.bus[1].hz)
-       .num("hzC", (long)s.canDiag.bus[2].hz)
-       .num("hzMinA", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
-       .num("hzMinB", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
-       .num("hzMinC", (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin))
-       .num("hzMaxA", (long)s.canDiag.bus[0].hzMax)
-       .num("hzMaxB", (long)s.canDiag.bus[1].hzMax)
-       .num("hzMaxC", (long)s.canDiag.bus[2].hzMax);
+       .num("framesChassis", (long)s.canDiag.bus[0].frames)
+       .num("framesVehicle", (long)s.canDiag.bus[1].frames)
+       .num("framesBody", (long)s.canDiag.bus[2].frames)
+       .num("hzChassis", (long)s.canDiag.bus[0].hz)
+       .num("hzVehicle", (long)s.canDiag.bus[1].hz)
+       .num("hzBody", (long)s.canDiag.bus[2].hz)
+       .num("hzMinChassis", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
+       .num("hzMinVehicle", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
+       .num("hzMinBody", (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin))
+       .num("hzMaxChassis", (long)s.canDiag.bus[0].hzMax)
+       .num("hzMaxVehicle", (long)s.canDiag.bus[1].hzMax)
+       .num("hzMaxBody", (long)s.canDiag.bus[2].hzMax);
     })
     .object("features", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.boolean("fsd", f.fsd)
@@ -397,13 +394,7 @@ void sendStatus(State& s, unsigned long now) {
        .num("clockMHz", s.canClockMHz)
        .object("health", [&](JsonLineBuilder::JsonObjectBuilder& health) {
          for (uint8_t i = 0; i < BUS_MAX; i++) {
-           char key[8];
-           key[0] = 'b';
-           key[1] = 'u';
-           key[2] = 's';
-           key[3] = (char)('0' + i);
-           key[4] = '\0';
-           health.object(key, [&](JsonLineBuilder::JsonObjectBuilder& bus) {
+           health.object(kBusName[i], [&](JsonLineBuilder::JsonObjectBuilder& bus) {
              bus.boolean("on", busActive(i)).boolean("det", mcpAvailable[i]);
            });
          }
@@ -412,18 +403,18 @@ void sendStatus(State& s, unsigned long now) {
        .num("eapModCount", (long)s.canDiag.eapModCount)
        .num("txFailCount", (long)s.canDiag.txFailCount)
        .num("busOffCount", (long)s.canDiag.busOffCount)
-       .num("framesA", (long)s.canDiag.bus[0].frames)
-       .num("framesB", (long)s.canDiag.bus[1].frames)
-       .num("framesC", (long)s.canDiag.bus[2].frames)
-       .num("hzA", (long)s.canDiag.bus[0].hz)
-       .num("hzB", (long)s.canDiag.bus[1].hz)
-       .num("hzC", (long)s.canDiag.bus[2].hz)
-       .num("hzMinA", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
-       .num("hzMinB", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
-       .num("hzMinC", (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin))
-       .num("hzMaxA", (long)s.canDiag.bus[0].hzMax)
-       .num("hzMaxB", (long)s.canDiag.bus[1].hzMax)
-       .num("hzMaxC", (long)s.canDiag.bus[2].hzMax);
+       .num("framesChassis", (long)s.canDiag.bus[0].frames)
+       .num("framesVehicle", (long)s.canDiag.bus[1].frames)
+       .num("framesBody", (long)s.canDiag.bus[2].frames)
+       .num("hzChassis", (long)s.canDiag.bus[0].hz)
+       .num("hzVehicle", (long)s.canDiag.bus[1].hz)
+       .num("hzBody", (long)s.canDiag.bus[2].hz)
+       .num("hzMinChassis", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
+       .num("hzMinVehicle", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
+       .num("hzMinBody", (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin))
+       .num("hzMaxChassis", (long)s.canDiag.bus[0].hzMax)
+       .num("hzMaxVehicle", (long)s.canDiag.bus[1].hzMax)
+       .num("hzMaxBody", (long)s.canDiag.bus[2].hzMax);
     })
     .object("features", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.boolean("fsd", f.fsd)
@@ -485,13 +476,7 @@ void sendStatusCan(State& s) {
     })
     .object("health", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       for (uint8_t i = 0; i < BUS_MAX; i++) {
-        char key[8];
-        key[0] = 'b';
-        key[1] = 'u';
-        key[2] = 's';
-        key[3] = (char)('0' + i);
-        key[4] = '\0';
-        o.object(key, [&](JsonLineBuilder::JsonObjectBuilder& bus) {
+        o.object(kBusName[i], [&](JsonLineBuilder::JsonObjectBuilder& bus) {
           bus.boolean("on", busActive(i))
              .boolean("det", mcpAvailable[i]);
         });
@@ -588,13 +573,7 @@ void sendStatusCompact(State& s, unsigned long now) {
 
       o.object("health", [&](JsonLineBuilder::JsonObjectBuilder& health) {
         for (uint8_t i = 0; i < BUS_MAX; i++) {
-          char key[8];
-          key[0] = 'b';
-          key[1] = 'u';
-          key[2] = 's';
-          key[3] = (char)('0' + i);
-          key[4] = '\0';
-          health.object(key, [&](JsonLineBuilder::JsonObjectBuilder& bus) {
+          health.object(kBusName[i], [&](JsonLineBuilder::JsonObjectBuilder& bus) {
             bus.boolean("on", busActive(i))
                .boolean("det", mcpAvailable[i]);
           });
