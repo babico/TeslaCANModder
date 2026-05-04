@@ -71,6 +71,7 @@ void handleLegacy(Frame &f, State &s)
 		{
 			setBit(f, 19, false);
 			driverSend(f, 0);
+			s.canEapModCount++;
 			if (!legacyLoggedNag)
 			{
 				sendLog(F("Legacy: Nag suppressed on CAN"));

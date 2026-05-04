@@ -181,6 +181,18 @@ void loop()
 	seatbeltEmulationTick(state);
 	canSimTick(state);
 
+	// ── CAN Diagnostic Counter Poll ────────────────────────────────────────
+	// Poll MCP2515 error registers and accumulate TX/bus-off counts to State.
+	// driverPollBusErrors() also auto-recovers from bus-off by resetting the chip.
+	static unsigned long _lastErrPollMs = 0;
+	if (now - _lastErrPollMs >= 250)
+	{
+		_lastErrPollMs = now;
+		driverPollBusErrors();
+		state.canTxFailCount += driverGetAndResetTxFails();
+		state.canBusOffCount += driverGetAndResetBusOffEvents();
+	}
+
 	Frame frame;
 	uint8_t bus;
 	while (driverRead(frame, bus))

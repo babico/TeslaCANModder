@@ -141,6 +141,7 @@ void handleHW4(Frame &f, State &s)
 				applyEceR79Bypass(f);
 			}
 			driverSend(f, 0);
+			s.canEapModCount++;
 			if (!hw4LoggedNag)
 			{
 				sendLog(F("HW4: Nag suppressed on CAN"));

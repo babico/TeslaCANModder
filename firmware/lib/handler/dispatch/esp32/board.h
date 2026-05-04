@@ -264,10 +264,28 @@ void driveModeTick_dispatch(State &s)
 #endif
 }
 
+// ── CAN Frame Rate Update (call once per received frame) ─────────────────────
+// Updates rolling Hz estimate for the given bus using a 1-second sliding window.
+static inline void _updateCanFrameRate(State &s, uint8_t bus, unsigned long now)
+{
+	if (bus >= 3)
+		return;
+	s.canFrames[bus]++;
+	s.canFrameRateCount[bus]++;
+	unsigned long elapsed = now - s.canFrameRateWindowMs[bus];
+	if (elapsed >= 1000UL)
+	{
+		s.canFrameRateHz[bus] = (s.canFrameRateCount[bus] * 1000.0f) / (float)elapsed;
+		s.canFrameRateCount[bus] = 0;
+		s.canFrameRateWindowMs[bus] = now;
+	}
+}
+
 // ── Message Dispatch ─────────────────────────────────────────────────────────
 void handleMessage(Frame &f, uint8_t bus, State &s)
 {
 	canRecorderCapture(f, bus, millis());
+	_updateCanFrameRate(s, bus, millis());
 
 	// Bus 0 (Chassis): variant-specific FSD frame processing
 	if (bus == BUS_CHASSIS)
@@ -624,11 +642,13 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 					float torque = nagNaturalTorque(s.steeringAngle, s.dasHandsOnState);
 					nagKillerModifyNatural(echo, torque);
 					driverSend(echo, BUS_VEHICLE);
+					s.canNagEchoCount++;
 				}
 				else if (s.nagKillerMode != NAG_KILLER_NATURAL)
 				{
 					nagKillerModify(echo);
 					driverSend(echo, BUS_VEHICLE);
+					s.canNagEchoCount++;
 				}
 			}
 			return;

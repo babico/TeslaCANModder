@@ -416,6 +416,17 @@ struct State
 	// Steering input for natural nag-killer modulation
 	float steeringAngle; // degrees, + = right (from 0x129)
 
+	// ── CAN Diagnostic Counters (runtime, not persisted) ──────────────────
+	// Inspired by alzza/tesla-can-moniter telemetry payload analysis
+	uint32_t canNagEchoCount;	// Total nag-killer echoes sent (0x370 intercepts)
+	uint32_t canEapModCount;	// Total EAP frames modified (nag-suppress mux=1)
+	uint32_t canTxFailCount;	// TX failures reported by MCP2515 driver
+	uint32_t canBusOffCount;	// CAN bus-off events recovered
+	uint32_t canFrames[3];		// Total frames received per bus (0=Chassis,1=Vehicle,2=Body)
+	unsigned long canFrameRateWindowMs[3]; // Window start timestamp for Hz calc
+	uint32_t canFrameRateCount[3];		   // Frame count in current 1-second window
+	float canFrameRateHz[3];			   // Rolling frames/sec per bus
+
 	// Turn signals (3-blink lane change)
 	// No persistent state — momentary burst only
 
@@ -548,7 +559,8 @@ struct State
 		  hasFwVersion(false), mqttEnabled(false), mqttPort(1883), mqttInterval(2000), mqttLastPublishMs(0),
 		  mqttConnected(false), vehicleModel(0), vehicleYear(0), hasVehicleConfig(false), platformModel(0),
 		  platformHwGen(0), platformSwYear(0), platformSwWeek(0), platformSwRelease(0), platformSwPatch(0),
-		  platformFsdProto(0), platformSwCompat(0), platformResolved(false), apiKeyRequired(false), steeringAngle(0)
+		  platformFsdProto(0), platformSwCompat(0), platformResolved(false), apiKeyRequired(false), steeringAngle(0),
+		  canNagEchoCount(0), canEapModCount(0), canTxFailCount(0), canBusOffCount(0)
 	{
 		for (uint8_t i = 0; i < 8; i++)
 			lastCtrl[i] = 0;
@@ -572,6 +584,13 @@ struct State
 		{
 			tpmsPressure[i] = 0;
 			tpmsTemp[i] = 0;
+		}
+		for (uint8_t i = 0; i < 3; i++)
+		{
+			canFrames[i] = 0;
+			canFrameRateWindowMs[i] = 0;
+			canFrameRateCount[i] = 0;
+			canFrameRateHz[i] = 0.0f;
 		}
 		mqttHost[0] = '\0';
 		apiKey[0] = '\0';

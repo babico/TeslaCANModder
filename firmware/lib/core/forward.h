@@ -7,6 +7,9 @@
 
 // Defined by core/driver/<board>.h
 void driverSend(const Frame &f, uint8_t bus);
+uint32_t driverGetAndResetTxFails();
+uint32_t driverGetAndResetBusOffEvents();
+void driverPollBusErrors();
 
 // Defined by core/persist/<board>.h
 void saveSettings(const State &s);

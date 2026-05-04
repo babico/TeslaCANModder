@@ -109,6 +109,44 @@ uint8_t driverGetClockMHz()
 	return mcpClockMHz;
 }
 
+// Module-level TX/bus-off diagnostic counters (polled from main loop)
+static uint32_t _driverTxFailCount = 0;
+static uint32_t _driverBusOffCount = 0;
+
+uint32_t driverGetAndResetTxFails()
+{
+	uint32_t v = _driverTxFailCount;
+	_driverTxFailCount = 0;
+	return v;
+}
+
+uint32_t driverGetAndResetBusOffEvents()
+{
+	uint32_t v = _driverBusOffCount;
+	_driverBusOffCount = 0;
+	return v;
+}
+
+// Poll MCP2515 EFLG register for bus-off state on each active bus.
+// Increments internal counter and auto-recovers (resets to Normal mode).
+void driverPollBusErrors()
+{
+	for (uint8_t i = 0; i < BUS_MAX; i++)
+	{
+		if (!busActive(i) || !mcpAvailable[i])
+			continue;
+		uint8_t eflg = mcpBus[i]->getErrorFlags();
+		if (eflg & MCP2515::EFLG_TXBO)
+		{
+			// Bus-off: increment counter and recover by re-entering Normal mode
+			_driverBusOffCount++;
+			mcpBus[i]->reset();
+			configureBitrateWithFallback(*mcpBus[i]);
+			mcpBus[i]->setNormalMode();
+		}
+	}
+}
+
 void driverSend(const Frame &f, uint8_t bus)
 {
 	if (bus < BUS_MAX && mcpAvailable[bus])
@@ -117,7 +155,8 @@ void driverSend(const Frame &f, uint8_t bus)
 		raw.can_id = f.id;
 		raw.can_dlc = f.dlc;
 		memcpy(raw.data, f.data, 8);
-		mcpBus[bus]->sendMessage(&raw);
+		if (mcpBus[bus]->sendMessage(&raw) != MCP2515::ERROR_OK)
+			_driverTxFailCount++;
 	}
 }
 

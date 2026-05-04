@@ -953,7 +953,17 @@
 			"properties": {
 				"clockReqMHz": { "type": "integer" },
 				"clockMHz": { "type": "integer" },
-				"health": { "$ref": "#/$defs/CanHealth" }
+				"health": { "$ref": "#/$defs/CanHealth" },
+				"nagEchoCount": { "type": "integer" },
+				"eapModCount": { "type": "integer" },
+				"txFailCount": { "type": "integer" },
+				"busOffCount": { "type": "integer" },
+				"framesA": { "type": "integer" },
+				"framesB": { "type": "integer" },
+				"framesC": { "type": "integer" },
+				"hzA": { "type": "integer" },
+				"hzB": { "type": "integer" },
+				"hzC": { "type": "integer" }
 			},
 			"required": ["clockReqMHz", "clockMHz", "health"],
 			"additionalProperties": false

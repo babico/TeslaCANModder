@@ -241,3 +241,6 @@
 [submodule "legacy/ev-open-can-tools-plugins"]
 	path = legacy/ev-open-can-tools-ev-open-can-tools-plugins
 	url = https://github.com/ev-open-can-tools/ev-open-can-tools-plugins
+[submodule "legacy/alzza-tesla-can-moniter"]
+	path = legacy/alzza-tesla-can-moniter
+	url = https://github.com/alzza/tesla-can-moniter.git

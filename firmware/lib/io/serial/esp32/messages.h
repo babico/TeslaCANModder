@@ -196,7 +196,17 @@ void sendBoot(State& s) {
              bus.boolean("on", busActive(i)).boolean("det", mcpAvailable[i]);
            });
          }
-       });
+       })
+       .num("nagEchoCount", (long)s.canNagEchoCount)
+       .num("eapModCount", (long)s.canEapModCount)
+       .num("txFailCount", (long)s.canTxFailCount)
+       .num("busOffCount", (long)s.canBusOffCount)
+       .num("framesA", (long)s.canFrames[0])
+       .num("framesB", (long)s.canFrames[1])
+       .num("framesC", (long)s.canFrames[2])
+       .num("hzA", (long)(s.canFrameRateHz[0] * 10))
+       .num("hzB", (long)(s.canFrameRateHz[1] * 10))
+       .num("hzC", (long)(s.canFrameRateHz[2] * 10));
     })
     .object("features", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.boolean("fsd", f.fsd)
@@ -391,7 +401,17 @@ void sendStatus(State& s, unsigned long now) {
              bus.boolean("on", busActive(i)).boolean("det", mcpAvailable[i]);
            });
          }
-       });
+       })
+       .num("nagEchoCount", (long)s.canNagEchoCount)
+       .num("eapModCount", (long)s.canEapModCount)
+       .num("txFailCount", (long)s.canTxFailCount)
+       .num("busOffCount", (long)s.canBusOffCount)
+       .num("framesA", (long)s.canFrames[0])
+       .num("framesB", (long)s.canFrames[1])
+       .num("framesC", (long)s.canFrames[2])
+       .num("hzA", (long)(s.canFrameRateHz[0] * 10))
+       .num("hzB", (long)(s.canFrameRateHz[1] * 10))
+       .num("hzC", (long)(s.canFrameRateHz[2] * 10));
     })
     .object("features", [&](JsonLineBuilder::JsonObjectBuilder& o) {
       o.boolean("fsd", f.fsd)
