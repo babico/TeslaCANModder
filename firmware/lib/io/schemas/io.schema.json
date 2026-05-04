@@ -2,29 +2,28 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://raw.githubusercontent.com/babico/TeslaCANModder/main/firmware/lib/io/schemas/io.schema.json",
 	"title": "TeslaCANModder IO Schema",
-	"description": "Unified schema for all firmware IO: serial/BLE newline-delimited JSON and WiFi REST API. Serial and BLE share an identical command/response protocol. WiFi exposes a separate REST surface with a different (native-bool) JSON state shape.",
+	"description": "Unified IO schema for all firmware transports (serial, BLE, WiFi). All transports share the same RPC contract: requests are RpcRequest objects, responses are RpcResponse tagged messages. Serial and BLE frame each message as newline-delimited JSON. WiFi uses HTTP with the same JSON payloads.",
 	"schemaVersion": 1,
-
 	"transports": {
 		"serial": {
-			"description": "USB CDC UART — newline-delimited JSON. Commands are plain text strings terminated with \\n. Responses are one JSON object per line.",
-			"protocol": "newline-json",
-			"commandSchema": { "$ref": "#/$defs/CommandInput" },
-			"outputSchema": "#/oneOf"
+			"description": "USB CDC UART — newline-delimited JSON RPC. Each request is an RpcRequest JSON object terminated with \\n. Each response is an RpcResponse tagged JSON object on its own line.",
+			"protocol": "newline-json-rpc",
+			"requestSchema": { "$ref": "#/$defs/RpcRequest" },
+			"responseSchema": { "$ref": "#/$defs/RpcResponse" }
 		},
 		"ble": {
-			"description": "Bluetooth Low Energy — Nordic UART Service (NUS). Same command/response protocol as serial.",
-			"protocol": "ble-nus",
+			"description": "Bluetooth Low Energy — Nordic UART Service (NUS). Same RPC contract as serial: newline-delimited RpcRequest / RpcResponse JSON.",
+			"protocol": "ble-nus-rpc",
 			"serviceUUID": "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
 			"rxCharacteristicUUID": "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
 			"txCharacteristicUUID": "6e400003-b5a3-f393-e0a9-e50e24dcca9e",
-			"commandSchema": { "$ref": "#/$defs/CommandInput" },
-			"outputSchema": "#/oneOf",
+			"requestSchema": { "$ref": "#/$defs/RpcRequest" },
+			"responseSchema": { "$ref": "#/$defs/RpcResponse" },
 			"notes": "Device name is set by BLE_DEVICE_NAME build constant. Enabled by BOARD_ENABLE_BLE. Numeric booleans 0/1 same as serial."
 		},
 		"wifi": {
-			"description": "HTTP REST API served by the ESP32 in AP or STA mode. Booleans are native JSON true/false (not 0/1 integers).",
-			"protocol": "http-rest",
+			"description": "HTTP REST API served by the ESP32 in AP or STA mode. Uses the same RpcRequest / RpcResponse contract as serial and BLE. Booleans are native JSON true/false (not 0/1 integers).",
+			"protocol": "http-rest-rpc",
 			"auth": {
 				"scheme": "header",
 				"header": "X-API-Key",
@@ -43,7 +42,7 @@
 					"path": "/status",
 					"description": "Full device state snapshot",
 					"responseContentType": "application/json",
-					"responseSchema": { "$ref": "#/$defs/WiFiState" },
+					"responseSchema": { "$ref": "#/$defs/DeviceState" },
 					"auth": false
 				},
 				{
@@ -51,9 +50,9 @@
 					"path": "/cmd",
 					"description": "Execute a firmware command. Same command vocabulary as serial/BLE. Returns updated state after the command executes.",
 					"requestContentType": "application/json",
-					"requestSchema": { "$ref": "#/$defs/WiFiCommand" },
+					"requestSchema": { "$ref": "#/$defs/RpcRequest" },
 					"responseContentType": "application/json",
-					"responseSchema": { "$ref": "#/$defs/WiFiState" },
+					"responseSchema": { "$ref": "#/$defs/RpcResponse" },
 					"auth": true,
 					"errors": [
 						{
@@ -583,110 +582,110 @@
 			"tag": "boot",
 			"description": "Emitted once at startup after all hardware is initialised.",
 			"schema": "#/$defs/Boot",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "status",
 			"description": "Full state snapshot. Emitted on demand (status command) or after any command.",
 			"schema": "#/$defs/Status",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "statusLive",
 			"description": "Live-stream state query response.",
 			"schema": "#/$defs/StatusLive",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "status_meta",
 			"description": "Firmware / hardware metadata only.",
 			"schema": "#/$defs/StatusMeta",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "status_features",
 			"description": "Feature flags only.",
 			"schema": "#/$defs/StatusFeatures",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "status_can",
 			"description": "CAN bus clock and health only.",
 			"schema": "#/$defs/StatusCan",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "status_state",
 			"description": "Runtime state flags only.",
 			"schema": "#/$defs/StatusState",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "status_compact",
 			"description": "Compact status snapshot with reduced payload.",
 			"schema": "#/$defs/StatusCompact",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "platform",
 			"description": "Platform (Tesla SW version) identification.",
 			"schema": "#/$defs/Platform",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "vehicle",
 			"description": "Vehicle model and year.",
 			"schema": "#/$defs/Vehicle",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "fwcompat",
 			"description": "Firmware compatibility report.",
 			"schema": "#/$defs/FwCompat",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "powertrain",
 			"description": "Powertrain telemetry snapshot.",
 			"schema": "#/$defs/Powertrain",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "tpms",
 			"description": "Tire pressure monitor snapshot.",
 			"schema": "#/$defs/Tpms",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "bms",
 			"description": "Battery management system telemetry.",
 			"schema": "#/$defs/Bms",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "frame",
 			"description": "Raw CAN frame (stream mode only).",
 			"schema": "#/$defs/Frame",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "ack",
 			"description": "Command acknowledgement.",
 			"schema": "#/$defs/Ack",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "error",
 			"description": "Error response.",
 			"schema": "#/$defs/Error",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "log",
 			"description": "Log message (simple string or log dump).",
 			"schema": "#/$defs/LogSimple",
 			"alternativeSchema": "#/$defs/LogDump",
-			"transports": ["serial", "ble"]
+			"transports": ["serial", "ble", "wifi"]
 		},
 		{
 			"tag": "pong",
@@ -1002,34 +1001,13 @@
 		}
 	],
 
-	"oneOf": [
-		{ "$ref": "#/$defs/Ack" },
-		{ "$ref": "#/$defs/Error" },
-		{ "$ref": "#/$defs/LogSimple" },
-		{ "$ref": "#/$defs/LogDump" },
-		{ "$ref": "#/$defs/Frame" },
-		{ "$ref": "#/$defs/Pong" },
-		{ "$ref": "#/$defs/StatusLive" },
-		{ "$ref": "#/$defs/Bms" },
-		{ "$ref": "#/$defs/Tpms" },
-		{ "$ref": "#/$defs/Powertrain" },
-		{ "$ref": "#/$defs/FwCompat" },
-		{ "$ref": "#/$defs/Vehicle" },
-		{ "$ref": "#/$defs/Platform" },
-		{ "$ref": "#/$defs/Boot" },
-		{ "$ref": "#/$defs/Status" },
-		{ "$ref": "#/$defs/StatusMeta" },
-		{ "$ref": "#/$defs/StatusFeatures" },
-		{ "$ref": "#/$defs/StatusCan" },
-		{ "$ref": "#/$defs/StatusState" },
-		{ "$ref": "#/$defs/StatusCompact" }
-	],
+	"oneOf": [{ "$ref": "#/$defs/RpcResponse" }],
 
 	"$defs": {
 		"Bool01": {
 			"type": "integer",
 			"enum": [0, 1],
-			"description": "Numeric boolean used in serial/BLE output. 0 = false, 1 = true. WiFi uses native JSON boolean."
+			"description": "Numeric boolean used in serial/BLE transport. 0 = false, 1 = true. HTTP transport uses native JSON true/false."
 		},
 		"TypeTag": {
 			"type": "object",
@@ -1039,9 +1017,9 @@
 			"required": ["t"]
 		},
 
-		"CommandInput": {
+		"RpcMethod": {
 			"type": "string",
-			"description": "Plain-text command string sent to serial or BLE (newline-terminated). Same vocabulary accepted by WiFi POST /cmd.",
+			"description": "RPC method string — the command to execute. Colon-delimited, e.g. 'fsd:on', 'status:compact'. Same vocabulary used across all transports.",
 			"minLength": 1,
 			"maxLength": 31,
 			"pattern": "^[a-zA-Z0-9:_-]+$",
@@ -1058,17 +1036,42 @@
 				"powertrain"
 			]
 		},
-		"WiFiCommand": {
+		"RpcRequest": {
 			"type": "object",
-			"description": "Request body for POST /cmd on the WiFi REST API.",
+			"description": "Unified RPC request envelope. Shared across serial, BLE, and WiFi transports. The 'cmd' field carries the RpcMethod to execute.",
 			"properties": {
-				"cmd": { "$ref": "#/$defs/CommandInput" }
+				"cmd": { "$ref": "#/$defs/RpcMethod" }
 			},
 			"required": ["cmd"],
 			"additionalProperties": false
 		},
+		"RpcResponse": {
+			"description": "Unified RPC response — a discriminated JSON object. The 't' field identifies the message type. All transports (serial, BLE, WiFi) return this format in response to a command.",
+			"oneOf": [
+				{ "$ref": "#/$defs/Ack" },
+				{ "$ref": "#/$defs/Error" },
+				{ "$ref": "#/$defs/LogSimple" },
+				{ "$ref": "#/$defs/LogDump" },
+				{ "$ref": "#/$defs/Frame" },
+				{ "$ref": "#/$defs/Pong" },
+				{ "$ref": "#/$defs/StatusLive" },
+				{ "$ref": "#/$defs/Bms" },
+				{ "$ref": "#/$defs/Tpms" },
+				{ "$ref": "#/$defs/Powertrain" },
+				{ "$ref": "#/$defs/FwCompat" },
+				{ "$ref": "#/$defs/Vehicle" },
+				{ "$ref": "#/$defs/Platform" },
+				{ "$ref": "#/$defs/Boot" },
+				{ "$ref": "#/$defs/Status" },
+				{ "$ref": "#/$defs/StatusMeta" },
+				{ "$ref": "#/$defs/StatusFeatures" },
+				{ "$ref": "#/$defs/StatusCan" },
+				{ "$ref": "#/$defs/StatusState" },
+				{ "$ref": "#/$defs/StatusCompact" }
+			]
+		},
 
-		"WiFiTpms": {
+		"Tpms": {
 			"type": "object",
 			"description": "TPMS pressures (× 100 kPa) and temperatures (°C) for all four wheels.",
 			"properties": {
@@ -1084,7 +1087,7 @@
 			"required": ["fl", "fr", "rl", "rr", "tfl", "tfr", "trl", "trr"],
 			"additionalProperties": false
 		},
-		"WiFiPowertrain": {
+		"Powertrain": {
 			"type": "object",
 			"description": "Basic powertrain snapshot included when hasPowertrain is true.",
 			"properties": {
@@ -1099,7 +1102,7 @@
 			"required": ["speed", "gear", "pedal", "brake", "steer", "rpmR", "rpmF"],
 			"additionalProperties": false
 		},
-		"WiFiWheelSpeeds": {
+		"WheelSpeeds": {
 			"type": "object",
 			"description": "Wheel speeds × 100 km/h, included when hasWheelSpeeds is true.",
 			"properties": {
@@ -1111,7 +1114,7 @@
 			"required": ["fl", "fr", "rl", "rr"],
 			"additionalProperties": false
 		},
-		"WiFiMotorTemps": {
+		"MotorTemps": {
 			"type": "object",
 			"description": "Motor temperatures °C, included when hasMotorTemps is true.",
 			"properties": {
@@ -1125,7 +1128,7 @@
 			"required": ["rInv", "rStat", "rHs", "fInv", "fStat", "fHs"],
 			"additionalProperties": false
 		},
-		"WiFiFeatures": {
+		"Features": {
 			"type": "object",
 			"description": "Feature availability flags for the detected vehicle variant.",
 			"properties": {
@@ -1139,7 +1142,7 @@
 			"required": ["fsd", "profile", "nag", "offset", "isaChime", "summon"],
 			"additionalProperties": false
 		},
-		"WiFiHardware": {
+		"Hardware": {
 			"type": "object",
 			"description": "Board and bus hardware identifiers.",
 			"properties": {
@@ -1164,9 +1167,9 @@
 			],
 			"additionalProperties": false
 		},
-		"WiFiState": {
+		"DeviceState": {
 			"type": "object",
-			"description": "Full device state returned by GET /status and POST /cmd on the WiFi REST API. Uses native JSON booleans (unlike serial/BLE which use 0/1).",
+			"description": "Full device state snapshot. Returned by GET /status and POST /cmd. Uses native JSON booleans (unlike serial/BLE which use 0/1 integers).",
 			"properties": {
 				"variant": {
 					"type": "string",
@@ -1228,12 +1231,12 @@
 				"accSpeedLimit": { "type": "integer", "description": "ACC speed limit × 10 km/h" },
 				"mapSpeedLimit": { "type": "integer", "description": "Map speed limit × 10 km/h" },
 				"maxSpeed": { "type": "integer", "description": "Max speed × 10 km/h" },
-				"tpms": { "$ref": "#/$defs/WiFiTpms" },
-				"powertrain": { "$ref": "#/$defs/WiFiPowertrain" },
-				"wheelSpeeds": { "$ref": "#/$defs/WiFiWheelSpeeds" },
-				"motorTemps": { "$ref": "#/$defs/WiFiMotorTemps" },
-				"features": { "$ref": "#/$defs/WiFiFeatures" },
-				"hardware": { "$ref": "#/$defs/WiFiHardware" }
+				"tpms": { "$ref": "#/$defs/Tpms" },
+				"powertrain": { "$ref": "#/$defs/Powertrain" },
+				"wheelSpeeds": { "$ref": "#/$defs/WheelSpeeds" },
+				"motorTemps": { "$ref": "#/$defs/MotorTemps" },
+				"features": { "$ref": "#/$defs/Features" },
+				"hardware": { "$ref": "#/$defs/Hardware" }
 			},
 			"required": [
 				"variant",
