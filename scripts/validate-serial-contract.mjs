@@ -4,29 +4,18 @@ import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const schemaDir = path.join(rootDir, "firmware", "lib", "io", "serial", "schemas");
+const schemaDir = path.join(rootDir, "firmware", "lib", "io", "schemas");
 
-const serialSchemaPath = path.join(schemaDir, "serial-output.schema.json");
-
-const manifestSectionNames = new Set([
-	"meta",
-	"connectivity",
-	"state",
-	"driverAssist",
-	"vehicle",
-	"platform",
-	"firmware",
-	"battery",
-	"safety",
-	"can",
-	"features",
-	"stream",
-	"canHealth",
-]);
+const schemaPath = path.join(schemaDir, "io.schema.json");
 
 const manifestFeatureKinds = new Set(["command", "query", "internal"]);
-const manifestMessageSectionKeys = new Set(["boot", "status"]);
-const manifestMessageKeys = new Set(["type", "command", "schemaRef", "sections", "notes"]);
+const manifestMessageKeys = new Set([
+	"tag",
+	"description",
+	"schema",
+	"alternativeSchema",
+	"transports",
+]);
 const manifestFeatureKeys = new Set([
 	"id",
 	"title",
@@ -34,11 +23,11 @@ const manifestFeatureKeys = new Set([
 	"commands",
 	"outputTags",
 	"statePaths",
-	"notes",
 ]);
 const manifestTypePattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const manifestSchemaRefPattern = /^#\/\$defs\/[A-Za-z][A-Za-z0-9]*$/;
 const featureIdPattern = /^[A-Za-z][A-Za-z0-9]*$/;
+const knownTransports = new Set(["serial", "ble", "wifi"]);
 
 const readJson = async (filePath) => JSON.parse(await readFile(filePath, "utf8"));
 
@@ -104,68 +93,49 @@ function assertUniqueStringArray(values, label, { allowEmpty = false, allowedVal
 }
 
 function validateManifest(manifest) {
-	if (!Number.isInteger(manifest.schemaVersion) || manifest.schemaVersion < 2) {
-		fail("serial-output.schema.json schemaVersion must be an integer >= 2");
+	if (!Number.isInteger(manifest.schemaVersion) || manifest.schemaVersion < 1) {
+		fail("io.schema.json schemaVersion must be an integer >= 1");
 	}
 
-	assertPlainObject(manifest.messageSections, "serial-output.schema.json messageSections");
-	assertNoExtraKeys(
-		manifest.messageSections,
-		manifestMessageSectionKeys,
-		"serial-output.schema.json messageSections",
-	);
-	assertUniqueStringArray(
-		manifest.messageSections.boot,
-		"serial-output.schema.json messageSections.boot",
-		{
-			allowedValues: manifestSectionNames,
-		},
-	);
-	assertUniqueStringArray(
-		manifest.messageSections.status,
-		"serial-output.schema.json messageSections.status",
-		{
-			allowedValues: manifestSectionNames,
-		},
-	);
-
 	if (!Array.isArray(manifest.messages) || manifest.messages.length === 0) {
-		fail("serial-output.schema.json messages must be a non-empty array");
+		fail("io.schema.json messages must be a non-empty array");
 	}
 
 	for (let index = 0; index < manifest.messages.length; index += 1) {
 		const message = manifest.messages[index];
-		const label = `serial-output.schema.json messages[${index}]`;
+		const label = `io.schema.json messages[${index}]`;
 		assertPlainObject(message, label);
 		assertNoExtraKeys(message, manifestMessageKeys, label);
-		assertNonEmptyString(message.type, `${label}.type`);
-		if (!manifestTypePattern.test(message.type)) {
-			fail(`${label}.type must match ${manifestTypePattern}`);
+		assertNonEmptyString(message.tag, `${label}.tag`);
+		if (!manifestTypePattern.test(message.tag)) {
+			fail(`${label}.tag must match ${manifestTypePattern}`);
 		}
 
-		if (message.command !== null) {
-			assertNonEmptyString(message.command, `${label}.command`);
+		assertNonEmptyString(message.schema, `${label}.schema`);
+		if (!manifestSchemaRefPattern.test(message.schema)) {
+			fail(`${label}.schema must match ${manifestSchemaRefPattern}`);
 		}
 
-		assertNonEmptyString(message.schemaRef, `${label}.schemaRef`);
-		if (!manifestSchemaRefPattern.test(message.schemaRef)) {
-			fail(`${label}.schemaRef must match ${manifestSchemaRefPattern}`);
+		if (message.alternativeSchema !== undefined) {
+			assertNonEmptyString(message.alternativeSchema, `${label}.alternativeSchema`);
+			if (!manifestSchemaRefPattern.test(message.alternativeSchema)) {
+				fail(`${label}.alternativeSchema must match ${manifestSchemaRefPattern}`);
+			}
 		}
 
-		assertUniqueStringArray(message.sections, `${label}.sections`, {
-			allowEmpty: true,
-			allowedValues: manifestSectionNames,
+		assertNonEmptyString(message.description, `${label}.description`);
+		assertUniqueStringArray(message.transports, `${label}.transports`, {
+			allowedValues: knownTransports,
 		});
-		assertOptionalString(message.notes, `${label}.notes`);
 	}
 
 	if (!Array.isArray(manifest.features) || manifest.features.length === 0) {
-		fail("serial-output.schema.json features must be a non-empty array");
+		fail("io.schema.json features must be a non-empty array");
 	}
 
 	for (let index = 0; index < manifest.features.length; index += 1) {
 		const feature = manifest.features[index];
-		const label = `serial-output.schema.json features[${index}]`;
+		const label = `io.schema.json features[${index}]`;
 		assertPlainObject(feature, label);
 		assertNoExtraKeys(feature, manifestFeatureKeys, label);
 		assertNonEmptyString(feature.id, `${label}.id`);
@@ -191,7 +161,6 @@ function validateManifest(manifest) {
 				allowEmpty: true,
 			});
 		}
-		assertOptionalString(feature.notes, `${label}.notes`);
 	}
 }
 
@@ -203,54 +172,48 @@ function _formatAjvErrors(errors) {
 	return errors.map((error) => `${error.instancePath || "/"} ${error.message}`.trim()).join("; ");
 }
 
-const serialSchema = await readJson(serialSchemaPath);
-const manifest = serialSchema;
+const ioSchema = await readJson(schemaPath);
+const manifest = ioSchema;
 
 const ajv = new Ajv2020({ allErrors: true, strict: false });
-ajv.compile(serialSchema);
+ajv.compile(ioSchema);
 validateManifest(manifest);
 
-const schemaDefs = new Set(Object.keys(serialSchema.$defs ?? {}));
-const manifestMessageTypes = new Set();
+const schemaDefs = new Set(Object.keys(ioSchema.$defs ?? {}));
+const manifestMessageTags = new Set();
 for (const message of manifest.messages) {
-	if (manifestMessageTypes.has(message.type)) {
-		fail(`serial-output.schema.json contains duplicate message type "${message.type}"`);
+	if (manifestMessageTags.has(message.tag)) {
+		fail(`io.schema.json contains duplicate message tag "${message.tag}"`);
 	}
 
-	manifestMessageTypes.add(message.type);
+	manifestMessageTags.add(message.tag);
 
-	if (!message.schemaRef.startsWith("#/$defs/")) {
-		fail(`message ${message.type} has unsupported schemaRef ${message.schemaRef}`);
+	if (!message.schema.startsWith("#/$defs/")) {
+		fail(`message ${message.tag} has unsupported schema ${message.schema}`);
 	}
 
-	const defName = message.schemaRef.slice("#/$defs/".length);
+	const defName = message.schema.slice("#/$defs/".length);
 	if (!schemaDefs.has(defName)) {
-		fail(`message ${message.type} references missing schema definition ${message.schemaRef}`);
+		fail(`message ${message.tag} references missing schema definition ${message.schema}`);
+	}
+
+	if (message.alternativeSchema !== undefined) {
+		const altDefName = message.alternativeSchema.slice("#/$defs/".length);
+		if (!schemaDefs.has(altDefName)) {
+			fail(
+				`message ${message.tag} alternativeSchema references missing definition ${message.alternativeSchema}`,
+			);
+		}
 	}
 }
 
 const featureIds = new Set();
 for (const feature of manifest.features) {
 	if (featureIds.has(feature.id)) {
-		fail(`serial-output.schema.json contains duplicate feature id "${feature.id}"`);
+		fail(`io.schema.json contains duplicate feature id "${feature.id}"`);
 	}
 
 	featureIds.add(feature.id);
-}
-
-const sectionUniverse = new Set([
-	...manifest.messageSections.boot,
-	...manifest.messageSections.status,
-	"stream",
-	"canHealth",
-]);
-
-for (const message of manifest.messages) {
-	for (const section of message.sections) {
-		if (!sectionUniverse.has(section)) {
-			fail(`message ${message.type} references unknown section "${section}"`);
-		}
-	}
 }
 
 const requiredMappings = new Map([
@@ -269,15 +232,15 @@ const requiredMappings = new Map([
 	["bms", "#/$defs/Bms"],
 ]);
 
-for (const [messageType, schemaRef] of requiredMappings) {
-	const mapping = manifest.messages.find((message) => message.type === messageType);
+for (const [messageTag, schemaRef] of requiredMappings) {
+	const mapping = manifest.messages.find((message) => message.tag === messageTag);
 	if (!mapping) {
-		fail(`serial-output.schema.json is missing required mapping for ${messageType}`);
+		fail(`io.schema.json is missing required mapping for ${messageTag}`);
 	}
 
-	if (mapping.schemaRef !== schemaRef) {
-		fail(`message ${messageType} should reference ${schemaRef}, got ${mapping.schemaRef}`);
+	if (mapping.schema !== schemaRef) {
+		fail(`message ${messageTag} should reference ${schemaRef}, got ${mapping.schema}`);
 	}
 }
 
-console.warn("Validated unified serial-output.schema.json contract.");
+console.warn("Validated unified io.schema.json contract.");
