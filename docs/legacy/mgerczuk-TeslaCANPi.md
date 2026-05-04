@@ -30,8 +30,11 @@ A Raspberry Pi Zero-based CAN bus logger for Tesla Model 3 that stores data offl
 - `VisualStudio/TeslaCAN/Elm327/` — ELM327 Bluetooth protocol implementation
 - `VisualStudio/TeslaCAN/SocketCAN/` — SocketCAN interface binding
 - `VisualStudio/TeslaCAN/TeslaLogger/` — TeslaLogger data format compatibility
+- `VisualStudio/TeslaCAN/www/w3.css` — Static CSS asset served by the built-in HTTP server
 - `VisualStudio/DbcParser/` — DBC file parser library
 - `VisualStudio/Mono.BlueZ/` — BlueZ Bluetooth stack bindings for Mono
+- `VisualStudio/TeslaCANTests/` — Unit test project
+- `VisualStudio/Linux Service/TeslaCAN.service` — systemd service unit for auto-start on boot
 - `Arduino/raspi_power.ino` — Arduino power management: monitors external power, controls Pi startup/shutdown via GPIO, enters deep sleep when no power
 - `Fritzing/` — Hardware wiring diagrams
 - `Images/` — Photos of the assembled hardware

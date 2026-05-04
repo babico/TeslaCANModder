@@ -28,6 +28,8 @@ An ESP32-based Tesla FSD CAN controller with a built-in WiFi access point and we
   - **Core 1**: CAN bus read/modify/write loop using TWAI driver.
 - `include/` — Shared headers:
   - `can_frame_types.h` — CAN frame type definitions
+  - `can_helpers.h` — Bit manipulation utilities (setBit, readMuxID, etc.)
+  - `drivers/can_driver.h` — Abstract CAN driver interface
   - `drivers/twai_driver.h` — ESP32 TWAI driver wrapper
   - `handlers.h` — CAN message handlers (same FSD logic as Tesla-Open-CAN-Mod)
   - `web_ui.h` — Embedded HTML for the web control panel

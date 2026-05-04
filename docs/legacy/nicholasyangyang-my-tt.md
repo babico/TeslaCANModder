@@ -27,7 +27,7 @@ A Tesla FSD (Full Self-Driving) CAN bus enabler firmware supporting multiple har
 - `src/main.cpp` — PlatformIO equivalent entry point.
 - `include/app.h` — Application logic: initializes CAN driver, runs main loop reading frames and dispatching to handlers.
 - `include/handlers.h` — Vehicle-specific CAN message handlers (`LegacyHandler`, `HW3Handler`, `HW4Handler`), each implementing FSD enable, speed profile mapping, and nag suppression.
-- `include/can_driver.h` / `include/drivers/` — Abstracted CAN driver interface with platform-specific implementations (MCP2515, SAME51, STM32 bxCAN).
+- `include/can_driver.h` / `include/drivers/` — Abstracted CAN driver interface with platform-specific implementations (MCP2515, SAME51, STM32 bxCAN via `stm32_bxcan_driver.h`, ESP32 TWAI via `twai_driver.h`).
 - `include/can_helpers.h` — Bit manipulation and CAN frame utility functions.
 - `include/can_frame_types.h` — Common CAN frame data structures.
 - `platformio.ini` — Multi-environment build configs for all supported boards.

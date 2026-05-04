@@ -20,9 +20,9 @@ Complete FSD region spoofing guide with three reference firmware implementations
 
 | Variant | Hardware | Cost | WiFi | Features |
 | ------- | -------- | ---- | ---- | -------- |
-| `nano/` | Arduino Nano + MCP2515 | ~$15 | No | Basic FSD enable |
-| `esp32/` | ESP32 + MCP2515 | ~$25 | Yes | FSD + web control |
-| `original/` | RP2040 CAN Feather | ~$40 | No | Original reference |
+| `firmware/nano/` | Arduino Nano + MCP2515 | ~$15 | No | Basic FSD enable |
+| `firmware/esp32/` | ESP32 + MCP2515 | ~$25 | Yes | FSD + web control |
+| `firmware/original/` | RP2040 CAN Feather | ~$40 | No | Original reference |
 
 ## Wiring (X179 Connector)
 

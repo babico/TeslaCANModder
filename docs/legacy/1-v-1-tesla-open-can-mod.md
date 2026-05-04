@@ -30,6 +30,7 @@ An open-source CAN bus modification firmware for Tesla vehicles that intercepts 
 - `include/drivers/` — Abstracted CAN drivers: `mcp2515_driver.h`, `same51_driver.h`, `twai_driver.h`
 - `include/can_frame_types.h`, `can_helpers.h` — CAN frame structures and utilities
 - `include/log_buffer.h` — Logging infrastructure
+- `include/shared_types.h` — Shared state types
 - `include/web/` — Web-related components
 - `platformio.ini` — Build environments for all hardware targets plus native test environments
 - `scripts/` — Build helper scripts (e.g., `platformio_sync_ino_defines.py`)

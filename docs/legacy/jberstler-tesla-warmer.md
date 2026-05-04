@@ -25,8 +25,9 @@ A small collection of Node.js scripts that control Tesla vehicles via the Tesla 
 
 - `start_climate.js` — Logs into the Tesla API, starts climate control, waits a configurable number of minutes, then turns it off. Checks for open doors and driver presence before acting.
 - `start_sentry_mode.js` — Logs into the Tesla API and enables Sentry Mode.
-- `lib/tesla_common.js` — Shared utilities: Tesla API authentication, climate control wrapper, battery level checks, logging.
 - `package.json` — Dependencies: `teslajs` v4.3.3 and `simple-node-logger`.
+
+> **Note**: A `lib/tesla_common.js` shared-utilities module is referenced in descriptions of this project but is not present in the repository as committed.
 
 ## CAN Bus Integration
 

@@ -24,7 +24,7 @@ A comprehensive Raspberry Pi-based Tesla CAN bus controller/automator for Tesla 
 ## Architecture
 
 - `jupiter.py` — Main application: initializes CAN bus, loads feature modules, reads CAN messages in a loop, dispatches to Buffer and feature handlers
-- `tesla.py` — Core Tesla logic: `Buffer` (CAN frame buffer with mux support), `Dashboard` (vehicle state), `Logger` (drive recording to CSV), `Autopilot` (speed/distance control), `RearCenterBuckle`, `ButtonManager`, `FreshAir`, `KickDown`, `TurnSignal`, `Reboot`
+- `tesla.py` — **Not present in the repository** (imported by `jupiter.py` but not committed — the module provides `Buffer`, `Dashboard`, `Logger`, `Autopilot`, `RearCenterBuckle`, `ButtonManager`, `FreshAir`, `KickDown`, `TurnSignal`, `Reboot`, `BatteryLogger`, and `monitoring_addrs` classes, but the file is absent, making the project non-runnable as published)
 - `functions.py` — CAN bus initialization (`modprobe mcp251x`, `ip link set can0`), JSON settings loader
 - `packet_functions.py` — Bit-level CAN packet manipulation: `get_value()` (extract bits with endian/signed support), `modify_packet_value()`, `make_new_packet()`
 - `navdy.py` — Navdy HUD Bluetooth integration: connects via RFCOMM, sends JSON payloads for speed/navigation display

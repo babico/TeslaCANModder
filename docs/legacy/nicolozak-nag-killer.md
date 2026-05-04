@@ -23,13 +23,16 @@ A minimal ESP32-based research firmware that echoes modified CAN ID 0x370 (880, 
 
 ## Architecture
 
-- `can880_echo.ino` — Single-file firmware, ~150 lines. Contains all logic:
+Two firmware versions, each in its own subdirectory:
+
+- `v1_simple/v1_simple.ino` — Single-file firmware (~150 lines). Contains all logic:
   - TWAI driver init (GPIO 26 RX, 27 TX, 23 standby, 16 power enable)
   - Main loop: receives CAN frames, filters for ID 0x370, echoes modified copies
   - `echoModified880()` — inline function that modifies and transmits the echo frame
   - Serial interface at 2,000,000 baud with 'e' (toggle echo) and 's' (status) commands
   - Auto-recovery from TWAI BUS_OFF state
   - Heartbeat logging every 5 seconds
+- `v2_dashboard/v2_dashboard.ino` + `v2_dashboard/index_html.ino` — Extended version that adds a WiFi web dashboard (real-time EPAS status, stats display); the HTML is embedded in a separate `.ino` file.
 
 ## CAN Bus Integration
 

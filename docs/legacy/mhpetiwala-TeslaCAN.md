@@ -23,15 +23,16 @@ A fork/mirror of the MatthewDriver-TeslaCAN repository. Contains the same Tesla 
 
 ## Architecture
 
-Identical to MatthewDriver-TeslaCAN:
+Largely identical to MatthewDriver-TeslaCAN, with some scripts absent:
 
 - `scripts/can_setup.sh` — SocketCAN interface setup
 - `scripts/canlogging.sh` — CAN data capture via `candump`
 - `scripts/Model3CAN.dbc` — Tesla Model 3 signal definitions
-- `scripts/mqttpy.py` — MQTT CAN data publisher
 - `scripts/convertbinary.py`, `convertRawASC.py` — Log converters
 - `www/index.html` — MQTT + D3.js real-time dashboard
 - `SteeringDemo.mp4` — Demo video
+
+> **Note**: `scripts/mqttpy.py` (MQTT publisher) is not present in this fork, unlike in MatthewDriver-TeslaCAN.
 
 ## CAN Bus Integration
 

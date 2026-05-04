@@ -25,6 +25,8 @@ A Go-based HTTP-to-BLE proxy that receives HTTP REST commands and forwards them 
 
 - `main.go` — Entry point. Initializes logging, config, BLE control, migrates legacy keys, sets up HTTP routes, and starts the HTTP server.
 - `internal/api/routes/` — HTTP route definitions mirroring Tesla Fleet API endpoints.
+- `internal/api/handlers/` — HTTP handler implementations (HTML pages, logs, Tesla commands, version).
+- `internal/api/models/` — Request/response model types and state conversion utilities.
 - `internal/ble/control/` — BLE connection management, key role handling (Owner vs Charging Manager), and command queue.
 - `internal/tesla/` — Tesla vehicle protocol implementation.
 - `internal/logging/` — Structured logging.

@@ -29,8 +29,9 @@ The repository contains documentation and a planned project structure (the `docs
 - **Device B (ESP32-C6)**: CAN bus reader with dual-channel CAN (high-speed 500kbps + low-speed 125kbps), FreeRTOS-based — acts as BLE peripheral
 - **Device C (ESP32)**: Ambient light controller with 12V WS2812 RGB strip, PWM dimming — acts as BLE peripheral
 - Communication: AES-256-GCM encrypted BLE between all devices
-- `docs/architecture.md` — Detailed system architecture, hardware interfaces, communication topology
-- `docs/hardware_spec.md` — Hardware specifications and BOM
+- `tesla-can-controller/docs/architecture.md` — Detailed system architecture, hardware interfaces, communication topology
+
+> **Note**: The repository contains only documentation; no firmware source code is present. `docs/hardware_spec.md` is referenced in descriptions but does not exist in the repository.
 
 ## CAN Bus Integration
 

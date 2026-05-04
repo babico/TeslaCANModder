@@ -34,9 +34,9 @@ Clean separation of concerns with a driver abstraction layer:
 - `include/can_helpers.h` — Bit manipulation utilities for CAN frames
 - `include/can_frame_types.h` — Platform-agnostic CAN frame struct
 - `include/drivers/` — Hardware abstraction:
+  - `can_driver.h` — Abstract CAN driver base interface
   - `mcp2515_driver.h` — MCP2515 SPI driver
   - `same51_driver.h` — ATSAME51 native CAN driver
-  - `twai_driver.h` — ESP32 TWAI driver
   - `mock_driver.h` — Test mock driver
 - `test/` — Host-side unit tests (native platform)
 - `scripts/` — Build helpers (`pio-local.ps1`, `native_toolchain.py`)

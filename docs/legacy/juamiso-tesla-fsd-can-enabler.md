@@ -12,7 +12,7 @@ repo: tesla-fsd-can-enabler
 
 ## Overview
 
-A multi-board Tesla FSD CAN bus enabler that intercepts and modifies specific CAN messages to activate Full Self-Driving functionality. Supports five board variants: ESP32+MCP2515, ESP32-S3 TWAI, Adafruit Feather M4 CAN, RP2040 CAN, and Arduino UNO+MCP2515. Derived from the original Starmixcraft/Tesla-OPEN-CAN-MOD project with expanded hardware support.
+A multi-board Tesla FSD CAN bus enabler that intercepts and modifies specific CAN messages to activate Full Self-Driving functionality. Supports four board variants: ESP32+MCP2515, ESP32-S3 TWAI, Adafruit Feather M4 CAN, and RP2040 CAN. (An Arduino UNO+MCP2515 variant is documented in the README but the sketch is not present in the repository.) Derived from the original Starmixcraft/Tesla-OPEN-CAN-MOD project with expanded hardware support.
 
 ## Technical Details
 
@@ -28,9 +28,10 @@ boards/
 ├── ESP32_MCP2515/ESP32_MCP2515.ino    — ESP32 + external MCP2515 via SPI
 ├── ESP32S3_TWAI/ESP32S3_TWAI.ino      — ESP32-S3 native TWAI CAN
 ├── FeatherM4CAN/FeatherM4CAN.ino      — Adafruit Feather M4 + MCP25625
-├── RP2040CAN/RP2040CAN.ino            — RP2040 + MCP25625
-└── UNO_MCP2515_CAN/UNO_MCP2515_CAN.ino — Arduino UNO + MCP2515
+└── RP2040CAN/RP2040CAN.ino            — RP2040 + MCP25625
 ```
+
+(The README also lists `UNO_MCP2515_CAN/` as a planned Arduino UNO variant, but that directory is not present in the repository.)
 
 Each sketch uses a compile-time `#define HW` to select vehicle hardware variant (LEGACY/HW3/HW4). The handler classes (`LegacyHandler`, `HW3Handler`, `HW4Handler`) implement variant-specific CAN message processing.
 

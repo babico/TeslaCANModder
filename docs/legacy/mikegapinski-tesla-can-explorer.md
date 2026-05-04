@@ -30,7 +30,9 @@ An open-source web-based research portal for browsing decoded Tesla CAN frames a
 - `data/can_frames_decoded_all_values_mcu3.json` — Complete decoded CAN frames for Model 3 MCU3 (AMD)
 - `data/can_frames_decoded_all_values_modelsx_amd.json` — Model S/X MCU3 (AMD)
 - `data/can_frames_decoded_all_values_modelsx_intel.json` — Model S/X MCU2 (Intel)
+- `data/can_frames_decoded_all_values.json` — Combined/unified frame dataset (all variants)
 - `data/vapi_can_digest_*.json` — VAPI CAN digest for each variant
+- `data/vapi_can_digest.json` — Combined VAPI CAN digest
 - `data/vapi_eth_signal_aliases_*.csv` — Ethernet signal alias mappings
 - `data/can_frames_decoded_enum_values_*.csv` — Enum value CSV exports
 - `enable_portal_source.sh` — Portal launch helper script

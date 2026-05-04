@@ -27,9 +27,12 @@ A web-based research portal for browsing decoded Tesla CAN frames and signal val
 - `index.html` — Single-page app with left (frame list) and right (signal detail) panels
 - `styles.css` — Styling
 - `data/` — Pre-decoded CAN frame datasets:
-  - `can_frames_decoded_all_values_mcu2.json` / `mcu3.json` / `modelsx_amd.json` / `modelsx_intel.json` — Full frame+signal+enum data
-  - `can_frames_decoded_enum_values_*.csv` — Enum value exports
-  - `vapi_can_digest_*.json` — VAPI CAN digest data
+  - `can_frames_decoded_all_values_mcu2.json` / `mcu3.json` / `modelsx_amd.json` / `modelsx_intel.json` — Full frame+signal+enum data per variant
+  - `can_frames_decoded_all_values.json` — Combined dataset (all variants)
+  - `can_frames_decoded_enum_values_*.csv` — Enum value exports per variant
+  - `can_frames_decoded_enum_values.csv` — Combined enum value export
+  - `vapi_can_digest_*.json` — VAPI CAN digest data per variant
+  - `vapi_can_digest.json` — Combined VAPI CAN digest
   - `vapi_eth_signal_aliases_*.csv` — VAPI Ethernet signal alias mappings
 
 ## CAN Bus Integration
