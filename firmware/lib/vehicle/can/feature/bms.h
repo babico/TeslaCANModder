@@ -1,6 +1,6 @@
 #pragma once
 #include "core/forward.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── BMS Battery Telemetry Decoder ────────────────────────────────────────────
 // Decodes BMS CAN frames into human-readable battery telemetry.

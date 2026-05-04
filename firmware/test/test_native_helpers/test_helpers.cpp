@@ -4,7 +4,7 @@
 class __FlashStringHelper;
 
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}

@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── CAN Simulation Mode ────────────────────────────────────────────────────
 // Generates synthetic CAN frames for testing without a real vehicle.

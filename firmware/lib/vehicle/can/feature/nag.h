@@ -1,7 +1,7 @@
 #pragma once
 #include <cmath>
 #include "core/forward.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 #include "infra/util/parse.h"
 
 // ── Nag Killer — EPAS Torque Spoofing ────────────────────────────────────────

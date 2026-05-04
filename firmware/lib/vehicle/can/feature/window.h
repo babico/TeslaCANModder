@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "core/forward.h"
-#include "infra/can/bus.h"
-#include "infra/can/burst.h"
+#include "vehicle/can/ids.h"
+#include "vehicle/can/burst.h"
 
 // ── Window Vent Control (0x119) ──────────────────────────────────────────────
 // Controls window vent position via CAN ID 0x119.

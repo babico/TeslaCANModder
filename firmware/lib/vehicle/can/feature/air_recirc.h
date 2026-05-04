@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── Automatic Air Recirculation ─────────────────────────────────────────────
 // Toggle cabin air recirculation via CAN ID 0x2AA

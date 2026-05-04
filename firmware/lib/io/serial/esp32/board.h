@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "core/config/esp32/board.h"
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 #include "api/command/features.h"
 #include "state.h"
 #include "output.h"

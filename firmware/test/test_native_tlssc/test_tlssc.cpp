@@ -15,7 +15,7 @@ class __FlashStringHelper;
 #define BOARD_ENABLE_WIFI 0
 
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 static int saveCount = 0;
 void saveSettings(const State &)

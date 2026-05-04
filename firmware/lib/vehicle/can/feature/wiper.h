@@ -1,8 +1,8 @@
 #pragma once
 #include <string.h>
 #include "core/forward.h"
-#include "infra/can/bus.h"
-#include "infra/can/burst.h"
+#include "vehicle/can/ids.h"
+#include "vehicle/can/burst.h"
 
 // ── Wiper Bit Helpers (0x273 UI_vehicleControl) ─────────────────────────────
 // Wiper speed is encoded in byte 7 bits [2:0] of the UI_vehicleControl frame.

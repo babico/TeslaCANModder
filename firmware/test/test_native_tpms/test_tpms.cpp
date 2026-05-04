@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 #include "feature/tpms.h"
 
 void setUp() {}

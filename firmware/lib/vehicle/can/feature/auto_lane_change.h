@@ -1,7 +1,7 @@
 #pragma once
 #include "core/forward.h"
-#include "infra/can/bus.h"
-#include "infra/can/crc8.h"
+#include "vehicle/can/ids.h"
+#include "vehicle/can/crc8.h"
 #include "infra/util/parse.h"
 
 // ── Auto Lane Change (ALC) Confirmation ──────────────────────────────────────

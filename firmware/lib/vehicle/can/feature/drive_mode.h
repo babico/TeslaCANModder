@@ -1,6 +1,6 @@
 #pragma once
 #include "core/forward.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── Drive Mode Override ("Ghost Mode") ───────────────────────────────────────
 // Injects CAN ID 0x334 to override drive mode mapping at runtime.

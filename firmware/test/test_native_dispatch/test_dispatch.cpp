@@ -20,7 +20,7 @@ class __FlashStringHelper;
 unsigned long millis();
 
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 #include "feature/summon.h"
 
 // ── Stubs for driver + handler functions ────────────────────────────────────

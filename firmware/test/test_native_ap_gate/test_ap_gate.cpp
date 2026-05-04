@@ -9,7 +9,7 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 void saveSettings(const State &) {}
 
@@ -40,7 +40,7 @@ void driverSend(const Frame &f, uint8_t bus)
 
 #include "feature/drive_mode.h"
 #include "feature/seatbelt.h"
-#include "infra/can/burst.h"
+#include "vehicle/can/burst.h"
 
 void setUp()
 {

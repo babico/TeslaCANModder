@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── 1.7 Firmware Version Compatibility ──────────────────────────────────────
 // Decode the vehicle firmware version string from CAN 0x392 (GTW_versionInfo)

@@ -1,7 +1,7 @@
 #pragma once
 #include "core/types.h"
-#include "infra/can/bus.h"
-#include "infra/can/burst.h"
+#include "vehicle/can/ids.h"
+#include "vehicle/can/burst.h"
 
 // ── Turn Signal Module (3-blink lane change) ────────────────────────────────
 // CAN ID 0x3F5 = VCFRONT_vehicleLights

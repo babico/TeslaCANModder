@@ -1,5 +1,5 @@
 #pragma once
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 #include "infra/can/recorder.h"
 #include "infra/can/id_filter.h"
 #include "infra/log/ring.h"

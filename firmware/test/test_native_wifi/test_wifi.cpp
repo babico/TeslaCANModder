@@ -17,7 +17,7 @@
 #define BOARD_DRIVER_NAME "arduino-mcp2515"
 
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── Stubs ───────────────────────────────────────────────────────────────────
 unsigned long millis()

@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── Rear Seatbelt Buckle Emulation ──────────────────────────────────────────
 // Suppress rear seatbelt warnings by injecting a CAN frame that signals

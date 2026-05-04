@@ -15,7 +15,7 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── Captured-output fakes ──────────────────────────────────────────────────
 static std::string capturedOutput;

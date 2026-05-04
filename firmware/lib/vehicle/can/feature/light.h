@@ -1,8 +1,8 @@
 #pragma once
 #include <string.h>
 #include "core/forward.h"
-#include "infra/can/bus.h"
-#include "infra/can/burst.h"
+#include "vehicle/can/ids.h"
+#include "vehicle/can/burst.h"
 
 // ── Lighting Bit Helpers (0x273 UI_vehicleControl) ───────────────────────────
 inline void setFrontFogSwitch(Frame &f, bool enable)

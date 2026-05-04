@@ -1,6 +1,6 @@
 #pragma once
 #include "core/forward.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 #include "infra/util/parse.h"
 
 // ── Region Detection & Spoofing ──────────────────────────────────────────────

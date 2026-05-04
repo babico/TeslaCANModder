@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── Powertrain Telemetry (read-only) ────────────────────────────────────────
 // Decode motor and drivetrain signals for performance monitoring.

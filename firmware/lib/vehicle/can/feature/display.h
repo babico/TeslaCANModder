@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "core/forward.h"
-#include "infra/can/bus.h"
-#include "infra/can/burst.h"
+#include "vehicle/can/ids.h"
+#include "vehicle/can/burst.h"
 
 // ── Display Bit Helpers (0x273 UI_vehicleControl) ────────────────────────────
 inline void setDisplayBrightness(Frame &f, uint8_t level)

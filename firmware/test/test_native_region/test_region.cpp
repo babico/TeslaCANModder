@@ -8,7 +8,7 @@ class __FlashStringHelper;
 #define F(s) (reinterpret_cast<const __FlashStringHelper *>(s))
 
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}

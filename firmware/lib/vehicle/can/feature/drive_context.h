@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "infra/can/bus.h"
+#include "vehicle/can/ids.h"
 
 // ── Drive context decode helpers (D-11 / D-13) ─────────────────────────────
 // Door/frunk/trunk open-state and cruise/speed-limit context extracted from
