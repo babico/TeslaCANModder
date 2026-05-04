@@ -152,6 +152,36 @@ inline bool parseNagKillerMode(const char *name, NagKillerMode &out)
 	return false;
 }
 
+// ── CAN Diagnostics ─────────────────────────────────────────────────────────
+
+// Per-bus CAN statistics. Fixed-size; no dynamic allocation. Safe across all
+// ride lengths (uint32_t frames wraps only after ~596 hours at peak bus load).
+struct CanBusStat
+{
+	uint32_t frames;        // total frames received (cumulative)
+	uint16_t hz;            // current frame rate × 10  (e.g. 456 → 45.6 Hz)
+	uint16_t hzMin;         // minimum Hz × 10 observed (0xFFFF until first window)
+	uint16_t hzMax;         // maximum Hz × 10 observed
+	uint16_t windowCount;   // frames counted in current 1-second window
+	uint32_t windowStartMs; // millis() when current window opened
+	CanBusStat()
+		: frames(0), hz(0), hzMin(0xFFFF), hzMax(0), windowCount(0), windowStartMs(0)
+	{
+	}
+};
+
+// All CAN-layer diagnostic counters in one place — three per-bus stat blocks
+// plus global intercept counters collected from every handler path.
+struct CanDiag
+{
+	CanBusStat bus[3];      // index: 0 = Chassis, 1 = Vehicle, 2 = Body
+	uint32_t nagEchoCount;  // nag-killer echoes sent (0x370, all modes)
+	uint32_t eapModCount;   // EAP frames modified for nag-suppress (mux=1)
+	uint32_t txFailCount;   // MCP2515 sendMessage() errors (accumulated)
+	uint32_t busOffCount;   // CAN bus-off events auto-recovered
+	CanDiag() : nagEchoCount(0), eapModCount(0), txFailCount(0), busOffCount(0) {}
+};
+
 // ── State ────────────────────────────────────────────────────────────────────
 struct State
 {
@@ -416,16 +446,8 @@ struct State
 	// Steering input for natural nag-killer modulation
 	float steeringAngle; // degrees, + = right (from 0x129)
 
-	// ── CAN Diagnostic Counters (runtime, not persisted) ──────────────────
-	// Inspired by alzza/tesla-can-moniter telemetry payload analysis
-	uint32_t canNagEchoCount;	// Total nag-killer echoes sent (0x370 intercepts)
-	uint32_t canEapModCount;	// Total EAP frames modified (nag-suppress mux=1)
-	uint32_t canTxFailCount;	// TX failures reported by MCP2515 driver
-	uint32_t canBusOffCount;	// CAN bus-off events recovered
-	uint32_t canFrames[3];		// Total frames received per bus (0=Chassis,1=Vehicle,2=Body)
-	unsigned long canFrameRateWindowMs[3]; // Window start timestamp for Hz calc
-	uint32_t canFrameRateCount[3];		   // Frame count in current 1-second window
-	float canFrameRateHz[3];			   // Rolling frames/sec per bus
+	// ── CAN Diagnostics (runtime, not persisted) ────────────────────────────
+	CanDiag canDiag; // per-bus stats + all intercept/error counters
 
 	// Turn signals (3-blink lane change)
 	// No persistent state — momentary burst only
@@ -560,7 +582,7 @@ struct State
 		  mqttConnected(false), vehicleModel(0), vehicleYear(0), hasVehicleConfig(false), platformModel(0),
 		  platformHwGen(0), platformSwYear(0), platformSwWeek(0), platformSwRelease(0), platformSwPatch(0),
 		  platformFsdProto(0), platformSwCompat(0), platformResolved(false), apiKeyRequired(false), steeringAngle(0),
-		  canNagEchoCount(0), canEapModCount(0), canTxFailCount(0), canBusOffCount(0)
+		  canDiag()
 	{
 		for (uint8_t i = 0; i < 8; i++)
 			lastCtrl[i] = 0;
@@ -584,13 +606,6 @@ struct State
 		{
 			tpmsPressure[i] = 0;
 			tpmsTemp[i] = 0;
-		}
-		for (uint8_t i = 0; i < 3; i++)
-		{
-			canFrames[i] = 0;
-			canFrameRateWindowMs[i] = 0;
-			canFrameRateCount[i] = 0;
-			canFrameRateHz[i] = 0.0f;
 		}
 		mqttHost[0] = '\0';
 		apiKey[0] = '\0';

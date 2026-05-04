@@ -265,19 +265,25 @@ void driveModeTick_dispatch(State &s)
 }
 
 // ── CAN Frame Rate Update (call once per received frame) ─────────────────────
-// Updates rolling Hz estimate for the given bus using a 1-second sliding window.
-static inline void _updateCanFrameRate(State &s, uint8_t bus, unsigned long now)
+// Updates rolling Hz (x10 fixed-point) + lifetime frame count for the given bus.
+// Hz min/max are tracked per bus after the first complete 1-second window.
+static inline void _updateCanFrameRate(State &s, uint8_t bus, uint32_t now)
 {
 	if (bus >= 3)
 		return;
-	s.canFrames[bus]++;
-	s.canFrameRateCount[bus]++;
-	unsigned long elapsed = now - s.canFrameRateWindowMs[bus];
+	CanBusStat &b = s.canDiag.bus[bus];
+	b.frames++;
+	b.windowCount++;
+	uint32_t elapsed = now - b.windowStartMs;
 	if (elapsed >= 1000UL)
 	{
-		s.canFrameRateHz[bus] = (s.canFrameRateCount[bus] * 1000.0f) / (float)elapsed;
-		s.canFrameRateCount[bus] = 0;
-		s.canFrameRateWindowMs[bus] = now;
+		// Compute Hz × 10 as integer; clamp to uint16_t max
+		uint32_t hz10 = (b.windowCount * 10000UL) / elapsed;
+		b.hz = (hz10 > 0xFFFFu) ? 0xFFFFu : (uint16_t)hz10;
+		if (b.hz < b.hzMin) b.hzMin = b.hz;
+		if (b.hz > b.hzMax) b.hzMax = b.hz;
+		b.windowCount = 0;
+		b.windowStartMs = now;
 	}
 }
 
@@ -642,13 +648,13 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 					float torque = nagNaturalTorque(s.steeringAngle, s.dasHandsOnState);
 					nagKillerModifyNatural(echo, torque);
 					driverSend(echo, BUS_VEHICLE);
-					s.canNagEchoCount++;
+					s.canDiag.nagEchoCount++;
 				}
 				else if (s.nagKillerMode != NAG_KILLER_NATURAL)
 				{
 					nagKillerModify(echo);
 					driverSend(echo, BUS_VEHICLE);
-					s.canNagEchoCount++;
+					s.canDiag.nagEchoCount++;
 				}
 			}
 			return;

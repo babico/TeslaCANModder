@@ -189,8 +189,8 @@ void loop()
 	{
 		_lastErrPollMs = now;
 		driverPollBusErrors();
-		state.canTxFailCount += driverGetAndResetTxFails();
-		state.canBusOffCount += driverGetAndResetBusOffEvents();
+		state.canDiag.txFailCount += driverGetAndResetTxFails();
+		state.canDiag.busOffCount += driverGetAndResetBusOffEvents();
 	}
 
 	Frame frame;
