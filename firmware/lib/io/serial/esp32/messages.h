@@ -199,24 +199,20 @@ void sendBoot(State& s) {
        .num("txFailCount", (long)s.canDiag.txFailCount)
        .num("busOffCount", (long)s.canDiag.busOffCount)
        .object("frames", [&](JsonLineBuilder::JsonObjectBuilder& fr) {
-         fr.num("chassis", (long)s.canDiag.bus[0].frames)
-           .num("vehicle", (long)s.canDiag.bus[1].frames)
-           .num("body",    (long)s.canDiag.bus[2].frames);
+         for (uint8_t i = 0; i < BUS_MAX; i++)
+           fr.num(kBusName[i], (long)s.canDiag.bus[i].frames);
        })
        .object("hz", [&](JsonLineBuilder::JsonObjectBuilder& hz) {
-         hz.num("chassis", (long)s.canDiag.bus[0].hz)
-           .num("vehicle", (long)s.canDiag.bus[1].hz)
-           .num("body",    (long)s.canDiag.bus[2].hz);
+         for (uint8_t i = 0; i < BUS_MAX; i++)
+           hz.num(kBusName[i], (long)s.canDiag.bus[i].hz);
        })
        .object("hzMin", [&](JsonLineBuilder::JsonObjectBuilder& hzMin) {
-         hzMin.num("chassis", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
-              .num("vehicle", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
-              .num("body",    (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin));
+         for (uint8_t i = 0; i < BUS_MAX; i++)
+           hzMin.num(kBusName[i], (long)(s.canDiag.bus[i].hzMin == 0xFFFF ? 0 : s.canDiag.bus[i].hzMin));
        })
        .object("hzMax", [&](JsonLineBuilder::JsonObjectBuilder& hzMax) {
-         hzMax.num("chassis", (long)s.canDiag.bus[0].hzMax)
-              .num("vehicle", (long)s.canDiag.bus[1].hzMax)
-              .num("body",    (long)s.canDiag.bus[2].hzMax);
+         for (uint8_t i = 0; i < BUS_MAX; i++)
+           hzMax.num(kBusName[i], (long)s.canDiag.bus[i].hzMax);
        });
     })
     .object("features", [&](JsonLineBuilder::JsonObjectBuilder& o) {
@@ -412,24 +408,20 @@ void sendStatus(State& s, unsigned long now) {
        .num("txFailCount", (long)s.canDiag.txFailCount)
        .num("busOffCount", (long)s.canDiag.busOffCount)
        .object("frames", [&](JsonLineBuilder::JsonObjectBuilder& fr) {
-         fr.num("chassis", (long)s.canDiag.bus[0].frames)
-           .num("vehicle", (long)s.canDiag.bus[1].frames)
-           .num("body",    (long)s.canDiag.bus[2].frames);
+         for (uint8_t i = 0; i < BUS_MAX; i++)
+           fr.num(kBusName[i], (long)s.canDiag.bus[i].frames);
        })
        .object("hz", [&](JsonLineBuilder::JsonObjectBuilder& hz) {
-         hz.num("chassis", (long)s.canDiag.bus[0].hz)
-           .num("vehicle", (long)s.canDiag.bus[1].hz)
-           .num("body",    (long)s.canDiag.bus[2].hz);
+         for (uint8_t i = 0; i < BUS_MAX; i++)
+           hz.num(kBusName[i], (long)s.canDiag.bus[i].hz);
        })
        .object("hzMin", [&](JsonLineBuilder::JsonObjectBuilder& hzMin) {
-         hzMin.num("chassis", (long)(s.canDiag.bus[0].hzMin == 0xFFFF ? 0 : s.canDiag.bus[0].hzMin))
-              .num("vehicle", (long)(s.canDiag.bus[1].hzMin == 0xFFFF ? 0 : s.canDiag.bus[1].hzMin))
-              .num("body",    (long)(s.canDiag.bus[2].hzMin == 0xFFFF ? 0 : s.canDiag.bus[2].hzMin));
+         for (uint8_t i = 0; i < BUS_MAX; i++)
+           hzMin.num(kBusName[i], (long)(s.canDiag.bus[i].hzMin == 0xFFFF ? 0 : s.canDiag.bus[i].hzMin));
        })
        .object("hzMax", [&](JsonLineBuilder::JsonObjectBuilder& hzMax) {
-         hzMax.num("chassis", (long)s.canDiag.bus[0].hzMax)
-              .num("vehicle", (long)s.canDiag.bus[1].hzMax)
-              .num("body",    (long)s.canDiag.bus[2].hzMax);
+         for (uint8_t i = 0; i < BUS_MAX; i++)
+           hzMax.num(kBusName[i], (long)s.canDiag.bus[i].hzMax);
        });
     })
     .object("features", [&](JsonLineBuilder::JsonObjectBuilder& o) {
