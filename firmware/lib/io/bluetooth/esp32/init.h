@@ -7,7 +7,7 @@ static bool btReady = false;
 
 void btInit()
 {
-	btSerial.begin(BT_DEVICE_NAME);
+	btSerial.begin(BLE_DEVICE_NAME);
 	btReady = true;
 }
 

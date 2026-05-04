@@ -46,7 +46,7 @@ void resetHandlerLogFlags()
 // ── Per-Bus Filter Setup (Hardcoded Tesla X179) ─────────────────────────────
 void applyFilters(State &s)
 {
-	// Bus 0 (FSD bus, X179 pins 13-14): dynamic filters based on enabled features
+	// Bus 0 (Chassis bus, X179 pins 13-14): dynamic filters based on enabled features
 	// Toggle-inject pattern: feature ON → intercept + inject, feature OFF → don't intercept CAN line
 	if (s.rawCanListen)
 	{

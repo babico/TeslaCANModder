@@ -4,7 +4,7 @@
 // ESP32-S DevKit with up to 3 CAN buses via MCP2515 modules over SPI.
 //
 // Tesla X179 Connector Mapping (hardcoded):
-//   Bus 0 (MCP2515_1): X179 pins 13-14 → FSD / Autopilot CAN
+//   Bus 0 (MCP2515_1): X179 pins 13-14 → Chassis / Autopilot CAN
 //   Bus 1 (MCP2515_2): X179 pins 9-10  → Vehicle Control CAN
 //   Bus 2 (MCP2515_3): X179 pins 2-3   → Body Control CAN
 //
@@ -13,7 +13,7 @@
 
 #define PIN_LED 2 // ESP32 DevKit on-board LED
 
-// ── Bus 0: MCP2515_1 (SPI) — FSD bus, X179 pins 13-14 ──────────────────────
+// ── Bus 0: MCP2515_1 (SPI) — Chassis bus, X179 pins 13-14 ─────────────────────
 #define PIN_MCP2515_1_CS 15
 #define PIN_MCP2515_1_INT 34 // Input-only pin, good for interrupt
 

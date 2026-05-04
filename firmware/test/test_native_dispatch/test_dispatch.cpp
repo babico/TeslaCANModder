@@ -90,7 +90,7 @@ unsigned long millis() { return fake_millis; }
 // and driver/esp32.h. Instead we replicate the key functions:
 
 void applyFilters(State& s) {
-  // Bus 0 (FSD): dynamic filters based on enabled features
+  // Bus 0 (Chassis): dynamic filters based on enabled features
   if (s.rawCanListen) {
     driverSetBusFilters(0, nullptr, 0);
   } else {
@@ -146,7 +146,7 @@ void applyFilters(State& s) {
 }
 
 void handleMessage(Frame& f, uint8_t bus, State& s) {
-  // Bus 0 (FSD): variant-specific handler
+  // Bus 0 (Chassis): variant-specific handler
   if (bus == BUS_CHASSIS) {
     // P2-06: Fallback variant inference from distinctive frame presence
     if (s.variantAutoDetect && !s.hwAutoDetected) {
@@ -380,7 +380,7 @@ void test_apply_filters_hw4_sets_fsd_3_ids() {
   s.isaChimeSuppress = true;
   s.fsdEnabled = true;
   applyFilters(s);
-  // Bus 0 (FSD): 3 IDs for HW4 (ISA + FOLLOW + MUX)
+  // Bus 0 (Chassis): 3 IDs for HW4 (ISA + FOLLOW + MUX)
   TEST_ASSERT_TRUE(stub_mcp_call_count >= 1);
   TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
   TEST_ASSERT_EQUAL(3, stub_mcp_calls[0].count);
@@ -419,7 +419,7 @@ void test_apply_filters_sets_vehicle_and_body_buses() {
   State s = makeState(HW4);
   s.fsdEnabled = true;
   applyFilters(s);
-  // 3-bus config: bus 0 (FSD) + bus 1 (vehicle, 4 IDs) + bus 2 (body, 3 IDs)
+  // 3-bus config: bus 0 (chassis) + bus 1 (vehicle, 4 IDs) + bus 2 (body, 3 IDs)
   TEST_ASSERT_EQUAL(3, stub_mcp_call_count);
   TEST_ASSERT_EQUAL(BUS_VEHICLE, stub_mcp_calls[1].idx);
   TEST_ASSERT_EQUAL(4, stub_mcp_calls[1].count);
