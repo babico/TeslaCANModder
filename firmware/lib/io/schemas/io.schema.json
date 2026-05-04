@@ -1071,9 +1071,9 @@
 			]
 		},
 
-		"Tpms": {
+		"TpmsData": {
 			"type": "object",
-			"description": "TPMS pressures (× 100 kPa) and temperatures (°C) for all four wheels.",
+			"description": "TPMS pressures (× 100 kPa) and temperatures (°C) for all four wheels. Used as a nested sub-object inside DeviceState.",
 			"properties": {
 				"fl": { "type": "integer", "description": "Front-left pressure × 100" },
 				"fr": { "type": "integer", "description": "Front-right pressure × 100" },
@@ -1087,9 +1087,9 @@
 			"required": ["fl", "fr", "rl", "rr", "tfl", "tfr", "trl", "trr"],
 			"additionalProperties": false
 		},
-		"Powertrain": {
+		"PowertrainData": {
 			"type": "object",
-			"description": "Basic powertrain snapshot included when hasPowertrain is true.",
+			"description": "Basic powertrain snapshot used as a nested sub-object inside DeviceState (included when hasPowertrain is true).",
 			"properties": {
 				"speed": { "type": "integer", "description": "Vehicle speed × 100 km/h" },
 				"gear": { "type": "integer", "description": "Gear: 0=invalid 1=P 2=R 3=N 4=D" },
@@ -1231,8 +1231,8 @@
 				"accSpeedLimit": { "type": "integer", "description": "ACC speed limit × 10 km/h" },
 				"mapSpeedLimit": { "type": "integer", "description": "Map speed limit × 10 km/h" },
 				"maxSpeed": { "type": "integer", "description": "Max speed × 10 km/h" },
-				"tpms": { "$ref": "#/$defs/Tpms" },
-				"powertrain": { "$ref": "#/$defs/Powertrain" },
+				"tpms": { "$ref": "#/$defs/TpmsData" },
+				"powertrain": { "$ref": "#/$defs/PowertrainData" },
 				"wheelSpeeds": { "$ref": "#/$defs/WheelSpeeds" },
 				"motorTemps": { "$ref": "#/$defs/MotorTemps" },
 				"features": { "$ref": "#/$defs/Features" },
