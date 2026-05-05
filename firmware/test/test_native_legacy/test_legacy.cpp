@@ -21,7 +21,7 @@ class __FlashStringHelper;
 
 // ── Stubs ────────────────────────────────────────────────────────────────────
 #include "support/stubs.h"
-#include "handler/legacy.h"
+#include "handler/variant/legacy.h"
 #include "support/helpers.h"
 
 static State makeState()

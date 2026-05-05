@@ -1,8 +1,5 @@
 #pragma once
-#include <string.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Climate Control (0x2F3) ──────────────────────────────────────────────────
 // Climate keeper mode control (bits 33-34)

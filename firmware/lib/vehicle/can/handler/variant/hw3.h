@@ -3,7 +3,7 @@
 #include "vehicle/can/ids.h"
 #include "feature/profile.h"
 #include "feature/offsets.h"
-#include "feature/region.h"
+#include "handler/variant/nag.h" // applyNagSuppressBits + ONCE_LOG + region
 
 static bool hw3LoggedFSD = false;
 static bool hw3LoggedNag = false;
@@ -96,38 +96,14 @@ void handleHW3(Frame &f, State &s)
 			setBit(f, 46, true);
 			setSpeedProfileV12V13(f, s.speedProfile);
 			driverSend(f, 0);
-			if (!hw3LoggedFSD)
-			{
-				sendLog(F("HW3: FSD mod active on CAN"));
-				hw3LoggedFSD = true;
-			}
+			ONCE_LOG(hw3LoggedFSD, F("HW3: FSD mod active on CAN"));
 			return;
 		}
 
 		if (mux == 1 && s.nagSuppress && apGateOpen)
 		{
-			setBit(f, 19, false);
-			setBit(f, 47, true); // summon EU unlock bit — matches HW4 and All HW/summon-eu-unlock.json
-			// Enhanced Autopilot: set bit 46 on mux=1 to unlock EAP/Summon
-			// Source: ev-open-can-tools HW3Handler enhancedAutopilotRuntime + hypery11
-			if (s.enhancedAutopilot)
-				setBit(f, 46, true);
-			// Lane graph visualization: bit 45 on mux=1
-			// Source: hypery11/flipper-tesla-fsd fsd_handler.c (assist_show_lane_graph)
-			if (s.laneGraphEnable)
-				setBit(f, 45, true);
-			// ECE R79 bypass: clear EU speed restriction bit for European vehicles
-			if (s.eceR79Bypass && s.hasRegion && isEuropeanMarket(s.regionCode))
-			{
-				applyEceR79Bypass(f);
-			}
-			driverSend(f, 0);
-			s.canDiag.eapModCount++;
-			if (!hw3LoggedNag)
-			{
-				sendLog(F("HW3: Nag suppressed on CAN"));
-				hw3LoggedNag = true;
-			}
+			applyNagSuppressBits(f, s);
+			ONCE_LOG(hw3LoggedNag, F("HW3: Nag suppressed on CAN"));
 			return;
 		}
 
@@ -135,11 +111,7 @@ void handleHW3(Frame &f, State &s)
 		{
 			writeHW3SpeedOffset(f, s.speedOffset);
 			driverSend(f, 0);
-			if (!hw3LoggedOffset)
-			{
-				sendLog(F("HW3: Speed offset applied"));
-				hw3LoggedOffset = true;
-			}
+			ONCE_LOG(hw3LoggedOffset, F("HW3: Speed offset applied"));
 			return;
 		}
 	}

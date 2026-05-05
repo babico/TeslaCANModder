@@ -77,16 +77,15 @@ static void applyMcpFilters(MCP2515 &mcp, const uint32_t *ids, uint8_t count)
 
 // ── Public API ──────────────────────────────────────────────────────────────
 
-void driverSetFilters(const uint32_t *ids, uint8_t count)
-{
-	if (mcpAvailable[0])
-		applyMcpFilters(*mcpBus[0], ids, count);
-}
-
 void driverSetBusFilters(uint8_t bus, const uint32_t *ids, uint8_t count)
 {
 	if (bus < BUS_MAX && busActive(bus) && mcpAvailable[bus])
 		applyMcpFilters(*mcpBus[bus], ids, count);
+}
+
+void driverSetFilters(const uint32_t *ids, uint8_t count)
+{
+	driverSetBusFilters(BUS_CHASSIS, ids, count);
 }
 
 bool driverBusReady(uint8_t bus)

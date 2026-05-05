@@ -1,8 +1,10 @@
 #pragma once
 #include "messages.h"
+#include "core/can/recorder.h"
 
 #if BOARD_ENABLE_BLE
 #include "io/ble/esp32/tesla_board.h"
+#include "io/ble/esp32/config.h"
 #endif
 
 // ── Command Parser ───────────────────────────────────────────────────────────
@@ -144,6 +146,38 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 	{
 		sendAck(cmd);
 		sendLog(s.fsdEnabled ? F("FSD enabled - saved to NVS") : F("FSD disabled - saved to NVS"));
+		sendStatus(s, now);
+		return;
+	}
+
+	if (strcmp(cmd, "drive:status") == 0)
+	{
+		jsonLine()
+			.str("t", "drive")
+			.boolean("enabled", dasDriveIsEnabled())
+			.boolean("active", dasDriveIsActive())
+			.num("steerDeg", (int)dasSteerAngle)
+			.num("accelMinX100", (int)(dasAccelMin * 100.0f))
+			.num("accelMaxX100", (int)(dasAccelMax * 100.0f))
+			.num("speedKph", (int)dasSetSpeedKph)
+			.num("speedLimitKph", (int)dasSpeedLimitKph)
+			.num("speedCapKph", (int)dasSpeedCapKph)
+			.num("speedCapMaxKph", (int)DAS_SPEED_CAP_MAX_KPH)
+			.end();
+		return;
+	}
+
+	if (executeDasCmd(cmd, s))
+	{
+		sendAck(cmd);
+		if (strcmp(cmd, "drive:on") == 0)
+			sendLog(F("Drive mode ON - saved"));
+		else if (strcmp(cmd, "drive:off") == 0)
+			sendLog(F("Drive mode OFF - saved"));
+		else if (strncmp(cmd, "drive:speed:", 12) == 0)
+			sendLog(F("Drive speed limit saved"));
+		else if (strncmp(cmd, "drive:cap:", 10) == 0)
+			sendLog(F("Drive speed CAP saved"));
 		sendStatus(s, now);
 		return;
 	}
@@ -347,7 +381,6 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 	}
 
 	// Body bus commands (window, sentry)
-#if BUS_BODY_ACTIVE
 	if (executeWindowCmd(cmd, s) || executeSentryCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -355,10 +388,8 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-#endif
 
 	// Vehicle bus commands (climate, charge, drive, precondition, track mode)
-#if BUS_VEHICLE_ACTIVE
 	if (executePreconditionCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -399,10 +430,8 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-#endif
 
 	// Trunk commands (frunk = vehicle bus, trunk/glovebox = body bus)
-#if BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE
 	if (s.variant != LEGACY && executeTrunkCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -410,7 +439,6 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-#endif
 
 	// TPMS query
 	if (executeTpmsCmd(cmd, s))
@@ -683,7 +711,6 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 	}
 
 	// Turn signals: turn:left3, turn:right3, turn:hazard, turn:off
-#if BUS_VEHICLE_ACTIVE
 	if (executeTurnSignalCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -691,10 +718,8 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-#endif
 
 	// Seatbelt emulation: seatbelt:on, seatbelt:off
-#if BUS_VEHICLE_ACTIVE
 	if (executeSeatbeltCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -703,10 +728,8 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-#endif
 
 	// Air recirculation: airecirc:on, airecirc:off
-#if BUS_VEHICLE_ACTIVE
 	if (executeAirRecircCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -714,10 +737,8 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-#endif
 
 	// Wiper persistence: wiperpersist:on, wiperpersist:off
-#if BUS_VEHICLE_ACTIVE
 	if (executeWiperPersistCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -726,10 +747,8 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-#endif
 
 	// Mirror auto-fold: mirror:autofold:on, mirror:autofold:off
-#if BUS_VEHICLE_ACTIVE
 	if (executeMirrorAutoFoldCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -738,10 +757,8 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-#endif
 
 	// Powertrain telemetry query
-#if BUS_VEHICLE_ACTIVE
 	if (executePowertrainCmd(cmd, s))
 	{
 		jsonLine()
@@ -769,7 +786,6 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 			.end();
 		return;
 	}
-#endif
 
 	// CAN simulation: simu:start, simu:stop
 	if (executeCanSimCmd(cmd, s))
@@ -806,7 +822,6 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-#if BUS_VEHICLE_ACTIVE
 	// MQTT bridge: mqtt:on/off, mqtt:broker:<host>, mqtt:port:<port>, mqtt:interval:<ms>
 	if (executeMqttCmd(cmd, s))
 	{
@@ -816,7 +831,6 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-#endif
 
 	// Vehicle config query: vehicle
 	if (executeVehicleConfigCmd(cmd, s))
@@ -866,8 +880,210 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
+	// ── CAN Recorder ─────────────────────────────────────────────────────────
+	//   recorder:on               start recording (clears ring buffer)
+	//   recorder:off              stop recording (preserves buffer)
+	//   recorder:clear            wipe buffer + counters
+	//   recorder:status           emit a {"t":"recorder",...} JSON line
+	if (strncmp(cmd, "recorder:", 9) == 0) {
+		const char *sub = cmd + 9;
+		if (strcmp(sub, "on") == 0) {
+			canRecorderStart(true);
+			sendAck(cmd);
+			sendLog(F("Recorder ON"));
+			return;
+		}
+		if (strcmp(sub, "off") == 0) {
+			canRecorderStop();
+			sendAck(cmd);
+			sendLog(F("Recorder OFF"));
+			return;
+		}
+		if (strcmp(sub, "clear") == 0) {
+			canRecorderReset();
+			sendAck(cmd);
+			sendLog(F("Recorder cleared"));
+			return;
+		}
+		if (strcmp(sub, "status") == 0) {
+			jsonLine()
+				.str("t", "recorder")
+				.boolean("enabled", canRecorderEnabled())
+				.num("count", (int)canRecorderCount())
+				.num("capacity", (int)canRecorderCapacity())
+				.num("captured", (unsigned long)canRecorderCapturedTotal())
+				.num("dropped", (unsigned long)canRecorderDroppedTotal())
+				.num("lastCaptureMs", (unsigned long)canRecorderLastCaptureMs())
+				.end();
+			return;
+		}
+		sendError(F("Unknown recorder sub-command"));
+		return;
+	}
+
 
 #if BOARD_ENABLE_BLE
+	// ── BLE radio control ────────────────────────────────────────────────────
+	//   ble:on                    enable BLE radio (saved to NVS)
+	//   ble:off                   disable BLE radio (saved to NVS)
+	//   ble:name:<n>              set advertised device name (1..32 chars)
+	//   ble:status                emit a {"t":"ble",...} JSON line
+	if (strncmp(cmd, "ble:", 4) == 0 && strncmp(cmd, "ble:scan", 8) != 0) {
+		const char *sub = cmd + 4;
+		if (strcmp(sub, "on") == 0) {
+			bleEnabledCfg = true;
+			if (!bleIsReady()) bleRestart();
+			saveBleConfig();
+			sendAck(cmd);
+			sendLog(F("BLE radio ON - saved"));
+			sendStatus(s, now);
+			return;
+		}
+		if (strcmp(sub, "off") == 0) {
+			bleEnabledCfg = false;
+			if (bleIsReady()) bleStop();
+			saveBleConfig();
+			sendAck(cmd);
+			sendLog(F("BLE radio OFF - saved"));
+			sendStatus(s, now);
+			return;
+		}
+		if (strcmp(sub, "status") == 0) {
+			jsonLine()
+				.str("t", "ble")
+				.boolean("enabled", bleIsReady())
+				.boolean("connected", bleIsConnected())
+				.str("deviceName", bleGetDeviceName())
+				.end();
+			return;
+		}
+		if (strncmp(sub, "name:", 5) == 0) {
+			const char *name = sub + 5;
+			size_t len = strlen(name);
+			if (len == 0 || len > 32) {
+				sendError(F("BLE name must be 1-32 chars"));
+				return;
+			}
+			strncpy(bleNameCfg, name, sizeof(bleNameCfg) - 1);
+			bleNameCfg[sizeof(bleNameCfg) - 1] = '\0';
+			if (!bleSetDeviceName(bleNameCfg)) {
+				sendError(F("Failed to apply BLE name"));
+				return;
+			}
+			saveBleConfig();
+			sendAck(cmd);
+			sendLog(F("BLE name updated - saved"));
+			return;
+		}
+		sendError(F("Unknown ble sub-command"));
+		return;
+	}
+
+	// Gamepad commands:
+	//   gamepad:scan | rescan         start a 6-second BLE HID scan
+	//   gamepad:pair:<AA:BB:..>       pair with a scanned address
+	//   gamepad:unpair                forget paired device
+	//   gamepad:on | off              enable / disable gamepad input
+	//   gamepad:status                JSON status (battery, rssi, axes, mode...)
+	//   gamepad:bind:<n>:<cmd>        tap binding for button n (0-15)
+	//   gamepad:hold:<n>:<cmd>        long-press (>=500 ms) binding for n
+	//   gamepad:axis:<n>:<dz|expo|inv>:<v>        per-axis tuning (n=0..5)
+	//   gamepad:cancel                send a one-shot DAS cancel burst
+	if (strncmp(cmd, "gamepad:", 8) == 0) {
+		const char *sub = cmd + 8;
+		if (strcmp(sub, "scan") == 0 || strcmp(sub, "rescan") == 0) {
+			gamepadStartScan();
+			sendAck(cmd);
+			return;
+		}
+		if (strcmp(sub, "unpair") == 0) {
+			gamepadUnpair();
+			sendAck(cmd);
+			sendLog(F("Gamepad unpaired"));
+			sendStatus(s, now);
+			return;
+		}
+		if (strcmp(sub, "on") == 0) {
+			gamepadSetEnabled(true);
+			sendAck(cmd);
+			sendLog(F("Gamepad enabled - saved"));
+			sendStatus(s, now);
+			return;
+		}
+		if (strcmp(sub, "off") == 0) {
+			gamepadSetEnabled(false);
+			sendAck(cmd);
+			sendLog(F("Gamepad disabled - saved"));
+			sendStatus(s, now);
+			return;
+		}
+		if (strcmp(sub, "cancel") == 0) {
+			gamepadCancel();
+			sendAck(cmd);
+			sendLog(F("Gamepad: DAS cancel burst sent"));
+			return;
+		}
+		if (strcmp(sub, "status") == 0) {
+			jsonLine()
+				.str("t", "gamepad")
+				.boolean("enabled", gpEnabled)
+				.boolean("connected", gpConnected)
+				.boolean("scanning", gpScanning)
+				.str("addr", gpPairedAddr)
+				.str("name", gamepadLastSeenName())
+				.num("rssi", gamepadGetRssi())
+				.num("battery", (int)gamepadGetBattery())
+				.num("reconnFails", (int)gamepadReconnectFails())
+				.num("buttons", (int)gpButtons)
+				.end();
+			return;
+		}
+		if (strncmp(sub, "pair:", 5) == 0) {
+			if (gamepadSetPaired(sub + 5)) {
+				sendAck(cmd);
+				sendLog(F("Gamepad paired - saved"));
+			} else {
+				sendError(F("Invalid address — use AA:BB:CC:DD:EE:FF"));
+			}
+			return;
+		}
+		if (strncmp(sub, "bind:", 5) == 0 || strncmp(sub, "hold:", 5) == 0) {
+			bool isHold = (sub[0] == 'h');
+			const char *rest = sub + 5;
+			const char *colon = strchr(rest, ':');
+			if (!colon) { sendError(F("Usage: gamepad:bind|hold:<n>:<cmd>")); return; }
+			int idx = (int)strtol(rest, nullptr, 10);
+			if (idx < 0 || idx >= GAMEPAD_BTN_COUNT) { sendError(F("Button index 0-15")); return; }
+			if (isHold) gamepadSetBindingHold(idx, colon + 1);
+			else        gamepadSetBinding(idx, colon + 1);
+			sendAck(cmd);
+			return;
+		}
+		// gamepad:axis:<n>:<dz|expo|inv>:<v>
+		if (strncmp(sub, "axis:", 5) == 0) {
+			const char *p = sub + 5;
+			char *end;
+			long n = strtol(p, &end, 10);
+			if (n < 0 || n > 5 || *end != ':') { sendError(F("Usage: gamepad:axis:<0-5>:dz|expo|inv:<v>")); return; }
+			const char *field = end + 1;
+			const char *colon = strchr(field, ':');
+			if (!colon) { sendError(F("Usage: gamepad:axis:<n>:dz|expo|inv:<v>")); return; }
+			long v = strtol(colon + 1, nullptr, 10);
+			uint8_t idx = (uint8_t)n;
+			uint8_t dz = gpAxisDz[idx], expo = gpAxisExpo[idx];
+			bool inv = (gpAxisInvMask & (1u << idx)) != 0;
+			if      (strncmp(field, "dz:",   3) == 0) dz   = (uint8_t)(v < 0 ? 0 : (v > 50  ? 50  : v));
+			else if (strncmp(field, "expo:", 5) == 0) expo = (uint8_t)(v < 0 ? 0 : (v > 100 ? 100 : v));
+			else if (strncmp(field, "inv:",  4) == 0) inv  = (v != 0);
+			else { sendError(F("axis field must be dz|expo|inv")); return; }
+			gamepadSetAxisTune(idx, dz, expo, inv);
+			sendAck(cmd);
+			return;
+		}
+		sendError(F("Unknown gamepad sub-command"));
+		return;
+	}
+
 	if (strncmp(cmd, "tesla:", 6) == 0) {
 		Tesla::executeTeslaCommand(cmd + 6);
 		return;

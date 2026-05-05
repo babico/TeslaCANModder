@@ -97,6 +97,40 @@ summon:stop      # Stop summon
 
 > Requires a cached 0x273 frame from the vehicle bus. If not yet received, Console shows "Waiting for 0x273 frame".
 
+## DAS Drive (Gamepad CAN Injection)
+
+Openpilot-style autopilot CAN injection on `BUS_CHASSIS` (X179 pins 13–14). Emits three Tesla DAS frames at the same rates the AP computer would:
+
+| ID    | Name                  | Rate  | Purpose                 |
+| ----- | --------------------- | ----- | ----------------------- |
+| 0x2B9 | `DAS_control`         | 25 Hz | Longitudinal accel/jerk |
+| 0x488 | `DAS_steeringControl` | 50 Hz | Steering angle request  |
+| 0x27D | `APS_eacMonitor`      | 10 Hz | EPAS steer-allow gate   |
+
+Safety envelope (mirrors `opendbc/car/tesla` CarControllerParams):
+
+- Accel: −3.48 … +2.0 m/s²
+- Jerk: ±4.9 m/s³ (ACC faults at ±5.0)
+- Angle rate: ≤ 5° per 20 ms steering frame (EPS faults at 12)
+- Speed cap: 1 … 200 km/h (NVS-persisted, default 25)
+- Hardware variant aware: HW3/LEGACY → ANGLE_CONTROL (1), HW4 → LANE_KEEP_ASSIST (2)
+- Dead-man timer: 150 ms without `dasSetControl()` auto-cancels
+- Standstill brake-hold: −0.4 m/s² when no input near zero speed
+- Disable emits 5 cancel frames before going silent
+
+```bash
+drive:on            # Enable DAS drive (gamepad takes over actuators)
+drive:off           # Disable + cancel burst
+drive:speed:N       # User speed limit km/h (1..current cap), persisted
+drive:cap:N         # Hard safety cap km/h (1..200), persisted
+```
+
+> ⚠️ Bench rig or jack stands only. See [DAS Drive guide](../guides/das-drive.md) for full safety model and bench checklist.
+
+## Gamepad Input (BLE HID)
+
+Pairs a BLE HID controller (Xbox/PS, service UUID `0x1812`) and routes its analog axes into DAS Drive plus its 16 buttons into bound serial commands. Default bindings: `A → drive:on`, `B → drive:off`, `X → horn`, button hold (≥500 ms) can be bound separately. Pairing, axis tuning, and button bindings persist to NVS namespaces `tcm_gpad` / `tcm_gbnd`. Battery % and RSSI are captured when the device exposes them.
+
 ## Nag Killer (EPAS Torque Spoofing)
 
 More aggressive than basic nag suppression — intercepts CAN ID 0x370 (EPAS torque sensor) and echoes it back with zeroed torque values. This eliminates the "hands on wheel" nag entirely by spoofing zero steering torque.
@@ -643,7 +677,7 @@ log    # Dump ring buffer contents
 
 ## Vehicle Commands ( 3 CAN required )
 
-These commands require a 3-CAN build and send frames on the Vehicle bus:
+These commands require a build with `_vehicle` (e.g. `esp32_wifi_ble_chassis_vehicle_body_8mhz`) and send frames on the Vehicle bus:
 
 ### Lock & Horn
 

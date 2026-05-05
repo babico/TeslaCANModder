@@ -780,8 +780,8 @@ infra/parse.h   — parseBoolCmd() shared command parser
 core/types.h    — State, Frame, Features structs
 core/forward.h  — forward declares saveSettings, resetHandlerLogFlags, applyFilters, driverSend
 
-handler/hw4.h   — HW4 FSD mux handler (mux 0/1/2 + ISA speed + follow dist)
-handler/hw3.h   — HW3 FSD mux handler (mux 0/1/2 + follow dist)
-handler/legacy.h — Legacy FSD handler (mux 0/1 + stalk profile)
+handler/variant/hw4.h   — HW4 FSD mux handler (mux 0/1/2 + ISA speed + follow dist)
+handler/variant/hw3.h   — HW3 FSD mux handler (mux 0/1/2 + follow dist)
+handler/variant/legacy.h — Legacy FSD handler (mux 0/1 + stalk profile)
 handler/dispatch/esp32.h — main loop dispatch (summonTick, preconditionTick, burstTick, nagKiller echo)
 ```

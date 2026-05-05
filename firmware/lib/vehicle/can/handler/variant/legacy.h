@@ -55,11 +55,7 @@ void handleLegacy(Frame &f, State &s)
 			setBit(f, 46, true);
 			setSpeedProfileV12V13(f, s.speedProfile);
 			driverSend(f, 0);
-			if (!legacyLoggedFSD)
-			{
-				sendLog(F("Legacy: FSD mod active on CAN"));
-				legacyLoggedFSD = true;
-			}
+			ONCE_LOG(legacyLoggedFSD, F("Legacy: FSD mod active on CAN"));
 			return;
 		}
 
@@ -68,11 +64,7 @@ void handleLegacy(Frame &f, State &s)
 			setBit(f, 19, false);
 			driverSend(f, 0);
 			s.canDiag.eapModCount++;
-			if (!legacyLoggedNag)
-			{
-				sendLog(F("Legacy: Nag suppressed on CAN"));
-				legacyLoggedNag = true;
-			}
+			ONCE_LOG(legacyLoggedNag, F("Legacy: Nag suppressed on CAN"));
 			return;
 		}
 	}

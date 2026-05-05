@@ -112,6 +112,56 @@ Status payload includes:
 
 - `enhancedAutopilot` — hidden AP setting state (0=off, 1=on)
 
+## DAS Drive (Gamepad CAN Injection)
+
+Manual remote-control of the car's actuators by injecting openpilot-protocol
+DAS frames (`DAS_control 0x2B9 @25 Hz`, `DAS_steeringControl 0x488 @50 Hz`,
+`APS_eacMonitor 0x27D @10 Hz`) on the chassis CAN bus. Gamepad sticks become
+steering and pedals. **Not** Autopilot/FSD — there is no perception or
+planning. See [DAS Drive guide](../guides/das-drive.md) for safety model.
+
+| Command         | Description                                                 |
+| --------------- | ----------------------------------------------------------- |
+| `drive:on`      | Enable DAS drive (gamepad takes over actuators)             |
+| `drive:off`     | Disable DAS drive and emit a 5-frame cancel burst           |
+| `drive:speed:N` | User speed limit in km/h (1..current cap), persisted to NVS |
+| `drive:cap:N`   | Hard safety cap in km/h (1..200), persisted to NVS          |
+
+Status payload includes:
+
+- `dasDriveEnabled` — drive mode toggle
+- `dasSpeedLimitKph` — current user speed limit
+- `dasSpeedCapKph` — current runtime safety cap
+- `dasSpeedCapMaxKph` — absolute compile-time ceiling (200)
+
+## Gamepad (BLE HID)
+
+Pair a BLE HID gamepad and route its sticks into [DAS Drive](#das-drive-gamepad-can-injection)
+plus its 16 buttons into bound serial commands. Pairing, button bindings
+(tap + hold) and per-axis tuning all persist to NVS namespaces `tcm_gpad`
+/ `tcm_gbnd`. See [vehicle features](./vehicle-features.md#gamepad-input-ble-hid).
+
+| Command                                | Description                                               |
+| -------------------------------------- | --------------------------------------------------------- |
+| `gamepad:scan`                         | Start a 6-second BLE HID scan                             |
+| `gamepad:pair:<addr>`                  | Pair with the scanned MAC address (`AA:BB:CC:DD:EE:FF`)   |
+| `gamepad:unpair`                       | Forget the paired device                                  |
+| `gamepad:on`                           | Enable gamepad input (saved to NVS)                       |
+| `gamepad:off`                          | Disable gamepad input (saved to NVS)                      |
+| `gamepad:status`                       | Emit a JSON status (battery, RSSI, axes, mode)            |
+| `gamepad:cancel`                       | Send a one-shot DAS cancel burst                          |
+| `gamepad:bind:<n>:<cmd>`               | Bind tap of button `n` (0..15) to a serial command        |
+| `gamepad:hold:<n>:<cmd>`               | Bind ≥500 ms long-press of button `n` to a serial command |
+| `gamepad:axis:<n>:<dz\|expo\|inv>:<v>` | Per-axis tuning, axes 0..5                                |
+
+Status payload (`gamepad` field) includes:
+
+- `enabled` / `connected` / `scanning`
+- `pairedAddr`, `pairedName`
+- `rssi`, `battery`
+- `devices[]` — last scan result
+- `bindings[]` — current tap and hold bindings per button
+
 ## FSD & Autopilot
 
 | Command         | Description                                               |

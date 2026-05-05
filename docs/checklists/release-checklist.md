@@ -36,16 +36,16 @@ Pre-release checklist for TeslaCANModder. Every tagged release **must** pass all
 
 ## 2. Manual Verification
 
-| Check                                                  | Owner    | Done? |
-| ------------------------------------------------------ | -------- | ----- |
-| Flash `esp32` firmware on test board — boot JSON valid | Engineer | ☐     |
-| Flash `esp32_wifi_ble` firmware — boot JSON valid      | Engineer | ☐     |
-| Browser client connects to device via Web Serial       | Engineer | ☐     |
-| Client app BLE scan finds ESP32 device                 | Engineer | ☐     |
-| Command round-trip: FSD on → ack received              | Engineer | ☐     |
-| Frame streaming: frames appear in dashboard            | Engineer | ☐     |
-| EEPROM/NVS persistence: settings survive reboot        | Engineer | ☐     |
-| AP gate blocks live mutation paths until open          | Engineer | ☐     |
+| Check                                                                       | Owner    | Done? |
+| --------------------------------------------------------------------------- | -------- | ----- |
+| Flash `esp32_chassis_8mhz` firmware on test board — boot JSON valid         | Engineer | ☐     |
+| Flash `esp32_wifi_ble_chassis_vehicle_body_8mhz` firmware — boot JSON valid | Engineer | ☐     |
+| Browser client connects to device via Web Serial                            | Engineer | ☐     |
+| Client app BLE scan finds ESP32 device                                      | Engineer | ☐     |
+| Command round-trip: FSD on → ack received                                   | Engineer | ☐     |
+| Frame streaming: frames appear in dashboard                                 | Engineer | ☐     |
+| EEPROM/NVS persistence: settings survive reboot                             | Engineer | ☐     |
+| AP gate blocks live mutation paths until open                               | Engineer | ☐     |
 
 Additional required runtime-safety check:
 
@@ -79,14 +79,15 @@ The release automation reads the root `package.json` version and only auto-tags 
 
 ## 5. Release Artifacts
 
-| Artifact                | Format        | Location                                          |
-| ----------------------- | ------------- | ------------------------------------------------- |
-| ESP32 firmware (serial) | `.bin`        | GitHub Release attachment (`esp32*.bin`)          |
-| ESP32 WiFi firmware     | `.bin`        | GitHub Release attachment (`esp32_wifi*.bin`)     |
-| ESP32 BLE firmware      | `.bin`        | GitHub Release attachment (`esp32_ble*.bin`)      |
-| ESP32 WiFi+BLE firmware | `.bin`        | GitHub Release attachment (`esp32_wifi_ble*.bin`) |
-| Browser client          | Docker image  | ghcr.io or Docker Hub                             |
-| Protocol package        | npm (private) | npm workspace                                     |
+| Artifact              | Format        | Location                                                            |
+| --------------------- | ------------- | ------------------------------------------------------------------- |
+| ESP32 firmware matrix | `.bin` (×~44) | GitHub Release attachments — one per PlatformIO env                 |
+| → naming              |               | `esp32[_wifi][_ble][_chassis][_vehicle][_body][_8mhz\|_16mhz].bin`  |
+| → default             |               | `esp32_chassis_8mhz.bin`                                            |
+| → full I/O            |               | `esp32_wifi_ble_chassis_vehicle_body_8mhz.bin` and `*_16mhz.bin`    |
+| → passive sniffer     |               | `esp32_vehicle_body_8mhz.bin` (no chassis — DAS injection disabled) |
+| Browser client        | Docker image  | ghcr.io or Docker Hub                                               |
+| Protocol package      | npm (private) | npm workspace                                                       |
 
 ## 6. Rollback Plan
 

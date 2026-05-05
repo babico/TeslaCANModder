@@ -24,32 +24,37 @@ This is the canonical setup path for TeslaCANModder across firmware, transport, 
 - GitHub release access for prebuilt firmware assets, or PlatformIO available for local builds (`firmware/.pio.ps1`)
 - Chrome or Edge for Web Serial flows
 - Data-capable USB cable
-- Correct MCP2515 crystal profile in hardware (8 MHz modules recommended)
+- Correct MCP2515 crystal profile in hardware (8 MHz or 16 MHz — the env suffix `_8mhz` / `_16mhz` must match)
 
 ## Step 1: Get Firmware Artifact
 
 Preferred path: download the release binary built by GitHub Actions for your target connectivity and bus profile.
 These release assets are merged flash-ready ESP32 images.
 
-Common release asset names:
+Common release asset names (asset name == PlatformIO env name + `.bin`):
 
-- `esp32.bin` — USB serial, chassis bus only
-- `esp32_no_can.bin` — USB serial, no CAN lanes enabled
-- `esp32_vehicle_only.bin` — USB serial, vehicle bus only
-- `esp32_wifi.bin` — USB serial + WiFi, chassis bus only
-- `esp32_ble_vehicle.bin` — USB serial + BLE, chassis + vehicle buses
-- `esp32_wifi_ble_vehicle_body.bin` — USB serial + WiFi + BLE, chassis + vehicle + body buses
+- `esp32_chassis_8mhz.bin` — USB serial, chassis bus only, 8 MHz crystals (default)
+- `esp32_chassis_16mhz.bin` — same, 16 MHz crystals
+- `esp32_chassis_vehicle_8mhz.bin` — USB serial, chassis + vehicle
+- `esp32_chassis_vehicle_body_8mhz.bin` — USB serial, chassis + vehicle + body
+- `esp32_wifi_chassis_8mhz.bin` — USB + WiFi REST API, chassis only
+- `esp32_ble_chassis_vehicle_8mhz.bin` — USB + BLE, chassis + vehicle
+- `esp32_wifi_ble_chassis_vehicle_body_8mhz.bin` — full I/O, three X179 buses
+- `esp32_wifi_ble_chassis_vehicle_body_8mhz.bin` — full I/O, all three buses
+- `esp32_vehicle_body_8mhz.bin` — passive sniffer (no chassis — DAS injection disabled)
+
+For the complete env list, see `firmware/platformio.ini` or [Firmware Variants](../reference/firmware-variants.md).
 
 If you need a local custom build instead, choose your target environment and compile manually.
 
 ```powershell
 cd firmware
-.\.pio.ps1 run -e esp32_wifi_ble
+.\.pio.ps1 run -e esp32_wifi_ble_chassis_8mhz
 ```
 
 Expected artifact example:
 
-- ESP32: `firmware/build/firmware/esp32_wifi_ble.bin`
+- ESP32: `firmware/build/firmware/esp32_wifi_ble_chassis_8mhz.bin`
 
 ## Step 2: Flash Firmware (Unified Flasher Paths)
 
@@ -77,13 +82,13 @@ npm run web
 Use the debug CLI to flash and perform basic serial boot verification.
 
 ```bash
-node tools/debug.js flash --port COM5 --hex firmware/build/firmware/esp32_wifi_ble.bin
+node tools/debug.js flash --port COM5 --hex firmware/build/firmware/esp32_wifi_ble_chassis_8mhz.bin
 ```
 
 Optional chip erase (factory reset style):
 
 ```bash
-node tools/debug.js flash --port COM5 --hex firmware/build/firmware/esp32_wifi_ble.bin --erase
+node tools/debug.js flash --port COM5 --hex firmware/build/firmware/esp32_wifi_ble_chassis_8mhz.bin --erase
 ```
 
 CLI flasher behavior:

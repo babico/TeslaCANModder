@@ -10,12 +10,12 @@
 
 // Now define config that the driver needs
 #define PIN_LED 2
-#define PIN_MCP2515_1_CS 15
-#define PIN_MCP2515_1_INT 34
-#define PIN_MCP2515_2_CS 27
-#define PIN_MCP2515_2_INT 35
-#define PIN_MCP2515_3_CS 26
-#define PIN_MCP2515_3_INT 33
+#define PIN_MCP2515_CHASSIS_CS 15
+#define PIN_MCP2515_CHASSIS_INT 34
+#define PIN_MCP2515_VEHICLE_CS 27
+#define PIN_MCP2515_VEHICLE_INT 35
+#define PIN_MCP2515_BODY_CS 26
+#define PIN_MCP2515_BODY_INT 33
 #define PIN_SPI_SCK 18
 #define PIN_SPI_MISO 19
 #define PIN_SPI_MOSI 23

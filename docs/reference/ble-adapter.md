@@ -11,7 +11,7 @@ icon: 📶
 
 # Bluetooth Low Energy (BLE)
 
-ESP32 firmware variants with BLE enabled (`esp32_ble`, `esp32_wifi_ble`) use **NimBLE** for Bluetooth Low Energy communication. This works natively with iOS and Android — no pairing PIN required.
+ESP32 firmware envs with BLE enabled (any env containing `_ble`, e.g. `esp32_ble_chassis_8mhz`, `esp32_wifi_ble_chassis_vehicle_body_8mhz`) use **NimBLE** for Bluetooth Low Energy communication. This works natively with iOS and Android — no pairing PIN required.
 
 ## Overview
 
@@ -61,26 +61,35 @@ BLE uses the exact same command protocol as USB Serial:
 
 ## Runtime Control
 
-BLE can be enabled or disabled at runtime via the WiFi REST API (if WiFi is also enabled):
+BLE is controlled at runtime through the unified wire-command channel
+([wifi-api.md](./wifi-api.md#api-command)). The same `ble:*` commands work over
+USB serial, BLE NUS, and HTTP `POST /api/command`:
 
 ```bash
-# Check BLE status
-curl http://192.168.4.1/api/ble/status
+# Inspect BLE state (returned under the `ble` sub-object of /api/status)
+curl http://192.168.4.1/api/status
 
-# Disable BLE
-curl -X POST http://192.168.4.1/api/ble/config \
+# Disable the BLE radio
+curl -X POST http://192.168.4.1/api/command \
   -H "Content-Type: application/json" \
-  -d '{"enabled":false}'
+  -d '{"cmd":"ble:off"}'
 
-# Re-enable BLE
-curl -X POST http://192.168.4.1/api/ble/config \
+# Re-enable the BLE radio
+curl -X POST http://192.168.4.1/api/command \
   -H "Content-Type: application/json" \
-  -d '{"enabled":true}'
+  -d '{"cmd":"ble:on"}'
+
+# Change the advertised device name (1–32 characters)
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"ble:name:Tesla CAN Mod"}'
 ```
 
-BLE state is persisted in NVS flash and survives reboots.
+`/api/command` returns an `ack` envelope; emitted state lines (e.g.
+`{"t":"ble",...}`) appear on the streaming output channel. Persistent BLE
+config (enabled flag + device name) is stored in NVS and survives reboots.
 
-The embedded HTML dashboard also has a BLE settings card with an enable/disable toggle.
+The embedded HTML dashboard exposes the same controls via its BLE settings card.
 
 ## Technical Details
 

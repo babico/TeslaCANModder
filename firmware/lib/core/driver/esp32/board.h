@@ -6,11 +6,24 @@
 #include "core/can/bus.h"
 
 // ── MCP2515 Array-Driven Driver (ESP32, up to 3 buses) ─────────────────────
-// All CAN buses use MCP2515 modules over SPI.
-// Bus 0 = MCP2515_1, Bus 1 = MCP2515_2, Bus 2 = MCP2515_3
+// All CAN buses use MCP2515 modules over SPI. Array slots are indexed by the
+// BUS_* IDs from core/can/bus.h (BUS_CHASSIS=0, BUS_VEHICLE=1, BUS_BODY=2).
+// The static_asserts below pin that contract.
 
-static const uint8_t mcpCsPins[3] = {PIN_MCP2515_1_CS, PIN_MCP2515_2_CS, PIN_MCP2515_3_CS};
-static const uint8_t mcpIntPins[3] = {PIN_MCP2515_1_INT, PIN_MCP2515_2_INT, PIN_MCP2515_3_INT};
+static_assert(BUS_CHASSIS == 0, "BUS_CHASSIS must be slot 0");
+static_assert(BUS_VEHICLE == 1, "BUS_VEHICLE must be slot 1");
+static_assert(BUS_BODY == 2, "BUS_BODY must be slot 2");
+
+static const uint8_t mcpCsPins[BUS_MAX] = {
+	PIN_MCP2515_CHASSIS_CS,
+	PIN_MCP2515_VEHICLE_CS,
+	PIN_MCP2515_BODY_CS,
+};
+static const uint8_t mcpIntPins[BUS_MAX] = {
+	PIN_MCP2515_CHASSIS_INT,
+	PIN_MCP2515_VEHICLE_INT,
+	PIN_MCP2515_BODY_INT,
+};
 
 static MCP2515 *mcpBus[BUS_MAX];
 static volatile bool mcpFrameReady[BUS_MAX];
@@ -18,39 +31,15 @@ bool mcpAvailable[BUS_MAX];							 // extern-visible
 static uint8_t mcpClockReqMHz = BOARD_CAN_CLOCK_MHZ; // 0=auto
 static uint8_t mcpClockMHz = BOARD_CAN_CLOCK_MHZ;	 // active clock after fallback
 
-// ISRs must be distinct function pointers
-void IRAM_ATTR mcpISR0()
-{
-	mcpFrameReady[0] = true;
-}
-#if BUS_VEHICLE_ACTIVE
-void IRAM_ATTR mcpISR1()
-{
-	mcpFrameReady[1] = true;
-}
-#endif
-#if BUS_BODY_ACTIVE
-void IRAM_ATTR mcpISR2()
-{
-	mcpFrameReady[2] = true;
-}
-#endif
+// One ISR per bus slot — distinct function pointers required by attachInterrupt.
+void IRAM_ATTR mcpISR_chassis() { mcpFrameReady[BUS_CHASSIS] = true; }
+void IRAM_ATTR mcpISR_vehicle() { mcpFrameReady[BUS_VEHICLE] = true; }
+void IRAM_ATTR mcpISR_body()    { mcpFrameReady[BUS_BODY]    = true; }
 
-static void (*mcpISRs[BUS_MAX])() = {mcpISR0
-#if BUS_VEHICLE_ACTIVE
-									 ,
-									 mcpISR1
-#else
-									 ,
-									 nullptr
-#endif
-#if BUS_BODY_ACTIVE
-									 ,
-									 mcpISR2
-#else
-									 ,
-									 nullptr
-#endif
+static void (*mcpISRs[BUS_MAX])() = {
+	mcpISR_chassis,
+	mcpISR_vehicle,
+	mcpISR_body,
 };
 
 // Shared bitrate, filter, clock, and send functions

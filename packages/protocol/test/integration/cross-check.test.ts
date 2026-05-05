@@ -201,6 +201,10 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"apgate:on",
 	"apgate:off",
 	"apgate:status",
+	"drive:on",
+	"drive:off",
+	"drive:speed:25",
+	"drive:cap:25",
 	"eap:on",
 	"eap:off",
 	"ratelimit:on",
@@ -283,6 +287,20 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"bleencrypt:off",
 	"bleencrypt:pair",
 	"bleencrypt:unpair",
+
+	// Gamepad (BLE HID)
+	"gamepad:scan",
+	"gamepad:unpair",
+	"gamepad:on",
+	"gamepad:off",
+	"gamepad:status",
+	"gamepad:cancel",
+	"gamepad:pair:aa:bb:cc:dd:ee:ff",
+	"gamepad:bind:0:lock",
+	"gamepad:hold:0:lock",
+	"gamepad:axis:0:dz:10",
+	"gamepad:axis:0:expo:50",
+	"gamepad:axis:0:inv:1",
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -382,7 +400,9 @@ function extractProtocolCommands(): string[] {
 				key === "bleEncrypt" ||
 				key === "alc" ||
 				key === "apGate" ||
-				key === "eap"
+				key === "eap" ||
+				key === "drive" ||
+				key === "gamepad"
 			) {
 				cmds.push((fn as (b: boolean) => string)(true));
 				cmds.push((fn as (b: boolean) => string)(false));
@@ -433,6 +453,10 @@ function extractProtocolCommands(): string[] {
 			}
 			if (key === "windowVent") {
 				cmds.push((fn as (n: number) => string)(42));
+				continue;
+			}
+			if (key === "driveSpeed" || key === "driveCap") {
+				cmds.push((fn as (n: number) => string)(25));
 				continue;
 			}
 			if (key === "mqttPort") {
@@ -488,6 +512,31 @@ function extractProtocolCommands(): string[] {
 				cmds.push((fn as (n: number) => string)(1000));
 				continue;
 			}
+			// Gamepad parameterized commands
+			if (key === "gamepadPair") {
+				cmds.push((fn as (a: string) => string)("AA:BB:CC:DD:EE:FF"));
+				continue;
+			}
+			if (key === "gamepadBind" || key === "gamepadHold") {
+				cmds.push((fn as (n: number, c: string) => string)(0, "lock"));
+				continue;
+			}
+			if (key === "gamepadAxis") {
+				cmds.push(
+					(fn as (n: number, k: "dz" | "expo" | "inv", v: number) => string)(0, "dz", 10),
+				);
+				cmds.push(
+					(fn as (n: number, k: "dz" | "expo" | "inv", v: number) => string)(
+						0,
+						"expo",
+						50,
+					),
+				);
+				cmds.push(
+					(fn as (n: number, k: "dz" | "expo" | "inv", v: number) => string)(0, "inv", 1),
+				);
+				continue;
+			}
 		} catch {
 			// Skip any that throw
 		}
@@ -525,11 +574,20 @@ describe("Cross-check: docs ↔ protocol ↔ firmware", () => {
 				// Check if a backtick pattern like `offset:N` or `ha:interval:<ms>` covers this
 				const nPattern = prefix + "N";
 				const anglePattern = cmd.split(":").slice(0, -1).join(":") + ":<";
-				const inDoc =
+				let inDoc =
 					docsContent.includes("`" + cmd + "`") ||
 					docsContent.includes("`" + nPattern + "`") ||
 					docsContent.includes("`" + cmd.split(":").slice(0, -1).join(":") + ":N`") ||
 					docsContent.includes(anglePattern);
+				if (!inDoc) {
+					// Walk progressively shorter prefixes; match `prefix:<...>` patterns
+					// (e.g. `gamepad:pair:<addr>`, `gamepad:bind:<n>:<cmd>`).
+					const parts = cmd.split(":");
+					for (let i = parts.length - 1; i >= 1 && !inDoc; i--) {
+						const head = parts.slice(0, i).join(":") + ":<";
+						if (docsContent.includes("`" + head)) inDoc = true;
+					}
+				}
 				if (!inDoc) {
 					undocumented.push(cmd);
 				}

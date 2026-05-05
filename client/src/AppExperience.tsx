@@ -599,7 +599,7 @@ export default function AppExperience() {
 
 		setBleConfigBusy(true);
 		try {
-			const response = await fetch(`${trimmedBase}/api/ble/status`);
+			const response = await fetch(`${trimmedBase}/api/status`);
 			const raw = await response.text();
 			let payload: Record<string, unknown> | null = null;
 			try {
@@ -614,12 +614,14 @@ export default function AppExperience() {
 				);
 			}
 
-			if (payload && typeof payload.deviceName === "string") {
-				setBleDeviceName(payload.deviceName);
+			const ble = (payload?.ble ?? {}) as Record<string, unknown>;
+
+			if (typeof ble.deviceName === "string") {
+				setBleDeviceName(ble.deviceName);
 			}
 
-			const enabled = payload?.enabled === true ? "on" : "off";
-			const connected = payload?.connected === true ? "yes" : "no";
+			const enabled = ble.enabled === true ? "on" : "off";
+			const connected = ble.connected === true ? "yes" : "no";
 			pushDiagnosticsArchive(
 				"system",
 				"BLE status fetched",
@@ -655,10 +657,10 @@ export default function AppExperience() {
 
 		setBleConfigBusy(true);
 		try {
-			const response = await fetch(`${trimmedBase}/api/ble/config`, {
+			const response = await fetch(`${trimmedBase}/api/command`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ name: nextName }),
+				body: JSON.stringify({ cmd: `ble:name:${nextName}` }),
 			});
 
 			const raw = await response.text();
@@ -677,8 +679,18 @@ export default function AppExperience() {
 				);
 			}
 
-			if (payload && typeof payload.deviceName === "string") {
-				setBleDeviceName(payload.deviceName);
+			// /api/command returns an Ack; re-read /api/status to surface the updated name.
+			try {
+				const statusRes = await fetch(`${trimmedBase}/api/status`);
+				if (statusRes.ok) {
+					const sd = (await statusRes.json()) as Record<string, unknown>;
+					const ble = (sd?.ble ?? {}) as Record<string, unknown>;
+					if (typeof ble.deviceName === "string") {
+						setBleDeviceName(ble.deviceName);
+					}
+				}
+			} catch {
+				// best-effort refresh; ignore failures
 			}
 
 			pushDiagnosticsArchive("system", "BLE name updated", `name=${nextName}`);

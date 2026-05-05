@@ -13,65 +13,54 @@ uint8_t driverGetClockMHz();
 #include "core/log/ring.h"
 
 // ── Bus-independent features ─────────────────────────────────────────────────
-#include "feature/stream.h"
-#include "feature/can_raw.h"
-#include "feature/can_clock.h"
+#include "vehicle/can/feature/stream.h"
+#include "vehicle/can/feature/can_raw.h"
+#include "vehicle/can/feature/can_clock.h"
 
-// ── Chassis CAN features (BUS_CHASSIS) ──────────────────────────────────────
-#if BUS_CHASSIS_ACTIVE
-#include "feature/fsd.h"
-#include "feature/nag.h"
-#include "feature/auto_lane_change.h"
-#include "feature/ban_shield.h"
-#include "feature/tlssc.h"
-#include "feature/profile.h"
-#include "feature/offsets.h"
-#include "feature/isa_chime.h"
-#include "feature/summon.h"
-#include "feature/variant.h"
-#include "feature/bms.h"
-#include "feature/tpms.h"
-#include "feature/region.h"
-#endif
-
-// ── Vehicle CAN features (BUS_VEHICLE) ──────────────────────────────────────
-#if BUS_VEHICLE_ACTIVE
-#include "feature/drive_mode.h"
-#include "feature/mirror.h"
-#include "feature/lock.h"
-#include "feature/light.h"
-#include "feature/wiper.h"
-#include "feature/seat.h"
-#include "feature/display.h"
-#include "feature/power.h"
-#include "feature/climate.h"
-#include "feature/charge.h"
-#include "feature/pedal.h"
-#include "feature/regen.h"
-#include "feature/stop.h"
-#include "feature/precondition.h"
-#include "feature/track_mode.h"
-#include "feature/turn_signal.h"
-#include "feature/seatbelt.h"
-#include "feature/air_recirc.h"
-#include "feature/powertrain.h"
-#include "feature/can_sim.h"
-#include "feature/single_shot.h"
-#include "feature/mqtt_bridge.h"
-#include "feature/fw_compat.h"
-#include "feature/vehicle_config.h"
-#endif
-
-// ── Body CAN features (BUS_BODY) ─────────────────────────────────────────────
-#if BUS_BODY_ACTIVE
-#include "feature/window.h"
-#include "feature/sentry.h"
-#endif
-
-#if BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE
-#include "feature/trunk.h"
-#endif
+// ── CAN-bus features (always compiled; runtime no-op when target bus inactive)
+#include "vehicle/can/feature/das_drive.h"
+#include "vehicle/can/feature/fsd.h"
+#include "vehicle/can/feature/nag.h"
+#include "vehicle/can/feature/auto_lane_change.h"
+#include "vehicle/can/feature/ban_shield.h"
+#include "vehicle/can/feature/tlssc.h"
+#include "vehicle/can/feature/profile.h"
+#include "vehicle/can/feature/offsets.h"
+#include "vehicle/can/feature/isa_chime.h"
+#include "vehicle/can/feature/summon.h"
+#include "vehicle/can/feature/variant.h"
+#include "vehicle/can/feature/bms.h"
+#include "vehicle/can/feature/tpms.h"
+#include "vehicle/can/feature/region.h"
+#include "vehicle/can/feature/drive_mode.h"
+#include "vehicle/can/feature/mirror.h"
+#include "vehicle/can/feature/lock.h"
+#include "vehicle/can/feature/light.h"
+#include "vehicle/can/feature/wiper.h"
+#include "vehicle/can/feature/seat.h"
+#include "vehicle/can/feature/display.h"
+#include "vehicle/can/feature/power.h"
+#include "vehicle/can/feature/climate.h"
+#include "vehicle/can/feature/charge.h"
+#include "vehicle/can/feature/pedal.h"
+#include "vehicle/can/feature/regen.h"
+#include "vehicle/can/feature/stop.h"
+#include "vehicle/can/feature/precondition.h"
+#include "vehicle/can/feature/track_mode.h"
+#include "vehicle/can/feature/turn_signal.h"
+#include "vehicle/can/feature/seatbelt.h"
+#include "vehicle/can/feature/air_recirc.h"
+#include "vehicle/can/feature/powertrain.h"
+#include "vehicle/can/feature/can_sim.h"
+#include "vehicle/can/feature/single_shot.h"
+#include "vehicle/can/feature/mqtt_bridge.h"
+#include "vehicle/can/feature/fw_compat.h"
+#include "vehicle/can/feature/vehicle_config.h"
+#include "vehicle/can/feature/window.h"
+#include "vehicle/can/feature/sentry.h"
+#include "vehicle/can/feature/trunk.h"
 
 #if BOARD_ENABLE_BLE
 #include "io/ble/esp32/board.h"
+#include "client/gamepad/gamepad.h"
 #endif

@@ -17,25 +17,25 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 ## Board Reference
 
-| Board        | CAN Modules   | CAN Buses                                  | Connectivity                          | Persistence       | Firmware Envs                                        |
-| ------------ | ------------- | ------------------------------------------ | ------------------------------------- | ----------------- | ---------------------------------------------------- |
-| ESP32 DevKit | MCP2515 × 1–3 | BUS_CHASSIS, BUS_VEHICLE, BUS_BODY (flags) | USB Serial, WiFi AP/STA, BLE (NimBLE) | NVS (Preferences) | `esp32`, `esp32_wifi`, `esp32_ble`, `esp32_wifi_ble` |
+| Board        | CAN Modules   | CAN Buses                                  | Connectivity                          | Persistence       | Firmware Envs                                                                           |
+| ------------ | ------------- | ------------------------------------------ | ------------------------------------- | ----------------- | --------------------------------------------------------------------------------------- |
+| ESP32 DevKit | MCP2515 × 1–3 | BUS_CHASSIS, BUS_VEHICLE, BUS_BODY (flags) | USB Serial, WiFi AP/STA, BLE (NimBLE) | NVS (Preferences) | `esp32[_wifi][_ble][_chassis][_vehicle][_body][_8mhz\|_16mhz]` envs in `platformio.ini` |
 
 ---
 
 ## ESP32 Scenarios
 
-## ESP32-1: First-Time Setup — Chassis Bus Only (esp32)
+## ESP32-1: First-Time Setup — Chassis Bus Only (esp32_chassis_8mhz)
 
 **User Story:** New user wires ESP32 DevKit + 1× MCP2515, connects via USB serial.
 
-**Hardware:** ESP32 DevKit, MCP2515 (8 MHz crystal), USB cable
+**Hardware:** ESP32 DevKit, MCP2515 (8 MHz crystal), USB cable
 
 **Wiring:**
 
 | MCP2515 Pin | ESP32 Pin                   | Function                        |
 | ----------- | --------------------------- | ------------------------------- |
-| VCC         | 3.3V                        | Power                           |
+| VCC         | 5V (VIN)                    | Power (MCP2515 needs 5V)        |
 | GND         | GND                         | Ground                          |
 | CS          | GPIO 15 (PIN_MCP2515_1_CS)  | SPI chip select                 |
 | INT         | GPIO 34 (PIN_MCP2515_1_INT) | Hardware interrupt (input-only) |
@@ -45,45 +45,45 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | CAN-H       | X179 pin 13                 | Chassis CAN high                |
 | CAN-L       | X179 pin 14                 | Chassis CAN low                 |
 
-| Step | Action                              | Expected Result                                                                                                                                                                | Status |
-| ---- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| 1    | Wire MCP2515 to ESP32 per table     | Physical wiring complete                                                                                                                                                       | —      |
-| 2    | Flash `esp32` via PlatformIO (COM4) | Upload successful                                                                                                                                                              | —      |
-| 3    | Open serial monitor at 115200       | Boot JSON received                                                                                                                                                             | —      |
-| 4    | Verify boot                         | `{"t":"boot","hw":"ESP32S_DevKit","can":"MCP2515_3x","drv":"arduino-mcp2515","busChassis":true,"busVehicle":false,"busBody":false,"wifiEnabled":false,"bleEnabled":false,...}` | —      |
-| 5    | Connect browser client via USB      | Web Serial connects to ESP32                                                                                                                                                   | —      |
-| 6    | MCP2515 init tries 8MHz then 16MHz  | Crystal auto-detection                                                                                                                                                         | —      |
+| Step | Action                                             | Expected Result                                                                                                                                                                | Status |
+| ---- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 1    | Wire MCP2515 to ESP32 per table                    | Physical wiring complete                                                                                                                                                       | —      |
+| 2    | Flash `esp32_chassis_8mhz` via PlatformIO (COM4)   | Upload successful                                                                                                                                                              | —      |
+| 3    | Open serial monitor at 115200                      | Boot JSON received                                                                                                                                                             | —      |
+| 4    | Verify boot                                        | `{"t":"boot","hw":"ESP32S_DevKit","can":"MCP2515_1x","drv":"arduino-mcp2515","busChassis":true,"busVehicle":false,"busBody":false,"wifiEnabled":false,"bleEnabled":false,...}` | —      |
+| 5    | Connect browser client via USB                     | Web Serial connects to ESP32                                                                                                                                                   | —      |
+| 6    | MCP2515 init uses configured `BOARD_CAN_CLOCK_MHZ` | Crystal frequency must match the build env (`_8mhz` or `_16mhz`)                                                                                                               | —      |
 
 **Pass Criteria:** ESP32 running chassis bus only, USB serial functional, no WiFi/BLE.
 
 ---
 
-## ESP32-2: Full Bus Setup with X179 (esp32 + BUS_VEHICLE_ACTIVE=1 + BUS_BODY_ACTIVE=1)
+## ESP32-2: Full Bus Setup with X179 (esp32_chassis_vehicle_body_8mhz)
 
 **User Story:** User wires all 3× MCP2515 modules for full Tesla X179 connector coverage.
 
-**X179 Connector Bus Mapping (hardcoded in config/esp32.h):**
+**X179 + AP Connector Bus Mapping (config/esp32.h):**
 
-| Bus Index       | MCP2515 # | X179 Pins | CAN Bus Function    | CS GPIO | INT GPIO |
-| --------------- | --------- | --------- | ------------------- | ------- | -------- |
-| 0 (BUS_CHASSIS) | #1        | 13-14     | Chassis / Autopilot | 15      | 34       |
-| 1 (BUS_VEHICLE) | #2        | 9-10      | Vehicle Control     | 27      | 35       |
-| 2 (BUS_BODY)    | #3        | 2-3       | Body Control        | 26      | 33       |
+| Bus Index       | MCP2515 # | Connector       | CAN Bus Function    | CS GPIO | INT GPIO |
+| --------------- | --------- | --------------- | ------------------- | ------- | -------- |
+| 0 (BUS_CHASSIS) | #1        | X179 pins 13-14 | Chassis / Autopilot | 15      | 34       |
+| 1 (BUS_VEHICLE) | #2        | X179 pins 9-10  | Vehicle Control     | 27      | 35       |
+| 2 (BUS_BODY)    | #3        | X179 pins 2-3   | Body Control        | 26      | 33       |
 
-**All 3 share SPI:** SCK=18, MOSI=23, MISO=19
+**All MCP2515s share SPI:** SCK=18, MOSI=23, MISO=19. **VCC = 5V (VIN)** on every module.
 
-| Step | Action                                                      | Expected Result                                             |
-| ---- | ----------------------------------------------------------- | ----------------------------------------------------------- |
-| 1    | Wire all 3 MCP2515 modules per table                        | Three modules sharing SPI bus                               |
-| 2    | Flash `esp32` with `BUS_VEHICLE_ACTIVE=1 BUS_BODY_ACTIVE=1` | Boot shows `busChassis:true, busVehicle:true, busBody:true` |
-| 3    | Bus 0 (FSD) receives autopilot frames                       | 0x399, 0x3FD, 0x3F8                                         |
-| 4    | Bus 1 (Vehicle) receives control frames                     | 0x273, 0x2F3, 0x333, 0x334                                  |
-| 5    | Bus 2 (Body) receives body frames                           | 0x119 (window/vent), 0x284 (sentry), trunk ctrl             |
-| 6    | All 3 buses use hardware interrupts                         | ESP32 supports INT on GPIO 34, 35, 33                       |
-| 7    | FSD mods applied on Bus 0                                   | Handler dispatches by bus index                             |
-| 8    | Vehicle commands sent on Bus 1                              | Climate, charge, drive routed correctly                     |
-| 9    | Body commands sent on Bus 2                                 | Window, sentry, trunk routed correctly                      |
-| 10   | One bus init fails                                          | Remaining buses still operate                               |
+| Step | Action                                    | Expected Result                                                       |
+| ---- | ----------------------------------------- | --------------------------------------------------------------------- |
+| 1    | Wire 3 MCP2515 modules per table          | All modules sharing SPI bus, each on its own CS/INT                   |
+| 2    | Flash `esp32_chassis_vehicle_body_8mhz`   | Boot shows `busChassis:true, busVehicle:true, busBody:true`           |
+| 3    | Bus 0 (Chassis) receives autopilot frames | 0x399, 0x3FD, 0x3F8                                                   |
+| 4    | Bus 1 (Vehicle) receives control frames   | 0x273, 0x2F3, 0x333, 0x334                                            |
+| 5    | Bus 2 (Body) receives body frames         | 0x119 (window/vent), 0x284 (sentry), trunk ctrl                       |
+| 7    | All buses use hardware interrupts         | ESP32 supports INT on GPIO 34, 35, 33, 39                             |
+| 8    | DAS / FSD mods applied on Bus 0           | Handler dispatches by bus index; DAS injection always targets Chassis |
+| 9    | Vehicle commands sent on Bus 1            | Climate, charge, drive routed correctly                               |
+| 10   | Body commands sent on Bus 2               | Window, sentry, trunk routed correctly                                |
+| 11   | One bus init fails                        | Remaining buses still operate                                         |
 
 **ESP32 dispatch:** ESP32 routes by bus index (`handleMessage` checks `bus` parameter) and uses hardware interrupts on every bus.
 
@@ -93,11 +93,11 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 **User Story:** User enables WiFi AP for wireless dashboard access.
 
-**Firmware:** `esp32_wifi` — WiFi ON, BLE OFF
+**Firmware:** `esp32_wifi_chassis_8mhz` — WiFi ON, BLE OFF
 
 | Step | Action                                              | Expected Result                                 | Status |
 | ---- | --------------------------------------------------- | ----------------------------------------------- | ------ |
-| 1    | Flash `esp32_wifi` firmware                         | Upload with `embed_html.py` pre-build           | —      |
+| 1    | Flash `esp32_wifi_chassis_8mhz` firmware            | Upload with `embed_html.py` pre-build           | —      |
 | 2    | ESP32 creates AP "TeslaCANModder"                   | SSID visible on phone/laptop                    | —      |
 | 3    | Connect to AP (password: `T3SL@c@n123.`, channel 6) | DHCP assigns IP (gateway: 192.168.4.1)          | —      |
 | 4    | Open <http://192.168.4.1>                           | Embedded HTML dashboard loads                   | —      |
@@ -143,7 +143,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 **User Story:** User connects to ESP32 via BLE for wireless serial-like access. BLE works with iOS and Android.
 
-**Firmware:** `esp32_ble` — BLE ON, WiFi OFF
+**Firmware:** `esp32_ble_chassis_8mhz` — BLE ON, WiFi OFF
 
 **BLE Service:** Nordic UART Service (NUS)
 
@@ -155,7 +155,7 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 | Step | Action                                       | Expected Result                            | Status |
 | ---- | -------------------------------------------- | ------------------------------------------ | ------ |
-| 1    | Flash `esp32_ble` firmware                   | Boot shows BLE capability                  | —      |
+| 1    | Flash `esp32_ble_chassis_8mhz` firmware      | Boot shows BLE capability                  | —      |
 | 2    | Open BLE scanner (nRF Connect, LightBlue)    | "TeslaCANModder" device visible            | —      |
 | 3    | Connect to device                            | BLE connection established                 | —      |
 | 4    | Subscribe to TX characteristic (6E400003)    | Status notifications arrive                | —      |
@@ -185,27 +185,34 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 **User Story:** Full-featured ESP32 with all 3 connectivity options: USB Serial + WiFi + BLE.
 
-**Firmware:** `esp32_wifi_ble` — WiFi ON, BLE ON
+**Firmware:** `esp32_wifi_ble_chassis_vehicle_body_8mhz` — WiFi ON, BLE ON, full X179 buses
 
-| Step | Action                                    | Expected Result                                                     |
-| ---- | ----------------------------------------- | ------------------------------------------------------------------- |
-| 1    | Flash `esp32_wifi_ble`                    | Boot shows WiFi + BLE + active buses                                |
-| 2    | WiFi AP active                            | "TeslaCANModder" AP visible                                         |
-| 3    | BLE advertising                           | "TeslaCANModder" in BLE scanner                                     |
-| 4    | USB serial active                         | 115200 baud, boot JSON received                                     |
-| 5    | All 3 channels accept commands            | Same command set, same responses                                    |
-| 6    | Command from WiFi affects BLE status      | State is shared across all channels                                 |
-| 7    | Toggle BLE off via WiFi dashboard         | BLE stops advertising, disconnects                                  |
-| 8    | GET `/api/ble/status`                     | `{"enabled":false,"connected":false,"deviceName":"TeslaCANModder"}` |
-| 9    | POST `/api/ble/config` `{"enabled":true}` | BLE restarts, device visible again                                  |
-| 10   | BLE state persists in NVS                 | `tcm_ble` namespace                                                 |
+| Step | Action                                           | Expected Result                                                                       |
+| ---- | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| 1    | Flash `esp32_wifi_ble_chassis_vehicle_body_8mhz` | Boot shows WiFi + BLE + active buses                                                  |
+| 2    | WiFi AP active                                   | "TeslaCANModder" AP visible                                                           |
+| 3    | BLE advertising                                  | "TeslaCANModder" in BLE scanner                                                       |
+| 4    | USB serial active                                | 115200 baud, boot JSON received                                                       |
+| 5    | All 3 channels accept commands                   | Same command set, same responses                                                      |
+| 6    | Command from WiFi affects BLE status             | State is shared across all channels                                                   |
+| 7    | Toggle BLE off via WiFi dashboard                | BLE stops advertising, disconnects                                                    |
+| 8    | GET `/api/status`                                | `ble` sub-object: `{"enabled":false,"connected":false,"deviceName":"TeslaCANModder"}` |
+| 9    | POST `/api/command` `{"cmd":"ble:on"}`           | BLE restarts, device visible again                                                    |
+| 10   | POST `/api/command` `{"cmd":"ble:name:NewName"}` | BLE re-advertises with new name; persists in NVS                                      |
+| 11   | BLE state persists in NVS                        | `tcm_ble` namespace                                                                   |
 
-**BLE REST API (WiFi+BLE firmware only):**
+**BLE wire commands (any transport — USB, BLE NUS, or `POST /api/command`):**
 
-| Method | Path              | Purpose                                                               |
-| ------ | ----------------- | --------------------------------------------------------------------- |
-| GET    | `/api/ble/status` | `{"enabled":bool,"connected":bool,"deviceName":"TeslaCANModder"}`     |
-| POST   | `/api/ble/config` | `{"enabled":true\|false}` — starts/stops BLE at runtime, saves to NVS |
+| Command        | Purpose                                                                |
+| -------------- | ---------------------------------------------------------------------- |
+| `ble:on`       | Start BLE radio; persist enabled flag to NVS                           |
+| `ble:off`      | Stop BLE radio; persist disabled flag to NVS                           |
+| `ble:name:<n>` | Update advertised device name (1–32 chars); persist to NVS             |
+| `ble:status`   | Emit `{"t":"ble","enabled":...,"connected":...,"deviceName":...}` line |
+
+> Per-feature `/api/ble/*` REST routes have been removed. All BLE control now
+> flows through the unified `/api/command` dispatcher and the aggregated
+> `/api/status` snapshot — see [`docs/reference/wifi-api.md`](../reference/wifi-api.md).
 
 ---
 
@@ -232,16 +239,16 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 
 Vehicle commands require `BUS_VEHICLE_ACTIVE=1` and/or `BUS_BODY_ACTIVE=1` for vehicle/window/sentry/climate/charge/drive commands to be compiled in.
 
-| Step | Action                            | Expected Result                                                |
-| ---- | --------------------------------- | -------------------------------------------------------------- |
-| 1    | Wait for frame caches to populate | `hasCtrl`, `hasClimate`, `hasCharge`, `hasDrive` from live CAN |
-| 2    | `unlock` via WiFi dashboard       | 30× 0x273 burst on Bus 1 (Vehicle)                             |
-| 3    | `frunk:open`                      | 50× 0x273 burst                                                |
-| 4    | `climate:keep`                    | 0x2F3 modified, sent on Bus 1                                  |
-| 5    | `vent:open`                       | 0x119 sent on Bus 2 (Body)                                     |
-| 6    | `sentry:on`                       | 0x284 sent on Bus 2 (Body)                                     |
-| 7    | `pedal:sport`                     | 0x334 modified, sent on Bus 1                                  |
-| 8    | Send command on 1-CAN firmware    | Vehicle commands not available (not compiled)                  |
+| Step | Action                                                  | Expected Result                                                |
+| ---- | ------------------------------------------------------- | -------------------------------------------------------------- |
+| 1    | Wait for frame caches to populate                       | `hasCtrl`, `hasClimate`, `hasCharge`, `hasDrive` from live CAN |
+| 2    | `unlock` via WiFi dashboard                             | 30× 0x273 burst on Bus 1 (Vehicle)                             |
+| 3    | `frunk:open`                                            | 50× 0x273 burst                                                |
+| 4    | `climate:keep`                                          | 0x2F3 modified, sent on Bus 1                                  |
+| 5    | `vent:open`                                             | 0x119 sent on Bus 2 (Body)                                     |
+| 6    | `sentry:on`                                             | 0x284 sent on Bus 2 (Body)                                     |
+| 7    | `pedal:sport`                                           | 0x334 modified, sent on Bus 1                                  |
+| 8    | Send command on a chassis-only firmware (no `_vehicle`) | Vehicle commands not available (not compiled)                  |
 
 **ESP32 Bus Routing:**
 
@@ -310,22 +317,22 @@ Summon only functions when `BUS_VEHICLE_ACTIVE=1`. Burst frames sent on Bus 1 (V
 
 ## ESP32-13: Error Handling
 
-| Case  | Trigger                                    | Expected Result                                     |
-| ----- | ------------------------------------------ | --------------------------------------------------- |
-| 13.1  | Send command without CAN init              | Error response                                      |
-| 13.2  | Vehicle cmd without 0x273 cache            | Error: "Waiting for 0x273 frame"                    |
-| 13.3  | Climate cmd without 0x2F3 cache            | Error: "Need 0x2F3"                                 |
-| 13.4  | Unknown command                            | Error: "Unknown command"                            |
-| 13.5  | WiFi client during active CAN              | No frame processing delay                           |
-| 13.6  | BLE and WiFi both active                   | All 3 I/O paths work simultaneously                 |
-| 13.7  | WiFi AP→STA switch fails (timeout 15s)     | Falls back to AP mode                               |
-| 13.8  | NVS corrupted/empty                        | Factory defaults applied                            |
-| 13.9  | MCP2515 crystal mismatch                   | Init tries 8MHz then 16MHz                          |
-| 13.10 | 1-CAN firmware, vehicle command sent       | Command not available (not compiled)                |
-| 13.11 | BLE toggle off via REST, reconnect attempt | Device not found in scanner                         |
-| 13.12 | Command > 31 chars                         | Buffer overflow rejected                            |
-| 13.13 | Invalid chars in REST command body         | Same validation as serial (a-z, A-Z, 0-9, :, -, \_) |
-| 13.14 | CORS preflight request                     | OPTIONS returns proper headers                      |
+| Case  | Trigger                                                     | Expected Result                                     |
+| ----- | ----------------------------------------------------------- | --------------------------------------------------- |
+| 13.1  | Send command without CAN init                               | Error response                                      |
+| 13.2  | Vehicle cmd without 0x273 cache                             | Error: "Waiting for 0x273 frame"                    |
+| 13.3  | Climate cmd without 0x2F3 cache                             | Error: "Need 0x2F3"                                 |
+| 13.4  | Unknown command                                             | Error: "Unknown command"                            |
+| 13.5  | WiFi client during active CAN                               | No frame processing delay                           |
+| 13.6  | BLE and WiFi both active                                    | All 3 I/O paths work simultaneously                 |
+| 13.7  | WiFi AP→STA switch fails (timeout 15s)                      | Falls back to AP mode                               |
+| 13.8  | NVS corrupted/empty                                         | Factory defaults applied                            |
+| 13.9  | MCP2515 crystal mismatch                                    | Init tries 8MHz then 16MHz                          |
+| 13.10 | Chassis-only firmware (no `_vehicle`), vehicle command sent | Command not available (not compiled)                |
+| 13.11 | BLE toggle off via REST, reconnect attempt                  | Device not found in scanner                         |
+| 13.12 | Command > 31 chars                                          | Buffer overflow rejected                            |
+| 13.13 | Invalid chars in REST command body                          | Same validation as serial (a-z, A-Z, 0-9, :, -, \_) |
+| 13.14 | CORS preflight request                                      | OPTIONS returns proper headers                      |
 
 ---
 
@@ -333,7 +340,7 @@ Summon only functions when `BUS_VEHICLE_ACTIVE=1`. Burst frames sent on Bus 1 (V
 
 **User Story:** Validate live driving-context overlays after firmware/protocol wiring for turn signals, blind-spot levels, door/frunk/trunk state, and cruise/speed-limit context.
 
-**Firmware:** `esp32`, `esp32_wifi`, or `esp32_wifi_ble` (with live vehicle CAN)
+**Firmware:** any `esp32_*chassis*` env (e.g. `esp32_chassis_8mhz`, `esp32_wifi_chassis_8mhz`, `esp32_wifi_ble_chassis_vehicle_body_8mhz`) flashed with live vehicle CAN
 
 **Prerequisites:**
 
@@ -445,33 +452,33 @@ All commands work identically across all I/O channels:
 
 **Full Command Reference:**
 
-| Command                                                      | Domain    | Cached Frame Required |
-| ------------------------------------------------------------ | --------- | --------------------- |
-| `ping`                                                       | System    | —                     |
-| `status`                                                     | System    | —                     |
-| `stream:on` / `stream:off`                                   | System    | —                     |
-| `can:raw:on` / `can:raw:off`                                 | System    | —                     |
-| `fsd:on` / `fsd:off`                                         | FSD       | —                     |
-| `nag:on` / `nag:off`                                         | FSD       | —                     |
-| `profile:0-3` / `profile:auto`                               | FSD       | —                     |
-| `offset:0-100` / `offset:auto`                               | FSD (HW3) | —                     |
-| `isa:on` / `isa:off`                                         | FSD (HW4) | —                     |
-| `summon:forward` / `summon:reverse` / `summon:stop`          | Summon    | `hasCtrl` (0x273)     |
-| `variant:hw4` / `variant:hw3` / `variant:legacy`             | System    | —                     |
-| `lock` / `unlock` / `lock:child`                             | Vehicle   | `hasCtrl` (0x273)     |
-| `frunk:open` / `frunk:close` / `frunk`                       | Trunk     | `hasCtrl` (0x273)     |
-| `trunk:open` / `trunk:close` / `trunk`                       | Trunk     | `hasCtrl` (0x273)     |
-| `mirror:fold` / `mirror:unfold` / `mirror:heat`              | Mirror    | `hasCtrl` (0x273)     |
-| `light:fog:front` / `light:fog:rear` / `light:highbeam:auto` | Light     | `hasCtrl` (0x273)     |
-| `wiper:off` / `wiper:1` / `wiper:2`                          | Wiper     | `hasCtrl` (0x273)     |
-| `seat:fl:0-3` / `seat:fr:0-3`                                | Seat      | `hasCtrl` (0x273)     |
-| `maindisplay:<0-127>`                                        | Display   | `hasCtrl` (0x273)     |
-| `power`                                                      | Power     | `hasCtrl` (0x273)     |
-| `window:vent:open` / `window:vent:close`                     | Window    | — (3-CAN required)    |
-| `sentry:on` / `sentry:off`                                   | Sentry    | — (3-CAN required)    |
-| `climate:keep` / `climate:off`                               | Climate   | `hasClimate` (0x2F3)  |
-| `charge:start` / `charge:stop` / `charge:port`               | Charge    | `hasCharge` (0x333)   |
-| `pedal:sport` / `pedal:chill` / `pedal:std`                  | Drive     | `hasDrive` (0x334)    |
+| Command                                                      | Domain    | Cached Frame Required    |
+| ------------------------------------------------------------ | --------- | ------------------------ |
+| `ping`                                                       | System    | —                        |
+| `status`                                                     | System    | —                        |
+| `stream:on` / `stream:off`                                   | System    | —                        |
+| `can:raw:on` / `can:raw:off`                                 | System    | —                        |
+| `fsd:on` / `fsd:off`                                         | FSD       | —                        |
+| `nag:on` / `nag:off`                                         | FSD       | —                        |
+| `profile:0-3` / `profile:auto`                               | FSD       | —                        |
+| `offset:0-100` / `offset:auto`                               | FSD (HW3) | —                        |
+| `isa:on` / `isa:off`                                         | FSD (HW4) | —                        |
+| `summon:forward` / `summon:reverse` / `summon:stop`          | Summon    | `hasCtrl` (0x273)        |
+| `variant:hw4` / `variant:hw3` / `variant:legacy`             | System    | —                        |
+| `lock` / `unlock` / `lock:child`                             | Vehicle   | `hasCtrl` (0x273)        |
+| `frunk:open` / `frunk:close` / `frunk`                       | Trunk     | `hasCtrl` (0x273)        |
+| `trunk:open` / `trunk:close` / `trunk`                       | Trunk     | `hasCtrl` (0x273)        |
+| `mirror:fold` / `mirror:unfold` / `mirror:heat`              | Mirror    | `hasCtrl` (0x273)        |
+| `light:fog:front` / `light:fog:rear` / `light:highbeam:auto` | Light     | `hasCtrl` (0x273)        |
+| `wiper:off` / `wiper:1` / `wiper:2`                          | Wiper     | `hasCtrl` (0x273)        |
+| `seat:fl:0-3` / `seat:fr:0-3`                                | Seat      | `hasCtrl` (0x273)        |
+| `maindisplay:<0-127>`                                        | Display   | `hasCtrl` (0x273)        |
+| `power`                                                      | Power     | `hasCtrl` (0x273)        |
+| `window:vent:open` / `window:vent:close`                     | Window    | — (`_body` env required) |
+| `sentry:on` / `sentry:off`                                   | Sentry    | — (`_body` env required) |
+| `climate:keep` / `climate:off`                               | Climate   | `hasClimate` (0x2F3)     |
+| `charge:start` / `charge:stop` / `charge:port`               | Charge    | `hasCharge` (0x333)      |
+| `pedal:sport` / `pedal:chill` / `pedal:std`                  | Drive     | `hasDrive` (0x334)       |
 
 ---
 
@@ -516,7 +523,7 @@ ESP32 uses MCP2515 hardware filters (RXF0-5, MASK0/MASK1) set per variant and pe
 | -------- | ----------------------------------------------------------- |
 | 0        | Variant FSD IDs (0x399, etc.) — FSD bus only                |
 | 1        | Vehicle IDs (0x273, 0x2F3, 0x333, 0x334) — Vehicle bus only |
-| 2        | (if 3-CAN) Body IDs — Body bus only                         |
+| 2        | (if `_body` env) Body IDs — Body bus only                   |
 | Raw mode | All filters cleared                                         |
 
 `applyFilters(State&)` is called on variant change, raw mode toggle, and CAN reinit.

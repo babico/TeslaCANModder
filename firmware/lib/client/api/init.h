@@ -2,22 +2,30 @@
 #include "client/common/api_fwd.h"
 #include "auth.h"
 #include "routes.h"
-#include "ble_config.h"
-#include "io/wifi/esp32/wifi_api.h"
+#include "io/ble/esp32/config.h"
 #include "core/can/recorder.h"
+#if BOARD_ENABLE_BLE
+#include "client/gamepad/gamepad.h"
+#endif
 
-// ── WiFi Init & Tick ────────────────────────────────────────────────────────
+// ── REST API Init & Tick ─────────────────────────────────────────────────────
+//
+// HTTP route registration table.
+//
+// Per-feature endpoints (BLE config, gamepad pairing, recorder start/stop)
+// have been removed in favour of the wire-command dispatch endpoint
+// `POST /api/command`. Use `ble:on|off|name:<n>|status`, `gamepad:*`, and
+// `recorder:on|off|clear|status` instead. The only feature-specific
+// endpoint that survives is `GET /api/recorder/download` (binary CSV file
+// — has no wire-command equivalent).
 
-void wifiInit(State &s)
+void restApiInit(State &s)
 {
 	restState = &s;
 	canRecorderInit();
 
 	// Load or generate API key
 	loadOrCreateApiKey(s);
-
-	// Load saved WiFi configuration from NVS
-	loadWifiConfig();
 
 #if BOARD_ENABLE_BLE
 	// Load saved BLE configuration from NVS
@@ -31,21 +39,10 @@ void wifiInit(State &s)
 		bleStop();
 		sendLog("BLE disabled (saved config)");
 	}
-#endif
 
-	// Start WiFi in configured mode
-	if (wifiCfg.mode == TCM_WIFI_MODE_STA && strlen(wifiCfg.staSSID) > 0)
-	{
-		if (!startSTA())
-		{
-			wifiCfg.mode = TCM_WIFI_MODE_AP;
-			startAP();
-		}
-	}
-	else
-	{
-		startAP();
-	}
+	// Initialize BLE gamepad central role
+	gamepadInit();
+#endif
 
 	// Register routes
 	const char *headerKeys[] = {"X-API-Key"};
@@ -82,40 +79,10 @@ void wifiInit(State &s)
 	server.on("/api/command", HTTP_OPTIONS, handleOptions);
 	server.on("/api/status", HTTP_OPTIONS, handleOptions);
 	server.on("/api/disable", HTTP_GET, handleDisable);
-	server.on("/api/wifi/status", HTTP_GET, handleGetWifiStatus);
-	server.on("/api/wifi/status", HTTP_OPTIONS, handleOptions);
-	server.on("/api/wifi/config", HTTP_POST, handlePostWifiConfig);
-	server.on("/api/wifi/config", HTTP_OPTIONS, handleOptions);
+	// WiFi status/config are handled via POST /api/command with cmd=wifi:status or wifi:config.
 #if BOARD_ENABLE_BLE
-	server.on("/api/ble/status", HTTP_GET, handleGetBleStatus);
-	server.on("/api/ble/status", HTTP_OPTIONS, handleOptions);
-	server.on("/api/ble/config", HTTP_POST, handlePostBleConfig);
-	server.on("/api/ble/config", HTTP_OPTIONS, handleOptions);
+	// All BLE/gamepad operations are wire commands; see client/command/dispatch.h
 #endif
-	// TPMS endpoint
-	server.on("/api/tpms", HTTP_GET,
-			  []()
-			  {
-				  if (!restState)
-				  {
-					  sendJsonResponse(500, "{\"error\":\"not initialized\"}");
-					  return;
-				  }
-				  JsonDocument doc;
-				  doc["ok"] = restState->hasTpms;
-				  doc["fl"] = (int)(restState->tpmsPressure[0] * 100);
-				  doc["fr"] = (int)(restState->tpmsPressure[1] * 100);
-				  doc["rl"] = (int)(restState->tpmsPressure[2] * 100);
-				  doc["rr"] = (int)(restState->tpmsPressure[3] * 100);
-				  doc["tfl"] = restState->tpmsTemp[0];
-				  doc["tfr"] = restState->tpmsTemp[1];
-				  doc["trl"] = restState->tpmsTemp[2];
-				  doc["trr"] = restState->tpmsTemp[3];
-				  String out;
-				  serializeJson(doc, out);
-				  sendJsonResponse(200, out);
-			  });
-	server.on("/api/tpms", HTTP_OPTIONS, handleOptions);
 	// Log endpoint
 	server.on("/api/log", HTTP_GET,
 			  []()
@@ -139,43 +106,8 @@ void wifiInit(State &s)
 			  });
 	server.on("/api/log", HTTP_OPTIONS, handleOptions);
 
-	// CAN recorder endpoints
-	server.on("/api/recorder/status", HTTP_GET,
-			  []()
-			  {
-				  JsonDocument doc;
-				  doc["enabled"] = canRecorderEnabled();
-				  doc["count"] = canRecorderCount();
-				  doc["capacity"] = canRecorderCapacity();
-				  doc["captured"] = canRecorderCapturedTotal();
-				  doc["dropped"] = canRecorderDroppedTotal();
-				  doc["lastCaptureMs"] = canRecorderLastCaptureMs();
-				  String out;
-				  serializeJson(doc, out);
-				  sendJsonResponse(200, out);
-			  });
-	server.on("/api/recorder/status", HTTP_OPTIONS, handleOptions);
-
-	server.on("/api/recorder/start", HTTP_POST,
-			  []()
-			  {
-				  if (!requireAuth())
-					  return;
-				  canRecorderStart(true);
-				  sendJsonResponse(200, "{\"ok\":true,\"enabled\":true}");
-			  });
-	server.on("/api/recorder/start", HTTP_OPTIONS, handleOptions);
-
-	server.on("/api/recorder/stop", HTTP_POST,
-			  []()
-			  {
-				  if (!requireAuth())
-					  return;
-				  canRecorderStop();
-				  sendJsonResponse(200, "{\"ok\":true,\"enabled\":false}");
-			  });
-	server.on("/api/recorder/stop", HTTP_OPTIONS, handleOptions);
-
+	// CAN recorder — only the binary CSV download remains a dedicated route.
+	// Use wire commands `recorder:on|off|clear|status` for control.
 	server.on("/api/recorder/download", HTTP_GET,
 			  []()
 			  {
@@ -209,15 +141,18 @@ void wifiInit(State &s)
 	wifiReady = true;
 }
 
-void wifiTick()
+void restApiTick()
 {
 	if (wifiReady)
 	{
 		server.handleClient();
 	}
+#if BOARD_ENABLE_BLE
+	gamepadTick(millis());
+#endif
 }
 
-bool wifiIsReady()
+bool restApiIsReady()
 {
 	return wifiReady;
 }

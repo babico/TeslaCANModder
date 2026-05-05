@@ -1,8 +1,5 @@
 #pragma once
-#include <string.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Pedal Mode Control (0x334 byte 0, bits 5-6) ─────────────────────────────
 

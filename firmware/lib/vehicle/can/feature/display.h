@@ -1,9 +1,6 @@
 #pragma once
-#include <string.h>
 #include <stdlib.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Display Bit Helpers (0x273 UI_vehicleControl) ────────────────────────────
 inline void setDisplayBrightness(Frame &f, uint8_t level)
@@ -17,8 +14,7 @@ inline void setDisplayBrightness(Frame &f, uint8_t level)
 
 static void controlDisplayBrightness(uint8_t level, State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setDisplayBrightness(f, level);
 
 	startBurst(s, f, BUS_VEHICLE, 20, 20);

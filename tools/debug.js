@@ -21,6 +21,7 @@ import { runBenchmark } from "./commands/benchmark.js";
 import { runVehicle } from "./commands/vehicle.js";
 import { runExport } from "./commands/export.js";
 import { runDriveContext } from "./commands/drive-context.js";
+import { runDasDrive } from "./commands/das-drive.js";
 
 const SESSION_COMMAND_HANDLERS = {
 	smoke: runSmoke,
@@ -32,6 +33,7 @@ const SESSION_COMMAND_HANDLERS = {
 	benchmark: runBenchmark,
 	vehicle: runVehicle,
 	"drive-context": runDriveContext,
+	"das-drive": runDasDrive,
 };
 
 const PORTLESS_COMMANDS = new Set(["export"]);

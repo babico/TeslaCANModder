@@ -1,8 +1,5 @@
 #pragma once
-#include <string.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Regen Level Control (0x334 byte 2, 0-200) ───────────────────────────────
 

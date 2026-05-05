@@ -3,6 +3,13 @@
 #include <string.h>
 #include <stdint.h>
 
+// BUS_MAX is normally defined by core/can/bus.h, but types.h is included
+// before bus.h in some translation units. Mirror the same definition here so
+// CanDiag.bus[] is sized correctly regardless of include order.
+#ifndef BUS_MAX
+#define BUS_MAX 3
+#endif
+
 // Forward-declare platform types (full header included after State)
 enum TeslaModel : uint8_t;
 enum HWGeneration : uint8_t;
@@ -191,7 +198,7 @@ struct CanBusStat
 // plus global intercept counters collected from every handler path.
 struct CanDiag
 {
-	CanBusStat bus[3];	   // index: 0 = Chassis, 1 = Vehicle, 2 = Body
+	CanBusStat bus[BUS_MAX];   // 0=Chassis, 1=Vehicle, 2=Body
 	uint32_t nagEchoCount; // nag-killer echoes sent (0x370, all modes)
 	uint32_t eapModCount;  // EAP frames modified for nag-suppress (mux=1)
 	uint32_t txFailCount;  // MCP2515 sendMessage() errors (accumulated)

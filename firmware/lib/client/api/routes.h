@@ -1,7 +1,12 @@
 #pragma once
 #include "client/common/api_fwd.h"
+#include "io/wifi/esp32/cmd.h"
 #include "auth.h"
 #include "core/can/recorder.h"
+#include "vehicle/can/feature/das_drive.h"
+#if BOARD_ENABLE_BLE
+#include "client/gamepad/gamepad.h"
+#endif
 
 // ── JSON State Builder ──────────────────────────────────────────────────────
 static String buildStateJson(State &s)
@@ -60,6 +65,10 @@ static String buildStateJson(State &s)
 	doc["accSpeedLimit"] = (int)(s.accSpeedLimitKph * 10);
 	doc["mapSpeedLimit"] = (int)(s.mapSpeedLimitKph * 10);
 	doc["maxSpeed"] = (int)(s.maxSpeedKph * 10);
+	doc["dasDriveEnabled"] = dasDriveIsEnabled();
+	doc["dasSpeedLimitKph"] = (int)dasSpeedLimitKph;
+	doc["dasSpeedCapKph"] = (int)dasSpeedCapKph;
+	doc["dasSpeedCapMaxKph"] = (int)DAS_SPEED_CAP_MAX_KPH;
 
 	if (s.hasTpms)
 	{
@@ -125,6 +134,49 @@ static String buildStateJson(State &s)
 #endif
 	hw["wifi"] = true;
 	hw["ip"] = wifiCurrentIP();
+
+	// Aggregated subsystem snapshots — replaces the old /api/ble/status,
+	// /api/recorder/status and /api/gamepad/status endpoints.
+	JsonObject rec = doc["recorder"].to<JsonObject>();
+	rec["enabled"] = canRecorderEnabled();
+	rec["count"] = canRecorderCount();
+	rec["capacity"] = canRecorderCapacity();
+	rec["captured"] = canRecorderCapturedTotal();
+	rec["dropped"] = canRecorderDroppedTotal();
+	rec["lastCaptureMs"] = canRecorderLastCaptureMs();
+
+#if BOARD_ENABLE_BLE
+	JsonObject ble = doc["ble"].to<JsonObject>();
+	ble["enabled"] = bleIsReady();
+	ble["connected"] = bleIsConnected();
+	ble["deviceName"] = bleGetDeviceName();
+
+	JsonObject gp = doc["gamepad"].to<JsonObject>();
+	gp["enabled"] = gpEnabled;
+	gp["connected"] = gpConnected;
+	gp["scanning"] = gpScanning;
+	gp["scanCount"] = gpDeviceCount;
+	gp["pairedAddr"] = gpPairedAddr;
+	gp["pairedName"] = gamepadLastSeenName();
+	gp["rssi"] = (int)gamepadGetRssi();
+	gp["battery"] = (int)gamepadGetBattery();
+	JsonArray scanArr = gp["devices"].to<JsonArray>();
+	for (uint8_t i = 0; i < gpDeviceCount; i++)
+	{
+		JsonObject d = scanArr.add<JsonObject>();
+		d["addr"] = gpDevices[i].addr;
+		d["name"] = gpDevices[i].name;
+	}
+	JsonArray bindArr = gp["bindings"].to<JsonArray>();
+	for (uint8_t i = 0; i < GAMEPAD_BTN_COUNT; i++)
+	{
+		JsonObject b = bindArr.add<JsonObject>();
+		b["index"] = i;
+		b["button"] = kGpBtnName[i];
+		b["command"] = gpBinding[i];
+		b["hold"] = gpBindingHold[i];
+	}
+#endif
 
 	String output;
 	serializeJson(doc, output);
@@ -215,6 +267,9 @@ static void handlePostCommand()
 			return;
 		}
 	}
+
+	if (executeWifiCmd(cmd, doc))
+		return;
 
 	executeCommand(cmd, *restState, millis());
 

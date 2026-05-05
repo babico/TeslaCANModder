@@ -2,6 +2,69 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] — 2026-05-05
+
+### Added
+
+- **DAS Drive (openpilot-style gamepad CAN injection)** — `0x2B9` DAS_control,
+  `0x488` DAS_steeringControl, `0x209` APS_eacMonitor with Tesla-style 4-bit
+  CRC-8 checksums, speed-aware steer cap, rate limiter, standstill brake hold,
+  cancel-burst on disable, NVS-persisted enable/cap/limit
+- **Gamepad (BLE HID)** — NimBLE central scanner/pairing, 16-button bindings
+  (tap + hold), 6 analog axes feeding DAS Drive sticks/triggers, per-axis
+  deadzone/expo/inversion tuning, NVS round-trip
+- New gamepad command family: `gamepad:scan|pair|unpair|on|off|status|cancel`,
+  `gamepad:bind:<n>:<cmd>`, `gamepad:hold:<n>:<cmd>`,
+  `gamepad:axis:<n>:<dz|expo|inv>:<v>`
+- Client `DasDrivePanel` and `GamepadPanel` in Controls screen with live status
+  (ARMED/CONNECTED/RSSI/battery), discovered-device pairing list, speed/cap
+  inputs bounded by safety envelope
+- IndexedDB persistence for monitor diagnostics + live CAN frames with
+  localStorage fallback (`monitorDiagnosticsPersistence`,
+  `monitorLiveCanPersistence`, `indexedDbStore`)
+- Native test suites: `test_native_das_drive` (22 tests — frame builders,
+  safety envelope, NVS), `test_native_gamepad_axis` (18 tests — deadzone,
+  expo curve, inversion, trigger range)
+- Protocol command tests: `gamepad-commands.test.ts` (20 tests covering MAC
+  validation, button/axis range checks, axis-kind enum)
+- Cross-check coverage extended for parameterized command families
+  (`prefix:<...>:<...>` doc-prefix matcher)
+- Client tests: `monitorDiagnosticsPersistence` (6) +
+  `monitorLiveCanPersistence` (5) + `ControlsScreen` Gamepad panel (5)
+- Docs: `docs/guides/das-drive.md`, expanded `vehicle-features.md`
+  (DAS Drive + Gamepad sections), Gamepad section in `commands.md`,
+  `openpilot-tesla-harness-topology.md` reference
+- Native test infrastructure: `Preferences.h` shim, `fake_preferences` extended
+  with `bool`/`uint8`/`uint16` getters/setters
+- Tools: `tools/commands/das-drive.js` debug helper
+
+### Changed
+
+- Refactored gamepad axis math into pure header `client/gamepad/axis_math.h`
+  for native testability without NimBLE dependencies
+- Promoted client/io serial + WiFi logic to top-level `lib/`; renamed
+  `io/wifi/web/esp32` → `io/wifi/esp32`; extracted `wifi_api.h` and
+  `client/common/api_fwd.h` to decouple includes
+- Variant gating split into `lib/vehicle/can/handler/variant/{hw3,hw4,legacy}.h`
+  with shared `helpers.h`/`filters.h`/`ticks.h`
+- DAS Drive section in `commands.md` now references the chassis CAN bus
+  consistently (legacy "autopilot party CAN" wording removed)
+
+### Removed
+
+- `ap_party` legacy build paths and references (fully cleared)
+- `BUS_DAS_OUT` build flag (DAS Drive now writes on the chassis bus)
+- `apmode` legacy AP toggle (replaced by WiFi soft-AP managed via `wifi:*`)
+- Stale `ble_config.h`, `wifi_api.h`, `hw3.h`/`hw4.h`/`legacy.h` shims under
+  `lib/io/` and `lib/vehicle/can/handler/` after refactor
+
+### Fixed
+
+- Cross-check doc-prefix matcher now walks all ancestor prefixes so
+  `prefix:<a>:<b>` style commands resolve correctly
+- Stick saturation expectation in axis math (`raw=255` → `v=127`, asymmetric
+  with `raw=0` → `v=-128`) documented and tested
+
 ## [1.1.0] — 2026-05-02
 
 ### Added

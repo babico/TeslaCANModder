@@ -50,48 +50,38 @@ function assertRange(name: string, value: number, min: number, max: number): voi
 	}
 }
 
-function assertVariant(v: string): asserts v is Variant {
-	if (!(VALID_VARIANTS as readonly string[]).includes(v)) {
-		throw new RangeError(`variant must be one of ${VALID_VARIANTS.join(", ")}, got "${v}"`);
+function assertInList<const T extends readonly string[]>(
+	name: string,
+	value: string,
+	valid: T,
+): asserts value is T[number] {
+	if (!valid.includes(value)) {
+		throw new RangeError(`${name} must be one of ${valid.join(", ")}, got "${value}"`);
 	}
+}
+
+function assertVariant(v: string): asserts v is Variant {
+	assertInList("variant", v, VALID_VARIANTS);
 }
 
 function assertNagKillerMode(m: string): asserts m is NagKillerMode {
-	if (!(VALID_NAG_KILLER_MODES as readonly string[]).includes(m)) {
-		throw new RangeError(
-			`nag killer mode must be one of ${VALID_NAG_KILLER_MODES.join(", ")}, got "${m}"`,
-		);
-	}
+	assertInList("nag killer mode", m, VALID_NAG_KILLER_MODES);
 }
 
 function assertRegionSpoofCode(c: string): asserts c is RegionSpoofCode {
-	if (!(VALID_REGION_SPOOF_CODES as readonly string[]).includes(c)) {
-		throw new RangeError(
-			`region spoof code must be one of ${VALID_REGION_SPOOF_CODES.join(", ")}, got "${c}"`,
-		);
-	}
+	assertInList("region spoof code", c, VALID_REGION_SPOOF_CODES);
 }
 
 function assertButtonName(b: string): asserts b is ButtonName {
-	if (!(VALID_BUTTONS as readonly string[]).includes(b)) {
-		throw new RangeError(`button must be one of ${VALID_BUTTONS.join(", ")}, got "${b}"`);
-	}
+	assertInList("button", b, VALID_BUTTONS);
 }
 
 function assertPressType(p: string): asserts p is PressType {
-	if (!(VALID_PRESS_TYPES as readonly string[]).includes(p)) {
-		throw new RangeError(
-			`press type must be one of ${VALID_PRESS_TYPES.join(", ")}, got "${p}"`,
-		);
-	}
+	assertInList("press type", p, VALID_PRESS_TYPES);
 }
 
 function assertButtonAction(a: string): asserts a is ButtonAction {
-	if (!(VALID_BUTTON_ACTIONS as readonly string[]).includes(a)) {
-		throw new RangeError(
-			`button action must be one of ${VALID_BUTTON_ACTIONS.join(", ")}, got "${a}"`,
-		);
-	}
+	assertInList("button action", a, VALID_BUTTON_ACTIONS);
 }
 
 export const commands = {
@@ -177,6 +167,14 @@ export const commands = {
 	evd: (on: boolean) => (on ? "evd:on" : "evd:off"),
 	apGate: (on: boolean) => (on ? "apgate:on" : "apgate:off"),
 	apGateStatus: () => "apgate:status",
+
+	// DAS Drive (gamepad-driven CAN injection of openpilot-protocol frames)
+	// See firmware/lib/vehicle/can/feature/das_drive.h. Speed values are
+	// integer km/h; cap is bounded firmware-side to 1..200, user limit to
+	// 1..current cap.
+	drive: (on: boolean) => (on ? "drive:on" : "drive:off"),
+	driveSpeed: (kph: number) => `drive:speed:${Math.max(1, Math.floor(kph))}`,
+	driveCap: (kph: number) => `drive:cap:${Math.max(1, Math.min(200, Math.floor(kph)))}`,
 
 	// Preconditioning
 	precondition: (on: boolean) => (on ? "precondition:on" : "precondition:off"),
@@ -434,6 +432,41 @@ export const commands = {
 	bleEncrypt: (on: boolean) => (on ? "bleencrypt:on" : "bleencrypt:off"),
 	blePair: () => "bleencrypt:pair",
 	bleUnpair: () => "bleencrypt:unpair",
+
+	// Gamepad (BLE HID) — pair/unpair, scan, enable, status, bindings, axis tuning.
+	// See firmware/lib/client/gamepad/* and dispatch.h "gamepad:" handler.
+	gamepadScan: () => "gamepad:scan",
+	gamepadPair: (addr: string) => {
+		if (!/^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$/.test(addr)) {
+			throw new RangeError(`gamepadPair expects MAC AA:BB:CC:DD:EE:FF, got "${addr}"`);
+		}
+		return `gamepad:pair:${addr.toLowerCase()}`;
+	},
+	gamepadUnpair: () => "gamepad:unpair",
+	gamepad: (on: boolean) => (on ? "gamepad:on" : "gamepad:off"),
+	gamepadStatus: () => "gamepad:status",
+	gamepadCancel: () => "gamepad:cancel",
+	gamepadBind: (button: number, cmd: string) => {
+		if (!Number.isInteger(button) || button < 0 || button > 15) {
+			throw new RangeError(`gamepadBind button must be 0..15, got ${button}`);
+		}
+		return `gamepad:bind:${button}:${cmd}`;
+	},
+	gamepadHold: (button: number, cmd: string) => {
+		if (!Number.isInteger(button) || button < 0 || button > 15) {
+			throw new RangeError(`gamepadHold button must be 0..15, got ${button}`);
+		}
+		return `gamepad:hold:${button}:${cmd}`;
+	},
+	gamepadAxis: (axis: number, kind: "dz" | "expo" | "inv", value: number) => {
+		if (!Number.isInteger(axis) || axis < 0 || axis > 5) {
+			throw new RangeError(`gamepadAxis axis must be 0..5, got ${axis}`);
+		}
+		if (kind !== "dz" && kind !== "expo" && kind !== "inv") {
+			throw new RangeError(`gamepadAxis kind must be dz|expo|inv, got "${kind}"`);
+		}
+		return `gamepad:axis:${axis}:${kind}:${value}`;
+	},
 } as const;
 
 /** Profile label map */

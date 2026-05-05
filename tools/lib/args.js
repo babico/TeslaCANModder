@@ -77,5 +77,9 @@ export function resolveOptions(args) {
 		driveCtxExpectFull: Boolean(args["drive-expect-full"]),
 		driveCtxMinSamples: Number(args["drive-min-samples"]) || 1,
 		driveCtxNoteOutput: args["drive-note-output"] ? String(args["drive-note-output"]) : null,
+		// das-drive (gamepad CAN injection diagnostics)
+		action: args.action ? String(args.action) : null,
+		kph: args.kph !== undefined ? Number(args.kph) : null,
+		duration: Number(args.duration) || null,
 	};
 }

@@ -24,7 +24,7 @@ class __FlashStringHelper;
 #include "support/stubs.h"
 
 // Include handler (uses our stubs)
-#include "handler/hw4.h"
+#include "handler/variant/hw4.h"
 
 #include "support/helpers.h"
 

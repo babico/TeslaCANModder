@@ -1,8 +1,5 @@
 #pragma once
-#include <string.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Wiper Bit Helpers (0x273 UI_vehicleControl) ─────────────────────────────
 // Wiper speed is encoded in byte 7 bits [2:0] of the UI_vehicleControl frame.
@@ -30,8 +27,7 @@ inline void setWiperRequest(Frame &f, WiperRequest speed)
 
 static void controlWiper(WiperRequest speed, State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setWiperRequest(f, speed);
 
 	startBurst(s, f, BUS_VEHICLE, 20, 20);

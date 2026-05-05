@@ -408,6 +408,40 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 						<button onclick="setProfile(4)">Sloth</button>
 						<button onclick="cmd('profile:auto')">Auto</button>
 					</div>
+
+					<div class="title" style="margin-top: 14px; margin-bottom: 6px">
+						Gamepad / DAS Drive Speed
+					</div>
+					<div class="warning-box">
+						Raises the absolute longitudinal-request ceiling sent to the car. Default
+						25 km/h is parking-lot safe; higher values are for closed-track / private-property
+						use only. Hard upper bound is the protocol byte limit.
+					</div>
+					<div class="row">
+						<span>DAS Drive Enabled</span>
+						<label class="switch"
+							><input type="checkbox" id="dasDriveTg" onchange="toggleDasDrive()" /><span
+								class="slider"
+							></span
+						></label>
+					</div>
+					<div class="row" style="gap: 8px; flex-wrap: wrap">
+						<span>User limit (km/h)</span>
+						<input
+							type="number"
+							id="dasSpeedLimitIn"
+							min="1"
+							style="width: 70px"
+							onchange="sendDasSpeedLimit()" />
+						<span>Hard cap (km/h)</span>
+						<input
+							type="number"
+							id="dasSpeedCapIn"
+							min="1"
+							style="width: 70px"
+							onchange="sendDasSpeedCap()" />
+						<span class="status-line" id="dasSpeedCapMaxLbl"></span>
+					</div>
 				</div>
 
 				<div class="card col-6">
@@ -565,6 +599,32 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					</div>
 				</div>
 
+				<div class="card col-6" id="gamepadCard">
+					<div class="title">Gamepad Control</div>
+					<div class="kv" id="gpSt">Loading...</div>
+					<div class="seg wide" style="margin-top: 10px">
+						<button onclick="gpScan()">Scan</button>
+						<button onclick="gpUnpair()">Unpair</button>
+					</div>
+					<div id="gpScanResults" style="display:none; margin-top: 10px">
+						<div style="font-size: 12px; color: var(--muted); margin-bottom: 6px">Found HID devices:</div>
+						<div id="gpDeviceList"></div>
+					</div>
+					<div style="margin-top: 14px">
+						<div style="font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em">Button Bindings</div>
+						<table id="gpBindTable" style="width:100%; border-collapse:collapse; font-size:12px">
+							<thead>
+								<tr>
+									<th style="text-align:left; padding:3px 6px; color:var(--muted); font-weight:600">Button</th>
+									<th style="text-align:left; padding:3px 6px; color:var(--muted); font-weight:600">Command</th>
+									<th style="padding:3px 6px"></th>
+								</tr>
+							</thead>
+							<tbody id="gpBindBody"></tbody>
+						</table>
+					</div>
+				</div>
+
 				<div class="card col-6">
 					<div class="title">CAN Recorder</div>
 					<div class="status-line" style="margin-bottom: 8px">
@@ -609,7 +669,8 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 			let S = {},
 				W = {},
 				B = {},
-				R = {};
+				R = {},
+				G = {};
 
 			const HIGH_RISK_COMMANDS = new Set([
 				"lock",
@@ -807,6 +868,28 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 				cmd("profile:" + p);
 			}
 
+			function toggleDasDrive() {
+				cmd(S.dasDriveEnabled ? "drive:off" : "drive:on");
+			}
+
+			function sendDasSpeedLimit() {
+				const v = parseInt($("dasSpeedLimitIn").value || "0", 10);
+				if (v >= 1) cmd("drive:speed:" + v);
+			}
+
+			function sendDasSpeedCap() {
+				const v = parseInt($("dasSpeedCapIn").value || "0", 10);
+				if (v < 1) return;
+				const max = S.dasSpeedCapMaxKph || 200;
+				if (v > max) {
+					alert("Cap cannot exceed protocol max " + max + " km/h.");
+					return;
+				}
+				if (v > 25 && !confirm("Raising the DAS hard cap above 25 km/h is for closed-track use only. Continue?"))
+					return;
+				cmd("drive:cap:" + v);
+			}
+
 			function ventPreview() {
 				$("ventVal").textContent = $("ventRange").value;
 			}
@@ -879,19 +962,111 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 
 			function toggleBle() {
 				const en = $("bleTg").checked;
-				fetch("/api/ble/config", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ enabled: en }),
-				})
-					.then((r) => r.json())
+				cmd(en ? "ble:on" : "ble:off")
 					.then((d) => {
-						B = d;
-						renderBle();
-						appendLog(en ? "BLE enabled" : "BLE disabled");
-						toast(en ? "BLE enabled" : "BLE disabled");
-					})
-					.catch(() => toast("Error"));
+						if (d && d.ble) { B = d.ble; renderBle(); }
+					});
+			}
+
+			function renderGamepad() {
+				const enabled   = !!G.enabled;
+				const connected = !!G.connected;
+				const scanning  = !!G.scanning;
+				const addr      = G.pairedAddr || "";
+				let h = "<b>Status:</b> ";
+				if (!enabled) {
+					h += '<span style="color:var(--muted)">Disabled</span>';
+				} else if (connected) {
+					h += '<span style="color:var(--ok)">Connected</span>';
+					h += " &nbsp; <b>Buttons:</b> 0x" + ((G.buttons || 0).toString(16).padStart(4,"0"));
+					if (G.axes && G.axes.length >= 6) {
+						h += "<br><b>Axes:</b> LX=" + G.axes[0] + " LY=" + G.axes[1] +
+							" RX=" + G.axes[2] + " RY=" + G.axes[3] +
+							" LT=" + G.axes[4] + " RT=" + G.axes[5];
+					}
+				} else if (addr) {
+					h += '<span style="color:var(--warn)">Disconnected</span>';
+					h += " &nbsp; reconnecting...";
+				} else {
+					h += '<span style="color:var(--muted)">No device paired</span>';
+				}
+				if (addr) h += "<br><b>Paired:</b> " + escapeHtml(addr);
+				if (scanning) h += " &nbsp; <span style='color:var(--warn)'>Scanning...</span>";
+				$("gpSt").innerHTML = h;
+
+				// Scan results panel
+				if (G.scanCount > 0 || scanning) {
+					$("gpScanResults").style.display = "block";
+				} else {
+					$("gpScanResults").style.display = "none";
+				}
+
+				// Build binding table rows if not yet populated
+				if (!$("gpBindBody").dataset.loaded && G.bindings) {
+					renderGpBindings(G.bindings);
+					$("gpBindBody").dataset.loaded = "1";
+				}
+			}
+
+			function renderGpScan(devices) {
+				let h = "";
+				(devices || []).forEach(function(d) {
+					h += '<div style="display:flex;align-items:center;gap:8px;margin:3px 0">' +
+						'<span style="font-family:monospace;font-size:11px">' + escapeHtml(d.addr) + '</span>' +
+						' ' + escapeHtml(d.name) +
+						' <button style="padding:2px 8px;font-size:11px" onclick="gpPair(\'' + escapeHtml(d.addr) + '\')">Pair</button>' +
+						'</div>';
+				});
+				$("gpDeviceList").innerHTML = h || '<span style="color:var(--muted)">No HID devices found yet</span>';
+				$("gpScanResults").style.display = "block";
+			}
+
+			function renderGpBindings(bindings) {
+				let rows = "";
+				(bindings || []).forEach(function(b) {
+					rows += '<tr>' +
+						'<td style="padding:2px 6px;white-space:nowrap">' + escapeHtml(b.button) + '</td>' +
+						'<td style="padding:2px 6px"><input type="text" class="input" style="padding:3px 6px;font-size:12px;width:100%" ' +
+						'id="gpBind' + b.index + '" value="' + escapeHtml(b.command) + '" placeholder="command e.g. fsd:on" /></td>' +
+						'<td style="padding:2px 6px"><button style="padding:2px 8px;font-size:11px" onclick="gpSaveBind(' + b.index + ')">Save</button></td>' +
+						'</tr>';
+				});
+				$("gpBindBody").innerHTML = rows;
+			}
+
+			function gpScan() {
+				cmd("gamepad:scan").then(() => {
+					$("gpScanResults").style.display = "block";
+					$("gpDeviceList").innerHTML = '<span style="color:var(--muted)">Scanning…</span>';
+					// Poll /api/status after 7 s to render scan results.
+					setTimeout(function() {
+						fetch("/api/status")
+							.then((r) => r.json())
+							.then((d) => {
+								S = d;
+								if (d.gamepad) renderGpScan(d.gamepad.devices);
+							})
+							.catch(() => {});
+					}, 7000);
+				});
+			}
+
+			function gpPair(addr) {
+				cmd("gamepad:pair:" + addr).then(() => {
+					$("gpBindBody").dataset.loaded = ""; // reload bindings on next render
+				});
+			}
+
+			function gpUnpair() {
+				if (!confirm("Unpair gamepad?")) return;
+				cmd("gamepad:unpair");
+			}
+
+			function gpSaveBind(idx) {
+				const el = $("gpBind" + idx);
+				if (!el) return;
+				const command = el.value.trim();
+				cmd("gamepad:bind:" + idx + ":" + command);
 			}
 
 			function renderRecorder() {
@@ -905,35 +1080,11 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 			}
 
 			function startRecorder() {
-				fetch("/api/recorder/start", { method: "POST" })
-					.then((r) => r.json())
-					.then(() => {
-						appendLog("Recorder started");
-						toast("Recorder started");
-						return fetch("/api/recorder/status");
-					})
-					.then((r) => r.json())
-					.then((d) => {
-						R = d;
-						renderRecorder();
-					})
-					.catch(() => toast("Error"));
+				cmd("recorder:on").then((d) => { if (d && d.recorder) { R = d.recorder; renderRecorder(); } });
 			}
 
 			function stopRecorder() {
-				fetch("/api/recorder/stop", { method: "POST" })
-					.then((r) => r.json())
-					.then(() => {
-						appendLog("Recorder stopped");
-						toast("Recorder stopped");
-						return fetch("/api/recorder/status");
-					})
-					.then((r) => r.json())
-					.then((d) => {
-						R = d;
-						renderRecorder();
-					})
-					.catch(() => toast("Error"));
+				cmd("recorder:off").then((d) => { if (d && d.recorder) { R = d.recorder; renderRecorder(); } });
 			}
 
 			function downloadRecorder() {
@@ -1025,6 +1176,17 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 				$("isaTg").checked = !!S.isaChime;
 				$("mirrorAutoTg").checked = !!S.mirrorAutoFold;
 				$("apGateTg").checked = !!S.apGateEnabled;
+				if ($("dasDriveTg")) {
+					$("dasDriveTg").checked = !!S.dasDriveEnabled;
+					const lim = $("dasSpeedLimitIn"), cap = $("dasSpeedCapIn"), lbl = $("dasSpeedCapMaxLbl");
+					if (lim && document.activeElement !== lim) lim.value = S.dasSpeedLimitKph ?? "";
+					if (cap) {
+						if (document.activeElement !== cap) cap.value = S.dasSpeedCapKph ?? "";
+						cap.max = S.dasSpeedCapMaxKph ?? 200;
+					}
+					if (lim) lim.max = S.dasSpeedCapKph ?? 25;
+					if (lbl) lbl.textContent = "max " + (S.dasSpeedCapMaxKph ?? 200);
+				}
 				$("apGateSt").innerHTML =
 					"<b>Gate:</b> " +
 					(S.apGateOpen
@@ -1065,6 +1227,18 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					.then((d) => {
 						S = d;
 						render();
+						// /api/status now carries ble/recorder/gamepad subsystem
+						// snapshots — no need for per-feature polls anymore.
+						if (d.ble) { B = d.ble; renderBle(); }
+						if (d.recorder) { R = d.recorder; renderRecorder(); }
+						if (d.gamepad) {
+							G = d.gamepad;
+							if (G.bindings && !$("gpBindBody").dataset.loaded) {
+								renderGpBindings(G.bindings);
+								$("gpBindBody").dataset.loaded = "1";
+							}
+							renderGamepad();
+						}
 					})
 					.catch(() => {});
 
@@ -1073,22 +1247,6 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					.then((d) => {
 						W = d;
 						renderWifi();
-					})
-					.catch(() => {});
-
-				fetch("/api/ble/status")
-					.then((r) => r.json())
-					.then((d) => {
-						B = d;
-						renderBle();
-					})
-					.catch(() => {});
-
-				fetch("/api/recorder/status")
-					.then((r) => r.json())
-					.then((d) => {
-						R = d;
-						renderRecorder();
 					})
 					.catch(() => {});
 			}

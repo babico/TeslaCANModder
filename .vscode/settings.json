@@ -8,6 +8,50 @@
 	"files.associations": {
 		"*.h": "cpp"
 	},
+	"C_Cpp.default.compilerPath": "${workspaceFolder}/firmware/.pio-home/packages/toolchain-xtensa-esp32/bin/xtensa-esp32-elf-g++.exe",
+	"C_Cpp.default.compileCommands": "${workspaceFolder}/firmware/compile_commands.json",
+	"C_Cpp.default.intelliSenseMode": "gcc-x64",
+	"C_Cpp.default.cStandard": "c11",
+	"C_Cpp.default.cppStandard": "c++17",
+	"C_Cpp.default.includePath": [
+		"${workspaceFolder}/firmware/src",
+		"${workspaceFolder}/firmware/lib",
+		"${workspaceFolder}/firmware/lib/vehicle/can",
+		"${workspaceFolder}/firmware/test",
+		"${workspaceFolder}/firmware/test/support",
+		"${workspaceFolder}/firmware/.pio/libdeps/esp32_wifi_ble/NimBLE-Arduino/src",
+		"${workspaceFolder}/firmware/.pio/libdeps/esp32_wifi_ble/ArduinoJson/src",
+		"${workspaceFolder}/firmware/.pio/libdeps/esp32_wifi_ble/autowp-mcp2515",
+		"${workspaceFolder}/firmware/.pio-home/packages/framework-arduinoespressif32/cores/esp32",
+		"${workspaceFolder}/firmware/.pio-home/packages/framework-arduinoespressif32/libraries/WebServer/src",
+		"${workspaceFolder}/firmware/.pio-home/packages/framework-arduinoespressif32/libraries/FS/src",
+		"${workspaceFolder}/firmware/.pio-home/packages/framework-arduinoespressif32/libraries/WiFi/src",
+		"${workspaceFolder}/firmware/.pio-home/packages/framework-arduinoespressif32/libraries/Preferences/src",
+		"${workspaceFolder}/firmware/.pio-home/packages/framework-arduinoespressif32/libraries/SPI/src",
+		"${workspaceFolder}/firmware/.pio-home/packages/framework-arduinoespressif32/variants/esp32",
+		"${workspaceFolder}/firmware/.pio-home/packages/framework-arduinoespressif32/tools/sdk/esp32/include/**"
+	],
+	"C_Cpp.default.systemIncludePath": [
+		"${workspaceFolder}/firmware/.pio-home/packages/toolchain-xtensa-esp32/xtensa-esp32-elf/include/c++/8.4.0",
+		"${workspaceFolder}/firmware/.pio-home/packages/toolchain-xtensa-esp32/xtensa-esp32-elf/include/c++/8.4.0/xtensa-esp32-elf",
+		"${workspaceFolder}/firmware/.pio-home/packages/toolchain-xtensa-esp32/xtensa-esp32-elf/include/c++/8.4.0/backward",
+		"${workspaceFolder}/firmware/.pio-home/packages/toolchain-xtensa-esp32/lib/gcc/xtensa-esp32-elf/8.4.0/include",
+		"${workspaceFolder}/firmware/.pio-home/packages/toolchain-xtensa-esp32/lib/gcc/xtensa-esp32-elf/8.4.0/include-fixed",
+		"${workspaceFolder}/firmware/.pio-home/packages/toolchain-xtensa-esp32/xtensa-esp32-elf/include"
+	],
+	"C_Cpp.default.defines": [
+		"ARDUINO_ARCH_ESP32",
+		"ESP_PLATFORM",
+		"ESP32",
+		"CONFIG_BT_ENABLED=1",
+		"CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=1",
+		"CONFIG_BT_NIMBLE_ROLE_BROADCASTER=1",
+		"BOARD_ENABLE_WIFI=1",
+		"BOARD_ENABLE_BLE=1",
+		"BUS_CHASSIS_ACTIVE=1",
+		"BUS_VEHICLE_ACTIVE=1",
+		"BUS_BODY_ACTIVE=1"
+	],
 	"[markdown]": {
 		"editor.insertSpaces": true,
 		"editor.tabSize": 2

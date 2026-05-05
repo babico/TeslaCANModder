@@ -1,8 +1,5 @@
 #pragma once
-#include <string.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Mirror Bit Helpers (0x273 UI_vehicleControl) ─────────────────────────────
 // These helpers set individual mirror-related bit fields in the 0x273 frame.
@@ -65,8 +62,7 @@ inline void setMirrorDipOnReverse(Frame &f, bool enable)
 // Fold or unfold mirrors (50 burst frames, 20 ms interval)
 static void controlMirrorFold(MirrorFoldRequest req, State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setMirrorFold(f, req);
 
 	startBurst(s, f, BUS_VEHICLE, 50, 20);
@@ -75,8 +71,7 @@ static void controlMirrorFold(MirrorFoldRequest req, State &s)
 // Activate heated mirrors (30 burst frames, 20 ms interval)
 static void controlMirrorHeat(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setMirrorHeat(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -85,8 +80,7 @@ static void controlMirrorHeat(State &s)
 // Toggle factory auto-fold-on-lock setting (30 burst frames)
 static void controlAutoFoldMirrors(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setAutoFoldMirrors(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -95,8 +89,7 @@ static void controlAutoFoldMirrors(State &s)
 // Dip passenger mirror when reversing (30 burst frames)
 static void controlMirrorDip(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setMirrorDipOnReverse(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);

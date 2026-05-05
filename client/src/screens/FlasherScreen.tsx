@@ -21,7 +21,7 @@ const CONNECTION_ESP32: ConnectionOption[] = [
 ];
 
 const BUS_OPTIONS = [
-	{ key: "chassis", label: "Chassis", desc: "X179 pins 13-14" },
+	{ key: "chassis", label: "Chassis", desc: "X179 pins 13-14 · DAS injection" },
 	{ key: "vehicle", label: "Vehicle", desc: "X179 pins 9-10" },
 	{ key: "body", label: "Body", desc: "X179 pins 2-3" },
 ] as const;
@@ -49,39 +49,27 @@ function isSerialFamilyTransport(type: string): boolean {
 	return type === "serial" || type === "bluetooth-serial";
 }
 
-function resolveEnvironment(connection: Record<string, number>): string {
-	const wifiEnabled = connection.wifi ? 1 : 0;
-	const bleEnabled = connection.ble ? 1 : 0;
-
-	if (wifiEnabled && bleEnabled) {
-		return "esp32_wifi_ble";
-	}
-	if (wifiEnabled) {
-		return "esp32_wifi";
-	}
-	if (bleEnabled) {
-		return "esp32_ble";
-	}
-	return "esp32";
-}
-
-function resolveAssetName(env: string, buses: Record<BusKey, number>): string {
-	const enabled = BUS_OPTIONS.filter((bus) => buses[bus.key]).map((bus) => bus.key);
-	if (enabled.length === 0) {
-		return `${env}_no_can.bin`;
-	}
-	if (buses.chassis) {
-		const nonChassis = enabled.filter((key) => key !== "chassis");
-		return nonChassis.length === 0 ? `${env}.bin` : `${env}_${nonChassis.join("_")}.bin`;
-	}
-	return `${env}_${enabled.join("_")}_only.bin`;
-}
-
-async function resolveReleaseAsset(
-	env: string,
+function resolveEnvironment(
+	connection: Record<string, number>,
 	buses: Record<BusKey, number>,
-): Promise<ResolvedReleaseAsset> {
-	const assetName = resolveAssetName(env, buses);
+	clock: 8 | 16,
+): string {
+	const parts: string[] = ["esp32"];
+	if (connection.wifi) parts.push("wifi");
+	if (connection.ble) parts.push("ble");
+	if (buses.chassis) parts.push("chassis");
+	if (buses.vehicle) parts.push("vehicle");
+	if (buses.body) parts.push("body");
+	parts.push(`${clock}mhz`);
+	return parts.join("_");
+}
+
+function resolveAssetName(env: string): string {
+	return `${env}.bin`;
+}
+
+async function resolveReleaseAsset(env: string): Promise<ResolvedReleaseAsset> {
+	const assetName = resolveAssetName(env);
 	const response = await fetch(LATEST_RELEASE_ENDPOINT, {
 		headers: { Accept: "application/vnd.github+json" },
 	});
@@ -103,8 +91,8 @@ async function resolveReleaseAsset(
 	};
 }
 
-async function downloadReleaseBinary(env: string, buses: Record<BusKey, number>): Promise<string> {
-	const asset = await resolveReleaseAsset(env, buses);
+async function downloadReleaseBinary(env: string): Promise<string> {
+	const asset = await resolveReleaseAsset(env);
 
 	if (Platform.OS === "web") {
 		const anchor = document.createElement("a");
@@ -133,12 +121,16 @@ export function FlasherScreen() {
 		vehicle: 0,
 		body: 0,
 	});
+	const [clock, setClock] = useState<8 | 16>(8);
 	const [status, setStatus] = useState<StatusType>("idle");
 	const [message, setMessage] = useState("");
 	const [flashLog, setFlashLog] = useState<string[]>([]);
 
-	const environment = useMemo(() => resolveEnvironment(connection), [connection]);
-	const assetName = useMemo(() => resolveAssetName(environment, buses), [environment, buses]);
+	const environment = useMemo(
+		() => resolveEnvironment(connection, buses, clock),
+		[connection, buses, clock],
+	);
+	const assetName = useMemo(() => resolveAssetName(environment), [environment]);
 	const busSummary = useMemo(() => {
 		const enabledLabels = BUS_OPTIONS.filter((bus) => buses[bus.key]).map((bus) => bus.label);
 		return enabledLabels.length > 0 ? enabledLabels.join(" + ") : "No CAN lanes enabled";
@@ -148,8 +140,9 @@ export function FlasherScreen() {
 		if (buses.chassis) flags.push("-DBUS_CHASSIS_ACTIVE=1");
 		if (buses.vehicle) flags.push("-DBUS_VEHICLE_ACTIVE=1");
 		if (buses.body) flags.push("-DBUS_BODY_ACTIVE=1");
+		flags.push(`-DBOARD_CAN_CLOCK_MHZ=${clock}`);
 		return flags.join(" ");
-	}, [buses]);
+	}, [buses, clock]);
 
 	const toggleConnection = (key: string) => {
 		if (key === "serial") {
@@ -167,7 +160,7 @@ export function FlasherScreen() {
 		setMessage("Resolving latest GitHub release asset...");
 
 		try {
-			const filename = await downloadReleaseBinary(environment, buses);
+			const filename = await downloadReleaseBinary(environment);
 			setStatus("done");
 			setMessage(`${filename} downloaded from the latest GitHub release.`);
 		} catch (error) {
@@ -201,7 +194,7 @@ export function FlasherScreen() {
 			}
 
 			addLog("> Resolving latest merged release image...");
-			const releaseAsset = await resolveReleaseAsset(environment, buses);
+			const releaseAsset = await resolveReleaseAsset(environment);
 			addLog(
 				releaseAsset.tag_name
 					? `> Release asset: ${releaseAsset.name} from ${releaseAsset.tag_name}`
@@ -268,7 +261,7 @@ export function FlasherScreen() {
 						<Text style={[styles.segmentTitle, styles.segmentTitleActive]}>
 							ESP32-S DevKit
 						</Text>
-						<Text style={styles.segmentDetail}>MCP2515 x1-3 / WiFi / BLE / NVS</Text>
+						<Text style={styles.segmentDetail}>MCP2515 x1-4 / WiFi / BLE / NVS</Text>
 					</View>
 				</View>
 				<Text style={styles.resolvedLine}>Latest release asset: {assetName}</Text>
@@ -346,6 +339,39 @@ export function FlasherScreen() {
 							</Pressable>
 						);
 					})}
+				</View>
+				{!buses.chassis ? (
+					<Text style={styles.resolvedLine}>
+						⚠ Chassis bus off — passive sniffer mode, DAS injection disabled
+					</Text>
+				) : null}
+			</View>
+
+			<View style={styles.panel}>
+				<Text style={styles.panelTitle}>MCP2515 Crystal Clock</Text>
+				<View style={styles.segmentRow}>
+					{([8, 16] as const).map((mhz) => (
+						<Pressable
+							key={mhz}
+							onPress={() => setClock(mhz)}
+							style={[
+								styles.segment,
+								clock === mhz ? styles.segmentActive : undefined,
+							]}
+						>
+							<Text
+								style={[
+									styles.segmentTitle,
+									clock === mhz ? styles.segmentTitleActive : undefined,
+								]}
+							>
+								{mhz} MHz
+							</Text>
+							<Text style={styles.segmentDetail}>
+								{mhz === 8 ? "Most modules" : "Some modules"}
+							</Text>
+						</Pressable>
+					))}
 				</View>
 			</View>
 
@@ -431,9 +457,7 @@ export function FlasherScreen() {
 				<Text style={styles.panelTitle}>CLI Reference</Text>
 				<View style={styles.codeBlock}>
 					<Text style={styles.codeText}>cd firmware</Text>
-					<Text style={styles.codeText}>
-						PLATFORMIO_BUILD_FLAGS="{buildFlags}" pio run -e {environment}
-					</Text>
+					<Text style={styles.codeText}>.\pio.ps1 run -e {environment}</Text>
 					<Text style={styles.codeText}>
 						node ../tools/debug.js flash --port COM5 --hex build/firmware/{environment}
 						.bin

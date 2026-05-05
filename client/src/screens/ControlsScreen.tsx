@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { BoardState } from "@teslacanmodder/protocol";
 import {
 	FEATURE_IDS,
@@ -537,6 +537,10 @@ export function ControlsScreen({ boardState, onRunCommand }: ControlsScreenProps
 				onSetOffsetAuto={() => runDirectCommand("offsetAuto")}
 			/>
 
+			<DasDrivePanel boardState={boardState} runDirectCommand={runDirectCommand} />
+
+			<GamepadPanel boardState={boardState} runDirectCommand={runDirectCommand} />
+
 			{tooltip ? (
 				<TooltipBanner
 					message={tooltip}
@@ -655,6 +659,330 @@ export function ControlsScreen({ boardState, onRunCommand }: ControlsScreenProps
 				onRequestClose={() => setPaletteOpen(false)}
 			/>
 		</ScrollView>
+	);
+}
+
+// ── DAS Drive (Gamepad CAN injection) ────────────────────────────────────────
+//
+// Surfaces the runtime state of `firmware/lib/vehicle/can/feature/das_drive.h`
+// and the four wire commands `drive:on / drive:off / drive:speed:N /
+// drive:cap:N`. The hard cap (`drive:cap:N`) is bounded firmware-side to
+// 1..200 km/h and the user limit is clamped to ≤ cap. We treat the BoardState
+// fields as optional (firmware may not have shipped these yet) so older boards
+// degrade gracefully.
+
+interface DasDrivePanelProps {
+	boardState: BoardState;
+	runDirectCommand: (name: CommandName, args?: string) => void;
+}
+
+function DasDrivePanel({ boardState, runDirectCommand }: DasDrivePanelProps) {
+	// These fields aren't in the typed BoardState yet — they pass through
+	// untyped via coerceBoardStateSnapshot (raw spread). Cast at the boundary.
+	const raw = boardState as unknown as Record<string, unknown>;
+	const enabled = Boolean(raw.dasDriveEnabled);
+	const liveLimit = Number(raw.dasSpeedLimitKph) || 0;
+	const liveCap = Number(raw.dasSpeedCapKph) || 0;
+	const capMax = Number(raw.dasSpeedCapMaxKph) || 200;
+
+	// Local input state — keep separate from the live values so the user can
+	// edit without their typing being clobbered by an arriving status message.
+	const [limitInput, setLimitInput] = useState(String(liveLimit || 25));
+	const [capInput, setCapInput] = useState(String(liveCap || 25));
+
+	// Submit helpers. Both clamp on the client side too so we don't bother the
+	// firmware with obviously-bad values (firmware will re-clamp anyway).
+	const submitLimit = () => {
+		const n = Math.max(1, Math.floor(Number(limitInput)));
+		if (!Number.isFinite(n)) return;
+		runDirectCommand("driveSpeed", String(n));
+	};
+	const submitCap = () => {
+		const n = Math.max(1, Math.min(capMax || 200, Math.floor(Number(capInput))));
+		if (!Number.isFinite(n)) return;
+		runDirectCommand("driveCap", String(n));
+	};
+
+	return (
+		<View style={styles.panelCard}>
+			<View style={styles.panelHeader}>
+				<Text style={styles.panelTitle}>DAS Drive (Gamepad CAN Injection)</Text>
+				<Text style={[styles.featureStatus, enabled ? styles.statusOn : styles.statusOff]}>
+					{enabled ? "ARMED" : "OFF"}
+				</Text>
+			</View>
+
+			<Text style={styles.dasHint}>
+				Manual remote-control. Gamepad sticks become steering and pedals — not Autopilot.
+				Hard cap {capMax} km/h. Use only on a bench or private property.
+			</Text>
+
+			<View style={styles.featureTileActions}>
+				<Pressable
+					style={({ pressed }) => [
+						styles.featureButton,
+						enabled ? styles.featureButtonActive : undefined,
+						pressed ? styles.featureButtonPressed : undefined,
+					]}
+					onPress={() => runDirectCommand("drive", "true")}
+				>
+					<Text
+						style={[
+							styles.featureButtonText,
+							enabled ? styles.featureButtonTextActive : undefined,
+						]}
+					>
+						Enable
+					</Text>
+				</Pressable>
+				<Pressable
+					style={({ pressed }) => [
+						styles.featureButton,
+						!enabled ? styles.featureButtonActive : undefined,
+						pressed ? styles.featureButtonPressed : undefined,
+					]}
+					onPress={() => runDirectCommand("drive", "false")}
+				>
+					<Text
+						style={[
+							styles.featureButtonText,
+							!enabled ? styles.featureButtonTextActive : undefined,
+						]}
+					>
+						Disable
+					</Text>
+				</Pressable>
+			</View>
+
+			<View style={styles.dasInputRow}>
+				<View style={styles.dasInputCol}>
+					<Text style={styles.statLabel}>User Limit (km/h)</Text>
+					<TextInput
+						style={styles.dasInput}
+						keyboardType="numeric"
+						value={limitInput}
+						onChangeText={setLimitInput}
+						onSubmitEditing={submitLimit}
+						placeholder={String(liveLimit || 25)}
+						placeholderTextColor={colors.dashSecondary}
+					/>
+					<Text style={styles.dasMeta}>live: {liveLimit} km/h</Text>
+				</View>
+				<Pressable
+					style={({ pressed }) => [
+						styles.featureButton,
+						styles.dasApplyButton,
+						pressed ? styles.featureButtonPressed : undefined,
+					]}
+					onPress={submitLimit}
+				>
+					<Text style={styles.featureButtonText}>Apply</Text>
+				</Pressable>
+			</View>
+
+			<View style={styles.dasInputRow}>
+				<View style={styles.dasInputCol}>
+					<Text style={styles.statLabel}>Hard Cap (km/h, max {capMax})</Text>
+					<TextInput
+						style={styles.dasInput}
+						keyboardType="numeric"
+						value={capInput}
+						onChangeText={setCapInput}
+						onSubmitEditing={submitCap}
+						placeholder={String(liveCap || 25)}
+						placeholderTextColor={colors.dashSecondary}
+					/>
+					<Text style={styles.dasMeta}>live: {liveCap} km/h</Text>
+				</View>
+				<Pressable
+					style={({ pressed }) => [
+						styles.featureButton,
+						styles.dasApplyButton,
+						styles.featureButtonDanger,
+						pressed ? styles.featureButtonPressed : undefined,
+					]}
+					onPress={submitCap}
+				>
+					<Text style={styles.featureButtonTextActive}>Set Cap</Text>
+				</Pressable>
+			</View>
+		</View>
+	);
+}
+
+// ── Gamepad (BLE HID) ────────────────────────────────────────────────────────
+// Surfaces the gamepad telemetry block published by /api/state and emits the
+// `gamepad:scan|pair|unpair|on|off|cancel` commands. Bindings/axis tuning
+// remain command-line only for now — the panel exposes the most common
+// recovery actions (scan, pair from list, enable/disable, cancel-burst).
+
+interface GamepadDevice {
+	addr?: string;
+	name?: string;
+}
+
+interface GamepadPanelProps {
+	boardState: BoardState;
+	runDirectCommand: (name: CommandName, args?: string) => void;
+}
+
+function GamepadPanel({ boardState, runDirectCommand }: GamepadPanelProps) {
+	const raw = boardState as unknown as Record<string, unknown>;
+	const gp = (raw.gamepad as Record<string, unknown> | undefined) ?? undefined;
+	const enabled = Boolean(gp?.enabled);
+	const connected = Boolean(gp?.connected);
+	const scanning = Boolean(gp?.scanning);
+	const pairedAddr = typeof gp?.pairedAddr === "string" ? (gp.pairedAddr as string) : "";
+	const pairedName = typeof gp?.pairedName === "string" ? (gp.pairedName as string) : "";
+	const rssi = Number(gp?.rssi);
+	const battery = Number(gp?.battery);
+	const devices: GamepadDevice[] = Array.isArray(gp?.devices)
+		? (gp!.devices as GamepadDevice[])
+		: [];
+
+	const status = !enabled
+		? "OFF"
+		: !connected
+			? scanning
+				? "SCANNING"
+				: pairedAddr
+					? "DISCONNECTED"
+					: "UNPAIRED"
+			: "CONNECTED";
+
+	const statusStyle =
+		status === "CONNECTED" || status === "SCANNING" ? styles.statusOn : styles.statusOff;
+
+	return (
+		<View style={styles.panelCard}>
+			<View style={styles.panelHeader}>
+				<Text style={styles.panelTitle}>Gamepad (BLE HID)</Text>
+				<Text style={[styles.featureStatus, statusStyle]}>{status}</Text>
+			</View>
+
+			<Text style={styles.dasHint}>
+				Pair a Bluetooth controller to drive DAS sticks and trigger bound commands. Use
+				Console for `gamepad:bind:&lt;n&gt;:&lt;cmd&gt;` and per-axis tuning.
+			</Text>
+
+			{pairedAddr ? (
+				<View style={styles.settingsGrid}>
+					<View style={styles.settingsItem}>
+						<Text style={styles.settingsKey}>Paired</Text>
+						<Text style={styles.settingsValue}>{pairedName || pairedAddr}</Text>
+					</View>
+					{Number.isFinite(battery) && battery >= 0 && battery <= 100 ? (
+						<View style={styles.settingsItem}>
+							<Text style={styles.settingsKey}>Battery</Text>
+							<Text style={styles.settingsValue}>{battery}%</Text>
+						</View>
+					) : null}
+					{Number.isFinite(rssi) && rssi !== 0 ? (
+						<View style={styles.settingsItem}>
+							<Text style={styles.settingsKey}>RSSI</Text>
+							<Text style={styles.settingsValue}>{rssi} dBm</Text>
+						</View>
+					) : null}
+				</View>
+			) : null}
+
+			<View style={styles.featureTileActions}>
+				<Pressable
+					style={({ pressed }) => [
+						styles.featureButton,
+						enabled ? styles.featureButtonActive : undefined,
+						pressed ? styles.featureButtonPressed : undefined,
+					]}
+					onPress={() => runDirectCommand("gamepad", "true")}
+				>
+					<Text
+						style={[
+							styles.featureButtonText,
+							enabled ? styles.featureButtonTextActive : undefined,
+						]}
+					>
+						Enable
+					</Text>
+				</Pressable>
+				<Pressable
+					style={({ pressed }) => [
+						styles.featureButton,
+						!enabled ? styles.featureButtonActive : undefined,
+						pressed ? styles.featureButtonPressed : undefined,
+					]}
+					onPress={() => runDirectCommand("gamepad", "false")}
+				>
+					<Text
+						style={[
+							styles.featureButtonText,
+							!enabled ? styles.featureButtonTextActive : undefined,
+						]}
+					>
+						Disable
+					</Text>
+				</Pressable>
+				<Pressable
+					style={({ pressed }) => [
+						styles.featureButton,
+						pressed ? styles.featureButtonPressed : undefined,
+					]}
+					onPress={() => runDirectCommand("gamepadScan")}
+				>
+					<Text style={styles.featureButtonText}>{scanning ? "Scanning…" : "Scan"}</Text>
+				</Pressable>
+				<Pressable
+					style={({ pressed }) => [
+						styles.featureButton,
+						styles.featureButtonDanger,
+						pressed ? styles.featureButtonPressed : undefined,
+					]}
+					onPress={() => runDirectCommand("gamepadCancel")}
+				>
+					<Text style={styles.featureButtonTextActive}>Cancel Burst</Text>
+				</Pressable>
+				{pairedAddr ? (
+					<Pressable
+						style={({ pressed }) => [
+							styles.featureButton,
+							pressed ? styles.featureButtonPressed : undefined,
+						]}
+						onPress={() => runDirectCommand("gamepadUnpair")}
+					>
+						<Text style={styles.featureButtonText}>Unpair</Text>
+					</Pressable>
+				) : null}
+			</View>
+
+			{devices.length > 0 ? (
+				<View style={styles.gamepadDeviceList}>
+					<Text style={styles.statLabel}>Discovered ({devices.length})</Text>
+					{devices.slice(0, 8).map((d, i) => {
+						const addr = d.addr ?? "";
+						const name = d.name ?? "(unnamed)";
+						return (
+							<View key={`${addr}-${i}`} style={styles.gamepadDeviceRow}>
+								<View style={styles.gamepadDeviceInfo}>
+									<Text style={styles.settingsValue}>{name}</Text>
+									<Text style={styles.dasMeta}>{addr}</Text>
+								</View>
+								<Pressable
+									style={({ pressed }) => [
+										styles.featureButton,
+										pressed ? styles.featureButtonPressed : undefined,
+									]}
+									onPress={() => {
+										if (!addr) return;
+										runDirectCommand("gamepadPair", addr);
+									}}
+								>
+									<Text style={styles.featureButtonText}>Pair</Text>
+								</Pressable>
+							</View>
+						);
+					})}
+				</View>
+			) : null}
+		</View>
 	);
 }
 
@@ -874,5 +1202,55 @@ const styles = StyleSheet.create({
 		fontSize: font.size.sm,
 		fontWeight: font.weight.semibold,
 		letterSpacing: 0.5,
+	},
+	dasHint: {
+		color: colors.dashSecondary,
+		fontSize: font.size.xs,
+		lineHeight: 16,
+	},
+	dasInputRow: {
+		flexDirection: "row",
+		alignItems: "flex-end",
+		gap: spacing.sm,
+	},
+	dasInputCol: {
+		flex: 1,
+		gap: 4,
+	},
+	dasInput: {
+		minHeight: 38,
+		borderRadius: radius.md,
+		borderWidth: 1,
+		borderColor: colors.dashCardBorder,
+		backgroundColor: colors.backgroundDarkSubtle,
+		color: colors.dashValue,
+		paddingHorizontal: spacing.sm,
+		fontSize: font.size.sm,
+	},
+	dasMeta: {
+		color: colors.dashSecondary,
+		fontSize: font.size.xs,
+	},
+	dasApplyButton: {
+		flex: 0,
+		paddingHorizontal: spacing.md,
+	},
+	gamepadDeviceList: {
+		marginTop: spacing.sm,
+		gap: spacing.xs,
+	},
+	gamepadDeviceRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		gap: spacing.sm,
+		paddingVertical: spacing.xs,
+		paddingHorizontal: spacing.sm,
+		borderRadius: radius.md,
+		backgroundColor: colors.backgroundDarkSubtle,
+	},
+	gamepadDeviceInfo: {
+		flex: 1,
+		gap: 2,
 	},
 });

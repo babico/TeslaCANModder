@@ -15,15 +15,15 @@ TeslaCANModder communicates with the vehicle by intercepting and modifying CAN b
 
 ## Bus Assignments
 
-The ESP32 3-CAN configuration maps to the Tesla X179 connector as follows:
+The ESP32 supports up to three CAN buses on a shared SPI fabric. All three lanes land on the Tesla X179 connector.
 
-| Bus     | MCP2515    | X179 Pins | Function                | CAN Speed |
-| ------- | ---------- | --------- | ----------------------- | --------- |
-| Chassis | MCP2515 #1 | 13–14     | Chassis / Autopilot CAN | 500 kbps  |
-| Vehicle | MCP2515 #2 | 9–10      | Vehicle Control CAN     | 500 kbps  |
-| Body    | MCP2515 #3 | 2–3       | Body Control CAN        | 500 kbps  |
+| Bus     | MCP2515    | Connector       | Function                | CAN Speed |
+| ------- | ---------- | --------------- | ----------------------- | --------- |
+| Chassis | MCP2515 #1 | X179 pins 13–14 | Chassis / Autopilot CAN | 500 kbps  |
+| Vehicle | MCP2515 #2 | X179 pins 9–10  | Vehicle Control CAN     | 500 kbps  |
+| Body    | MCP2515 #3 | X179 pins 2–3   | Body Control CAN        | 500 kbps  |
 
-> 1-CAN builds use only the Chassis bus. Vehicle and body commands require 3-CAN builds.
+> Every bus is opt-in via PlatformIO build flags (`BUS_CHASSIS_ACTIVE`, `BUS_VEHICLE_ACTIVE`, `BUS_BODY_ACTIVE`). Builds without `_chassis` run as a passive sniffer — DAS injection requires the Chassis CAN.
 
 ## CAN IDs
 

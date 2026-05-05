@@ -1,8 +1,5 @@
 #pragma once
-#include <string.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Power Bit Helpers (0x273 UI_vehicleControl) ─────────────────────────────
 inline void setAccessoryPower(Frame &f, bool enable)
@@ -39,8 +36,7 @@ inline void setDriveStateRequest(Frame &f, bool enable)
 
 static void controlPowerOff(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setPowerOff(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -48,8 +44,7 @@ static void controlPowerOff(State &s)
 
 static void controlAccessoryPower(bool enable, State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setAccessoryPower(f, enable);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -57,8 +52,7 @@ static void controlAccessoryPower(bool enable, State &s)
 
 static void controlDriveState(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setDriveStateRequest(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);

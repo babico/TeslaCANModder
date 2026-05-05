@@ -19,6 +19,12 @@ class __FlashStringHelper;
 void sendLog(const char *msg);
 void sendLog(const __FlashStringHelper *msg);
 
+// ── One-shot log guard ───────────────────────────────────────────────────────
+// Logs msg exactly once per boot (or until the flag is reset).
+// Usage:  ONCE_LOG(hw4LoggedNag, F("HW4: Nag suppressed on CAN"));
+#define ONCE_LOG(flag, msg) \
+	do { if (!(flag)) { sendLog(msg); (flag) = true; } } while (0)
+
 // Defined by core/driver/<board>.h
 void driverSend(const Frame &f, uint8_t bus);
 uint32_t driverGetAndResetTxFails();

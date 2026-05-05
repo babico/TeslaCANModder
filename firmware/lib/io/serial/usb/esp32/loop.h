@@ -10,6 +10,8 @@ void serialInit(State& s) {
   bleInit();
 #endif
 
+  dasInit();
+
   sendLog(F(BOARD_READY_MSG));
   sendBoot(s);
 }
@@ -36,5 +38,12 @@ void serialTick(State& s) {
     char c = bleRead();
     handleChar(bleBuf, bleLen, c, s);
   }
+  // Flush queued gamepad button press events
+  gamepadFlushEvents(s, now);
+  // Map gamepad analog axes to DAS drive control
+  gamepadDriveTick(s, now);
 #endif
+
+  // DAS autopilot CAN injection — rate-limited frame sender (always runs when bus active)
+  dasTick(now, s);
 }

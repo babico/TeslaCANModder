@@ -1,9 +1,6 @@
 #pragma once
-#include <string.h>
 #include <stdlib.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Window Vent Control (0x119) ──────────────────────────────────────────────
 // Controls window vent position via CAN ID 0x119.

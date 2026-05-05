@@ -10,3 +10,28 @@
 #include "state.h"
 #include "config.h"
 #include "client/api/init.h"
+
+// ── WiFi Driver Entry Points ─────────────────────────────────────────────────
+
+inline void wifiInit(State &s)
+{
+	loadWifiConfig();
+
+	if (wifiCfg.mode == TCM_WIFI_MODE_STA && strlen(wifiCfg.staSSID) > 0)
+	{
+		if (!startSTA())
+		{
+			wifiCfg.mode = TCM_WIFI_MODE_AP;
+			startAP();
+		}
+	}
+	else
+	{
+		startAP();
+	}
+
+	restApiInit(s);
+}
+
+inline void wifiTick()      { restApiTick(); }
+inline bool wifiIsReady()   { return restApiIsReady(); }

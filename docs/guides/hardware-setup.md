@@ -13,12 +13,12 @@ icon: 🔧
 
 ## ESP32-S DevKit
 
-The ESP32 uses **3× MCP2515 modules over SPI** for all CAN buses.
+The ESP32 uses **1–3× MCP2515 modules over SPI** for the CAN buses. Chassis is required for DAS injection; Vehicle and Body are optional and selected per build env.
 
 ### Required Components
 
 - **ESP32-S DevKit (30-pin or 38-pin)** — Built-in WiFi + BLE
-- **MCP2515 CAN Module ×1–3** — 8 MHz crystal + TJA1050 transceiver each
+- **MCP2515 CAN Module ×1–4** — 8 MHz or 16 MHz crystal + TJA1050 transceiver each (build env must match the crystal)
 - **9V-36V to 5V Buck Converter** — 3A minimum
 - **Tesla X179 Connector** — Behind center screen
 

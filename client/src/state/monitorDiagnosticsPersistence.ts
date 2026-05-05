@@ -1,3 +1,5 @@
+import { hasIndexedDb, readIndexedDbRecord, writeIndexedDbRecord } from "./indexedDbStore";
+
 export interface PersistedHistoryEntry {
 	id: string;
 	ts: number;
@@ -35,13 +37,6 @@ const STORE_NAME = "monitor-diagnostics";
 const RECORD_KEY = "state-v1";
 const LOCAL_STORAGE_KEY = "tcm:monitor-diagnostics:v1";
 type ArchiveCategory = PersistedDiagnosticsArchiveEntry["category"];
-
-function hasIndexedDb(): boolean {
-	return (
-		typeof globalThis !== "undefined" &&
-		typeof (globalThis as { indexedDB?: unknown }).indexedDB !== "undefined"
-	);
-}
 
 function hasLocalStorage(): boolean {
 	return (
@@ -123,58 +118,16 @@ function sanitizeState(input: unknown): PersistedDiagnosticsState {
 	};
 }
 
-function openDb(): Promise<IDBDatabase> {
-	return new Promise((resolve, reject) => {
-		const indexedDb = (globalThis as { indexedDB?: IDBFactory }).indexedDB;
-		if (!indexedDb) {
-			reject(new Error("indexedDB unavailable"));
-			return;
-		}
-
-		const request = indexedDb.open(DB_NAME, 1);
-		request.onupgradeneeded = () => {
-			const db = request.result;
-			if (!db.objectStoreNames.contains(STORE_NAME)) {
-				db.createObjectStore(STORE_NAME);
-			}
-		};
-		request.onsuccess = () => resolve(request.result);
-		request.onerror = () => reject(request.error ?? new Error("failed to open indexedDB"));
-	});
-}
-
 async function loadFromIndexedDb(): Promise<PersistedDiagnosticsState | null> {
-	const db = await openDb();
-	try {
-		const result = await new Promise<unknown>((resolve, reject) => {
-			const tx = db.transaction(STORE_NAME, "readonly");
-			const store = tx.objectStore(STORE_NAME);
-			const request = store.get(RECORD_KEY);
-			request.onsuccess = () => resolve(request.result);
-			request.onerror = () => reject(request.error ?? new Error("indexedDB read failed"));
-		});
-		if (!result) {
-			return null;
-		}
-		return sanitizeState(result);
-	} finally {
-		db.close();
+	const result = await readIndexedDbRecord<unknown>(DB_NAME, STORE_NAME, RECORD_KEY);
+	if (!result) {
+		return null;
 	}
+	return sanitizeState(result);
 }
 
 async function saveToIndexedDb(state: PersistedDiagnosticsState): Promise<void> {
-	const db = await openDb();
-	try {
-		await new Promise<void>((resolve, reject) => {
-			const tx = db.transaction(STORE_NAME, "readwrite");
-			const store = tx.objectStore(STORE_NAME);
-			const request = store.put(state, RECORD_KEY);
-			request.onsuccess = () => resolve();
-			request.onerror = () => reject(request.error ?? new Error("indexedDB write failed"));
-		});
-	} finally {
-		db.close();
-	}
+	await writeIndexedDbRecord(DB_NAME, STORE_NAME, RECORD_KEY, state);
 }
 
 function loadFromLocalStorage(): PersistedDiagnosticsState | null {

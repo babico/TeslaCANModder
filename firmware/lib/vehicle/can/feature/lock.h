@@ -1,8 +1,5 @@
 #pragma once
-#include <string.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Lock Bit Helpers (0x273 UI_vehicleControl) ───────────────────────────────
 enum LockRequest
@@ -44,8 +41,7 @@ inline void setHornRequest(Frame &f, bool honk)
 
 static void controlLock(LockRequest req, State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setLockRequest(f, req);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -53,8 +49,7 @@ static void controlLock(LockRequest req, State &s)
 
 static void controlChildLock(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setChildDoorLock(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -62,8 +57,7 @@ static void controlChildLock(State &s)
 
 static void controlHorn(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setHornRequest(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);

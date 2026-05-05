@@ -1,8 +1,5 @@
 #pragma once
-#include <string.h>
-#include "core/forward.h"
-#include "vehicle/can/ids.h"
-#include "vehicle/can/burst.h"
+#include "vehicle/can/fwd.h"
 
 // ── Lighting Bit Helpers (0x273 UI_vehicleControl) ───────────────────────────
 inline void setFrontFogSwitch(Frame &f, bool enable)
@@ -73,8 +70,7 @@ inline void setDomeLightSwitch(Frame &f, DomeLightSwitch mode)
 
 static void controlFrontFog(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setFrontFogSwitch(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -82,8 +78,7 @@ static void controlFrontFog(State &s)
 
 static void controlRearFog(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setRearFogSwitch(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -91,8 +86,7 @@ static void controlRearFog(State &s)
 
 static void controlAutoHighBeam(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setAutoHighBeam(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -100,8 +94,7 @@ static void controlAutoHighBeam(State &s)
 
 static void controlAmbientLight(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setAmbientLighting(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -109,8 +102,7 @@ static void controlAmbientLight(State &s)
 
 static void controlHomeLight(State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setSeeYouHomeLighting(f, true);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
@@ -118,8 +110,7 @@ static void controlHomeLight(State &s)
 
 static void controlDomeLight(DomeLightSwitch mode, State &s)
 {
-	Frame f = {CAN_ID_UI_VEHICLE_CTRL, 8};
-	memcpy(f.data, s.lastCtrl, 8);
+	Frame f = makeCtrlFrame(s);
 	setDomeLightSwitch(f, mode);
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);

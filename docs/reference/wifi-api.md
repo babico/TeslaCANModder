@@ -11,7 +11,7 @@ icon: 📡
 
 # WiFi REST API
 
-ESP32 firmware variants with WiFi enabled (`esp32_wifi`, `esp32_wifi_ble`) create a wireless access point for HTTP control.
+ESP32 firmware envs with WiFi enabled (any env containing `_wifi`, e.g. `esp32_wifi_chassis_8mhz`, `esp32_wifi_ble_chassis_vehicle_body_8mhz`) create a wireless access point for HTTP control.
 
 ## WiFi Modes
 
@@ -52,11 +52,11 @@ If STA connection fails, the device automatically falls back to AP mode.
 | `GET`  | `/api/status`  | Full board state JSON                       |
 | `GET`  | `/api/disable` | Emergency disable all injections            |
 
-### Command Execution
+### Command Execution — the One True Endpoint
 
-| Method | Endpoint       | Description                |
-| ------ | -------------- | -------------------------- |
-| `POST` | `/api/command` | Execute any serial command |
+| Method | Endpoint       | Description                                    |
+| ------ | -------------- | ---------------------------------------------- |
+| `POST` | `/api/command` | Execute **any** wire command — preferred path. |
 
 **Request body:**
 
@@ -64,9 +64,41 @@ If STA connection fails, the device automatically falls back to AP mode.
 { "cmd": "fsd:on" }
 ```
 
-**Response:** Full board state JSON (same as `/api/status`).
+**Response:** an Ack — `{"t":"ack","cmd":"fsd:on"}`. Clients that need new state poll `GET /api/status` (or open the SSE/serial stream).
 
-All serial commands work over REST. See [Command Reference](commands) for the full list.
+> **Design rule** — every new feature ships as a wire command, _not_ a new HTTP route.
+> Wire commands work identically over Serial, BLE NUS, and HTTP, and stay in sync
+> automatically across the docs/protocol/firmware cross-check test
+> (`packages/protocol/test/integration/cross-check.test.ts`).
+>
+> The catalogue lives in [`commands.md`](commands.md). Examples:
+> `gamepad:scan`, `gamepad:pair:AA:BB:CC:DD:EE:FF`, `gamepad:bind:0:drive:on`,
+> `drive:on`, `drive:cap:25`, `apgate:status`.
+
+#### When NOT to add a new HTTP route
+
+Adding `server.on("/api/foo", …)` is almost never the right answer.
+Use a wire command instead unless **all** of the following are true:
+
+- The response is a binary payload (e.g. CSV file download), **or**
+- The request is part of the auth/bootstrap chicken-and-egg (`/api/auth/key`), **or**
+- The endpoint must be reachable before serial dispatch is available
+  (e.g. `/api/disable` must work even if dispatch is wedged).
+
+Anything else — toggles, configs, scans, pairings — belongs on `/api/command`.
+
+#### Auth
+
+When `apiKey` is set in `State`, mutating commands require the `X-API-Key` header:
+
+```bash
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $TCM_KEY" \
+  -d '{"cmd":"drive:on"}'
+```
+
+`GET /api/status`, `GET /api/ping`, and the auth bootstrap endpoints are always open.
 
 ### WiFi Configuration
 
@@ -126,19 +158,63 @@ All serial commands work over REST. See [Command Reference](commands) for the fu
 
 ### BLE Control
 
-| Method | Endpoint          | Description                                 |
-| ------ | ----------------- | ------------------------------------------- |
-| `GET`  | `/api/ble/status` | BLE state (enabled, connected, device name) |
-| `POST` | `/api/ble/config` | Enable or disable BLE at runtime            |
+> **All BLE control is wire-command driven.** There are _no_ dedicated
+> `/api/ble/*` REST endpoints anymore. Send commands via `POST /api/command`
+> and read state from the `ble` sub-object of `GET /api/status`.
+>
+> | Wire command   | Effect                                                                          |
+> | -------------- | ------------------------------------------------------------------------------- |
+> | `ble:on`       | Start the BLE radio; persist `enabled=true` to NVS                              |
+> | `ble:off`      | Stop the BLE radio; persist `enabled=false` to NVS                              |
+> | `ble:name:<n>` | Update advertised device name (1–32 chars); persist to NVS                      |
+> | `ble:status`   | Emit `{"t":"ble","enabled":...,"connected":...,"deviceName":...}` on the stream |
+>
+> The `ble` sub-object inside `GET /api/status` exposes the same fields
+> (`enabled`, `connected`, `deviceName`) for single-poll dashboards.
 
 ### TPMS & Diagnostics
 
-| Method | Endpoint    | Description                              |
-| ------ | ----------- | ---------------------------------------- |
-| `GET`  | `/api/tpms` | TPMS tire pressure & temperature JSON    |
-| `GET`  | `/api/log`  | Debug ring buffer dump (last 256 events) |
+| Method | Endpoint   | Description                              |
+| ------ | ---------- | ---------------------------------------- |
+| `GET`  | `/api/log` | Debug ring buffer dump (last 256 events) |
 
-**GET `/api/tpms`** response:
+> TPMS readings are exposed as the `tpms` sub-object inside `GET /api/status`
+> — the standalone `/api/tpms` endpoint has been removed.
+
+### Gamepad (BLE central)
+
+> **All gamepad operations are wire commands** — there are _no_ dedicated
+> gamepad routes worth using directly. Send them via `POST /api/command`:
+>
+> | Wire command                           | Effect                                      |
+> | -------------------------------------- | ------------------------------------------- |
+> | `gamepad:on` / `gamepad:off`           | Enable/disable BLE central role             |
+> | `gamepad:scan`                         | Start a BLE scan for nearby HID gamepads    |
+> | `gamepad:pair:AA:BB:CC:DD:EE:FF`       | Pair a specific MAC                         |
+> | `gamepad:unpair`                       | Forget paired device                        |
+> | `gamepad:bind:<n>:<cmd>`               | Bind button `n` (0..15) to a wire command   |
+> | `gamepad:hold:<n>:<cmd>`               | Long-press binding (≥500 ms) for button `n` |
+> | `gamepad:axis:<n>:<dz\|expo\|inv>:<v>` | Per-axis tuning (dz/expo/invert)            |
+> | `gamepad:cancel`                       | One-shot DAS cancel burst (panic-stop)      |
+> | `gamepad:status`                       | Emit a `gamepad` JSON line on the stream    |
+
+### CAN Recorder
+
+> All recorder control is via wire commands. Read state from the `recorder`
+> sub-object inside `GET /api/status` (`enabled`, `count`, `capacity`,
+> `captured`, `dropped`, `lastCaptureMs`).
+>
+> | Wire command      | Effect                                              |
+> | ----------------- | --------------------------------------------------- |
+> | `recorder:on`     | Start capturing all CAN frames into the ring buffer |
+> | `recorder:off`    | Stop capturing                                      |
+> | `recorder:clear`  | Reset the buffer and stats                          |
+> | `recorder:status` | Emit `{"t":"recorder",...}` line                    |
+>
+> The binary `GET /api/recorder/download` (CSV file) has no wire equivalent
+> and remains a dedicated endpoint.
+
+**`tpms` sub-object inside `GET /api/status`:**
 
 ```json
 {
@@ -165,7 +241,7 @@ Pressures are in bar, temperatures in °C. `ok` is `false` when no TPMS data has
 ]
 ```
 
-**GET `/api/ble/status`** response:
+**`ble` sub-object inside `GET /api/status`:**
 
 ```json
 {
@@ -175,10 +251,12 @@ Pressures are in bar, temperatures in °C. `ok` is `false` when no TPMS data has
 }
 ```
 
-**POST `/api/ble/config`** — Disable BLE:
+**Disable BLE via wire command:**
 
-```json
-{ "enabled": false }
+```bash
+curl -X POST http://192.168.4.1/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"cmd":"ble:off"}'
 ```
 
 > BLE state is saved to NVS and persists across reboots.
@@ -228,15 +306,15 @@ curl -X POST http://192.168.4.1/api/wifi/config \
 curl http://192.168.4.1/api/wifi/status
 
 # Disable BLE
-curl -X POST http://192.168.4.1/api/ble/config \
+curl -X POST http://192.168.4.1/api/command \
   -H "Content-Type: application/json" \
-  -d '{"enabled":false}'
+  -d '{"cmd":"ble:off"}'
 
 # Emergency disable all modifications
 curl http://192.168.4.1/api/disable
 
-# Query TPMS data
-curl http://192.168.4.1/api/tpms
+# Query TPMS data (read the `tpms` sub-object of /api/status)
+curl http://192.168.4.1/api/status
 
 # Set drive mode to Performance
 curl -X POST http://192.168.4.1/api/command \

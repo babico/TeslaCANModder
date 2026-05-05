@@ -47,7 +47,7 @@ icon: 🔍
 
 ## MCP2515 Bus Not Detected
 
-- Must flash a matching firmware variant (1-CAN or 3-CAN)
+- Must flash a firmware env that includes the bus you need (e.g. `_chassis`, `_vehicle`, `_body` segments)
 - Boot log shows "MCP2515 #N not detected" if wiring is wrong
 - Check SPI lines are shared correctly between modules
 - Chassis bus: CS → GPIO 15, INT → GPIO 34
@@ -90,7 +90,7 @@ icon: 🔍
 
 - Verify CAN ID 0x370 (EPAS torque) is visible in raw CAN mode (`can:raw:on`)
 - If using `nag:killer:mode:safe`, verify CAN ID 0x39B (DAS status) is visible as well
-- The nag killer intercepts the EPAS frame on the vehicle bus — requires 3-CAN wiring
+- The nag killer intercepts the EPAS frame on the vehicle bus — requires a build with `_vehicle` (e.g. `esp32_wifi_ble_chassis_vehicle_8mhz`)
 - Check that `nag:killer:on` was sent (not just `nag:on` — these are different features)
 - `nag:on` = bit-19 suppress, `nag:killer:on` = EPAS torque zeroing
 - `nag:killer:mode:safe` only echoes spoof frames when DAS requests hands-on steering input
@@ -105,14 +105,14 @@ icon: 🔍
 
 ## Preconditioning Not Activating
 
-- Requires 3-CAN build with Vehicle bus connected
+- Requires a build with `_chassis` + `_vehicle` and the Vehicle bus connected
 - `precondition:on` injects CAN 0x082 — check console for confirmation
 - Preconditioning needs periodic injection; if board loses power, it stops
 
 ## Track Mode Not Enabling
 
 - Track Mode injects CAN 0x313 on the Vehicle bus
-- Requires 3-CAN build
+- Requires a build with both `_chassis` and `_vehicle`
 - Sends a 20-frame burst — check that vehicle is in a compatible state (Park or Drive)
 
 ## OTA Paused TX

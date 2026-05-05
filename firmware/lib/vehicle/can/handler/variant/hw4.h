@@ -3,7 +3,7 @@
 #include "vehicle/can/ids.h"
 #include "feature/profile.h"
 #include "feature/isa_chime.h"
-#include "feature/region.h"
+#include "handler/variant/nag.h" // applyNagSuppressBits + ONCE_LOG + region
 
 static bool hw4LoggedFSD = false;
 static bool hw4LoggedNag = false;
@@ -36,11 +36,7 @@ void handleHW4(Frame &f, State &s)
 			f.data[1] |= 0x20;
 			f.data[7] = computeHW4IsaChecksum(f);
 			driverSend(f, 0);
-			if (!hw4LoggedISA)
-			{
-				sendLog(F("HW4: ISA chime suppressed"));
-				hw4LoggedISA = true;
-			}
+			ONCE_LOG(hw4LoggedISA, F("HW4: ISA chime suppressed"));
 			return;
 		}
 		return;
@@ -111,38 +107,14 @@ void handleHW4(Frame &f, State &s)
 			if (s.evdEnabled)
 				setBit(f, 59, true);
 			driverSend(f, 0);
-			if (!hw4LoggedFSD)
-			{
-				sendLog(F("HW4: FSD mod active on CAN"));
-				hw4LoggedFSD = true;
-			}
+			ONCE_LOG(hw4LoggedFSD, F("HW4: FSD mod active on CAN"));
 			return;
 		}
 
 		if (mux == 1 && s.nagSuppress && apGateOpen)
 		{
-			setBit(f, 19, false);
-			setBit(f, 47, true);
-			// Enhanced Autopilot: set bit 46 on mux=1 to unlock EAP/Summon
-			// Source: ev-open-can-tools hw4OffsetRuntime + hypery11 enhanced_autopilot
-			if (s.enhancedAutopilot)
-				setBit(f, 46, true);
-			// Lane graph visualization: bit 45 on mux=1
-			// Source: hypery11/flipper-tesla-fsd fsd_handler.c (assist_show_lane_graph)
-			if (s.laneGraphEnable)
-				setBit(f, 45, true);
-			// ECE R79 bypass: clear EU speed restriction bit for European vehicles
-			if (s.eceR79Bypass && s.hasRegion && isEuropeanMarket(s.regionCode))
-			{
-				applyEceR79Bypass(f);
-			}
-			driverSend(f, 0);
-			s.canDiag.eapModCount++;
-			if (!hw4LoggedNag)
-			{
-				sendLog(F("HW4: Nag suppressed on CAN"));
-				hw4LoggedNag = true;
-			}
+			applyNagSuppressBits(f, s);
+			ONCE_LOG(hw4LoggedNag, F("HW4: Nag suppressed on CAN"));
 			return;
 		}
 

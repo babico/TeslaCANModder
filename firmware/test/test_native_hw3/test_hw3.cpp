@@ -22,7 +22,7 @@ class __FlashStringHelper;
 // ── Stubs ────────────────────────────────────────────────────────────────────
 #include "support/stubs.h"
 
-#include "handler/hw3.h"
+#include "handler/variant/hw3.h"
 
 #include "support/helpers.h"
 

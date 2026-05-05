@@ -2,28 +2,31 @@
 
 // ── ESP32-S DevKit Pin Configuration ─────────────────────────────────────────
 // ESP32-S DevKit with up to 3 CAN buses via MCP2515 modules over SPI.
+// Pins are named by bus role (CHASSIS/VEHICLE/BODY), not by physical module
+// index. The BUS_* IDs in core/can/bus.h provide the array-index map.
 //
 // Tesla X179 Connector Mapping (hardcoded):
-//   Bus 0 (MCP2515_1): X179 pins 13-14 → Chassis / Autopilot CAN
-//   Bus 1 (MCP2515_2): X179 pins 9-10  → Vehicle Control CAN
-//   Bus 2 (MCP2515_3): X179 pins 2-3   → Body Control CAN
+//   BUS_CHASSIS : X179 pins 13-14 → Chassis bus (vehicle ECUs: rack, ESP, IBST).
+//                 *DAS injection always targets this bus* — that's where
+//                 steering/braking/ACC ECUs listen.
+//   BUS_VEHICLE : X179 pins 9-10  → Vehicle Control CAN (BMS, climate, body)
+//   BUS_BODY    : X179 pins 2-3   → Body Control CAN (windows, sentry, trunk)
 //
-// Bus activation is controlled by BUS_CHASSIS_ACTIVE, BUS_VEHICLE_ACTIVE, BUS_BODY_ACTIVE
-// Build server injects these flags. Default: FSD only.
+// Bus activation is controlled by BUS_<NAME>_ACTIVE flags injected by the build.
 
 #define PIN_LED 2 // ESP32 DevKit on-board LED
 
-// ── Bus 0: MCP2515_1 (SPI) — Chassis bus, X179 pins 13-14 ─────────────────────
-#define PIN_MCP2515_1_CS 15
-#define PIN_MCP2515_1_INT 34 // Input-only pin, good for interrupt
+// ── BUS_CHASSIS — Chassis / Party CAN, X179 pins 13-14 ──────────────────────
+#define PIN_MCP2515_CHASSIS_CS 15
+#define PIN_MCP2515_CHASSIS_INT 34 // Input-only pin, good for interrupt
 
-// ── Bus 1: MCP2515_2 (SPI) — Vehicle bus, X179 pins 9-10 ───────────────────
-#define PIN_MCP2515_2_CS 27
-#define PIN_MCP2515_2_INT 35 // Input-only pin, good for interrupt
+// ── BUS_VEHICLE — Vehicle Control CAN, X179 pins 9-10 ───────────────────────
+#define PIN_MCP2515_VEHICLE_CS 27
+#define PIN_MCP2515_VEHICLE_INT 35 // Input-only pin, good for interrupt
 
-// ── Bus 2: MCP2515_3 (SPI) — Body bus, X179 pins 2-3 ───────────────────────
-#define PIN_MCP2515_3_CS 26
-#define PIN_MCP2515_3_INT 33
+// ── BUS_BODY — Body Control CAN, X179 pins 2-3 ──────────────────────────────
+#define PIN_MCP2515_BODY_CS 26
+#define PIN_MCP2515_BODY_INT 33
 
 // ── SPI (shared between MCP2515 modules) ────────────────────────────────────
 #define PIN_SPI_SCK 18

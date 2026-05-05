@@ -19,8 +19,8 @@ For a detailed narrative setup flow that includes both browser flasher and CLI f
 
 ## 1. Hardware Preparation
 
-- [ ] **Board selected**: ESP32-S DevKit (1–3 bus USB/WiFi/BLE)
-- [ ] **MCP2515 module(s)** ready with **8 MHz crystal** — not 16 MHz
+- [ ] **Board selected**: ESP32-S DevKit (1–4 bus USB/WiFi/BLE)
+- [ ] **MCP2515 module(s)** ready — 8 MHz or 16 MHz crystal (build env must match: `_8mhz` or `_16mhz` suffix)
 - [ ] **Data-capable USB cable** — charge-only cables will not work
 - [ ] **Wiring complete** per [Hardware Setup](hardware-setup.md): Chassis bus CS → GPIO 15, INT → GPIO 34, SPI → 18/19/23; Vehicle bus CS → GPIO 27, INT → GPIO 35 _(optional)_; Body bus CS → GPIO 26, INT → GPIO 33 _(optional)_
 - [ ] **CAN bus wires** ready for X179 connector (CAN-H / CAN-L)

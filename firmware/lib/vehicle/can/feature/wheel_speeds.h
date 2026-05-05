@@ -24,23 +24,18 @@ inline float decodeWheelSpeedFL(const uint8_t *d)
 
 inline float decodeWheelSpeedFR(const uint8_t *d)
 {
-	uint16_t raw = ((uint16_t)(d[1] >> 5)) |
-	               ((uint16_t)d[2] << 3) |
-	               ((uint16_t)(d[3] & 0x03) << 11);
+	uint16_t raw = ((uint16_t)(d[1] >> 5)) | ((uint16_t)d[2] << 3) | ((uint16_t)(d[3] & 0x03) << 11);
 	return (raw == 8191) ? 0.0f : raw * 0.04f;
 }
 
 inline float decodeWheelSpeedRL(const uint8_t *d)
 {
-	uint16_t raw = ((uint16_t)(d[3] >> 2)) |
-	               ((uint16_t)(d[4] & 0x7F) << 6);
+	uint16_t raw = ((uint16_t)(d[3] >> 2)) | ((uint16_t)(d[4] & 0x7F) << 6);
 	return (raw == 8191) ? 0.0f : raw * 0.04f;
 }
 
 inline float decodeWheelSpeedRR(const uint8_t *d)
 {
-	uint16_t raw = ((uint16_t)(d[4] >> 7)) |
-	               ((uint16_t)d[5] << 1) |
-	               ((uint16_t)(d[6] & 0x07) << 9);
+	uint16_t raw = ((uint16_t)(d[4] >> 7)) | ((uint16_t)d[5] << 1) | ((uint16_t)(d[6] & 0x07) << 9);
 	return (raw == 8191) ? 0.0f : raw * 0.04f;
 }
