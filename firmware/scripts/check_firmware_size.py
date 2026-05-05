@@ -8,7 +8,7 @@ against defined thresholds. Exits non-zero if any threshold is exceeded.
 Usage:
     python scripts/check_firmware_size.py [--env ENV ...]
 
-Without args, checks: esp32
+Without args, checks: esp32_chassis_8mhz
 """
 
 import subprocess
@@ -19,27 +19,30 @@ import argparse
 # ── Thresholds ────────────────────────────────────────────────────────────────
 # Flash and RAM limits per board (bytes)
 # ESP32: 1310720 bytes flash (1.25 MB), 327680 bytes RAM (320 KB)
+#
+# Env naming: esp32[_wifi][_ble]_<bus combo>_<clock>. Keys below cover the
+# representative profiles built in CI.
 
 THRESHOLDS = {
-    "esp32": {
+    "esp32_chassis_8mhz": {
         "flash_max": 1100000,  # ~84% of 1310720 — new features add overhead
         "ram_max": 300000,  # ~92% of 327680
         "flash_total": 1310720,
         "ram_total": 327680,
     },
-    "esp32_wifi": {
+    "esp32_wifi_chassis_8mhz": {
         "flash_max": 1200000,  # WiFi + new features
         "ram_max": 310000,
         "flash_total": 1310720,
         "ram_total": 327680,
     },
-    "esp32_ble": {
+    "esp32_ble_chassis_8mhz": {
         "flash_max": 1200000,  # BLE + new features
         "ram_max": 310000,
         "flash_total": 1310720,
         "ram_total": 327680,
     },
-    "esp32_wifi_ble": {
+    "esp32_wifi_ble_chassis_8mhz": {
         "flash_max": 1280000,  # WiFi + BLE + new features
         "ram_max": 320000,
         "flash_total": 1310720,
@@ -120,8 +123,8 @@ def main():
     parser.add_argument(
         "--env",
         nargs="+",
-        default=["esp32"],
-        help="Environments to check (default: esp32)",
+        default=["esp32_chassis_8mhz"],
+        help="Environments to check (default: esp32_chassis_8mhz)",
     )
     args = parser.parse_args()
 

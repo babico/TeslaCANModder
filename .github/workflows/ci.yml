@@ -37,7 +37,7 @@ jobs:
             - run: pip install platformio
             - run: pio test -e native
             - name: Firmware size regression check
-              run: python scripts/check_firmware_size.py --env esp32
+              run: python scripts/check_firmware_size.py --env esp32_chassis_8mhz
 
     protocol:
         runs-on: ubuntu-latest
