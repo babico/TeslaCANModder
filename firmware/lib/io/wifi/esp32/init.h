@@ -50,7 +50,7 @@ void wifiInit(State& s) {
     server.on("/api/auth/key", HTTP_GET, []() {
     // Only available from dashboard (same origin) — returns current API key
       if (!restState) { sendJsonResponse(500, "{\"error\":\"not initialized\"}"); return; }
-    StaticJsonDocument<128> doc;
+    JsonDocument doc;
       doc["key"] = restState->apiKey;
       doc["required"] = restState->apiKeyRequired;
     String out;
@@ -76,7 +76,7 @@ void wifiInit(State& s) {
   // TPMS endpoint
   server.on("/api/tpms", HTTP_GET, []() {
     if (!restState) { sendJsonResponse(500, "{\"error\":\"not initialized\"}"); return; }
-    StaticJsonDocument<256> doc;
+    JsonDocument doc;
     doc["ok"] = restState->hasTpms;
     doc["fl"] = (int)(restState->tpmsPressure[0] * 100);
     doc["fr"] = (int)(restState->tpmsPressure[1] * 100);
@@ -93,14 +93,14 @@ void wifiInit(State& s) {
   server.on("/api/tpms", HTTP_OPTIONS, handleOptions);
   // Log endpoint
   server.on("/api/log", HTTP_GET, []() {
-    StaticJsonDocument<2048> doc;
+    JsonDocument doc;
     uint16_t cnt = logRingCount();
     doc["count"] = cnt;
-    JsonArray arr = doc.createNestedArray("entries");
+    JsonArray arr = doc["entries"].to<JsonArray>();
     for (uint16_t i = 0; i < cnt && i < 64; i++) {
       const LogEntry* e = logRingGet(i);
       if (!e) break;
-      JsonObject entry = arr.createNestedObject();
+      JsonObject entry = arr.add<JsonObject>();
       entry["ms"] = e->timestamp;
       entry["m"] = e->msg;
     }
@@ -112,7 +112,7 @@ void wifiInit(State& s) {
 
   // CAN recorder endpoints
   server.on("/api/recorder/status", HTTP_GET, []() {
-    StaticJsonDocument<256> doc;
+    JsonDocument doc;
     doc["enabled"] = canRecorderEnabled();
     doc["count"] = canRecorderCount();
     doc["capacity"] = canRecorderCapacity();

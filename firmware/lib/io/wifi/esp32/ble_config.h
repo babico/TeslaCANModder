@@ -32,7 +32,7 @@ static void saveBleConfig() {
 }
 
 static String buildBleStatusJson() {
-  StaticJsonDocument<192> doc;
+  JsonDocument doc;
   doc["enabled"] = bleIsReady();
   doc["connected"] = bleIsConnected();
   doc["deviceName"] = bleGetDeviceName();
@@ -53,7 +53,7 @@ static void handlePostBleConfig() {
     return;
   }
 
-  StaticJsonDocument<128> doc;
+  JsonDocument doc;
   DeserializationError err = deserializeJson(doc, body);
   if (err) {
     sendJsonResponse(400, "{\"error\":\"invalid json\"}");

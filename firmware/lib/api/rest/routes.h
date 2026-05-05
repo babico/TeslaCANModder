@@ -4,7 +4,7 @@
 
 // ── JSON State Builder ──────────────────────────────────────────────────────
 static String buildStateJson(State& s) {
-  StaticJsonDocument<2048> doc;
+  JsonDocument doc;
   Features feat = getFeatures(s.variant);
 
   doc["variant"] = variantName(s.variant);
@@ -60,7 +60,7 @@ static String buildStateJson(State& s) {
   doc["maxSpeed"] = (int)(s.maxSpeedKph * 10);
 
   if (s.hasTpms) {
-    JsonObject tpms = doc.createNestedObject("tpms");
+    JsonObject tpms = doc["tpms"].to<JsonObject>();
     tpms["fl"] = (int)(s.tpmsPressure[0] * 100);
     tpms["fr"] = (int)(s.tpmsPressure[1] * 100);
     tpms["rl"] = (int)(s.tpmsPressure[2] * 100);
@@ -72,7 +72,7 @@ static String buildStateJson(State& s) {
   }
 
   if (s.hasPowertrain) {
-    JsonObject pt = doc.createNestedObject("powertrain");
+    JsonObject pt = doc["powertrain"].to<JsonObject>();
     pt["speed"] = (int)(s.vehicleSpeed * 100);
     pt["gear"] = s.gearState;
     pt["pedal"] = s.accelPedal;
@@ -82,14 +82,14 @@ static String buildStateJson(State& s) {
     pt["rpmF"] = s.frontMotorRpm;
   }
   if (s.hasWheelSpeeds) {
-    JsonObject ws = doc.createNestedObject("wheelSpeeds");
+    JsonObject ws = doc["wheelSpeeds"].to<JsonObject>();
     ws["fl"] = (int)(s.wheelSpeedFL * 100);
     ws["fr"] = (int)(s.wheelSpeedFR * 100);
     ws["rl"] = (int)(s.wheelSpeedRL * 100);
     ws["rr"] = (int)(s.wheelSpeedRR * 100);
   }
   if (s.hasMotorTemps) {
-    JsonObject mt = doc.createNestedObject("motorTemps");
+    JsonObject mt = doc["motorTemps"].to<JsonObject>();
     mt["rInv"] = s.rearInvTemp;
     mt["rStat"] = s.rearStatorTemp;
     mt["rHs"] = s.rearHeatsinkTemp;
@@ -98,7 +98,7 @@ static String buildStateJson(State& s) {
     mt["fHs"] = s.frontHeatsinkTemp;
   }
 
-  JsonObject f = doc.createNestedObject("features");
+  JsonObject f = doc["features"].to<JsonObject>();
   f["fsd"] = feat.fsd;
   f["profile"] = feat.profile;
   f["nag"] = feat.nag;
@@ -106,7 +106,7 @@ static String buildStateJson(State& s) {
   f["isaChime"] = feat.isaChime;
   f["summon"] = feat.summon;
 
-  JsonObject hw = doc.createNestedObject("hardware");
+  JsonObject hw = doc["hardware"].to<JsonObject>();
   hw["board"] = BOARD_HW_NAME;
   hw["can"] = BOARD_CAN_NAME;
   hw["busChassis"] = (int)BUS_CHASSIS_ACTIVE;
@@ -166,7 +166,7 @@ static void handlePostCommand() {
     return;
   }
 
-  StaticJsonDocument<256> doc;
+  JsonDocument doc;
   DeserializationError err = deserializeJson(doc, body);
   if (err) {
     sendJsonResponse(400, "{\"error\":\"invalid json\"}");
@@ -219,7 +219,7 @@ static void handleNotFound() {
 // ── WiFi Status & Config Endpoints ──────────────────────────────────────────
 
 static String buildWifiStatusJson() {
-  StaticJsonDocument<384> doc;
+  JsonDocument doc;
   doc["mode"] = (wifiCfg.mode == TCM_WIFI_MODE_STA) ? "sta" : "ap";
 
   if (wifiCfg.mode == TCM_WIFI_MODE_STA) {
@@ -254,7 +254,7 @@ static void handlePostWifiConfig() {
     return;
   }
 
-  StaticJsonDocument<256> doc;
+  JsonDocument doc;
   DeserializationError err = deserializeJson(doc, body);
   if (err) {
     sendJsonResponse(400, "{\"error\":\"invalid json\"}");
