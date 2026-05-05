@@ -244,3 +244,9 @@
 [submodule "legacy/alzza-tesla-can-moniter"]
 	path = legacy/alzza-tesla-can-moniter
 	url = https://github.com/alzza/tesla-can-moniter.git
+[submodule "legacy/commaai-openpilot"]
+	path = legacy/commaai-openpilot
+	url = https://github.com/commaai/openpilot
+[submodule "legacy/sunnypilot"]
+	path = legacy/sunnypilot
+	url = https://github.com/sunnypilot/sunnypilot
