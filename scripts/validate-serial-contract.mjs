@@ -58,12 +58,6 @@ function assertNonEmptyString(value, label) {
 	}
 }
 
-function assertOptionalString(value, label) {
-	if (value !== undefined && typeof value !== "string") {
-		fail(`${label} must be a string when provided`);
-	}
-}
-
 function assertUniqueStringArray(values, label, { allowEmpty = false, allowedValues } = {}) {
 	if (!Array.isArray(values)) {
 		fail(`${label} must be an array`);

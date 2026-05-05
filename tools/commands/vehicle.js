@@ -1,7 +1,5 @@
 /** vehicle command — Send vehicle control commands interactively or one-shot. */
 
-import { setTimeout as delay } from "node:timers/promises";
-
 const VEHICLE_COMMANDS = {
 	// mirrors
 	"mirror-fold": "mirror:fold",

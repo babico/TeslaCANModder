@@ -5,7 +5,7 @@
  */
 
 import { initialBoardState, reduceBoardMessage } from "../../src/reducer.js";
-import type { BootMessage, StatusMessage, PowertrainMessage, BoardState } from "../../src/types.js";
+import type { PowertrainMessage, BoardState } from "../../src/types.js";
 
 let nextId = 0;
 const id = () => ++nextId;

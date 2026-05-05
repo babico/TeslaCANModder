@@ -1,4 +1,4 @@
-import { commands, COMMAND_RANGES, VALID_VARIANTS } from "../../src/commands.js";
+import { commands, COMMAND_RANGES } from "../../src/commands.js";
 
 describe("commands", () => {
 	describe("system", () => {

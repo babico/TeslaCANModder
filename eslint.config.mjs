@@ -25,6 +25,23 @@ export default tseslint.config(
 		},
 	},
 	{
+		// CLI tooling intentionally writes machine-readable JSON / status
+		// directly to stdout via console.log.
+		files: ["tools/**/*.js", "tools/**/*.mjs"],
+		rules: { "no-console": "off" },
+	},
+	{
+		// Test files often need `any` to satisfy structural test fixtures
+		// (mock factories, jest spies, partial-shape assertions). Allowing
+		// `any` here keeps test ergonomics without weakening production types.
+		files: [
+			"**/test/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+			"**/tests/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+			"**/*.test.{ts,tsx,js,jsx,mjs,cjs}",
+		],
+		rules: { "@typescript-eslint/no-explicit-any": "off" },
+	},
+	{
 		ignores: [
 			"**/node_modules/**",
 			"**/dist/**",

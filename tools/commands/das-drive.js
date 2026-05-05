@@ -16,8 +16,6 @@
  * private property. `set-cap` and `toggle` MUTATE persisted NVS state.
  */
 
-import { setTimeout as delay } from "node:timers/promises";
-
 // CAN IDs that the DAS Drive feature emits on BUS_CHASSIS.
 const DAS_CONTROL_ID = 0x2b9; // 25 Hz longitudinal
 const DAS_STEER_ID = 0x488; // 50 Hz lateral

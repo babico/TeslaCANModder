@@ -3,7 +3,7 @@
 import { setTimeout as delay } from "node:timers/promises";
 
 export async function runBenchmark(session, opts, out) {
-	const { benchDurMs, timeoutMs } = opts;
+	const { benchDurMs } = opts;
 
 	out.section("CAN Throughput Benchmark");
 	out.info(`Duration: ${benchDurMs}ms`);

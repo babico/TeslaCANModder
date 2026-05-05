@@ -135,7 +135,7 @@ export function FlasherScreen() {
 		const enabledLabels = BUS_OPTIONS.filter((bus) => buses[bus.key]).map((bus) => bus.label);
 		return enabledLabels.length > 0 ? enabledLabels.join(" + ") : "No CAN lanes enabled";
 	}, [buses]);
-	const buildFlags = useMemo(() => {
+	const _buildFlags = useMemo(() => {
 		const flags: string[] = [];
 		if (buses.chassis) flags.push("-DBUS_CHASSIS_ACTIVE=1");
 		if (buses.vehicle) flags.push("-DBUS_VEHICLE_ACTIVE=1");

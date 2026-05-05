@@ -1,7 +1,6 @@
 /** test command — FSD / profile functional round-trip tests. */
 
 import { setTimeout as delay } from "node:timers/promises";
-import { parseHexData, compareBits } from "./watch.js";
 
 export async function runTest(session, opts, out) {
 	const { timeoutMs, testFsd, testProfile, testFsdListen, restore } = opts;

@@ -4,7 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { tagPhase } from "../lib/diagnosis.js";
 
 export async function runSmoke(session, opts, out) {
-	const { timeoutMs, variant } = opts;
+	const { timeoutMs } = opts;
 
 	out.section("Boot / connection");
 	let boot = await session.waitForType("boot", timeoutMs * 2);

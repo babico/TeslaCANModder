@@ -13,22 +13,25 @@ import { StyleSheet } from "react-native";
 
 import { colors, font, radius, spacing } from "../../design/tokens";
 
-type MarkdownItParser = any;
+type MarkdownItParser = MarkdownIt;
+type MarkdownItPlugin = Parameters<MarkdownIt["use"]>[0];
 
-function resolvePlugin(pluginModule: unknown): ((...args: unknown[]) => unknown) | undefined {
-	const candidates = [
-		pluginModule,
-		(pluginModule as any)?.default,
-		(pluginModule as any)?.full,
-		(pluginModule as any)?.light,
-		(pluginModule as any)?.bare,
-		(pluginModule as any)?.default?.full,
-		(pluginModule as any)?.default?.light,
-		(pluginModule as any)?.default?.bare,
+function resolvePlugin(pluginModule: unknown): MarkdownItPlugin | undefined {
+	const mod = pluginModule as Record<string, unknown> | null | undefined;
+	const defaultMod = mod?.default as Record<string, unknown> | undefined;
+	const candidates: unknown[] = [
+		mod,
+		defaultMod,
+		mod?.full,
+		mod?.light,
+		mod?.bare,
+		defaultMod?.full,
+		defaultMod?.light,
+		defaultMod?.bare,
 	];
 
 	return candidates.find((candidate) => typeof candidate === "function") as
-		| ((...args: unknown[]) => unknown)
+		| MarkdownItPlugin
 		| undefined;
 }
 
@@ -41,7 +44,7 @@ function usePluginSafe(
 	if (!plugin) {
 		return parser;
 	}
-	return options ? parser.use(plugin as any, options) : parser.use(plugin as any);
+	return options ? parser.use(plugin, options) : parser.use(plugin);
 }
 
 const markdownParser = (() => {
@@ -74,7 +77,7 @@ export function MarkdownRenderer({
 	return (
 		<Markdown
 			markdownit={markdownParser}
-			style={markdownStyles as any}
+			style={markdownStyles as Parameters<typeof Markdown>[0]["style"]}
 			onLinkPress={onLinkPress}
 		>
 			{markdown || "No document selected."}

@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { setTimeout as delay } from "node:timers/promises";
 
-export async function runReplay(session, opts, out, C) {
+export async function runReplay(session, opts, out, _C) {
 	const { replayFile, replaySpeed } = opts;
 
 	if (!replayFile) {
