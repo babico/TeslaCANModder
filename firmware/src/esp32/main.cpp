@@ -13,7 +13,7 @@
 #include "core/persist/esp32/board.h"
 #include "core/driver/esp32/board.h"
 #include "handler/dispatch.h"
-#include "io/serial/esp32/board.h"
+#include "io/serial/usb/esp32/board.h"
 #include "core/can/ring_buffer.h"
 #include "core/can/health.h"
 

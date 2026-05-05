@@ -1,5 +1,5 @@
 #pragma once
-#include "io/serial/esp32/output.h"
+#include "io/serial/usb/esp32/output.h"
 
 // Bus index → JSON key name map (Chassis=0, Vehicle=1, Body=2)
 static const char* const kBusName[3] = { "chassis", "vehicle", "body" };
