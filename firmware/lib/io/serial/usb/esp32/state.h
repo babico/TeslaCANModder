@@ -1,5 +1,5 @@
 #pragma once
-#include "io/serial/client/command/features.h"
+#include "client/command/features.h"
 
 // RpcRequest JSON envelope {"cmd":"..."} needs room for the longest method string
 // plus ~10 bytes of JSON overhead. 64 bytes covers all defined RPC methods.

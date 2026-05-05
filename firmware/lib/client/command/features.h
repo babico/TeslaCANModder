@@ -3,10 +3,7 @@
 #include "core/config/esp32/board.h"
 #include "core/types.h"
 #include "core/can/bus.h"
-
-// Forward declarations for logging (used by handlers included below)
-void sendLog(const char *msg);
-void sendLog(const __FlashStringHelper *msg);
+#include "io/log.h"
 bool driverReinit();
 void driverSetClockMHz(uint8_t mhz);
 uint8_t driverGetClockReqMHz();

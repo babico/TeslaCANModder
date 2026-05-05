@@ -6,8 +6,11 @@
 #include "core/config/esp32/board.h"
 #include "core/types.h"
 #include "core/log/ring.h"
-#include "io/log.h"
-#include "client/dashboard/dashboard.h"
+#include "io/wifi/client/dashboard/dashboard.h"
+
+// Forward declarations
+void sendLog(const char *msg);
+void sendLog(const __FlashStringHelper *msg);
 static void sendJsonResponse(int code, const String &json);
 
 #if BOARD_ENABLE_BLE

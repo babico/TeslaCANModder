@@ -1,5 +1,5 @@
 #pragma once
-#include "io/serial/client/command/dispatch.h"
+#include "client/command/dispatch.h"
 
 // ── Serial API ───────────────────────────────────────────────────────────────
 void serialInit(State& s) {
