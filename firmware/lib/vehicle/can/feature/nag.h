@@ -2,7 +2,7 @@
 #include <cmath>
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── Nag Killer — EPAS Torque Spoofing ────────────────────────────────────────
 // Echoes CAN 0x370 (EPAS3P_sysStatus) with counter+1 and zeroed torque request.

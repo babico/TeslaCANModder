@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "infra/can/bus.h"
+#include "core/can/bus.h"
 
 // ── MCP2515 CAN Bus Health Check ────────────────────────────────────────────
 // Validates that all configured MCP2515 modules are physically connected

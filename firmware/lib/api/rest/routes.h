@@ -1,6 +1,6 @@
 #pragma once
 #include "io/wifi/esp32/auth.h"
-#include "infra/can/recorder.h"
+#include "core/can/recorder.h"
 
 // ── JSON State Builder ──────────────────────────────────────────────────────
 static String buildStateJson(State& s) {

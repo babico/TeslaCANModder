@@ -3,7 +3,7 @@
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
 #include "vehicle/can/burst.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── Track Mode Inject ────────────────────────────────────────────────────────
 // Modifies CAN 0x313 (UI_trackModeSettings) byte[0] bits 1:0 = 0x01 to enable.

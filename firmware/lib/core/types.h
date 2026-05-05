@@ -17,6 +17,26 @@ struct Frame
 	uint8_t data[8];
 };
 
+// Flat bit index (0=LSB of byte 0) → set/clear a single bit in a CAN frame.
+inline void setBit(Frame &f, int bit, bool val)
+{
+	int byteIdx = bit / 8;
+	int bitIdx  = bit % 8;
+	if (byteIdx >= f.dlc)
+		return;
+	uint8_t mask = 1 << bitIdx;
+	if (val)
+		f.data[byteIdx] |= mask;
+	else
+		f.data[byteIdx] &= ~mask;
+}
+
+// Read the 3-bit mux/counter from byte 0 bits[2:0].
+inline uint8_t readMuxID(const Frame &f)
+{
+	return f.dlc >= 1 ? (f.data[0] & 0x07) : 0;
+}
+
 // ── Variant ──────────────────────────────────────────────────────────────────
 enum Variant
 {

@@ -5,10 +5,6 @@
 #include "feature/offsets.h"
 #include "feature/region.h"
 
-// Forward declarations (defined by platform-specific serial)
-void sendLog(const char *msg);
-void sendLog(const __FlashStringHelper *msg);
-
 static bool hw3LoggedFSD = false;
 static bool hw3LoggedNag = false;
 static bool hw3LoggedOffset = false;

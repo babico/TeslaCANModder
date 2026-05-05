@@ -1,5 +1,5 @@
 #pragma once
-#include "vehicle/can/ids.h"
+#include "core/can/bus.h"
 
 // ── Tesla CAN IDs ────────────────────────────────────────────────────────────
 // 69 - Legacy stalk position (Model S/X pre-AP, FSD enable trigger)
@@ -122,58 +122,15 @@ inline uint8_t driveChecksum(const uint8_t *data, uint8_t len)
 	return sum & 0xFF;
 }
 
-// ── Frame Helpers ────────────────────────────────────────────────────────────
-inline uint8_t readMuxID(const Frame &f)
-{
-	return f.dlc >= 1 ? (f.data[0] & 0x07) : 0;
-}
-
-inline bool isFSDSelectedInUI(const Frame &f)
-{
-	return f.dlc >= 5 ? ((f.data[4] >> 6) & 0x01) : false;
-}
-
+// ── Shared Frame Decoders ─────────────────────────────────────────────────────
+// Byte 5 bits[7:5]: follow-distance dial value (1–4; 0 = not present).
 inline uint8_t readFollowDistance(const Frame &f)
 {
 	return f.dlc >= 6 ? ((f.data[5] & 0xE0) >> 5) : 0;
 }
 
-inline uint8_t readDASAutopilotStatus(const Frame &f)
+// Byte 4 bit 6: user has selected FSD in the UI (STEERING_MODE = 5).
+inline bool isFSDSelectedInUI(const Frame &f)
 {
-	return f.dlc >= 1 ? (f.data[0] & 0x0F) : 0;
-}
-
-// DAS_autopilotState from 0x39B byte1 bits[7:4].
-// 0=UNAVAIL 1=AVAIL 2=ACTIVE_NOMINAL 3=ACTIVE_MIN_DRIVER ...
-// Used by AP-First mode to delay 0x3FD injection until AP is running.
-inline uint8_t readDASAutopilotState(const Frame &f)
-{
-	return f.dlc >= 2 ? ((f.data[1] >> 4) & 0x0F) : 0;
-}
-
-inline bool isDASAutopilotActive(uint8_t status)
-{
-	return status >= 3 && status <= 5;
-}
-
-inline int8_t readGtwAutopilotTier(const Frame &f)
-{
-	if (f.dlc < 6)
-		return -1;
-	if (readMuxID(f) != 2)
-		return -1;
-	return (int8_t)((f.data[5] >> 2) & 0x07);
-}
-
-inline void setBit(Frame &f, int bit, bool val)
-{
-	int byteIdx = bit / 8;
-	int bitIdx = bit % 8;
-	if (byteIdx >= f.dlc)
-		return;
-	uint8_t mask = 1 << bitIdx;
-	if (val)
-		f.data[byteIdx] |= mask;
-	else
-		f.data[byteIdx] &= ~mask;
+	return f.dlc >= 5 ? ((f.data[4] >> 6) & 0x01) : false;
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include "core/forward.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── ASS (Autopark Summon System) Commands ────────────────────────────────────
 // SummonDirection and SummonMode enums are defined in types.h

@@ -3,7 +3,7 @@
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
 #include "vehicle/can/burst.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── Battery Preconditioning Trigger ──────────────────────────────────────────
 // Injects CAN 0x082 (UI_tripPlanning) to trigger battery heating for charging.

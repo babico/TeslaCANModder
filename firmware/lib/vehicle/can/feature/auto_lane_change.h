@@ -2,7 +2,7 @@
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
 #include "vehicle/can/crc8.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── Auto Lane Change (ALC) Confirmation ──────────────────────────────────────
 // Monitors DAS_laneChangeState from 0x39B and automatically confirms lane

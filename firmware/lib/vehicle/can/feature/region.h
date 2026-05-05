@@ -1,7 +1,7 @@
 #pragma once
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── Region Detection & Spoofing ──────────────────────────────────────────────
 // Detects region from GTW_carConfig (0x398) and supports optional spoofing.

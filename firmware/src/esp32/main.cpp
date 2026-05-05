@@ -14,8 +14,8 @@
 #include "core/driver/esp32/board.h"
 #include "handler/dispatch.h"
 #include "io/serial/esp32/board.h"
-#include "infra/can/ring_buffer.h"
-#include "infra/can/health.h"
+#include "core/can/ring_buffer.h"
+#include "core/can/health.h"
 
 #if BOARD_ENABLE_WIFI
 #include "io/wifi/esp32/board.h"

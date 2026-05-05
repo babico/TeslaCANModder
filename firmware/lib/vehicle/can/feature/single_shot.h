@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── 1.6 Single-Shot TX Mode ─────────────────────────────────────────────────
 // When enabled, all injected CAN frames use the MCP2515 one-shot TX mode

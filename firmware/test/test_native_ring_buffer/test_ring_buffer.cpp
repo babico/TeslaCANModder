@@ -15,8 +15,8 @@ class __FlashStringHelper;
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "infra/can/ring_buffer.h"
-#include "infra/log/ring.h"
+#include "core/can/ring_buffer.h"
+#include "core/log/ring.h"
 
 void setUp()
 {

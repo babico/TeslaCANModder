@@ -1,6 +1,6 @@
 #pragma once
 #include "core/forward.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── HW4 ISA Speed Chime Checksum ─────────────────────────────────────────────
 // Computes the ISA speed message checksum (byte 7 = sum of bytes 0-6 + ID).

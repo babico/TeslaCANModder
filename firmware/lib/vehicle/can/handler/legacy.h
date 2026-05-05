@@ -4,10 +4,6 @@
 #include "feature/profile.h"
 #include "feature/offsets.h"
 
-// Forward declarations (defined by platform-specific serial)
-void sendLog(const char *msg);
-void sendLog(const __FlashStringHelper *msg);
-
 static bool legacyLoggedFSD = false;
 static bool legacyLoggedNag = false;
 
@@ -17,7 +13,7 @@ void resetLegacyLogFlags()
 	legacyLoggedNag = false;
 }
 
-// ── Legacy Handler ───────────────────────────────────────────────────────────
+// ── Legacy Handler ────────────────────────────────────────────────────────
 void handleLegacy(Frame &f, State &s)
 {
 	// OTA safety: pass-through unmodified frames during OTA update

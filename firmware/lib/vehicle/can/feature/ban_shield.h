@@ -1,6 +1,6 @@
 #pragma once
 #include "core/forward.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── Ban Shield Command ────────────────────────────────────────────────────────
 // banshield:on|off

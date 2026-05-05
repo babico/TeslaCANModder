@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 
 // ── 3.6 MQTT Telemetry Bridge ───────────────────────────────────────────────
 // Publishes decoded CAN telemetry data to an MQTT broker for Home Assistant,

@@ -5,10 +5,6 @@
 #include "feature/isa_chime.h"
 #include "feature/region.h"
 
-// Forward declarations (defined by platform-specific serial)
-void sendLog(const char *msg);
-void sendLog(const __FlashStringHelper *msg);
-
 static bool hw4LoggedFSD = false;
 static bool hw4LoggedNag = false;
 static bool hw4LoggedISA = false;

@@ -1,9 +1,9 @@
 #pragma once
 #include "vehicle/can/ids.h"
-#include "infra/can/recorder.h"
-#include "infra/can/id_filter.h"
-#include "infra/log/ring.h"
-#include "infra/can/ring_buffer.h"
+#include "core/can/recorder.h"
+#include "core/can/id_filter.h"
+#include "core/log/ring.h"
+#include "core/can/ring_buffer.h"
 #include "feature/summon.h"
 #include "feature/bms.h"
 #include "feature/nag.h"
@@ -32,6 +32,34 @@
 #include "handler/hw4.h"
 #include "handler/hw3.h"
 #include "handler/legacy.h"
+
+// ── DAS Helpers ────────────────────────────────────────────────────────────
+inline uint8_t readDASAutopilotStatus(const Frame &f)
+{
+	return f.dlc >= 1 ? (f.data[0] & 0x0F) : 0;
+}
+
+// DAS_autopilotState from 0x39B byte1 bits[7:4].
+// 0=UNAVAIL 1=AVAIL 2=ACTIVE_NOMINAL 3=ACTIVE_MIN_DRIVER ...
+// Used by AP-First mode to delay 0x3FD injection until AP is running.
+inline uint8_t readDASAutopilotState(const Frame &f)
+{
+	return f.dlc >= 2 ? ((f.data[1] >> 4) & 0x0F) : 0;
+}
+
+inline bool isDASAutopilotActive(uint8_t status)
+{
+	return status >= 3 && status <= 5;
+}
+
+inline int8_t readGtwAutopilotTier(const Frame &f)
+{
+	if (f.dlc < 6)
+		return -1;
+	if (readMuxID(f) != 2)
+		return -1;
+	return (int8_t)((f.data[5] >> 2) & 0x07);
+}
 
 // Module-level platform instance for re-resolution on CAN updates
 static VehiclePlatform dispatchPlatform;

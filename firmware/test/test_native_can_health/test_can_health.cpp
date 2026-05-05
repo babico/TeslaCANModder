@@ -16,7 +16,7 @@ class __FlashStringHelper;
 
 #include "core/types.h"
 #include "vehicle/can/ids.h"
-#include "infra/can/health.h"
+#include "core/can/health.h"
 
 void setUp() {}
 void tearDown() {}

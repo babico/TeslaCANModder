@@ -25,7 +25,7 @@ void saveSettings(const State &)
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
-#include "infra/util/parse.h"
+#include "core/util/parse.h"
 #include "feature/ban_shield.h"
 #include "support/helpers.h"
 
