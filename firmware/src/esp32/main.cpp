@@ -18,7 +18,7 @@
 #include "core/can/health.h"
 
 #if BOARD_ENABLE_WIFI
-#include "io/wifi/client/api/board.h"
+#include "io/wifi/web/esp32/board.h"
 #endif
 
 static State state;
