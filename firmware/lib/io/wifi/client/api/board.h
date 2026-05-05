@@ -6,7 +6,7 @@
 #include "core/config/esp32/board.h"
 #include "core/types.h"
 #include "core/log/ring.h"
-#include "io/wifi/dashboard/esp32/dashboard.h"
+#include "io/wifi/client/dashboard/dashboard.h"
 #include "state.h"
 #include "config.h"
 #include "auth.h"
