@@ -31,7 +31,7 @@ void tearDown() {}
 void test_mqtt_on()
 {
 	State s = {};
-	bool ok = execMqttCmd("mqtt:on", s);
+	bool ok = executeMqttCmd("mqtt:on", s);
 	TEST_ASSERT_TRUE(ok);
 	TEST_ASSERT_TRUE(s.mqttEnabled);
 }
@@ -40,7 +40,7 @@ void test_mqtt_off()
 {
 	State s = {};
 	s.mqttEnabled = true;
-	bool ok = execMqttCmd("mqtt:off", s);
+	bool ok = executeMqttCmd("mqtt:off", s);
 	TEST_ASSERT_TRUE(ok);
 	TEST_ASSERT_FALSE(s.mqttEnabled);
 }
@@ -48,7 +48,7 @@ void test_mqtt_off()
 void test_mqtt_broker()
 {
 	State s = {};
-	bool ok = execMqttCmd("mqtt:broker:192.168.1.100", s);
+	bool ok = executeMqttCmd("mqtt:broker:192.168.1.100", s);
 	TEST_ASSERT_TRUE(ok);
 	TEST_ASSERT_EQUAL_STRING("192.168.1.100", s.mqttHost);
 }
@@ -56,7 +56,7 @@ void test_mqtt_broker()
 void test_mqtt_port()
 {
 	State s = {};
-	bool ok = execMqttCmd("mqtt:port:8883", s);
+	bool ok = executeMqttCmd("mqtt:port:8883", s);
 	TEST_ASSERT_TRUE(ok);
 	TEST_ASSERT_EQUAL(8883, s.mqttPort);
 }
@@ -64,7 +64,7 @@ void test_mqtt_port()
 void test_mqtt_interval()
 {
 	State s = {};
-	bool ok = execMqttCmd("mqtt:interval:5000", s);
+	bool ok = executeMqttCmd("mqtt:interval:5000", s);
 	TEST_ASSERT_TRUE(ok);
 	TEST_ASSERT_EQUAL(5000, s.mqttInterval);
 }
@@ -72,7 +72,7 @@ void test_mqtt_interval()
 void test_mqtt_unrelated_returns_false()
 {
 	State s = {};
-	bool ok = execMqttCmd("fsd:on", s);
+	bool ok = executeMqttCmd("fsd:on", s);
 	TEST_ASSERT_FALSE(ok);
 }
 
@@ -108,7 +108,7 @@ void test_mqtt_broker_rejects_long_host()
 	for (int i = 12; i < 82; i++)
 		longHost[i] = 'a';
 	longHost[82] = '\0';
-	bool ok = execMqttCmd(longHost, s);
+	bool ok = executeMqttCmd(longHost, s);
 	TEST_ASSERT_FALSE(ok);
 	TEST_ASSERT_EQUAL(0, strlen(s.mqttHost));
 }

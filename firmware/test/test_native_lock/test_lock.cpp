@@ -38,7 +38,7 @@ void tearDown() {}
 void test_lock()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLockCmd("lock", s));
+	TEST_ASSERT_TRUE(executeLockCmd("lock", s));
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_UI_VEHICLE_CTRL, s.burstFrame.id);
 	TEST_ASSERT_TRUE(s.burstRemaining > 0);
 	// Lock = bits 17-19 = 1 → byte 2 bits [3:1] = 0x02
@@ -48,7 +48,7 @@ void test_lock()
 void test_unlock()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLockCmd("unlock", s));
+	TEST_ASSERT_TRUE(executeLockCmd("unlock", s));
 	// Unlock = bits 17-19 = 2 → byte 2 bits [3:1] = 0x04
 	TEST_ASSERT_EQUAL_UINT8(0x04, s.burstFrame.data[2] & 0x0E);
 }
@@ -56,14 +56,14 @@ void test_unlock()
 void test_horn()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLockCmd("horn", s));
+	TEST_ASSERT_TRUE(executeLockCmd("horn", s));
 	TEST_ASSERT_EQUAL_UINT8(0x20, s.burstFrame.data[7] & 0x20);
 }
 
 void test_child_lock()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLockCmd("lock:child", s));
+	TEST_ASSERT_TRUE(executeLockCmd("lock:child", s));
 	TEST_ASSERT_EQUAL_UINT8(0x01, s.burstFrame.data[2] & 0x01);
 }
 
@@ -71,14 +71,14 @@ void test_lock_requires_ctrl_cache()
 {
 	State s = makeState();
 	s.hasCtrl = false;
-	TEST_ASSERT_FALSE(execLockCmd("lock", s));
+	TEST_ASSERT_FALSE(executeLockCmd("lock", s));
 }
 
 void test_lock_unknown_returns_false()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execLockCmd("locks", s));
-	TEST_ASSERT_FALSE(execLockCmd("fsd:on", s));
+	TEST_ASSERT_FALSE(executeLockCmd("locks", s));
+	TEST_ASSERT_FALSE(executeLockCmd("fsd:on", s));
 }
 
 int main(int, char **)

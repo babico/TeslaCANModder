@@ -26,37 +26,37 @@ void tearDown() {}
 
 void test_charge_start() {
   State s = makeState();
-  TEST_ASSERT_TRUE(execChargeCmd("charge:start", s));
+  TEST_ASSERT_TRUE(executeChargeCmd("charge:start", s));
   TEST_ASSERT_EQUAL_UINT8(0x04, s.burstFrame.data[0] & 0x04);
 }
 void test_charge_stop() {
   State s = makeState();
   s.lastCharge[0] = 0x04;
-  TEST_ASSERT_TRUE(execChargeCmd("charge:stop", s));
+  TEST_ASSERT_TRUE(executeChargeCmd("charge:stop", s));
   TEST_ASSERT_EQUAL_UINT8(0x00, s.burstFrame.data[0] & 0x04);
 }
 void test_charge_port_open() {
   State s = makeState();
-  TEST_ASSERT_TRUE(execChargeCmd("charge:port", s));
+  TEST_ASSERT_TRUE(executeChargeCmd("charge:port", s));
   TEST_ASSERT_EQUAL_UINT8(0x01, s.burstFrame.data[0] & 0x01);
 }
 void test_charge_port_alias() {
   State s = makeState();
-  TEST_ASSERT_TRUE(execChargeCmd("chargeport", s));
+  TEST_ASSERT_TRUE(executeChargeCmd("chargeport", s));
 }
 void test_charge_legacy_blocks() {
   State s = makeState();
   s.variant = LEGACY;
-  TEST_ASSERT_FALSE(execChargeCmd("charge:start", s));
+  TEST_ASSERT_FALSE(executeChargeCmd("charge:start", s));
 }
 void test_charge_no_cache_blocks() {
   State s = makeState();
   s.hasCharge = false;
-  TEST_ASSERT_FALSE(execChargeCmd("charge:start", s));
+  TEST_ASSERT_FALSE(executeChargeCmd("charge:start", s));
 }
 void test_charge_unknown_returns_false() {
   State s = makeState();
-  TEST_ASSERT_FALSE(execChargeCmd("charge:turbo", s));
+  TEST_ASSERT_FALSE(executeChargeCmd("charge:turbo", s));
 }
 
 int main(int, char**) {

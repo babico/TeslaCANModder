@@ -109,12 +109,12 @@ void test_restore_skips_without_ctrl()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── execWiperPersistCmd ─────────────────────────────────────────────────────
+// ── executeWiperPersistCmd ─────────────────────────────────────────────────────
 
 void test_cmd_on()
 {
 	State s = {};
-	TEST_ASSERT_TRUE(execWiperPersistCmd("wiperpersist:on", s));
+	TEST_ASSERT_TRUE(executeWiperPersistCmd("wiperpersist:on", s));
 	TEST_ASSERT_TRUE(s.wiperPersistEnabled);
 }
 
@@ -122,14 +122,14 @@ void test_cmd_off()
 {
 	State s = {};
 	s.wiperPersistEnabled = true;
-	TEST_ASSERT_TRUE(execWiperPersistCmd("wiperpersist:off", s));
+	TEST_ASSERT_TRUE(executeWiperPersistCmd("wiperpersist:off", s));
 	TEST_ASSERT_FALSE(s.wiperPersistEnabled);
 }
 
 void test_cmd_unknown()
 {
 	State s = {};
-	TEST_ASSERT_FALSE(execWiperPersistCmd("wiperpersist:toggle", s));
+	TEST_ASSERT_FALSE(executeWiperPersistCmd("wiperpersist:toggle", s));
 }
 
 // ── main ────────────────────────────────────────────────────────────────────

@@ -43,7 +43,7 @@ static State makeReady()
 void test_roundtrip_regen_max_emits_correct_can_id_and_payload()
 {
 	State s = makeReady();
-	TEST_ASSERT_TRUE(execRegenCmd("regen:max", s));
+	TEST_ASSERT_TRUE(executeRegenCmd("regen:max", s));
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_DRIVE_CONFIG, s.burstFrame.id);
 	TEST_ASSERT_EQUAL_UINT8(8, s.burstFrame.dlc);
 	TEST_ASSERT_EQUAL_UINT8(200, s.burstFrame.data[2]);
@@ -54,7 +54,7 @@ void test_roundtrip_regen_max_emits_correct_can_id_and_payload()
 void test_roundtrip_window_vent_emits_window_id()
 {
 	State s = makeReady();
-	TEST_ASSERT_TRUE(execWindowCmd("window:vent:75", s));
+	TEST_ASSERT_TRUE(executeWindowCmd("window:vent:75", s));
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_WINDOW_VENT, s.burstFrame.id);
 	TEST_ASSERT_EQUAL_UINT8(0x1F, s.burstFrame.data[0]); // all-window mask
 	TEST_ASSERT_EQUAL_UINT8(75, s.burstFrame.data[1]);
@@ -64,7 +64,7 @@ void test_roundtrip_window_vent_emits_window_id()
 void test_roundtrip_sentry_on_emits_burst()
 {
 	State s = makeReady();
-	TEST_ASSERT_TRUE(execSentryCmd("sentry:on", s));
+	TEST_ASSERT_TRUE(executeSentryCmd("sentry:on", s));
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_SENTRY, s.burstFrame.id);
 	TEST_ASSERT_TRUE(s.burstRemaining > 0);
 }
@@ -72,26 +72,26 @@ void test_roundtrip_sentry_on_emits_burst()
 void test_roundtrip_lock_emits_burst()
 {
 	State s = makeReady();
-	TEST_ASSERT_TRUE(execLockCmd("lock", s));
+	TEST_ASSERT_TRUE(executeLockCmd("lock", s));
 	TEST_ASSERT_TRUE(s.burstRemaining > 0);
 }
 
 void test_roundtrip_unknown_command_does_not_emit_burst()
 {
 	State s = makeReady();
-	TEST_ASSERT_FALSE(execRegenCmd("unrecognized:foo", s));
-	TEST_ASSERT_FALSE(execWindowCmd("unrecognized:foo", s));
-	TEST_ASSERT_FALSE(execSentryCmd("unrecognized:foo", s));
-	TEST_ASSERT_FALSE(execLockCmd("unrecognized:foo", s));
+	TEST_ASSERT_FALSE(executeRegenCmd("unrecognized:foo", s));
+	TEST_ASSERT_FALSE(executeWindowCmd("unrecognized:foo", s));
+	TEST_ASSERT_FALSE(executeSentryCmd("unrecognized:foo", s));
+	TEST_ASSERT_FALSE(executeLockCmd("unrecognized:foo", s));
 	TEST_ASSERT_EQUAL_UINT8(0, s.burstRemaining);
 }
 
 void test_roundtrip_subsequent_commands_overwrite_burst_frame()
 {
 	State s = makeReady();
-	TEST_ASSERT_TRUE(execRegenCmd("regen:low", s));
+	TEST_ASSERT_TRUE(executeRegenCmd("regen:low", s));
 	TEST_ASSERT_EQUAL_UINT8(50, s.burstFrame.data[2]);
-	TEST_ASSERT_TRUE(execRegenCmd("regen:max", s));
+	TEST_ASSERT_TRUE(executeRegenCmd("regen:max", s));
 	TEST_ASSERT_EQUAL_UINT8(200, s.burstFrame.data[2]);
 }
 

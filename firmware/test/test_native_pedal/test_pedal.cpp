@@ -27,42 +27,42 @@ void tearDown() {}
 void test_pedal_standard()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execPedalCmd("pedal:standard", s));
+	TEST_ASSERT_TRUE(executePedalCmd("pedal:standard", s));
 	TEST_ASSERT_EQUAL_UINT8(0x00, s.burstFrame.data[0] & 0x60);
 }
 void test_pedal_std_alias()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execPedalCmd("pedal:std", s));
+	TEST_ASSERT_TRUE(executePedalCmd("pedal:std", s));
 }
 void test_pedal_chill()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execPedalCmd("pedal:chill", s));
+	TEST_ASSERT_TRUE(executePedalCmd("pedal:chill", s));
 	TEST_ASSERT_EQUAL_UINT8(0x20, s.burstFrame.data[0] & 0x60);
 }
 void test_pedal_sport()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execPedalCmd("pedal:sport", s));
+	TEST_ASSERT_TRUE(executePedalCmd("pedal:sport", s));
 	TEST_ASSERT_EQUAL_UINT8(0x40, s.burstFrame.data[0] & 0x60);
 }
 void test_pedal_legacy_blocks()
 {
 	State s = makeState();
 	s.variant = LEGACY;
-	TEST_ASSERT_FALSE(execPedalCmd("pedal:sport", s));
+	TEST_ASSERT_FALSE(executePedalCmd("pedal:sport", s));
 }
 void test_pedal_no_drive_blocks()
 {
 	State s = makeState();
 	s.hasDrive = false;
-	TEST_ASSERT_FALSE(execPedalCmd("pedal:sport", s));
+	TEST_ASSERT_FALSE(executePedalCmd("pedal:sport", s));
 }
 void test_pedal_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execPedalCmd("pedal:eco", s));
+	TEST_ASSERT_FALSE(executePedalCmd("pedal:eco", s));
 }
 
 int main(int, char **)

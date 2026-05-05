@@ -14,6 +14,7 @@ void applyFilters(State &) {}
 void driverSend(const Frame &, uint8_t) {}
 
 #include "feature/profile.h"
+#include "handler/frame_readers.h"
 
 void setUp() {}
 void tearDown() {}

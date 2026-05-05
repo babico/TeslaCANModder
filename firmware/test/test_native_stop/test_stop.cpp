@@ -27,35 +27,35 @@ void tearDown() {}
 void test_stop_creep()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execStopCmd("stop:creep", s));
+	TEST_ASSERT_TRUE(executeStopCmd("stop:creep", s));
 }
 void test_stop_roll()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execStopCmd("stop:roll", s));
+	TEST_ASSERT_TRUE(executeStopCmd("stop:roll", s));
 }
 void test_stop_hold()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execStopCmd("stop:hold", s));
+	TEST_ASSERT_TRUE(executeStopCmd("stop:hold", s));
 }
 void test_stop_legacy_blocks()
 {
 	State s = makeState();
 	s.variant = LEGACY;
-	TEST_ASSERT_FALSE(execStopCmd("stop:hold", s));
+	TEST_ASSERT_FALSE(executeStopCmd("stop:hold", s));
 }
 void test_stop_no_drive_blocks()
 {
 	State s = makeState();
 	s.hasDrive = false;
-	TEST_ASSERT_FALSE(execStopCmd("stop:hold", s));
+	TEST_ASSERT_FALSE(executeStopCmd("stop:hold", s));
 }
 void test_stop_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execStopCmd("stop:foo", s));
-	TEST_ASSERT_FALSE(execStopCmd("foo", s));
+	TEST_ASSERT_FALSE(executeStopCmd("stop:foo", s));
+	TEST_ASSERT_FALSE(executeStopCmd("foo", s));
 }
 
 int main(int, char **)

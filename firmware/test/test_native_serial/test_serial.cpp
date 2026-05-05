@@ -210,31 +210,31 @@ bool executeVariantCmd(const char *cmd, State &s)
 	return false;
 }
 
-bool execWindowCmd(const char *, State &)
+bool executeWindowCmd(const char *, State &)
 {
 	return false;
 }
-bool execSentryCmd(const char *, State &)
+bool executeSentryCmd(const char *, State &)
 {
 	return false;
 }
-bool execClimateCmd(const char *, State &)
+bool executeClimateCmd(const char *, State &)
 {
 	return false;
 }
-bool execChargeCmd(const char *, State &)
+bool executeChargeCmd(const char *, State &)
 {
 	return false;
 }
-bool execPedalCmd(const char *, State &)
+bool executePedalCmd(const char *, State &)
 {
 	return false;
 }
-bool execRegenCmd(const char *, State &)
+bool executeRegenCmd(const char *, State &)
 {
 	return false;
 }
-bool execStopCmd(const char *, State &)
+bool executeStopCmd(const char *, State &)
 {
 	return false;
 }

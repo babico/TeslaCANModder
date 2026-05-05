@@ -81,12 +81,12 @@ void test_no_ctrl_does_nothing()
 	TEST_ASSERT_EQUAL(0, s.burstRemaining);
 }
 
-// ── execMirrorAutoFoldCmd ───────────────────────────────────────────────────
+// ── executeMirrorAutoFoldCmd ───────────────────────────────────────────────────
 
 void test_cmd_on()
 {
 	State s = {};
-	TEST_ASSERT_TRUE(execMirrorAutoFoldCmd("mirror:autofold:on", s));
+	TEST_ASSERT_TRUE(executeMirrorAutoFoldCmd("mirror:autofold:on", s));
 	TEST_ASSERT_TRUE(s.mirrorAutoFoldEnabled);
 }
 
@@ -94,14 +94,14 @@ void test_cmd_off()
 {
 	State s = {};
 	s.mirrorAutoFoldEnabled = true;
-	TEST_ASSERT_TRUE(execMirrorAutoFoldCmd("mirror:autofold:off", s));
+	TEST_ASSERT_TRUE(executeMirrorAutoFoldCmd("mirror:autofold:off", s));
 	TEST_ASSERT_FALSE(s.mirrorAutoFoldEnabled);
 }
 
 void test_cmd_unknown()
 {
 	State s = {};
-	TEST_ASSERT_FALSE(execMirrorAutoFoldCmd("mirror:autofold:toggle", s));
+	TEST_ASSERT_FALSE(executeMirrorAutoFoldCmd("mirror:autofold:toggle", s));
 }
 
 // ── main ────────────────────────────────────────────────────────────────────

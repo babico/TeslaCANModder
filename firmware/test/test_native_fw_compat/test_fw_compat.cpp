@@ -103,13 +103,13 @@ void test_compat_warn_for_older()
 void test_exec_fwcompat_cmd_matches()
 {
 	State s = {};
-	TEST_ASSERT_TRUE(execFwCompatCmd("fwcompat", s));
+	TEST_ASSERT_TRUE(executeFwCompatCmd("fwcompat", s));
 }
 
 void test_exec_fwcompat_cmd_no_match()
 {
 	State s = {};
-	TEST_ASSERT_FALSE(execFwCompatCmd("vehicle", s));
+	TEST_ASSERT_FALSE(executeFwCompatCmd("vehicle", s));
 }
 
 void test_compat_name()

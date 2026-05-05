@@ -27,43 +27,43 @@ void tearDown() {}
 void test_frunk_open()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execTrunkCmd("frunk:open", s));
+	TEST_ASSERT_TRUE(executeTrunkCmd("frunk:open", s));
 	TEST_ASSERT_EQUAL_UINT8(0x20, s.burstFrame.data[0] & 0x20);
 }
 void test_frunk_alias()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execTrunkCmd("frunk", s));
+	TEST_ASSERT_TRUE(executeTrunkCmd("frunk", s));
 }
 void test_trunk_open()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execTrunkCmd("trunk:open", s));
+	TEST_ASSERT_TRUE(executeTrunkCmd("trunk:open", s));
 	TEST_ASSERT_EQUAL_UINT8(0x02, s.burstFrame.data[0]);
 }
 void test_trunk_close()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execTrunkCmd("trunk:close", s));
+	TEST_ASSERT_TRUE(executeTrunkCmd("trunk:close", s));
 	TEST_ASSERT_EQUAL_UINT8(0x03, s.burstFrame.data[0]);
 }
 void test_glovebox()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execTrunkCmd("glovebox", s));
+	TEST_ASSERT_TRUE(executeTrunkCmd("glovebox", s));
 	TEST_ASSERT_EQUAL_UINT8(0x01, s.burstFrame.data[0]);
 }
 void test_frunk_no_ctrl_blocks()
 {
 	State s = makeState();
 	s.hasCtrl = false;
-	TEST_ASSERT_FALSE(execTrunkCmd("frunk:open", s));
+	TEST_ASSERT_FALSE(executeTrunkCmd("frunk:open", s));
 }
 void test_trunk_legacy_blocks()
 {
 	State s = makeState();
 	s.variant = LEGACY;
-	TEST_ASSERT_FALSE(execTrunkCmd("trunk:open", s));
+	TEST_ASSERT_FALSE(executeTrunkCmd("trunk:open", s));
 }
 
 int main(int, char **)

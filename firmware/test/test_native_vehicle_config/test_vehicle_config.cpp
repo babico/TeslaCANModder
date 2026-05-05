@@ -115,8 +115,8 @@ void test_capabilities_model3()
 void test_exec_vehicle_cmd()
 {
 	State s = {};
-	TEST_ASSERT_TRUE(execVehicleConfigCmd("vehicle", s));
-	TEST_ASSERT_FALSE(execVehicleConfigCmd("fsd:on", s));
+	TEST_ASSERT_TRUE(executeVehicleConfigCmd("vehicle", s));
+	TEST_ASSERT_FALSE(executeVehicleConfigCmd("fsd:on", s));
 }
 
 int main()

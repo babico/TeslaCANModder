@@ -30,27 +30,27 @@ void tearDown() {}
 void test_precondition_on()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execPreconditionCmd("precondition:on", s));
+	TEST_ASSERT_TRUE(executePreconditionCmd("precondition:on", s));
 	TEST_ASSERT_TRUE(s.preconditionEnabled);
 }
 void test_precondition_off()
 {
 	State s = makeState();
 	s.preconditionEnabled = true;
-	TEST_ASSERT_TRUE(execPreconditionCmd("precondition:off", s));
+	TEST_ASSERT_TRUE(executePreconditionCmd("precondition:off", s));
 	TEST_ASSERT_FALSE(s.preconditionEnabled);
 }
 void test_precondition_legacy_blocks()
 {
 	State s = makeState();
 	s.variant = LEGACY;
-	TEST_ASSERT_FALSE(execPreconditionCmd("precondition:on", s));
+	TEST_ASSERT_FALSE(executePreconditionCmd("precondition:on", s));
 }
 void test_precondition_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execPreconditionCmd("precondition:bogus", s));
-	TEST_ASSERT_FALSE(execPreconditionCmd("nope", s));
+	TEST_ASSERT_FALSE(executePreconditionCmd("precondition:bogus", s));
+	TEST_ASSERT_FALSE(executePreconditionCmd("nope", s));
 }
 
 int main(int, char **)

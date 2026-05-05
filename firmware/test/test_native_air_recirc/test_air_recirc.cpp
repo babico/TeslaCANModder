@@ -28,18 +28,18 @@ void tearDown() {}
 void test_airecirc_on()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execAirRecircCmd("airecirc:on", s));
+	TEST_ASSERT_TRUE(executeAirRecircCmd("airecirc:on", s));
 }
 void test_airecirc_off()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execAirRecircCmd("airecirc:off", s));
+	TEST_ASSERT_TRUE(executeAirRecircCmd("airecirc:off", s));
 }
 void test_airecirc_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execAirRecircCmd("airecirc:maybe", s));
-	TEST_ASSERT_FALSE(execAirRecircCmd("foo", s));
+	TEST_ASSERT_FALSE(executeAirRecircCmd("airecirc:maybe", s));
+	TEST_ASSERT_FALSE(executeAirRecircCmd("foo", s));
 }
 
 int main(int, char **)

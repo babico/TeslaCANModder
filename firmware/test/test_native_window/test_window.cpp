@@ -26,44 +26,44 @@ void tearDown() {}
 void test_window_vent_open()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execWindowCmd("window:vent:open", s));
+	TEST_ASSERT_TRUE(executeWindowCmd("window:vent:open", s));
 	TEST_ASSERT_EQUAL_UINT8(100, s.burstFrame.data[1]);
 }
 void test_window_vent_close()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execWindowCmd("window:vent:close", s));
+	TEST_ASSERT_TRUE(executeWindowCmd("window:vent:close", s));
 	TEST_ASSERT_EQUAL_UINT8(0, s.burstFrame.data[1]);
 }
 void test_window_vent_alias()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execWindowCmd("vent:open", s));
-	TEST_ASSERT_TRUE(execWindowCmd("vent:close", s));
+	TEST_ASSERT_TRUE(executeWindowCmd("vent:open", s));
+	TEST_ASSERT_TRUE(executeWindowCmd("vent:close", s));
 }
 void test_window_vent_position()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execWindowCmd("window:vent:50", s));
+	TEST_ASSERT_TRUE(executeWindowCmd("window:vent:50", s));
 	TEST_ASSERT_EQUAL_UINT8(50, s.burstFrame.data[1]);
 }
 void test_window_vent_invalid_position()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execWindowCmd("window:vent:101", s));
-	TEST_ASSERT_FALSE(execWindowCmd("window:vent:abc", s));
-	TEST_ASSERT_FALSE(execWindowCmd("window:vent:", s));
+	TEST_ASSERT_FALSE(executeWindowCmd("window:vent:101", s));
+	TEST_ASSERT_FALSE(executeWindowCmd("window:vent:abc", s));
+	TEST_ASSERT_FALSE(executeWindowCmd("window:vent:", s));
 }
 void test_window_legacy_blocks()
 {
 	State s = makeState();
 	s.variant = LEGACY;
-	TEST_ASSERT_FALSE(execWindowCmd("window:vent:open", s));
+	TEST_ASSERT_FALSE(executeWindowCmd("window:vent:open", s));
 }
 void test_window_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execWindowCmd("foo", s));
+	TEST_ASSERT_FALSE(executeWindowCmd("foo", s));
 }
 
 int main(int, char **)

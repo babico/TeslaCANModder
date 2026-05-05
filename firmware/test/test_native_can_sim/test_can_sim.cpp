@@ -22,18 +22,18 @@ void tearDown() {}
 
 void test_canSim_start() {
   State s = makeState();
-  TEST_ASSERT_TRUE(execCanSimCmd("simu:start", s));
+  TEST_ASSERT_TRUE(executeCanSimCmd("simu:start", s));
   TEST_ASSERT_TRUE(s.canSimEnabled);
 }
 void test_canSim_stop() {
   State s = makeState(); s.canSimEnabled = true;
-  TEST_ASSERT_TRUE(execCanSimCmd("simu:stop", s));
+  TEST_ASSERT_TRUE(executeCanSimCmd("simu:stop", s));
   TEST_ASSERT_FALSE(s.canSimEnabled);
 }
 void test_canSim_unknown() {
   State s = makeState();
-  TEST_ASSERT_FALSE(execCanSimCmd("simu:foo", s));
-  TEST_ASSERT_FALSE(execCanSimCmd("foo", s));
+  TEST_ASSERT_FALSE(executeCanSimCmd("simu:foo", s));
+  TEST_ASSERT_FALSE(executeCanSimCmd("foo", s));
 }
 
 int main(int, char**) {

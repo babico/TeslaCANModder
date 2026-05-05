@@ -27,49 +27,49 @@ void tearDown() {}
 void test_seat_fl()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execSeatCmd("seat:fl:2", s));
+	TEST_ASSERT_TRUE(executeSeatCmd("seat:fl:2", s));
 }
 void test_seat_fr()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execSeatCmd("seat:fr:0", s));
+	TEST_ASSERT_TRUE(executeSeatCmd("seat:fr:0", s));
 }
 void test_seat_rl()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execSeatCmd("seat:rl:1", s));
+	TEST_ASSERT_TRUE(executeSeatCmd("seat:rl:1", s));
 }
 void test_seat_rr()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execSeatCmd("seat:rr:3", s));
+	TEST_ASSERT_TRUE(executeSeatCmd("seat:rr:3", s));
 }
 void test_seat_rc()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execSeatCmd("seat:rc:1", s));
+	TEST_ASSERT_TRUE(executeSeatCmd("seat:rc:1", s));
 }
 void test_seat_invalid_level()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execSeatCmd("seat:fl:4", s));
-	TEST_ASSERT_FALSE(execSeatCmd("seat:fl:9", s));
+	TEST_ASSERT_FALSE(executeSeatCmd("seat:fl:4", s));
+	TEST_ASSERT_FALSE(executeSeatCmd("seat:fl:9", s));
 }
 void test_seat_invalid_position()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execSeatCmd("seat:xx:1", s));
+	TEST_ASSERT_FALSE(executeSeatCmd("seat:xx:1", s));
 }
 void test_seat_no_ctrl()
 {
 	State s = makeState();
 	s.hasCtrl = false;
-	TEST_ASSERT_FALSE(execSeatCmd("seat:fl:1", s));
+	TEST_ASSERT_FALSE(executeSeatCmd("seat:fl:1", s));
 }
 void test_seat_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execSeatCmd("foo", s));
+	TEST_ASSERT_FALSE(executeSeatCmd("foo", s));
 }
 
 int main(int, char **)

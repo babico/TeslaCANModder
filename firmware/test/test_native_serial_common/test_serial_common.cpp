@@ -60,7 +60,7 @@ void executeCommand(const char *cmd, State &, unsigned long)
 	lastExecuted = cmd;
 }
 
-#include "io/serial/esp32/common.h"
+#include "io/serial/usb/esp32/common.h"
 
 void setUp()
 {
@@ -146,7 +146,7 @@ void test_handleChar_collects_until_newline()
 	State s = {};
 	char buf[SERIAL_CMD_BUFFER_SIZE];
 	uint8_t len = 0;
-	const char *cmd = "fsd:on\n";
+	const char *cmd = "{\"cmd\":\"fsd:on\"}\n";
 	for (size_t i = 0; cmd[i]; i++)
 		handleChar(buf, len, cmd[i], s);
 	TEST_ASSERT_EQUAL(1, executedCount);
@@ -158,7 +158,7 @@ void test_handleChar_ignores_carriage_return()
 	State s = {};
 	char buf[SERIAL_CMD_BUFFER_SIZE];
 	uint8_t len = 0;
-	const char *cmd = "ok\r\n";
+	const char *cmd = "{\"cmd\":\"ok\"}\r\n";
 	for (size_t i = 0; cmd[i]; i++)
 		handleChar(buf, len, cmd[i], s);
 	TEST_ASSERT_EQUAL(1, executedCount);
@@ -194,7 +194,7 @@ void test_handleChar_accepts_alphanumeric_punctuation()
 	State s = {};
 	char buf[SERIAL_CMD_BUFFER_SIZE];
 	uint8_t len = 0;
-	const char *cmd = "Power_AC-9:off\n";
+	const char *cmd = "{\"cmd\":\"Power_AC-9:off\"}\n";
 	for (size_t i = 0; cmd[i]; i++)
 		handleChar(buf, len, cmd[i], s);
 	TEST_ASSERT_EQUAL(1, executedCount);

@@ -20,13 +20,13 @@ void tearDown() {}
 
 void test_bms_command_recognized() {
   State s = makeState();
-  TEST_ASSERT_TRUE(execBmsCmd("bms", s));
+  TEST_ASSERT_TRUE(executeBmsCmd("bms", s));
 }
 void test_bms_unknown() {
   State s = makeState();
-  TEST_ASSERT_FALSE(execBmsCmd("bms:foo", s));
-  TEST_ASSERT_FALSE(execBmsCmd("foo", s));
-  TEST_ASSERT_FALSE(execBmsCmd("", s));
+  TEST_ASSERT_FALSE(executeBmsCmd("bms:foo", s));
+  TEST_ASSERT_FALSE(executeBmsCmd("foo", s));
+  TEST_ASSERT_FALSE(executeBmsCmd("", s));
 }
 
 int main(int, char**) {

@@ -55,67 +55,67 @@ static State legacyState()
 void test_legacy_blocks_regen()
 {
 	State s = legacyState();
-	TEST_ASSERT_FALSE(execRegenCmd("regen:max", s));
+	TEST_ASSERT_FALSE(executeRegenCmd("regen:max", s));
 }
 void test_legacy_blocks_precondition()
 {
 	State s = legacyState();
-	TEST_ASSERT_FALSE(execPreconditionCmd("precondition:on", s));
+	TEST_ASSERT_FALSE(executePreconditionCmd("precondition:on", s));
 }
 void test_legacy_blocks_trackmode()
 {
 	State s = legacyState();
-	TEST_ASSERT_FALSE(execTrackModeCmd("trackmode:on", s));
+	TEST_ASSERT_FALSE(executeTrackModeCmd("trackmode:on", s));
 }
 void test_legacy_blocks_window_vent()
 {
 	State s = legacyState();
-	TEST_ASSERT_FALSE(execWindowCmd("window:vent:open", s));
+	TEST_ASSERT_FALSE(executeWindowCmd("window:vent:open", s));
 }
 void test_legacy_blocks_stop_modes()
 {
 	State s = legacyState();
-	TEST_ASSERT_FALSE(execStopCmd("stop:hold", s));
+	TEST_ASSERT_FALSE(executeStopCmd("stop:hold", s));
 }
 void test_legacy_blocks_charge()
 {
 	State s = legacyState();
-	TEST_ASSERT_FALSE(execChargeCmd("charge:start", s));
+	TEST_ASSERT_FALSE(executeChargeCmd("charge:start", s));
 }
 void test_legacy_blocks_sentry()
 {
 	State s = legacyState();
-	TEST_ASSERT_FALSE(execSentryCmd("sentry:on", s));
+	TEST_ASSERT_FALSE(executeSentryCmd("sentry:on", s));
 }
 void test_legacy_blocks_trunk()
 {
 	State s = legacyState();
-	TEST_ASSERT_FALSE(execTrunkCmd("trunk:open", s));
+	TEST_ASSERT_FALSE(executeTrunkCmd("trunk:open", s));
 }
 void test_legacy_blocks_climate_keep()
 {
 	State s = legacyState();
-	TEST_ASSERT_FALSE(execClimateCmd("climate:keep", s));
+	TEST_ASSERT_FALSE(executeClimateCmd("climate:keep", s));
 }
 
 void test_hw4_allows_all_modern_features()
 {
 	State s = hw4State();
-	TEST_ASSERT_TRUE(execRegenCmd("regen:max", s));
-	TEST_ASSERT_TRUE(execPreconditionCmd("precondition:on", s));
-	TEST_ASSERT_TRUE(execTrackModeCmd("trackmode:on", s));
-	TEST_ASSERT_TRUE(execWindowCmd("window:vent:open", s));
-	TEST_ASSERT_TRUE(execStopCmd("stop:hold", s));
-	TEST_ASSERT_TRUE(execChargeCmd("charge:start", s));
-	TEST_ASSERT_TRUE(execSentryCmd("sentry:on", s));
+	TEST_ASSERT_TRUE(executeRegenCmd("regen:max", s));
+	TEST_ASSERT_TRUE(executePreconditionCmd("precondition:on", s));
+	TEST_ASSERT_TRUE(executeTrackModeCmd("trackmode:on", s));
+	TEST_ASSERT_TRUE(executeWindowCmd("window:vent:open", s));
+	TEST_ASSERT_TRUE(executeStopCmd("stop:hold", s));
+	TEST_ASSERT_TRUE(executeChargeCmd("charge:start", s));
+	TEST_ASSERT_TRUE(executeSentryCmd("sentry:on", s));
 }
 void test_hw3_also_allows_modern_features()
 {
 	State s = hw4State();
 	s.variant = HW3;
-	TEST_ASSERT_TRUE(execRegenCmd("regen:standard", s));
-	TEST_ASSERT_TRUE(execPreconditionCmd("precondition:off", s));
-	TEST_ASSERT_TRUE(execTrackModeCmd("trackmode:off", s));
+	TEST_ASSERT_TRUE(executeRegenCmd("regen:standard", s));
+	TEST_ASSERT_TRUE(executePreconditionCmd("precondition:off", s));
+	TEST_ASSERT_TRUE(executeTrackModeCmd("trackmode:off", s));
 }
 
 int main(int, char **)

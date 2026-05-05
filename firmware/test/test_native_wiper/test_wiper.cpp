@@ -27,45 +27,45 @@ void tearDown() {}
 void test_wiper_off()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execWiperCmd("wiper:off", s));
+	TEST_ASSERT_TRUE(executeWiperCmd("wiper:off", s));
 }
 void test_wiper_1()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execWiperCmd("wiper:1", s));
+	TEST_ASSERT_TRUE(executeWiperCmd("wiper:1", s));
 }
 void test_wiper_2()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execWiperCmd("wiper:2", s));
+	TEST_ASSERT_TRUE(executeWiperCmd("wiper:2", s));
 }
 void test_wiper_3()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execWiperCmd("wiper:3", s));
+	TEST_ASSERT_TRUE(executeWiperCmd("wiper:3", s));
 }
 void test_wiper_no_ctrl()
 {
 	State s = makeState();
 	s.hasCtrl = false;
-	TEST_ASSERT_FALSE(execWiperCmd("wiper:1", s));
+	TEST_ASSERT_FALSE(executeWiperCmd("wiper:1", s));
 }
 void test_wiper_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execWiperCmd("foo", s));
+	TEST_ASSERT_FALSE(executeWiperCmd("foo", s));
 }
 void test_wiperpersist_on()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execWiperPersistCmd("wiperpersist:on", s));
+	TEST_ASSERT_TRUE(executeWiperPersistCmd("wiperpersist:on", s));
 	TEST_ASSERT_TRUE(s.wiperPersistEnabled);
 }
 void test_wiperpersist_off()
 {
 	State s = makeState();
 	s.wiperPersistEnabled = true;
-	TEST_ASSERT_TRUE(execWiperPersistCmd("wiperpersist:off", s));
+	TEST_ASSERT_TRUE(executeWiperPersistCmd("wiperpersist:off", s));
 	TEST_ASSERT_FALSE(s.wiperPersistEnabled);
 }
 

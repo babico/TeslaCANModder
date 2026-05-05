@@ -118,12 +118,12 @@ void test_tick_respects_interval()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── execSeatbeltCmd ─────────────────────────────────────────────────────────
+// ── executeSeatbeltCmd ─────────────────────────────────────────────────────────
 
 void test_cmd_on()
 {
 	State s = {};
-	TEST_ASSERT_TRUE(execSeatbeltCmd("seatbelt:on", s));
+	TEST_ASSERT_TRUE(executeSeatbeltCmd("seatbelt:on", s));
 	TEST_ASSERT_TRUE(s.seatbeltEmulation);
 }
 
@@ -131,14 +131,14 @@ void test_cmd_off()
 {
 	State s = {};
 	s.seatbeltEmulation = true;
-	TEST_ASSERT_TRUE(execSeatbeltCmd("seatbelt:off", s));
+	TEST_ASSERT_TRUE(executeSeatbeltCmd("seatbelt:off", s));
 	TEST_ASSERT_FALSE(s.seatbeltEmulation);
 }
 
 void test_cmd_unknown()
 {
 	State s = {};
-	TEST_ASSERT_FALSE(execSeatbeltCmd("seatbelt:toggle", s));
+	TEST_ASSERT_FALSE(executeSeatbeltCmd("seatbelt:toggle", s));
 }
 
 // ── main ────────────────────────────────────────────────────────────────────

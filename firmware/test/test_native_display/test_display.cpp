@@ -27,29 +27,29 @@ void tearDown() {}
 void test_display_zero()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execDisplayCmd("maindisplay:0", s));
+	TEST_ASSERT_TRUE(executeDisplayCmd("maindisplay:0", s));
 }
 void test_display_max()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execDisplayCmd("maindisplay:127", s));
+	TEST_ASSERT_TRUE(executeDisplayCmd("maindisplay:127", s));
 }
 void test_display_out_of_range()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execDisplayCmd("maindisplay:128", s));
-	TEST_ASSERT_FALSE(execDisplayCmd("maindisplay:-1", s));
+	TEST_ASSERT_FALSE(executeDisplayCmd("maindisplay:128", s));
+	TEST_ASSERT_FALSE(executeDisplayCmd("maindisplay:-1", s));
 }
 void test_display_no_ctrl()
 {
 	State s = makeState();
 	s.hasCtrl = false;
-	TEST_ASSERT_FALSE(execDisplayCmd("maindisplay:50", s));
+	TEST_ASSERT_FALSE(executeDisplayCmd("maindisplay:50", s));
 }
 void test_display_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execDisplayCmd("foo", s));
+	TEST_ASSERT_FALSE(executeDisplayCmd("foo", s));
 }
 
 int main(int, char **)

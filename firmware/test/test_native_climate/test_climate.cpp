@@ -27,29 +27,29 @@ void tearDown() {}
 void test_climate_keep()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execClimateCmd("climate:keep", s));
+	TEST_ASSERT_TRUE(executeClimateCmd("climate:keep", s));
 }
 void test_climate_off()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execClimateCmd("climate:off", s));
+	TEST_ASSERT_TRUE(executeClimateCmd("climate:off", s));
 }
 void test_climate_legacy_blocks()
 {
 	State s = makeState();
 	s.variant = LEGACY;
-	TEST_ASSERT_FALSE(execClimateCmd("climate:keep", s));
+	TEST_ASSERT_FALSE(executeClimateCmd("climate:keep", s));
 }
 void test_climate_no_cache_blocks()
 {
 	State s = makeState();
 	s.hasClimate = false;
-	TEST_ASSERT_FALSE(execClimateCmd("climate:keep", s));
+	TEST_ASSERT_FALSE(executeClimateCmd("climate:keep", s));
 }
 void test_climate_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execClimateCmd("climate:on", s));
+	TEST_ASSERT_FALSE(executeClimateCmd("climate:on", s));
 }
 
 int main(int, char **)

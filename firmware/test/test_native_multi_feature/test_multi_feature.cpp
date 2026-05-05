@@ -46,12 +46,12 @@ static State allEnabledState()
 void test_independent_persist_flags_dont_collide()
 {
 	State s = allEnabledState();
-	TEST_ASSERT_TRUE(execMirrorAutoFoldCmd("mirror:autofold:on", s));
-	TEST_ASSERT_TRUE(execWiperPersistCmd("wiperpersist:on", s));
+	TEST_ASSERT_TRUE(executeMirrorAutoFoldCmd("mirror:autofold:on", s));
+	TEST_ASSERT_TRUE(executeWiperPersistCmd("wiperpersist:on", s));
 	TEST_ASSERT_TRUE(s.mirrorAutoFoldEnabled);
 	TEST_ASSERT_TRUE(s.wiperPersistEnabled);
 	// Toggling one must not toggle the other.
-	TEST_ASSERT_TRUE(execMirrorAutoFoldCmd("mirror:autofold:off", s));
+	TEST_ASSERT_TRUE(executeMirrorAutoFoldCmd("mirror:autofold:off", s));
 	TEST_ASSERT_FALSE(s.mirrorAutoFoldEnabled);
 	TEST_ASSERT_TRUE(s.wiperPersistEnabled);
 }
@@ -59,9 +59,9 @@ void test_independent_persist_flags_dont_collide()
 void test_multiple_state_features_active_simultaneously()
 {
 	State s = allEnabledState();
-	TEST_ASSERT_TRUE(execPreconditionCmd("precondition:on", s));
-	TEST_ASSERT_TRUE(execTrackModeCmd("trackmode:on", s));
-	TEST_ASSERT_TRUE(execSentryCmd("sentry:on", s));
+	TEST_ASSERT_TRUE(executePreconditionCmd("precondition:on", s));
+	TEST_ASSERT_TRUE(executeTrackModeCmd("trackmode:on", s));
+	TEST_ASSERT_TRUE(executeSentryCmd("sentry:on", s));
 	TEST_ASSERT_TRUE(executeCanRawCmd("can:raw:on", s));
 	TEST_ASSERT_TRUE(executeStreamCmd("stream:on", s));
 
@@ -76,7 +76,7 @@ void test_disabling_one_feature_leaves_others_intact()
 	State s = allEnabledState();
 	s.preconditionEnabled = true;
 	s.trackModeEnabled = true;
-	TEST_ASSERT_TRUE(execPreconditionCmd("precondition:off", s));
+	TEST_ASSERT_TRUE(executePreconditionCmd("precondition:off", s));
 	TEST_ASSERT_FALSE(s.preconditionEnabled);
 	TEST_ASSERT_TRUE(s.trackModeEnabled);
 }
@@ -85,9 +85,9 @@ void test_handlers_do_not_steal_each_others_commands()
 {
 	// precondition handler must reject trackmode commands and vice-versa.
 	State s = allEnabledState();
-	TEST_ASSERT_FALSE(execPreconditionCmd("trackmode:on", s));
-	TEST_ASSERT_FALSE(execTrackModeCmd("precondition:on", s));
-	TEST_ASSERT_FALSE(execSentryCmd("stream:on", s));
+	TEST_ASSERT_FALSE(executePreconditionCmd("trackmode:on", s));
+	TEST_ASSERT_FALSE(executeTrackModeCmd("precondition:on", s));
+	TEST_ASSERT_FALSE(executeSentryCmd("stream:on", s));
 	TEST_ASSERT_FALSE(executeStreamCmd("sentry:on", s));
 	TEST_ASSERT_FALSE(s.preconditionEnabled);
 	TEST_ASSERT_FALSE(s.trackModeEnabled);

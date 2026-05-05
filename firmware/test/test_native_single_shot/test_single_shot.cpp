@@ -31,7 +31,7 @@ void tearDown() {}
 void test_singleshot_on_enables()
 {
 	State s = {};
-	bool ok = execSingleShotCmd("singleshot:on", s);
+	bool ok = executeSingleShotCmd("singleshot:on", s);
 	TEST_ASSERT_TRUE(ok);
 	TEST_ASSERT_TRUE(s.singleShotTx);
 }
@@ -40,7 +40,7 @@ void test_singleshot_off_disables()
 {
 	State s = {};
 	s.singleShotTx = true;
-	bool ok = execSingleShotCmd("singleshot:off", s);
+	bool ok = executeSingleShotCmd("singleshot:off", s);
 	TEST_ASSERT_TRUE(ok);
 	TEST_ASSERT_FALSE(s.singleShotTx);
 }
@@ -48,7 +48,7 @@ void test_singleshot_off_disables()
 void test_singleshot_unrelated_returns_false()
 {
 	State s = {};
-	bool ok = execSingleShotCmd("fsd:on", s);
+	bool ok = executeSingleShotCmd("fsd:on", s);
 	TEST_ASSERT_FALSE(ok);
 }
 

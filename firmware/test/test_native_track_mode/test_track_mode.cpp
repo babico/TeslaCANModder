@@ -26,26 +26,26 @@ void tearDown() {}
 void test_trackmode_on()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execTrackModeCmd("trackmode:on", s));
+	TEST_ASSERT_TRUE(executeTrackModeCmd("trackmode:on", s));
 	TEST_ASSERT_TRUE(s.trackModeEnabled);
 }
 void test_trackmode_off()
 {
 	State s = makeState();
 	s.trackModeEnabled = true;
-	TEST_ASSERT_TRUE(execTrackModeCmd("trackmode:off", s));
+	TEST_ASSERT_TRUE(executeTrackModeCmd("trackmode:off", s));
 	TEST_ASSERT_FALSE(s.trackModeEnabled);
 }
 void test_trackmode_legacy_blocks()
 {
 	State s = makeState();
 	s.variant = LEGACY;
-	TEST_ASSERT_FALSE(execTrackModeCmd("trackmode:on", s));
+	TEST_ASSERT_FALSE(executeTrackModeCmd("trackmode:on", s));
 }
 void test_trackmode_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execTrackModeCmd("foo", s));
+	TEST_ASSERT_FALSE(executeTrackModeCmd("foo", s));
 }
 
 int main(int, char **)

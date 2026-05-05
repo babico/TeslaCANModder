@@ -97,40 +97,40 @@ void test_enum_values()
 	TEST_ASSERT_EQUAL(3, TURN_HAZARD);
 }
 
-// ── execTurnSignalCmd ───────────────────────────────────────────────────────
+// ── executeTurnSignalCmd ───────────────────────────────────────────────────────
 
 void test_cmd_left3()
 {
 	State s = {};
 	s.hasCtrl = true;
-	TEST_ASSERT_TRUE(execTurnSignalCmd("turn:left3", s));
+	TEST_ASSERT_TRUE(executeTurnSignalCmd("turn:left3", s));
 }
 
 void test_cmd_right3()
 {
 	State s = {};
 	s.hasCtrl = true;
-	TEST_ASSERT_TRUE(execTurnSignalCmd("turn:right3", s));
+	TEST_ASSERT_TRUE(executeTurnSignalCmd("turn:right3", s));
 }
 
 void test_cmd_hazard()
 {
 	State s = {};
 	s.hasCtrl = true;
-	TEST_ASSERT_TRUE(execTurnSignalCmd("turn:hazard", s));
+	TEST_ASSERT_TRUE(executeTurnSignalCmd("turn:hazard", s));
 }
 
 void test_cmd_off()
 {
 	State s = {};
 	s.hasCtrl = true;
-	TEST_ASSERT_TRUE(execTurnSignalCmd("turn:off", s));
+	TEST_ASSERT_TRUE(executeTurnSignalCmd("turn:off", s));
 }
 
 void test_cmd_unknown_returns_false()
 {
 	State s = {};
-	TEST_ASSERT_FALSE(execTurnSignalCmd("turn:invalid", s));
+	TEST_ASSERT_FALSE(executeTurnSignalCmd("turn:invalid", s));
 }
 
 // ── runtime decode helpers (D-05) ─────────────────────────────────────────

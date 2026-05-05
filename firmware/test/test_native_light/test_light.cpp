@@ -27,54 +27,54 @@ void tearDown() {}
 void test_light_fog_front()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLightCmd("light:fog:front", s));
+	TEST_ASSERT_TRUE(executeLightCmd("light:fog:front", s));
 }
 void test_light_fog_rear()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLightCmd("light:fog:rear", s));
+	TEST_ASSERT_TRUE(executeLightCmd("light:fog:rear", s));
 }
 void test_light_highbeam_auto()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLightCmd("light:highbeam:auto", s));
+	TEST_ASSERT_TRUE(executeLightCmd("light:highbeam:auto", s));
 }
 void test_light_ambient()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLightCmd("light:ambient", s));
+	TEST_ASSERT_TRUE(executeLightCmd("light:ambient", s));
 }
 void test_light_home()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLightCmd("light:home", s));
+	TEST_ASSERT_TRUE(executeLightCmd("light:home", s));
 }
 void test_light_dome_off()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLightCmd("light:dome:off", s));
+	TEST_ASSERT_TRUE(executeLightCmd("light:dome:off", s));
 }
 void test_light_dome_on()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLightCmd("light:dome:on", s));
+	TEST_ASSERT_TRUE(executeLightCmd("light:dome:on", s));
 }
 void test_light_dome_auto()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(execLightCmd("light:dome:auto", s));
+	TEST_ASSERT_TRUE(executeLightCmd("light:dome:auto", s));
 }
 void test_light_no_ctrl()
 {
 	State s = makeState();
 	s.hasCtrl = false;
-	TEST_ASSERT_FALSE(execLightCmd("light:ambient", s));
+	TEST_ASSERT_FALSE(executeLightCmd("light:ambient", s));
 }
 void test_light_unknown()
 {
 	State s = makeState();
-	TEST_ASSERT_FALSE(execLightCmd("light:bogus", s));
-	TEST_ASSERT_FALSE(execLightCmd("foo", s));
+	TEST_ASSERT_FALSE(executeLightCmd("light:bogus", s));
+	TEST_ASSERT_FALSE(executeLightCmd("foo", s));
 }
 
 int main(int, char **)
