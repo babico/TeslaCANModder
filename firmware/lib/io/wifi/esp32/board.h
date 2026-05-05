@@ -9,7 +9,4 @@
 #include "client/dashboard/dashboard.h"
 #include "state.h"
 #include "config.h"
-#include "client/api/auth.h"
-#include "client/api/routes.h"
-#include "client/api/ble_config.h"
 #include "client/api/init.h"

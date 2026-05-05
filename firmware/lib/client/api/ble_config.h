@@ -1,5 +1,6 @@
 #pragma once
-#include "routes.h"
+#include "client/common/api_fwd.h"
+#include "auth.h"
 
 // ── BLE Status & Config Endpoints ───────────────────────────────────────────
 

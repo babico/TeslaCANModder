@@ -23,3 +23,11 @@ void bleRestart();
 static WebServer server(WIFI_REST_PORT);
 static bool wifiReady = false;
 static State *restState = nullptr;
+
+// Returns the active IP address regardless of AP/STA mode.
+static inline String wifiCurrentIP()
+{
+	IPAddress ip = WiFi.localIP();
+	if ((uint32_t)ip != 0) return ip.toString();
+	return WiFi.softAPIP().toString();
+}

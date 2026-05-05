@@ -1,5 +1,9 @@
 #pragma once
+#include "client/common/api_fwd.h"
+#include "auth.h"
+#include "routes.h"
 #include "ble_config.h"
+#include "io/wifi/esp32/wifi_api.h"
 #include "core/can/recorder.h"
 
 // ── WiFi Init & Tick ────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 #pragma once
-#include "io/wifi/esp32/config.h"
+#include "client/common/api_fwd.h"
 
 // ── API Key Generation & Validation ─────────────────────────────────────────
 static Preferences authPrefs;
