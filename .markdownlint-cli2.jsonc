@@ -1,7 +1,7 @@
 {
 	"config": {
 		"MD007": { "indent": 2 },
-		"MD010": { "code_blocks": false }
+		"MD010": { "code_blocks": false },
 	},
 	"ignores": [
 		"legacy/**",
@@ -10,6 +10,6 @@
 		"**/.pio/**",
 		"**/.pio-home/**",
 		"client/.expo/**",
-		".venv/**"
-	]
+		".venv/**",
+	],
 }
