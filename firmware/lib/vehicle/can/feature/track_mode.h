@@ -25,7 +25,7 @@ static void controlTrackMode(bool enable, State &s)
 // ── Track Mode Command ───────────────────────────────────────────────────────
 // Enables/disables Track Mode via CAN 0x313 injection.
 
-bool execTrackModeCmd(const char *cmd, State &s)
+static bool executeTrackModeCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "trackmode:", 10) == 0)
 	{

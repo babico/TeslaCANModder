@@ -71,7 +71,7 @@ static void controlHorn(State &s)
 
 // ── Lock Command Execution ───────────────────────────────────────────────────
 
-static bool execLockCmd(const char *cmd, State &s)
+static bool executeLockCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)
 		return false;

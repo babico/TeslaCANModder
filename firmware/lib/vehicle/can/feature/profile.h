@@ -34,7 +34,7 @@ inline int mapHW4FollowDistToProfile(uint8_t fd)
 }
 
 // ── Speed Profile Command (profile:N, sp:N, profile:auto, profile:lock/unlock) ──
-bool executeProfileCmd(const char *cmd, State &s)
+static bool executeProfileCmd(const char *cmd, State &s)
 {
 	const char *arg = nullptr;
 	if (strncmp(cmd, "profile:", 8) == 0)

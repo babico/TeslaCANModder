@@ -17,7 +17,7 @@ inline uint8_t computeHW4IsaChecksum(const Frame &f)
 }
 
 // ── ISA Speed Chime Suppress Command ─────────────────────────────────────────
-bool executeIsaChimeCmd(const char *cmd, State &s)
+static bool executeIsaChimeCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "isa-chime:", 10) == 0)
 	{

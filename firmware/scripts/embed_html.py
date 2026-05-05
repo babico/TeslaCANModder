@@ -20,8 +20,8 @@ env = globals().get("env", env)
 
 def embed_html(source, target, env):
     src_dir = env.subst("$PROJECT_DIR")
-    html_path = os.path.join(src_dir, "lib", "io", "wifi", "esp32", "dashboard.html")
-    header_path = os.path.join(src_dir, "lib", "io", "wifi", "esp32", "dashboard.h")
+    html_path = os.path.join(src_dir, "lib", "io", "wifi", "dashboard", "esp32", "dashboard.html")
+    header_path = os.path.join(src_dir, "lib", "io", "wifi", "dashboard", "esp32", "dashboard.h")
 
     if not os.path.exists(html_path):
         print("embed_html: dashboard.html not found, skipping")

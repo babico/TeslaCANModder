@@ -28,7 +28,7 @@ inline void controlAirRecirc(State &s, bool enable)
 	startBurst(s, f, BUS_VEHICLE, 20, 20);
 }
 
-inline bool execAirRecircCmd(const char *cmd, State &s)
+static bool executeAirRecircCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "airecirc:on") == 0)
 	{

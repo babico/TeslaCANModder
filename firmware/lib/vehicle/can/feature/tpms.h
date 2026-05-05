@@ -48,7 +48,7 @@ inline void decodeTpms(const Frame &f, State &s)
 	s.hasTpms = true;
 }
 
-bool execTpmsCmd(const char *cmd, State &s)
+static bool executeTpmsCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "tpms") != 0)
 		return false;

@@ -118,7 +118,7 @@ void applyFilters(State &s)
 			bool isaAlready = (s.variant == HW4 && s.isaChimeSuppress);
 			bool legacyMuxAlready = (s.variant == LEGACY && (s.fsdEnabled || s.nagSuppress));
 			if (!isaAlready)
-				ids[count++] = CAN_ID_ISA_SPEED;      // HW4-only frame (ISA speed chime)
+				ids[count++] = CAN_ID_ISA_SPEED; // HW4-only frame (ISA speed chime)
 			if (!legacyMuxAlready)
 				ids[count++] = CAN_ID_LEGACY_FSD_MUX; // Legacy-only frame
 		}
@@ -179,9 +179,9 @@ void applyFilters(State &s)
 										  CAN_ID_FRONT_MOTOR,
 										  CAN_ID_SEATBELT_STATUS,
 										  CAN_ID_GTW_VERSION,
-									  CAN_ID_DAS_AP_CONFIG,
-									  CAN_ID_REAR_INV_TEMPS,
-									  CAN_ID_FRONT_INV_TEMPS};
+										  CAN_ID_DAS_AP_CONFIG,
+										  CAN_ID_REAR_INV_TEMPS,
+										  CAN_ID_FRONT_INV_TEMPS};
 		driverSetBusFilters(BUS_VEHICLE, vehIds, sizeof(vehIds) / sizeof(vehIds[0]));
 	}
 #endif
@@ -308,8 +308,10 @@ static inline void _updateCanFrameRate(State &s, uint8_t bus, uint32_t now)
 		// Compute Hz × 10 as integer; clamp to uint16_t max
 		uint32_t hz10 = (b.windowCount * 10000UL) / elapsed;
 		b.hz = (hz10 > 0xFFFFu) ? 0xFFFFu : (uint16_t)hz10;
-		if (b.hz < b.hzMin) b.hzMin = b.hz;
-		if (b.hz > b.hzMax) b.hzMax = b.hz;
+		if (b.hz < b.hzMin)
+			b.hzMin = b.hz;
+		if (b.hz > b.hzMax)
+			b.hzMax = b.hz;
 		b.windowCount = 0;
 		b.windowStartMs = now;
 	}
@@ -362,7 +364,8 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 				// ISA speed chime (921) is HW4-only; infer variant from its presence
 				bool fromLegacy = (s.variant == LEGACY);
 				s.variant = HW4;
-				if (fromLegacy) s.speedProfile = 1; // P2-07: clear stale legacy stalk value
+				if (fromLegacy)
+					s.speedProfile = 1; // P2-07: clear stale legacy stalk value
 				applyFilters(s);
 				resetHandlerLogFlags();
 				sendLog(F("Fallback: HW4 inferred from ISA_SPEED"));
@@ -781,12 +784,12 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 		if (f.id == CAN_ID_GTW_CAR_STATE && f.dlc >= 7)
 		{
 			static uint8_t otaAssertCnt = 0;
-			static uint8_t otaClearCnt  = 0;
+			static uint8_t otaClearCnt = 0;
 			bool installing = ((f.data[6] & 0x03) == 2);
 			if (installing)
 			{
 				otaAssertCnt = (otaAssertCnt < 3) ? otaAssertCnt + 1 : 3;
-				otaClearCnt  = 0;
+				otaClearCnt = 0;
 				if (otaAssertCnt >= 3 && !s.otaInProgress)
 				{
 					s.otaInProgress = true;
@@ -796,7 +799,7 @@ void handleMessage(Frame &f, uint8_t bus, State &s)
 			}
 			else
 			{
-				otaClearCnt  = (otaClearCnt < 6) ? otaClearCnt + 1 : 6;
+				otaClearCnt = (otaClearCnt < 6) ? otaClearCnt + 1 : 6;
 				otaAssertCnt = 0;
 				if (otaClearCnt >= 6 && s.otaInProgress)
 				{

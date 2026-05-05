@@ -10,7 +10,7 @@
 // Command: singleshot:on / singleshot:off
 // NVS key: "ssTx" (persisted bool)
 
-inline bool execSingleShotCmd(const char *cmd, State &s)
+static bool executeSingleShotCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "singleshot:", 11) == 0 && parseBoolCmd(cmd + 11, s.singleShotTx, s.singleShotTx))
 	{

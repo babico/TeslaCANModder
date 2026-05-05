@@ -26,7 +26,7 @@ inline void setSummonMode(Frame& f, SummonMode mode) {
 
 // ── Summon Injection Enable/Disable Command ──────────────────────────────────
 // Controls whether summon injection is allowed. Persisted to EEPROM/NVS.
-bool executeSummonInjectCmd(const char* cmd, State& s) {
+static bool executeSummonInjectCmd(const char* cmd, State& s) {
   if (strncmp(cmd, "summon-inject:", 14) == 0) {
     if (!s.features().summon) return false;
     if (!parseBoolCmd(cmd + 14, s.summonInject, s.summonInject)) return false;
@@ -44,7 +44,7 @@ bool executeSummonInjectCmd(const char* cmd, State& s) {
 
 // ── Summon Command (summon, summon:forward, summon:reverse, summon:stop) ─────
 // Requires summonInject to be enabled (except for stop, which always works).
-bool executeSummonCmd(const char* cmd, State& s) {
+static bool executeSummonCmd(const char* cmd, State& s) {
   if (strcmp(cmd, "summon:stop") == 0) {
     if (!s.features().summon) return false;
     s.summonMode = SUMMON_STOP;

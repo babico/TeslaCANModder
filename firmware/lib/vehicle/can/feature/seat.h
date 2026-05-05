@@ -71,7 +71,7 @@ static void controlSeatHeat(uint8_t seat, SeatHeatLevel level, State &s)
 
 // ── Seat Command Execution ───────────────────────────────────────────────────
 
-static bool execSeatCmd(const char *cmd, State &s)
+static bool executeSeatCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)
 		return false;

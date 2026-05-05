@@ -38,7 +38,7 @@ static void controlWindowVent(uint8_t pos, State &s)
 //   window:vent:N      — set vent to arbitrary position 0-100
 //   vent:open / vent:close — shorthand aliases
 
-static bool execWindowCmd(const char *cmd, State &s)
+static bool executeWindowCmd(const char *cmd, State &s)
 {
 	if (s.variant == LEGACY)
 		return false;

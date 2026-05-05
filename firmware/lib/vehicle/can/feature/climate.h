@@ -28,7 +28,7 @@ static void controlClimate(ClimateMode mode, const uint8_t *lastClimate, State &
 
 // ── Climate Command Execution ───────────────────────────────────────────────
 
-static bool execClimateCmd(const char *cmd, State &s)
+static bool executeClimateCmd(const char *cmd, State &s)
 {
 	if (s.variant == LEGACY)
 		return false;

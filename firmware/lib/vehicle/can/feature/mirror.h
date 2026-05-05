@@ -130,7 +130,7 @@ inline void mirrorAutoFoldCheck(State &s, bool vehicleLocked)
 // Handles all mirror:* commands including fold, unfold, heat, autofold, dip,
 // and the mirror:autofold:on/off toggle for lock-based auto-folding.
 
-static bool execMirrorCmd(const char *cmd, State &s)
+static bool executeMirrorCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)
 		return false;
@@ -164,7 +164,7 @@ static bool execMirrorCmd(const char *cmd, State &s)
 }
 
 // Auto-fold enable/disable toggle (persisted via NVS)
-inline bool execMirrorAutoFoldCmd(const char *cmd, State &s)
+static bool executeMirrorAutoFoldCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "mirror:autofold:on") == 0)
 	{

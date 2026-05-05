@@ -13,9 +13,15 @@ uint8_t driverGetClockReqMHz();
 uint8_t driverGetClockMHz();
 
 #include "core/util/parse.h"
+#include "core/log/ring.h"
+
+// ── Bus-independent features ─────────────────────────────────────────────────
 #include "feature/stream.h"
 #include "feature/can_raw.h"
 #include "feature/can_clock.h"
+
+// ── Chassis CAN features (BUS_CHASSIS) ──────────────────────────────────────
+#if BUS_CHASSIS_ACTIVE
 #include "feature/fsd.h"
 #include "feature/nag.h"
 #include "feature/auto_lane_change.h"
@@ -28,10 +34,12 @@ uint8_t driverGetClockMHz();
 #include "feature/variant.h"
 #include "feature/bms.h"
 #include "feature/tpms.h"
-#include "feature/drive_mode.h"
 #include "feature/region.h"
-#include "core/log/ring.h"
+#endif
+
+// ── Vehicle CAN features (BUS_VEHICLE) ──────────────────────────────────────
 #if BUS_VEHICLE_ACTIVE
+#include "feature/drive_mode.h"
 #include "feature/mirror.h"
 #include "feature/lock.h"
 #include "feature/light.h"
@@ -49,8 +57,6 @@ uint8_t driverGetClockMHz();
 #include "feature/turn_signal.h"
 #include "feature/seatbelt.h"
 #include "feature/air_recirc.h"
-#include "feature/wiper.h"
-#include "feature/mirror.h"
 #include "feature/powertrain.h"
 #include "feature/can_sim.h"
 #include "feature/single_shot.h"
@@ -58,10 +64,13 @@ uint8_t driverGetClockMHz();
 #include "feature/fw_compat.h"
 #include "feature/vehicle_config.h"
 #endif
+
+// ── Body CAN features (BUS_BODY) ─────────────────────────────────────────────
 #if BUS_BODY_ACTIVE
 #include "feature/window.h"
 #include "feature/sentry.h"
 #endif
+
 #if BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE
 #include "feature/trunk.h"
 #endif

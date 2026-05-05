@@ -26,7 +26,7 @@ static void controlDisplayBrightness(uint8_t level, State &s)
 
 // ── Display Command Execution ────────────────────────────────────────────────
 
-static bool execDisplayCmd(const char *cmd, State &s)
+static bool executeDisplayCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)
 		return false;

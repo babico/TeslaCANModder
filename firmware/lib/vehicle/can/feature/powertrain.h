@@ -72,7 +72,7 @@ inline const char *gearName(uint8_t gear)
 	}
 }
 
-inline bool execPowertrainCmd(const char *cmd, State &s)
+static bool executePowertrainCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "powertrain") == 0)
 	{

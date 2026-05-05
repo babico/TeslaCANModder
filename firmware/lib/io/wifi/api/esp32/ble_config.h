@@ -1,5 +1,5 @@
 #pragma once
-#include "api/rest/routes.h"
+#include "routes.h"
 
 // ── BLE Status & Config Endpoints ───────────────────────────────────────────
 

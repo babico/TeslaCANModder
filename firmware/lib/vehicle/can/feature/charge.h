@@ -38,7 +38,7 @@ static void controlCharge(ChargeAction action, const uint8_t *lastCharge, State 
 
 // ── Charge Command Execution ────────────────────────────────────────────────
 
-static bool execChargeCmd(const char *cmd, State &s)
+static bool executeChargeCmd(const char *cmd, State &s)
 {
 	if (s.variant == LEGACY)
 		return false;

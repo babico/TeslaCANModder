@@ -27,7 +27,7 @@
 #define MQTT_HOST_MAX 63
 #define MQTT_TOPIC_PREFIX "teslacanmodder/"
 
-inline bool execMqttCmd(const char *cmd, State &s)
+static bool executeMqttCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "mqtt:", 5) == 0 && parseBoolCmd(cmd + 5, s.mqttEnabled, s.mqttEnabled))
 	{

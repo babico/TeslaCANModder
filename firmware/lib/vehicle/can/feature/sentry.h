@@ -22,7 +22,7 @@ static void controlSentry(bool enable, State &s)
 
 // ── Sentry Command Execution ────────────────────────────────────────────────
 
-static bool execSentryCmd(const char *cmd, State &s)
+static bool executeSentryCmd(const char *cmd, State &s)
 {
 	if (s.variant == LEGACY)
 		return false;

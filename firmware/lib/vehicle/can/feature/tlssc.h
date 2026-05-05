@@ -16,7 +16,7 @@
 
 // ── TLSSC Command ─────────────────────────────────────────────────────────────
 // tlssc:on|off
-bool executeTlsscCmd(const char *cmd, State &s)
+static bool executeTlsscCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "tlssc:", 6) == 0)
 	{
@@ -31,7 +31,7 @@ bool executeTlsscCmd(const char *cmd, State &s)
 // ── TLSSC Frame Handler ───────────────────────────────────────────────────────
 // Called for every 0x331 frame on the vehicle bus.
 // Returns true when frame was modified (caller should retransmit).
-bool handleTlssc(Frame &f, State &s)
+static bool handleTlssc(Frame &f, State &s)
 {
 	if (!s.tlsscRestore)
 		return false;

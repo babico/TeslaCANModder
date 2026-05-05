@@ -23,7 +23,7 @@ static void controlRegenLevel(uint8_t level, const uint8_t *lastDrive, State &s)
 
 // ── Regen Command Execution ─────────────────────────────────────────────────
 
-static bool execRegenCmd(const char *cmd, State &s)
+static bool executeRegenCmd(const char *cmd, State &s)
 {
 	if (s.variant == LEGACY)
 		return false;

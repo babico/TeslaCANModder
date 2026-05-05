@@ -82,7 +82,7 @@ inline void decodeFwVersion(const Frame &f, State &s)
 }
 
 // Query command
-inline bool execFwCompatCmd(const char *cmd, State &s)
+static bool executeFwCompatCmd(const char *cmd, State &s)
 {
 	return strcmp(cmd, "fwcompat") == 0;
 }

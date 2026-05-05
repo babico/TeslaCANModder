@@ -117,7 +117,7 @@ inline VehicleCapabilities getVehicleCapabilities(VehicleModel model)
 }
 
 // Query command
-inline bool execVehicleConfigCmd(const char *cmd, State &s)
+static bool executeVehicleConfigCmd(const char *cmd, State &s)
 {
 	return strcmp(cmd, "vehicle") == 0;
 }

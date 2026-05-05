@@ -29,7 +29,7 @@ inline int calculateHW3SpeedOffset(int steps)
 
 // ── Offset Command (offset:N, offset:auto, offset:off) ──────────────────────
 // Unified: HW4 accepts 0–63, HW3 accepts 0–100. Legacy rejected.
-bool executeOffsetCmd(const char *cmd, State &s)
+static bool executeOffsetCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "offset:", 7) != 0)
 		return false;

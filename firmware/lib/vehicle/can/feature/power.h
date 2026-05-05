@@ -66,7 +66,7 @@ static void controlDriveState(State &s)
 
 // ── Power Command Execution ──────────────────────────────────────────────────
 
-static bool execPowerCmd(const char *cmd, State &s)
+static bool executePowerCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)
 		return false;

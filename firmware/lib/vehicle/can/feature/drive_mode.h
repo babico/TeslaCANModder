@@ -111,7 +111,7 @@ inline void driveModeTick(State &s, unsigned long now)
 }
 
 // ── Drive Mode Command ───────────────────────────────────────────────────────
-bool executeDriveModeCmd(const char *cmd, State &s)
+static bool executeDriveModeCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "drivemode:", 10) != 0)
 		return false;

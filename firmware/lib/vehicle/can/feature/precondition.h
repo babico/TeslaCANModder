@@ -23,7 +23,7 @@ static void controlPrecondition(bool enable, State &s)
 // ── Preconditioning Command ──────────────────────────────────────────────────
 // Enables/disables battery preconditioning for supercharging.
 
-bool execPreconditionCmd(const char *cmd, State &s)
+static bool executePreconditionCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "precondition:", 13) == 0)
 	{

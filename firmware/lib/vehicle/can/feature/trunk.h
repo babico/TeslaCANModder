@@ -96,7 +96,7 @@ static bool executeTrunkControl(TrunkTarget target, TrunkAction action, State &s
 
 // ── Trunk Command Execution ──────────────────────────────────────────────────
 
-static bool execTrunkCmd(const char *cmd, State &s)
+static bool executeTrunkCmd(const char *cmd, State &s)
 {
 	if (s.variant == LEGACY)
 		return false;

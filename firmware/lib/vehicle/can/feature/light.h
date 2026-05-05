@@ -127,7 +127,7 @@ static void controlDomeLight(DomeLightSwitch mode, State &s)
 
 // ── Light Command Execution ──────────────────────────────────────────────────
 
-static bool execLightCmd(const char *cmd, State &s)
+static bool executeLightCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)
 		return false;

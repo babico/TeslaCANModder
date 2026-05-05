@@ -66,7 +66,7 @@ inline void wiperPersistSave(State &s, uint8_t speed)
 // ── Wiper Command Execution ──────────────────────────────────────────────────
 // Handles wiper:off/1/2/3 direct speed commands and wiperpersist:on/off toggle.
 
-static bool execWiperCmd(const char *cmd, State &s)
+static bool executeWiperCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)
 		return false;
@@ -95,7 +95,7 @@ static bool execWiperCmd(const char *cmd, State &s)
 }
 
 // Wiper persistence enable/disable toggle (persisted via NVS)
-inline bool execWiperPersistCmd(const char *cmd, State &s)
+static bool executeWiperPersistCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "wiperpersist:on") == 0)
 	{

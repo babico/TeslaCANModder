@@ -34,7 +34,7 @@ inline void controlTurnSignal(State &s, TurnSignalRequest req)
 	startBurst(s, f, BUS_VEHICLE, 3, 100);
 }
 
-inline bool execTurnSignalCmd(const char *cmd, State &s)
+static bool executeTurnSignalCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "turn:left3") == 0)
 	{

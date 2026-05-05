@@ -28,7 +28,7 @@ static void controlStopMode(StopMode mode, const uint8_t *lastDrive, State &s)
 
 // ── Stop Mode Command Execution ─────────────────────────────────────────────
 
-static bool execStopCmd(const char *cmd, State &s)
+static bool executeStopCmd(const char *cmd, State &s)
 {
 	if (s.variant == LEGACY)
 		return false;

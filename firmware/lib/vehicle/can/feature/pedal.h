@@ -41,7 +41,7 @@ static void controlPedalMode(PedalMode mode, const uint8_t *lastDrive, State &s)
 
 // ── Pedal Command Execution ─────────────────────────────────────────────────
 
-static bool execPedalCmd(const char *cmd, State &s)
+static bool executePedalCmd(const char *cmd, State &s)
 {
 	if (s.variant == LEGACY)
 		return false;

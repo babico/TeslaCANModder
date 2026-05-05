@@ -33,7 +33,7 @@ inline void seatbeltEmulationTick(State &s)
 	driverSend(f, BUS_VEHICLE);
 }
 
-inline bool execSeatbeltCmd(const char *cmd, State &s)
+static bool executeSeatbeltCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "seatbelt:on") == 0)
 	{

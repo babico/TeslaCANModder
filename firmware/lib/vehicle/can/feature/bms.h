@@ -364,7 +364,7 @@ inline float decodeBmsChargeTimeToFull(const uint8_t *data)
 // ── BMS Telemetry Command ────────────────────────────────────────────────────
 // Returns current BMS battery data as JSON.
 
-bool execBmsCmd(const char *cmd, State &s)
+static bool executeBmsCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "bms") != 0)
 		return false;

@@ -133,7 +133,7 @@ inline bool parseRegionCode(const char *name, uint8_t &out)
 	return false;
 }
 
-bool executeRegionSpoofCmd(const char *cmd, State &s)
+static bool executeRegionSpoofCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "region:spoof:", 13) != 0)
 		return false;

@@ -2,7 +2,7 @@
 #include "core/forward.h"
 
 // ── Variant Selection Command ────────────────────────────────────────────────
-bool executeVariantCmd(const char *cmd, State &s)
+static bool executeVariantCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "variant:", 8) == 0)
 	{

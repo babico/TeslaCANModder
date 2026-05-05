@@ -4,7 +4,7 @@
 // ── MCP2515 Clock Profile Command ──────────────────────────────────────────
 // canclock:auto|8|12|16|20
 // 12MHz is accepted as a compatibility request and resolved by driver fallback.
-bool executeCanClockCmd(const char *cmd, State &s)
+static bool executeCanClockCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "canclock:", 9) != 0)
 		return false;

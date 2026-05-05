@@ -190,7 +190,7 @@ inline bool nagNaturalIntervalReady(State &s, unsigned long nowMs)
 // ── Nag Suppress Command ─────────────────────────────────────────────────────
 // Toggles bit-19 nag suppression (lighter approach than full torque spoofing).
 // Command: nag:on / nag:off
-bool executeNagCmd(const char *cmd, State &s)
+static bool executeNagCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "nag:", 4) == 0)
 	{
@@ -214,7 +214,7 @@ bool executeNagCmd(const char *cmd, State &s)
 //   nag:killer:mode:safe    — echo only when DAS requests hands-on
 //   nag:killer:mode:natural — Gaussian jitter with steering angle feedback
 
-bool executeNagKillerCmd(const char *cmd, State &s)
+static bool executeNagKillerCmd(const char *cmd, State &s)
 {
 	// nag:killer:mode:<legacy|safe> — set echo behavior mode
 	if (strncmp(cmd, "nag:killer:mode:", 16) == 0)

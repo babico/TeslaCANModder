@@ -280,7 +280,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		sendStatus(s, now);
 		return;
 	}
-	if (execBmsCmd(cmd, s))
+	if (executeBmsCmd(cmd, s))
 	{
 		auto bmsCore = [&](JsonLineBuilder &out)
 		{
@@ -348,7 +348,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 	// Body bus commands (window, sentry)
 #if BUS_BODY_ACTIVE
-	if (execWindowCmd(cmd, s) || execSentryCmd(cmd, s))
+	if (executeWindowCmd(cmd, s) || executeSentryCmd(cmd, s))
 	{
 		sendAck(cmd);
 		sendLog(cmd);
@@ -359,7 +359,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 	// Vehicle bus commands (climate, charge, drive, precondition, track mode)
 #if BUS_VEHICLE_ACTIVE
-	if (execPreconditionCmd(cmd, s))
+	if (executePreconditionCmd(cmd, s))
 	{
 		sendAck(cmd);
 		sendLog(s.preconditionEnabled ? F("Precondition ON - saved") : F("Precondition OFF - saved"));
@@ -367,7 +367,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	if (execTrackModeCmd(cmd, s))
+	if (executeTrackModeCmd(cmd, s))
 	{
 		sendAck(cmd);
 		sendLog(s.trackModeEnabled ? F("Track mode ON - saved") : F("Track mode OFF - saved"));
@@ -375,8 +375,8 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	if (execClimateCmd(cmd, s) || execChargeCmd(cmd, s) || execPedalCmd(cmd, s) || execRegenCmd(cmd, s) ||
-		execStopCmd(cmd, s))
+	if (executeClimateCmd(cmd, s) || executeChargeCmd(cmd, s) || executePedalCmd(cmd, s) || executeRegenCmd(cmd, s) ||
+		executeStopCmd(cmd, s))
 	{
 		sendAck(cmd);
 		sendLog(cmd);
@@ -391,8 +391,8 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 	}
 
 	if (s.variant != LEGACY &&
-		(execMirrorCmd(cmd, s) || execLockCmd(cmd, s) || execLightCmd(cmd, s) || execWiperCmd(cmd, s) ||
-		 execSeatCmd(cmd, s) || execDisplayCmd(cmd, s) || execPowerCmd(cmd, s)))
+		(executeMirrorCmd(cmd, s) || executeLockCmd(cmd, s) || executeLightCmd(cmd, s) || executeWiperCmd(cmd, s) ||
+		 executeSeatCmd(cmd, s) || executeDisplayCmd(cmd, s) || executePowerCmd(cmd, s)))
 	{
 		sendAck(cmd);
 		sendLog(cmd);
@@ -403,7 +403,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 	// Trunk commands (frunk = vehicle bus, trunk/glovebox = body bus)
 #if BUS_VEHICLE_ACTIVE || BUS_BODY_ACTIVE
-	if (s.variant != LEGACY && execTrunkCmd(cmd, s))
+	if (s.variant != LEGACY && executeTrunkCmd(cmd, s))
 	{
 		sendAck(cmd);
 		sendLog(cmd);
@@ -413,7 +413,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 #endif
 
 	// TPMS query
-	if (execTpmsCmd(cmd, s))
+	if (executeTpmsCmd(cmd, s))
 	{
 		jsonLine()
 			.str("t", "tpms")
@@ -684,7 +684,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 	// Turn signals: turn:left3, turn:right3, turn:hazard, turn:off
 #if BUS_VEHICLE_ACTIVE
-	if (execTurnSignalCmd(cmd, s))
+	if (executeTurnSignalCmd(cmd, s))
 	{
 		sendAck(cmd);
 		sendLog(cmd);
@@ -695,7 +695,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 	// Seatbelt emulation: seatbelt:on, seatbelt:off
 #if BUS_VEHICLE_ACTIVE
-	if (execSeatbeltCmd(cmd, s))
+	if (executeSeatbeltCmd(cmd, s))
 	{
 		sendAck(cmd);
 		saveSettings(s);
@@ -707,7 +707,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 	// Air recirculation: airecirc:on, airecirc:off
 #if BUS_VEHICLE_ACTIVE
-	if (execAirRecircCmd(cmd, s))
+	if (executeAirRecircCmd(cmd, s))
 	{
 		sendAck(cmd);
 		sendLog(cmd);
@@ -718,7 +718,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 	// Wiper persistence: wiperpersist:on, wiperpersist:off
 #if BUS_VEHICLE_ACTIVE
-	if (execWiperPersistCmd(cmd, s))
+	if (executeWiperPersistCmd(cmd, s))
 	{
 		sendAck(cmd);
 		saveSettings(s);
@@ -730,7 +730,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 	// Mirror auto-fold: mirror:autofold:on, mirror:autofold:off
 #if BUS_VEHICLE_ACTIVE
-	if (execMirrorAutoFoldCmd(cmd, s))
+	if (executeMirrorAutoFoldCmd(cmd, s))
 	{
 		sendAck(cmd);
 		saveSettings(s);
@@ -742,7 +742,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 	// Powertrain telemetry query
 #if BUS_VEHICLE_ACTIVE
-	if (execPowertrainCmd(cmd, s))
+	if (executePowertrainCmd(cmd, s))
 	{
 		jsonLine()
 			.str("t", "powertrain")
@@ -772,7 +772,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 #endif
 
 	// CAN simulation: simu:start, simu:stop
-	if (execCanSimCmd(cmd, s))
+	if (executeCanSimCmd(cmd, s))
 	{
 		sendAck(cmd);
 		sendLog(s.canSimEnabled ? F("CAN simulation started") : F("CAN simulation stopped"));
@@ -781,7 +781,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 	}
 
 	// Single-shot TX mode: singleshot:on, singleshot:off
-	if (execSingleShotCmd(cmd, s))
+	if (executeSingleShotCmd(cmd, s))
 	{
 		sendAck(cmd);
 		saveSettings(s);
@@ -792,7 +792,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 	}
 
 	// Firmware version compatibility: fwcompat
-	if (execFwCompatCmd(cmd, s))
+	if (executeFwCompatCmd(cmd, s))
 	{
 		jsonLine()
 			.str("t", "fwcompat")
@@ -808,7 +808,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 #if BUS_VEHICLE_ACTIVE
 	// MQTT bridge: mqtt:on/off, mqtt:broker:<host>, mqtt:port:<port>, mqtt:interval:<ms>
-	if (execMqttCmd(cmd, s))
+	if (executeMqttCmd(cmd, s))
 	{
 		sendAck(cmd);
 		saveSettings(s);
@@ -819,7 +819,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 #endif
 
 	// Vehicle config query: vehicle
-	if (execVehicleConfigCmd(cmd, s))
+	if (executeVehicleConfigCmd(cmd, s))
 	{
 		jsonLine()
 			.str("t", "vehicle")

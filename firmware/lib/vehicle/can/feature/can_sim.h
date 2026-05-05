@@ -73,7 +73,7 @@ inline void canSimTick(State &s)
 	handleMessage(f, BUS_VEHICLE, s);
 }
 
-inline bool execCanSimCmd(const char *cmd, State &s)
+static bool executeCanSimCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "simu:start") == 0)
 	{

@@ -5,7 +5,7 @@
 // ── Ban Shield Command ────────────────────────────────────────────────────────
 // banshield:on|off
 // Enables/disables experimental telemetry monitoring for ban threat detection
-bool executeBanShieldCmd(const char *cmd, State &s)
+static bool executeBanShieldCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "banshield:", 10) == 0)
 	{
@@ -29,7 +29,7 @@ bool executeBanShieldCmd(const char *cmd, State &s)
 // gtwshield:reset    — disarm + clear snapshot (re-learning phase)
 //
 // Source pattern: hypery11/flipper-tesla-fsd fsd_handle_gtw_shield()
-bool executeGtwShieldCmd(const char *cmd, State &s)
+static bool executeGtwShieldCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "gtwshield:", 10) != 0)
 		return false;
@@ -67,7 +67,7 @@ bool executeGtwShieldCmd(const char *cmd, State &s)
 //   so the caller can retransmit the healthy version immediately.
 //
 // Source: hypery11/flipper-tesla-fsd fsd_logic/fsd_handler.c
-bool handleGtwShield(Frame &f, State &s)
+static bool handleGtwShield(Frame &f, State &s)
 {
 	if (f.dlc < 8)
 		return false;

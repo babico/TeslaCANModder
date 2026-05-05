@@ -117,7 +117,7 @@ inline int8_t alcDirectionFromTurnSignal(const State &s)
 // Commands:
 //   alc:on  — enable auto lane change confirmation
 //   alc:off — disable auto lane change confirmation
-bool executeAlcCmd(const char *cmd, State &s)
+static bool executeAlcCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "alc:", 4) != 0)
 		return false;

@@ -3,7 +3,7 @@
 #include "core/util/parse.h"
 
 // ── FSD Enable/Disable Command ───────────────────────────────────────────────
-bool executeFsdCmd(const char *cmd, State &s)
+static bool executeFsdCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "fsd:", 4) == 0)
 	{
@@ -21,7 +21,7 @@ bool executeFsdCmd(const char *cmd, State &s)
 
 // ── FSD Force Enable/Disable Command ────────────────────────────────────────
 // When enabled, FSD modifications are applied even if UI FSD selection bit is off.
-bool executeFsdForceCmd(const char *cmd, State &s)
+static bool executeFsdForceCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "fsd:force:", 10) == 0)
 	{
