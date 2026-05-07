@@ -13,8 +13,8 @@ import { StyleSheet } from "react-native";
 
 import { colors, font, radius, spacing } from "../../design/tokens";
 
-type MarkdownItParser = MarkdownIt;
-type MarkdownItPlugin = Parameters<MarkdownIt["use"]>[0];
+type MarkdownItParser = InstanceType<typeof MarkdownIt>;
+type MarkdownItPlugin = Parameters<MarkdownItParser["use"]>[0];
 
 function resolvePlugin(pluginModule: unknown): MarkdownItPlugin | undefined {
 	const mod = pluginModule as Record<string, unknown> | null | undefined;
@@ -77,7 +77,7 @@ export function MarkdownRenderer({
 	return (
 		<Markdown
 			markdownit={markdownParser}
-			style={markdownStyles as Parameters<typeof Markdown>[0]["style"]}
+			style={markdownStyles as StyleSheet.NamedStyles<Record<string, unknown>>}
 			onLinkPress={onLinkPress}
 		>
 			{markdown || "No document selected."}

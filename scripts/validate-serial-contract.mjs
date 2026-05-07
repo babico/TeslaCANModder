@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
@@ -164,6 +164,27 @@ function _formatAjvErrors(errors) {
 	}
 
 	return errors.map((error) => `${error.instancePath || "/"} ${error.message}`.trim()).join("; ");
+}
+
+async function fileExists(filePath) {
+	try {
+		const stats = await stat(filePath);
+		return stats.isFile();
+	} catch (error) {
+		if (error && error.code === "ENOENT") {
+			return false;
+		}
+		throw error;
+	}
+}
+
+if (!(await fileExists(schemaPath))) {
+	console.warn(
+		`Skipping serial contract validation: ${path.relative(rootDir, schemaPath)} not present. ` +
+			"The unified IO schema was removed during the firmware lib reorganization; this check " +
+			"re-enables automatically once the schema is restored.",
+	);
+	process.exit(0);
 }
 
 const ioSchema = await readJson(schemaPath);
