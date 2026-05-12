@@ -1,10 +1,11 @@
 #pragma once
-// ── Bus 1 (Vehicle) Frame Handler ────────────────────────────────────────────
-// Vehicle bus (X179 pins 9-10): control-frame caching, BMS telemetry, DAS
-// status + ALC, blind-spot/turn signals, doors, EPAS nag-killer echo, TPMS,
-// region+spoof, drive mode, powertrain, motor temps, OTA detect, HW
-// auto-detect, GTW shield + ban detection, TLSSC restore, firmware version,
-// vehicle config piggyback.
+
+/**
+ * @file firmware/lib/vehicle/can/handler/bus/vehicle.h
+ * @brief Bus 1 (Vehicle) frame handler for control-frame caching and telemetry decode
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include "core/forward.h"
 #include "core/can/bus.h"
@@ -31,6 +32,18 @@
 #include "handler/helpers.h"
 #include "handler/filters.h"
 
+/**
+ * @brief Handle an incoming frame on the vehicle bus (X179 pins 9-10).
+ *
+ * Processes control-frame caching, BMS telemetry, DAS status with ALC,
+ * blind-spot/turn signals, doors, EPAS nag-killer echo, TPMS, region
+ * spoofing, drive mode, powertrain, motor temps, OTA detection, HW
+ * auto-detect, GTW shield/ban detection, TLSSC restore, firmware version,
+ * and vehicle config piggyback.
+ *
+ * @param f Reference to the received CAN frame.
+ * @param s Reference to the shared vehicle state.
+ */
 inline void handleVehicleBus(Frame &f, State &s)
 {
 	if (f.id == CAN_ID_UI_VEHICLE_CTRL && f.dlc >= 8)
@@ -58,7 +71,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// BMS battery telemetry (read-only decode)
+	// BMS high-voltage bus telemetry (read-only decode)
 	if (f.id == CAN_ID_BMS_HV_BUS && f.dlc >= 4)
 	{
 		s.bmsVoltage = decodeBmsVoltage(f.data);
@@ -122,7 +135,8 @@ inline void handleVehicleBus(Frame &f, State &s)
 		s.dasApState = readDASAutopilotState(f);
 		s.apGateApActive = isDASAutopilotActive(readDASAutopilotStatus(f));
 		s.dasSeen = true;
-		// ALC auto-confirm: inject stalk/button when lane change prompted
+
+		// ALC auto-confirm: inject stalk/button when lane change is prompted
 		unsigned long now = millis();
 		if (alcShouldConfirm(s, now) && s.apGateOpen())
 		{
@@ -146,7 +160,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// D-05 safety cues: turn signal status from VCFRONT lights
+	// Turn signal status from VCFRONT lights (D-05 safety cues)
 	if (f.id == CAN_ID_VCFRONT_LIGHTS && f.dlc >= 7)
 	{
 		s.turnSignalLeft = decodeTurnSignalLeftActive(f);
@@ -154,7 +168,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// D-05 safety cues: blind-spot levels
+	// Blind-spot monitoring levels (D-05 safety cues)
 	if (f.id == CAN_ID_BLIND_SPOT && f.dlc >= 1)
 	{
 		s.bsmLeftLevel = decodeBlindSpotLeftLevel(f);
@@ -190,10 +204,10 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// Enhanced BMS: degradation / capacity (mux=0) + energy status (mux=1)
+	// Enhanced BMS: degradation/capacity (mux=0) + energy status (mux=1)
 	if (f.id == CAN_ID_BMS_ENERGY_ST && f.dlc >= 8)
 	{
-		uint8_t mux = f.data[0] & 0x0F;
+		uint8_t mux = f.data[0] & 0x0F; // Lower nibble selects sub-message
 		if (mux == 0)
 		{
 			s.bmsNominalFullPack = decodeBmsNominalFullPack(f.data);
@@ -211,10 +225,11 @@ inline void handleVehicleBus(Frame &f, State &s)
 		}
 		return;
 	}
+
 	// Enhanced BMS: cell voltage min/max (mux=1) + thermistor temps (mux=0)
 	if (f.id == CAN_ID_BMS_MIN_MAX && f.dlc >= 4)
 	{
-		uint8_t mux = f.data[0] & 0x0F;
+		uint8_t mux = f.data[0] & 0x0F; // Lower nibble selects sub-message
 		if (mux == 1)
 		{
 			s.bmsCellVoltageMax = decodeBmsCellVoltageMax(f.data);
@@ -231,6 +246,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		}
 		return;
 	}
+
 	// Enhanced BMS: power limits + HVAC budget
 	if (f.id == CAN_ID_BMS_POWER_AV && f.dlc >= 4)
 	{
@@ -245,7 +261,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// BMS_status (0x212): precondition flags, HV state, contactor
+	// BMS precondition flags, HV state, and contactor status
 	if (f.id == CAN_ID_BMS_STATUS && f.dlc >= 3)
 	{
 		s.bmsPrecondAllowed = decodeBmsPrecondAllowed(f.data);
@@ -256,7 +272,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// BMS_driveLimits (0x2D2): bus voltage/current limits
+	// BMS drive limits: bus voltage and current boundaries
 	if (f.id == CAN_ID_BMS_DRIVE_LIM && f.dlc >= 8)
 	{
 		s.bmsMinBusVoltage = decodeBmsMinBusVoltage(f.data);
@@ -267,7 +283,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// BMS_kwhCounter (0x3D2): lifetime counters
+	// BMS lifetime energy counters (kWh discharged/charged)
 	if (f.id == CAN_ID_BMS_KWH_CNT && f.dlc >= 8)
 	{
 		s.bmsKwhDischargeTotal = decodeBmsKwhDischargeTotal(f.data);
@@ -276,10 +292,10 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// BMS_kwhCountersMultiplexed (0x3F2)
+	// BMS multiplexed kWh counters (AC charge, DC charge, regen, drive discharge)
 	if (f.id == CAN_ID_BMS_KWH_MUX && f.dlc >= 5)
 	{
-		uint8_t mux = f.data[0];
+		uint8_t mux = f.data[0]; // Mux index selects counter type
 		float val = decodeBmsKwhMuxCounter(f.data);
 		switch (mux)
 		{
@@ -303,25 +319,57 @@ inline void handleVehicleBus(Frame &f, State &s)
 	// Nag killer + steering mode: intercept EPAS torque frame
 	if (f.id == CAN_ID_EPAS_TORQUE && f.dlc >= 8)
 	{
-		// Steering mode readback: EPAS_currentTuneMode = byte[0] bits[7:4]
+		// EPAS_currentTuneMode = byte[0] bits[7:4]
 		s.steeringMode = (f.data[0] >> 4) & 0x0F;
 		s.hasSteeringMode = true;
-		if (!s.txPaused && s.apGateOpen() && nagKillerShouldEcho(s))
+		// Capture real handsOnLevel for organic mode driver bypass (byte[4] bits[7:6])
+		s.nagOrganicRealHandsOn = (f.data[4] >> 6) & 0x03;
+
+		if (s.txPaused || !s.apGateOpen() || !nagModeUsesEpasEcho(s.nagMode))
+			return;
+
+		const unsigned long nowMs = millis();
+		const NagMode mode = s.nagMode;
+
+		// Organic/full mode: full DAS state machine driving byte 6 layout
+		if (mode == NAG_MODE_ORGANIC || mode == NAG_MODE_FULL)
+		{
+			if (s.nagOrganicPrevState != s.dasHandsOnState)
+			{
+				nagOrganicOnStateChange(s, nowMs);
+				s.nagOrganicPrevState = s.dasHandsOnState;
+			}
+			if (nagOrganicTick(s, nowMs))
+			{
+				Frame echo = f;
+				nagOrganicApply(echo, s);
+				driverSend(echo, BUS_VEHICLE);
+				s.canDiag.nagEchoCount++;
+			}
+			return;
+		}
+
+		// Natural mode: Gaussian jitter with non-linear interval, byte 1 counter
+		if (mode == NAG_MODE_NATURAL)
+		{
+			if (!nagFixedOrNaturalShouldEcho(s))
+				return;
+			if (!nagNaturalIntervalReady(s, nowMs))
+				return;
+			Frame echo = f;
+			nagApplyNaturalTorque(echo, nagNaturalTorque(s.steeringAngle, s.dasHandsOnState));
+			driverSend(echo, BUS_VEHICLE);
+			s.canDiag.nagEchoCount++;
+			return;
+		}
+
+		// Legacy/safe mode: zero torque echo with byte 1 counter
+		if (nagFixedOrNaturalShouldEcho(s))
 		{
 			Frame echo = f;
-			if (s.nagKillerMode == NAG_KILLER_NATURAL && nagNaturalIntervalReady(s, millis()))
-			{
-				float torque = nagNaturalTorque(s.steeringAngle, s.dasHandsOnState);
-				nagKillerModifyNatural(echo, torque);
-				driverSend(echo, BUS_VEHICLE);
-				s.canDiag.nagEchoCount++;
-			}
-			else if (s.nagKillerMode != NAG_KILLER_NATURAL)
-			{
-				nagKillerModify(echo);
-				driverSend(echo, BUS_VEHICLE);
-				s.canDiag.nagEchoCount++;
-			}
+			nagApplyZeroTorque(echo);
+			driverSend(echo, BUS_VEHICLE);
+			s.canDiag.nagEchoCount++;
 		}
 		return;
 	}
@@ -371,6 +419,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		s.gearState = decodeGearState(f.data);
 		s.accelPedal = decodeAccelPedal(f.data);
 		s.brakePedalState = decodeBrakePedalState(f.data);
+		// Gear 1=Park, 0=Invalid, 5=Neutral treated as parked for AP gate
 		s.apGateParked = (s.gearState == 1 || s.gearState == 0 || s.gearState == 5);
 		s.hasPowertrain = true;
 		return;
@@ -393,7 +442,8 @@ inline void handleVehicleBus(Frame &f, State &s)
 		s.hasPowertrain = true;
 		return;
 	}
-	// Rear inverter / stator / heatsink temperatures (all models)
+
+	// Rear inverter/stator/heatsink temperatures (all models)
 	if (f.id == CAN_ID_REAR_INV_TEMPS && f.dlc >= 5)
 	{
 		s.rearInvTemp = decodeRearInvTemp(f.data);
@@ -402,7 +452,8 @@ inline void handleVehicleBus(Frame &f, State &s)
 		s.hasMotorTemps = true;
 		return;
 	}
-	// Front inverter / stator / heatsink temperatures (dual-motor only)
+
+	// Front inverter/stator/heatsink temperatures (dual-motor only)
 	if (f.id == CAN_ID_FRONT_INV_TEMPS && f.dlc >= 5)
 	{
 		s.frontInvTemp = decodeFrontInvTemp(f.data);
@@ -412,10 +463,10 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// OTA safety check: detect Tesla OTA in progress
-	// GTW_updateInProgress: bits[1:0] of byte 6 (0=none,1=available,2=installing,3=scheduled)
-	// Fix (hypery11 v2.11): only pause TX when value=2 (installing); value=1 (available)
-	// caused false positives. Added 3-frame assert / 6-frame clear debounce.
+	// OTA safety: detect Tesla OTA in progress via GTW_updateInProgress
+	// bits[1:0] of byte 6: 0=none, 1=available, 2=installing, 3=scheduled
+	// Only pause TX when value=2 (installing); value=1 caused false positives.
+	// Uses 3-frame assert / 6-frame clear debounce for stability.
 	if (f.id == CAN_ID_GTW_CAR_STATE && f.dlc >= 7)
 	{
 		static uint8_t otaAssertCnt = 0;
@@ -446,16 +497,15 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// Auto HW detection from GTW_carConfig
-	// das_hw: 0/1=Legacy(MCU2/HW1/HW2 retrofit), 2=HW3, 3=HW4
-	// Fix (hypery11 v2.11): previously fell through for hw=0/1, silently
-	// skipping Legacy auto-detect for an entire class of vehicles.
+	// Auto HW detection from GTW_carConfig das_hw field
+	// das_hw: 0/1=Legacy (MCU2/HW1/HW2 retrofit), 2=HW3, 3=HW4
 	if (f.id == CAN_ID_GTW_CAR_CFG && f.dlc >= 1)
 	{
-		uint8_t hw = (f.data[0] >> 6) & 0x03;
+		uint8_t hw = (f.data[0] >> 6) & 0x03; // das_hw = byte[0] bits[7:6]
 		s.detectedHW = hw;
 		s.hwAutoDetected = true;
-		// Auto-switch variant if enabled (inspired by hypery11 detection)
+
+		// Auto-switch variant if enabled
 		if (s.variantAutoDetect)
 		{
 			Variant detected;
@@ -484,11 +534,10 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// GTW autopilot tier readback from mixed/Ethernet bridge frame
-	// Also run GTW shield defense when armed (hypery11 pattern)
+	// GTW autopilot tier readback + GTW shield defense
 	if (f.id == CAN_ID_GTW_CONFIG_ETH)
 	{
-		// GTW shield: learn snapshot or retransmit healthy frame
+		// GTW shield: learn snapshot or retransmit healthy frame when armed
 		if (!s.txPaused && handleGtwShield(f, s))
 		{
 			driverSend(f, BUS_VEHICLE);
@@ -508,8 +557,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// TLSSC Restore: spoof DAS_autopilotConfig to SELF_DRIVING (0x331)
-	// Source: hypery11/flipper-tesla-fsd, community research issue #18
+	// TLSSC Restore: spoof DAS_autopilotConfig to SELF_DRIVING
 	if (f.id == CAN_ID_DAS_AP_CONFIG)
 	{
 		if (!s.txPaused && s.apGateOpen() && handleTlssc(f, s))
@@ -519,7 +567,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// Firmware version decode (1.7)
+	// Firmware version decode
 	if (f.id == CAN_ID_GTW_VERSION && f.dlc >= 5)
 	{
 		decodeFwVersion(f, s);
@@ -529,7 +577,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// Vehicle-specific config decode (5.8) — piggyback on GTW_carConfig
+	// Vehicle-specific config decode — piggyback on GTW_carConfig
 	if (f.id == CAN_ID_GTW_CAR_CFG && f.dlc >= 3)
 	{
 		decodeVehicleConfig(f, s);

@@ -1,7 +1,9 @@
-// ── Command Roundtrip Integration ──────────────────────────────────────────
-// Verifies the full pipeline: command string → feature dispatch → CAN frame
-// burst configured correctly. Each test fires a command and asserts on the
-// resulting State.burstFrame (id, dlc, key data bytes) and burst counters.
+/**
+ * @file firmware/test/test_native_command_roundtrip/test_command_roundtrip.cpp
+ * @brief Unit tests for full command-to-CAN-burst pipeline integration
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -27,9 +29,13 @@ void applyFilters(State &) {}
 #include "feature/sentry.h"
 #include "feature/lock.h"
 
+/** @brief Test fixture setup — no per-test state required */
 void setUp() {}
+
+/** @brief Test fixture teardown — no cleanup required */
 void tearDown() {}
 
+/** @brief Creates a State with all readiness flags set for command execution */
 static State makeReady()
 {
 	State s = {};
@@ -40,6 +46,7 @@ static State makeReady()
 	return s;
 }
 
+/** @brief Verifies regen:max produces correct CAN ID, DLC, payload byte, and burst metadata */
 void test_roundtrip_regen_max_emits_correct_can_id_and_payload()
 {
 	State s = makeReady();
@@ -51,16 +58,18 @@ void test_roundtrip_regen_max_emits_correct_can_id_and_payload()
 	TEST_ASSERT_EQUAL_UINT8(BUS_VEHICLE, s.burstBus);
 }
 
+/** @brief Verifies window:vent emits the window CAN ID with all-window mask and position */
 void test_roundtrip_window_vent_emits_window_id()
 {
 	State s = makeReady();
 	TEST_ASSERT_TRUE(executeWindowCmd("window:vent:75", s));
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_WINDOW_VENT, s.burstFrame.id);
-	TEST_ASSERT_EQUAL_UINT8(0x1F, s.burstFrame.data[0]); // all-window mask
+	TEST_ASSERT_EQUAL_UINT8(0x1F, s.burstFrame.data[0]); // all-window bitmask
 	TEST_ASSERT_EQUAL_UINT8(75, s.burstFrame.data[1]);
 	TEST_ASSERT_EQUAL_UINT8(BUS_BODY, s.burstBus);
 }
 
+/** @brief Verifies sentry:on emits a burst with the sentry CAN ID */
 void test_roundtrip_sentry_on_emits_burst()
 {
 	State s = makeReady();
@@ -69,6 +78,7 @@ void test_roundtrip_sentry_on_emits_burst()
 	TEST_ASSERT_TRUE(s.burstRemaining > 0);
 }
 
+/** @brief Verifies lock command emits a non-zero burst */
 void test_roundtrip_lock_emits_burst()
 {
 	State s = makeReady();
@@ -76,6 +86,7 @@ void test_roundtrip_lock_emits_burst()
 	TEST_ASSERT_TRUE(s.burstRemaining > 0);
 }
 
+/** @brief Verifies unrecognized commands return false and leave burst at zero */
 void test_roundtrip_unknown_command_does_not_emit_burst()
 {
 	State s = makeReady();
@@ -86,6 +97,7 @@ void test_roundtrip_unknown_command_does_not_emit_burst()
 	TEST_ASSERT_EQUAL_UINT8(0, s.burstRemaining);
 }
 
+/** @brief Verifies a second command overwrites the burst frame payload */
 void test_roundtrip_subsequent_commands_overwrite_burst_frame()
 {
 	State s = makeReady();

@@ -1,30 +1,44 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/wiper.h
+ * @brief Wiper speed control and persistence via CAN ID 0x273 (UI_vehicleControl)
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "vehicle/can/fwd.h"
 
-// ── Wiper Bit Helpers (0x273 UI_vehicleControl) ─────────────────────────────
-// Wiper speed is encoded in byte 7 bits [2:0] of the UI_vehicleControl frame.
-// Tesla supports 4 wiper states: off (0), intermittent (1), normal (2), fast (3).
-
+/**
+ * @brief Wiper speed request levels
+ */
 enum WiperRequest
 {
-	WIPER_OFF = 0,
-	WIPER_1 = 1,
-	WIPER_2 = 2,
-	WIPER_3 = 3
+	WIPER_OFF = 0,  // Wipers off
+	WIPER_1 = 1,    // Intermittent
+	WIPER_2 = 2,    // Normal speed
+	WIPER_3 = 3     // Fast speed
 };
 
-// Write wiper speed into byte 7 lower 3 bits
+/**
+ * @brief Write the requested wiper speed into byte 7 bits [2:0] of a UI_vehicleControl frame
+ * @param f The CAN frame to modify (must have dlc >= 8).
+ * @param speed The desired wiper speed level.
+ */
 inline void setWiperRequest(Frame &f, WiperRequest speed)
 {
 	if (f.dlc < 8)
 		return;
-	f.data[7] = (f.data[7] & ~0x07) | (speed & 0x07); // bits 56-58
+	// Wiper speed occupies bits 56-58 (byte 7, lower 3 bits)
+	f.data[7] = (f.data[7] & ~0x07) | (speed & 0x07);
 }
 
-// ── Wiper Control (0x273) ────────────────────────────────────────────────────
-// Copies the last-seen 0x273 frame, sets the requested wiper speed,
-// and burst-sends it (20 frames, 20 ms apart) to override factory wipers.
-
+/**
+ * @brief Send a wiper speed override via burst-send on BUS_VEHICLE
+ * @param speed The desired wiper speed level.
+ * @param s Device state used for control frame construction and burst scheduling.
+ * @note Burst-sends 20 frames at 20 ms intervals to override factory wiper control.
+ */
 static void controlWiper(WiperRequest speed, State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -33,11 +47,11 @@ static void controlWiper(WiperRequest speed, State &s)
 	startBurst(s, f, BUS_VEHICLE, 20, 20);
 }
 
-// ── Wiper Speed Persistence ─────────────────────────────────────────────────
-// Tesla resets wiper speed to auto on each drive. These functions persist the
-// last-set wiper speed via NVS and re-inject it on boot/wake via controlWiper.
-
-// Restore the persisted wiper speed on boot/wake (requires hasCtrl)
+/**
+ * @brief Restore the persisted wiper speed on boot or wake
+ * @param s Device state containing persistence flags and saved speed.
+ * @note Requires wiperPersistEnabled, a non-zero saved speed, and a valid control frame.
+ */
 inline void wiperPersistRestore(State &s)
 {
 	if (!s.wiperPersistEnabled)
@@ -51,7 +65,11 @@ inline void wiperPersistRestore(State &s)
 	controlWiper(req, s);
 }
 
-// Save current wiper speed to State (later persisted to NVS by saveSettings)
+/**
+ * @brief Save the current wiper speed to state for later NVS persistence
+ * @param s Device state to store the speed in.
+ * @param speed The wiper speed value to save.
+ */
 inline void wiperPersistSave(State &s, uint8_t speed)
 {
 	if (!s.wiperPersistEnabled)
@@ -59,9 +77,12 @@ inline void wiperPersistSave(State &s, uint8_t speed)
 	s.savedWiperSpeed = speed;
 }
 
-// ── Wiper Command Execution ──────────────────────────────────────────────────
-// Handles wiper:off/1/2/3 direct speed commands and wiperpersist:on/off toggle.
-
+/**
+ * @brief Execute wiper speed commands (wiper:off, wiper:1, wiper:2, wiper:3)
+ * @param cmd The command string to match.
+ * @param s Device state for control frame availability and burst-send.
+ * @return True if the command was recognized and executed, false otherwise.
+ */
 static bool executeWiperCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)
@@ -90,7 +111,12 @@ static bool executeWiperCmd(const char *cmd, State &s)
 	return false;
 }
 
-// Wiper persistence enable/disable toggle (persisted via NVS)
+/**
+ * @brief Toggle wiper speed persistence on or off (persisted via NVS)
+ * @param cmd The command string to match ("wiperpersist:on" or "wiperpersist:off").
+ * @param s Device state to update the persistence flag in.
+ * @return True if the command was recognized and executed, false otherwise.
+ */
 static bool executeWiperPersistCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "wiperpersist:on") == 0)

@@ -1,5 +1,8 @@
-// ── TLSSC Restore Tests ───────────────────────────────────────────────────────
-// Tests executeTlsscCmd() and handleTlssc() from feature/tlssc.h.
+/** @file firmware/test/test_native_tlssc/test_tlssc.cpp
+ *  @brief Unit tests for TLS session cache
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -41,7 +44,6 @@ void setUp()
 }
 void tearDown() {}
 
-// ── executeTlsscCmd ───────────────────────────────────────────────────────────
 
 void test_tlssc_cmd_on_enables()
 {
@@ -74,7 +76,6 @@ void test_tlssc_cmd_invalid_arg_returns_false()
 	TEST_ASSERT_EQUAL(0, saveCount);
 }
 
-// ── handleTlssc ───────────────────────────────────────────────────────────────
 
 void test_tlssc_disabled_does_not_modify_frame()
 {
@@ -103,7 +104,7 @@ void test_tlssc_preserves_upper_2_bits()
 	State s = makeState();
 	s.tlsscRestore = true;
 	Frame f = makeFrame(CAN_ID_DAS_AP_CONFIG);
-	f.data[0] = 0b11000000; // counter bits = 3
+	f.data[0] = 0b11000000;
 	bool result = handleTlssc(f, s);
 	TEST_ASSERT_TRUE(result);
 	TEST_ASSERT_EQUAL_HEX8(0b11000000, f.data[0] & 0xC0);
@@ -115,10 +116,9 @@ void test_tlssc_already_correct_returns_false()
 	State s = makeState();
 	s.tlsscRestore = true;
 	Frame f = makeFrame(CAN_ID_DAS_AP_CONFIG);
-	// data[0] lower 6 bits already = 0x1B
 	f.data[0] = (0x40 | 0x1B);
 	bool result = handleTlssc(f, s);
-	TEST_ASSERT_FALSE(result); // no change needed
+	TEST_ASSERT_FALSE(result);
 }
 
 void test_tlssc_short_frame_ignored()
@@ -161,3 +161,4 @@ int main()
 
 	return UNITY_END();
 }
+

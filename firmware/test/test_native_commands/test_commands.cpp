@@ -1,6 +1,9 @@
-// ── FSD Command Handler Tests ─────────────────────────────────────────────────
-// Tests the real executeProfileCmd, executeFsdCmd, executeNagCmd, executeOffsetCmd,
-// executeIsaChimeCmd, executeSummonCmd and executeVariantCmd from command/fsd.h.
+/**
+ * @file firmware/test/test_native_commands/test_commands.cpp
+ * @brief Unit tests for FSD, profile, nag, offset, ISA chime, summon, and variant commands
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -13,13 +16,11 @@
 #define BOARD_ENABLE_WIFI 0
 #define BOARD_ENABLE_BLE 0
 
-// Forward-declare millis() so inline functions in headers can reference it
 unsigned long millis();
 
 #include "core/types.h"
 #include "feature/summon.h"
 
-// ── Stubs for save/dispatch/applyFilters ────────────────────────────────────
 static int saveCount = 0;
 static int resetCount = 0;
 static int filterCount = 0;
@@ -42,7 +43,6 @@ unsigned long millis()
 	return fake_millis_val;
 }
 
-// Need parseBoolCmd before fsd.h
 #include "core/util/parse.h"
 #include "feature/can_clock.h"
 #include "feature/fsd.h"
@@ -62,18 +62,18 @@ static State makeState(Variant v = HW4)
 	return s;
 }
 
+/** @brief Reset call counters before each test */
 void setUp()
 {
 	saveCount = 0;
 	resetCount = 0;
 	filterCount = 0;
 }
+
+/** @brief Cleanup after each test */
 void tearDown() {}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeProfileCmd
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Setting a numeric profile pins it and triggers a save */
 void test_profile_sets_value_and_pins()
 {
 	State s = makeState();
@@ -83,6 +83,7 @@ void test_profile_sets_value_and_pins()
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
+/** @brief "profile:auto" unpins the profile without changing the current value */
 void test_profile_auto_unpins()
 {
 	State s = makeState();
@@ -90,9 +91,10 @@ void test_profile_auto_unpins()
 	s.speedProfile = 3;
 	TEST_ASSERT_TRUE(executeProfileCmd("profile:auto", s));
 	TEST_ASSERT_FALSE(s.profileOverride);
-	TEST_ASSERT_EQUAL(3, s.speedProfile); // value unchanged
+	TEST_ASSERT_EQUAL(3, s.speedProfile);
 }
 
+/** @brief "profile:lock" pins the current profile value */
 void test_profile_lock_pins_current_profile()
 {
 	State s = makeState();
@@ -103,6 +105,7 @@ void test_profile_lock_pins_current_profile()
 	TEST_ASSERT_EQUAL(2, s.speedProfile);
 }
 
+/** @brief "profile:unlock" unpins the current profile value */
 void test_profile_unlock_unpins_current_profile()
 {
 	State s = makeState();
@@ -113,20 +116,23 @@ void test_profile_unlock_unpins_current_profile()
 	TEST_ASSERT_EQUAL(4, s.speedProfile);
 }
 
+/** @brief Negative profile values are rejected */
 void test_profile_rejects_negative()
 {
 	State s = makeState();
 	TEST_ASSERT_FALSE(executeProfileCmd("profile:-1", s));
-	TEST_ASSERT_EQUAL(1, s.speedProfile); // unchanged
+	TEST_ASSERT_EQUAL(1, s.speedProfile);
 }
 
+/** @brief Profile values above 4 are rejected */
 void test_profile_rejects_above_4()
 {
 	State s = makeState();
 	TEST_ASSERT_FALSE(executeProfileCmd("profile:5", s));
-	TEST_ASSERT_EQUAL(1, s.speedProfile); // unchanged
+	TEST_ASSERT_EQUAL(1, s.speedProfile);
 }
 
+/** @brief Profile values 0 through 4 are all accepted */
 void test_profile_accepts_0_through_4()
 {
 	for (int i = 0; i <= 4; i++)
@@ -139,6 +145,7 @@ void test_profile_accepts_0_through_4()
 	}
 }
 
+/** @brief "sp:" prefix is accepted as an alias for "profile:" */
 void test_profile_sp_alias()
 {
 	State s = makeState();
@@ -147,6 +154,7 @@ void test_profile_sp_alias()
 	TEST_ASSERT_TRUE(s.profileOverride);
 }
 
+/** @brief Profile handler ignores commands belonging to other features */
 void test_profile_ignores_unrelated()
 {
 	State s = makeState();
@@ -154,10 +162,7 @@ void test_profile_ignores_unrelated()
 	TEST_ASSERT_FALSE(executeProfileCmd("nag:off", s));
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeFsdCmd
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief "fsd:on" enables FSD injection */
 void test_fsd_on()
 {
 	State s = makeState();
@@ -165,6 +170,7 @@ void test_fsd_on()
 	TEST_ASSERT_TRUE(s.fsdEnabled);
 }
 
+/** @brief "fsd:off" disables FSD injection */
 void test_fsd_off()
 {
 	State s = makeState();
@@ -173,21 +179,24 @@ void test_fsd_off()
 	TEST_ASSERT_FALSE(s.fsdEnabled);
 }
 
+/** @brief FSD toggle triggers save, handler reset, and filter reapply */
 void test_fsd_saves()
 {
 	State s = makeState();
 	executeFsdCmd("fsd:on", s);
 	TEST_ASSERT_EQUAL(1, saveCount);
 	TEST_ASSERT_EQUAL(1, resetCount);
-	TEST_ASSERT_EQUAL(1, filterCount); // dynamic filter update
+	TEST_ASSERT_EQUAL(1, filterCount);
 }
 
+/** @brief Invalid FSD subcommands are rejected */
 void test_fsd_rejects_invalid()
 {
 	State s = makeState();
 	TEST_ASSERT_FALSE(executeFsdCmd("fsd:maybe", s));
 }
 
+/** @brief "fsd:force:on" enables forced FSD mode */
 void test_force_fsd_on()
 {
 	State s = makeState();
@@ -195,6 +204,7 @@ void test_force_fsd_on()
 	TEST_ASSERT_TRUE(s.fsdForceEnabled);
 }
 
+/** @brief "fsd:force:off" disables forced FSD mode */
 void test_force_fsd_off()
 {
 	State s = makeState();
@@ -203,6 +213,7 @@ void test_force_fsd_off()
 	TEST_ASSERT_FALSE(s.fsdForceEnabled);
 }
 
+/** @brief "canclock:auto" resets requested clock to zero (auto-detect) */
 void test_canclock_auto()
 {
 	State s = makeState();
@@ -211,6 +222,7 @@ void test_canclock_auto()
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
+/** @brief "canclock:8" sets requested CAN clock to 8 MHz */
 void test_canclock_8()
 {
 	State s = makeState();
@@ -219,6 +231,7 @@ void test_canclock_8()
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
+/** @brief "canclock:12" sets requested CAN clock to 12 MHz */
 void test_canclock_12()
 {
 	State s = makeState();
@@ -227,18 +240,14 @@ void test_canclock_12()
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
+/** @brief Unsupported clock frequencies are rejected */
 void test_canclock_rejects_invalid()
 {
 	State s = makeState();
 	TEST_ASSERT_FALSE(executeCanClockCmd("canclock:11", s));
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeNagCmd
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeBanShieldCmd
-// ═══════════════════════════════════════════════════════════════════════════════
+/** @brief "banshield:on" enables ban shield */
 void test_banshield_on()
 {
 	State s = makeState();
@@ -247,6 +256,7 @@ void test_banshield_on()
 	TEST_ASSERT_TRUE(s.banShieldEnabled);
 }
 
+/** @brief "banshield:off" disables ban shield */
 void test_banshield_off()
 {
 	State s = makeState();
@@ -255,6 +265,7 @@ void test_banshield_off()
 	TEST_ASSERT_FALSE(s.banShieldEnabled);
 }
 
+/** @brief Enabling ban shield resets threat level and detection count */
 void test_banshield_resets_threat_on_enable()
 {
 	State s = makeState();
@@ -265,40 +276,35 @@ void test_banshield_resets_threat_on_enable()
 	TEST_ASSERT_EQUAL(0, s.banDetectionCount);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeNagCmd
-// ═══════════════════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════════════════
-
-void test_nag_on()
+/** @brief "nag:mode:bit19" sets nag mode to BIT19 and reapplies filters */
+void test_nag_mode_bit19()
 {
 	State s = makeState();
-	TEST_ASSERT_TRUE(executeNagCmd("nag:on", s));
-	TEST_ASSERT_TRUE(s.nagSuppress);
-	TEST_ASSERT_EQUAL(1, filterCount); // dynamic filter update
+	TEST_ASSERT_TRUE(executeNagCmd("nag:mode:bit19", s));
+	TEST_ASSERT_EQUAL(NAG_MODE_BIT19, s.nagMode);
+	TEST_ASSERT_EQUAL(1, filterCount);
 }
 
-void test_nag_off()
+/** @brief "nag:mode:off" clears nag mode */
+void test_nag_mode_off()
 {
 	State s = makeState();
-	s.nagSuppress = true;
-	TEST_ASSERT_TRUE(executeNagCmd("nag:off", s));
-	TEST_ASSERT_FALSE(s.nagSuppress);
-	TEST_ASSERT_EQUAL(1, filterCount); // dynamic filter update
+	s.nagMode = NAG_MODE_BIT19;
+	TEST_ASSERT_TRUE(executeNagCmd("nag:mode:off", s));
+	TEST_ASSERT_EQUAL(NAG_MODE_OFF, s.nagMode);
+	TEST_ASSERT_EQUAL(1, filterCount);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeOffsetCmd
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Offset command sets value and enables override on HW3 */
 void test_offset_sets_value()
 {
-	State s = makeState(HW3); // HW3 has speedOffset feature
+	State s = makeState(HW3);
 	TEST_ASSERT_TRUE(executeOffsetCmd("offset:50", s));
 	TEST_ASSERT_EQUAL(50, s.speedOffset);
 	TEST_ASSERT_TRUE(s.offsetOverride);
 }
 
+/** @brief "offset:auto" disables offset override */
 void test_offset_auto()
 {
 	State s = makeState(HW3);
@@ -307,18 +313,21 @@ void test_offset_auto()
 	TEST_ASSERT_FALSE(s.offsetOverride);
 }
 
+/** @brief Offset values above 100 are rejected on HW3 */
 void test_offset_rejects_above_100()
 {
 	State s = makeState(HW3);
 	TEST_ASSERT_FALSE(executeOffsetCmd("offset:101", s));
 }
 
+/** @brief Offset command is rejected on LEGACY variant */
 void test_offset_rejects_without_feature()
 {
-	State s = makeState(LEGACY); // Legacy has no mux2 handler, offset rejected
+	State s = makeState(LEGACY);
 	TEST_ASSERT_FALSE(executeOffsetCmd("offset:50", s));
 }
 
+/** @brief HW4 offset accepts values within its valid range */
 void test_hw4_offset_sets_value()
 {
 	State s = makeState(HW4);
@@ -326,6 +335,7 @@ void test_hw4_offset_sets_value()
 	TEST_ASSERT_EQUAL(16, s.speedOffset);
 }
 
+/** @brief "offset:off" on HW4 zeroes the speed offset */
 void test_hw4_offset_off_disables()
 {
 	State s = makeState(HW4);
@@ -334,51 +344,48 @@ void test_hw4_offset_off_disables()
 	TEST_ASSERT_EQUAL(0, s.speedOffset);
 }
 
+/** @brief HW4 offset rejects values outside its valid range */
 void test_hw4_offset_rejects_out_of_range()
 {
 	State s = makeState(HW4);
 	TEST_ASSERT_FALSE(executeOffsetCmd("offset:64", s));
 }
 
+/** @brief HW3 variant still uses the HW3 offset path (accepts value 10) */
 void test_hw4_offset_rejects_non_hw4()
 {
 	State s = makeState(HW3);
-	// HW3 uses legacy offset path, not HW4 — value goes to speedOffset
 	TEST_ASSERT_TRUE(executeOffsetCmd("offset:10", s));
 	TEST_ASSERT_EQUAL(10, s.speedOffset);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeIsaChimeCmd
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief "isa-chime:on" enables ISA chime suppression on HW4 */
 void test_isa_on_hw4()
 {
-	State s = makeState(HW4); // HW4 has isaChime
+	State s = makeState(HW4);
 	TEST_ASSERT_TRUE(executeIsaChimeCmd("isa-chime:on", s));
 	TEST_ASSERT_TRUE(s.isaChimeSuppress);
-	TEST_ASSERT_EQUAL(1, filterCount); // dynamic filter update
+	TEST_ASSERT_EQUAL(1, filterCount);
 }
 
+/** @brief "isa-chime:off" disables ISA chime suppression on HW4 */
 void test_isa_off_hw4()
 {
 	State s = makeState(HW4);
 	s.isaChimeSuppress = true;
 	TEST_ASSERT_TRUE(executeIsaChimeCmd("isa-chime:off", s));
 	TEST_ASSERT_FALSE(s.isaChimeSuppress);
-	TEST_ASSERT_EQUAL(1, filterCount); // dynamic filter update
+	TEST_ASSERT_EQUAL(1, filterCount);
 }
 
+/** @brief ISA chime command is rejected on LEGACY variant */
 void test_isa_rejects_without_feature()
 {
-	State s = makeState(LEGACY); // ISA is HW4-only, rejected on non-HW4
+	State s = makeState(LEGACY);
 	TEST_ASSERT_FALSE(executeIsaChimeCmd("isa-chime:on", s));
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeSummonCmd
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief "summon:fwd" starts forward summon with 30 remaining ticks */
 void test_summon_forward()
 {
 	State s = makeState(HW4);
@@ -390,6 +397,7 @@ void test_summon_forward()
 	TEST_ASSERT_EQUAL(30, s.summonRemaining);
 }
 
+/** @brief "summon:rev" starts reverse summon */
 void test_summon_reverse()
 {
 	State s = makeState(HW4);
@@ -399,6 +407,7 @@ void test_summon_reverse()
 	TEST_ASSERT_EQUAL(SUMMON_REVERSE, s.summonDirection);
 }
 
+/** @brief "summon:stop" halts summon and zeroes remaining count */
 void test_summon_stop()
 {
 	State s = makeState(HW4);
@@ -409,6 +418,7 @@ void test_summon_stop()
 	TEST_ASSERT_EQUAL(0, s.summonRemaining);
 }
 
+/** @brief Summon requires hasCtrl to be true */
 void test_summon_requires_ctrl()
 {
 	State s = makeState(HW4);
@@ -416,18 +426,16 @@ void test_summon_requires_ctrl()
 	TEST_ASSERT_FALSE(executeSummonCmd("summon:fwd", s));
 }
 
+/** @brief Summon is rejected on LEGACY variant */
 void test_summon_requires_feature()
 {
-	State s = makeState(LEGACY); // Legacy has features().summon=false
+	State s = makeState(LEGACY);
 	s.hasCtrl = true;
 	s.summonInject = true;
 	TEST_ASSERT_FALSE(executeSummonCmd("summon:fwd", s));
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeVariantCmd
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief "variant:hw3" switches variant and reapplies filters */
 void test_variant_hw3()
 {
 	State s = makeState(HW4);
@@ -436,6 +444,7 @@ void test_variant_hw3()
 	TEST_ASSERT_EQUAL(1, filterCount);
 }
 
+/** @brief "variant:legacy" switches to LEGACY variant */
 void test_variant_legacy()
 {
 	State s = makeState(HW4);
@@ -443,22 +452,25 @@ void test_variant_legacy()
 	TEST_ASSERT_EQUAL(LEGACY, s.variant);
 }
 
+/** @brief Invalid variant names are rejected */
 void test_variant_rejects_invalid()
 {
 	State s = makeState(HW4);
 	TEST_ASSERT_FALSE(executeVariantCmd("variant:unknown", s));
 }
 
+/** @brief "variant:auto" enables auto-detection without changing current variant */
 void test_variant_auto_enables_auto_detect()
 {
 	State s = makeState(HW4);
 	s.variantAutoDetect = false;
 	TEST_ASSERT_TRUE(executeVariantCmd("variant:auto", s));
 	TEST_ASSERT_TRUE(s.variantAutoDetect);
-	TEST_ASSERT_EQUAL(HW4, s.variant); // variant unchanged
-	TEST_ASSERT_EQUAL(1, filterCount); // applyFilters called
+	TEST_ASSERT_EQUAL(HW4, s.variant);
+	TEST_ASSERT_EQUAL(1, filterCount);
 }
 
+/** @brief Manual variant selection disables auto-detection */
 void test_variant_manual_disables_auto_detect()
 {
 	State s = makeState(HW4);
@@ -468,50 +480,60 @@ void test_variant_manual_disables_auto_detect()
 	TEST_ASSERT_FALSE(s.variantAutoDetect);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Feature flag guard tests
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// Nag Killer rejects when nag feature disabled (LEGACY has no summon but has nag;
-// we simulate by temporarily testing — currently nag=true for all, so we verify
-// the guard path exists via nag:killer command structure)
-void test_nagkiller_on()
+/** @brief "nag:mode:legacy" sets legacy nag mode and saves */
+void test_nag_mode_legacy()
 {
 	State s = makeState(HW4);
-	TEST_ASSERT_TRUE(executeNagKillerCmd("nag:killer:on", s));
-	TEST_ASSERT_TRUE(s.nagKillerEnabled);
+	TEST_ASSERT_TRUE(executeNagCmd("nag:mode:legacy", s));
+	TEST_ASSERT_EQUAL(NAG_MODE_LEGACY, s.nagMode);
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
-void test_nagkiller_off()
+/** @brief "nag:mode:off" clears any active nag mode */
+void test_nag_mode_off_clears()
 {
 	State s = makeState(HW4);
-	s.nagKillerEnabled = true;
-	TEST_ASSERT_TRUE(executeNagKillerCmd("nag:killer:off", s));
-	TEST_ASSERT_FALSE(s.nagKillerEnabled);
+	s.nagMode = NAG_MODE_ORGANIC;
+	TEST_ASSERT_TRUE(executeNagCmd("nag:mode:off", s));
+	TEST_ASSERT_EQUAL(NAG_MODE_OFF, s.nagMode);
 }
 
-void test_nagkiller_mode_safe()
+/** @brief "nag:mode:safe" sets safe nag mode */
+void test_nag_mode_safe()
 {
 	State s = makeState(HW4);
-	TEST_ASSERT_TRUE(executeNagKillerCmd("nag:killer:mode:safe", s));
-	TEST_ASSERT_EQUAL(NAG_KILLER_SAFE, s.nagKillerMode);
+	TEST_ASSERT_TRUE(executeNagCmd("nag:mode:safe", s));
+	TEST_ASSERT_EQUAL(NAG_MODE_SAFE, s.nagMode);
 }
 
-void test_nagkiller_mode_legacy()
+/** @brief "nag:mode:full" enables all nag suppression bits */
+void test_nag_mode_full_sets_all_bits()
 {
 	State s = makeState(HW4);
-	s.nagKillerMode = NAG_KILLER_SAFE;
-	TEST_ASSERT_TRUE(executeNagKillerCmd("nag:killer:mode:legacy", s));
-	TEST_ASSERT_EQUAL(NAG_KILLER_LEGACY, s.nagKillerMode);
+	TEST_ASSERT_TRUE(executeNagCmd("nag:mode:full", s));
+	TEST_ASSERT_EQUAL(NAG_MODE_FULL, s.nagMode);
+	TEST_ASSERT_TRUE(nagModeUsesBit19(s.nagMode));
+	TEST_ASSERT_TRUE(nagModeUsesEpasEcho(s.nagMode));
 }
 
-void test_nagkiller_rejects_invalid_mode()
+/** @brief Invalid nag mode names are rejected */
+void test_nag_mode_rejects_invalid_name()
 {
 	State s = makeState(HW4);
-	TEST_ASSERT_FALSE(executeNagKillerCmd("nag:killer:mode:turbo", s));
+	TEST_ASSERT_FALSE(executeNagCmd("nag:mode:turbo", s));
 }
 
+/** @brief Legacy nag command forms (nag:on, nag:off, nag:killer:*) are no longer accepted */
+void test_nag_legacy_commands_rejected()
+{
+	State s = makeState(HW4);
+	TEST_ASSERT_FALSE(executeNagCmd("nag:on", s));
+	TEST_ASSERT_FALSE(executeNagCmd("nag:off", s));
+	TEST_ASSERT_FALSE(executeNagCmd("nag:killer:on", s));
+	TEST_ASSERT_FALSE(executeNagCmd("nag:killer:mode:safe", s));
+}
+
+/** @brief Ban shield toggle triggers a settings save */
 void test_banshield_saves()
 {
 	State s = makeState();
@@ -519,6 +541,7 @@ void test_banshield_saves()
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
+/** @brief "summon-inject:on" enables summon injection */
 void test_summon_inject_on()
 {
 	State s = makeState(HW4);
@@ -526,6 +549,7 @@ void test_summon_inject_on()
 	TEST_ASSERT_TRUE(s.summonInject);
 }
 
+/** @brief "summon-inject:off" disables summon injection */
 void test_summon_inject_off()
 {
 	State s = makeState(HW4);
@@ -534,19 +558,17 @@ void test_summon_inject_off()
 	TEST_ASSERT_FALSE(s.summonInject);
 }
 
+/** @brief Summon inject command is rejected on LEGACY variant */
 void test_summon_inject_rejects_without_feature()
 {
-	State s = makeState(LEGACY); // Legacy has features().summon=false
+	State s = makeState(LEGACY);
 	TEST_ASSERT_FALSE(executeSummonInjectCmd("summon-inject:on", s));
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
 
 int main()
 {
 	UNITY_BEGIN();
 
-	// Profile
 	RUN_TEST(test_profile_sets_value_and_pins);
 	RUN_TEST(test_profile_auto_unpins);
 	RUN_TEST(test_profile_lock_pins_current_profile);
@@ -557,7 +579,6 @@ int main()
 	RUN_TEST(test_profile_sp_alias);
 	RUN_TEST(test_profile_ignores_unrelated);
 
-	// FSD
 	RUN_TEST(test_fsd_on);
 	RUN_TEST(test_fsd_off);
 	RUN_TEST(test_fsd_saves);
@@ -569,19 +590,15 @@ int main()
 	RUN_TEST(test_canclock_12);
 	RUN_TEST(test_canclock_rejects_invalid);
 
-	// Nag
-	RUN_TEST(test_nag_on);
+	RUN_TEST(test_nag_mode_bit19);
 
-	// Ban Shield
 	RUN_TEST(test_banshield_on);
 	RUN_TEST(test_banshield_off);
 	RUN_TEST(test_banshield_resets_threat_on_enable);
 	RUN_TEST(test_banshield_saves);
 
-	// Nag (continued)
-	RUN_TEST(test_nag_off);
+	RUN_TEST(test_nag_mode_off);
 
-	// Offset
 	RUN_TEST(test_offset_sets_value);
 	RUN_TEST(test_offset_auto);
 	RUN_TEST(test_offset_rejects_above_100);
@@ -591,33 +608,29 @@ int main()
 	RUN_TEST(test_hw4_offset_rejects_out_of_range);
 	RUN_TEST(test_hw4_offset_rejects_non_hw4);
 
-	// ISA Chime
 	RUN_TEST(test_isa_on_hw4);
 	RUN_TEST(test_isa_off_hw4);
 	RUN_TEST(test_isa_rejects_without_feature);
 
-	// Summon
 	RUN_TEST(test_summon_forward);
 	RUN_TEST(test_summon_reverse);
 	RUN_TEST(test_summon_stop);
 	RUN_TEST(test_summon_requires_ctrl);
 	RUN_TEST(test_summon_requires_feature);
 
-	// Variant
 	RUN_TEST(test_variant_hw3);
 	RUN_TEST(test_variant_legacy);
 	RUN_TEST(test_variant_rejects_invalid);
 	RUN_TEST(test_variant_auto_enables_auto_detect);
 	RUN_TEST(test_variant_manual_disables_auto_detect);
 
-	// Nag Killer
-	RUN_TEST(test_nagkiller_on);
-	RUN_TEST(test_nagkiller_off);
-	RUN_TEST(test_nagkiller_mode_safe);
-	RUN_TEST(test_nagkiller_mode_legacy);
-	RUN_TEST(test_nagkiller_rejects_invalid_mode);
+	RUN_TEST(test_nag_mode_legacy);
+	RUN_TEST(test_nag_mode_off_clears);
+	RUN_TEST(test_nag_mode_safe);
+	RUN_TEST(test_nag_mode_full_sets_all_bits);
+	RUN_TEST(test_nag_mode_rejects_invalid_name);
+	RUN_TEST(test_nag_legacy_commands_rejected);
 
-	// Summon Inject
 	RUN_TEST(test_summon_inject_on);
 	RUN_TEST(test_summon_inject_off);
 	RUN_TEST(test_summon_inject_rejects_without_feature);

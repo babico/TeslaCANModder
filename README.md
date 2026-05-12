@@ -2,40 +2,66 @@
 
 [![CI](https://github.com/babico/TeslaCANModder/actions/workflows/ci.yml/badge.svg)](https://github.com/babico/TeslaCANModder/actions/workflows/ci.yml)
 
-Tesla CAN firmware, client, protocol, and diagnostics tooling centered on ESP32-S DevKit hardware and the Tesla X179 connector.
+Open-source Tesla CAN bus firmware, cross-platform client, shared protocol library, and diagnostics tooling built around the ESP32-S DevKit and the Tesla X179 diagnostic connector.
 
-## Overview
+## Features
 
-The active stack is split into four maintained areas:
+- **Multi-bus CAN architecture** — up to 3 MCP2515 buses (Chassis, Vehicle, Body) on the X179 connector
+- **48 vehicle feature modules** — window vent, sentry, climate, charge, DAS Drive, gamepad injection, BMS, TPMS, and more
+- **Cross-platform client** — Expo app for Web, iOS, and Android with Web Serial flashing, live CAN monitor, and in-app docs
+- **DAS Drive** — openpilot-style gamepad CAN injection with safety envelope, rate limiting, and NVS persistence
+- **BLE Gamepad** — NimBLE central scanner/pairing, 16-button bindings, 6 analog axes with deadzone/expo tuning
+- **WiFi REST API + Dashboard** — on-device HTTP API and HTML dashboard served over soft-AP
+- **Browser flasher** — flash firmware directly from Chrome/Edge using Web Serial (no toolchain needed)
+- **CAN frame decoder** — 577 Tesla frames decoded from the mikegapinski dataset
+- **Shared protocol package** — `@teslacanmodder/protocol` with commands, types, decoder, and parser
+- **Debug CLI** — `tcm-debug` serial tool with 12 command modules for bench work and validation
 
-| Area                 | Purpose                                                                              |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| `firmware/`          | PlatformIO ESP32 firmware with 1-3 MCP2515 buses, WiFi REST API, and BLE             |
-| `client/`            | Expo client for web, iOS, and Android, including the browser flasher and in-app docs |
-| `packages/protocol/` | Shared protocol types, commands, decoder data, and parsing helpers                   |
-| `tools/`             | Debug CLI and serial-to-HTTP bridge for bench work and validation                    |
+## Repository Structure
 
-The documentation screen now renders raw markdown directly from `docs/`. There is no generated TypeScript docs bundle anymore.
+```text
+TeslaCANModder/
+├── firmware/                      PlatformIO ESP32 firmware (C++)
+│   ├── lib/core/                  shared types, driver, persistence, log, CAN plumbing
+│   ├── lib/io/                    transports: serial, WiFi, BLE
+│   ├── lib/client/                REST API, dashboard, command dispatch, gamepad
+│   ├── lib/vehicle/can/           Tesla CAN logic (48 feature modules + variant handlers)
+│   ├── lib/vehicle/ble/           Tesla BLE protocol
+│   ├── src/esp32/                 firmware entry point
+│   └── test/                      PlatformIO Unity native test suites
+├── client/                        Expo app (Web, iOS, Android)
+│   ├── src/                       components, screens, state, hardware, design system
+│   └── tests/                     Jest + React Native Testing Library
+├── packages/protocol/             @teslacanmodder/protocol (shared TS package)
+├── tools/                         tcm-debug CLI + serial-to-HTTP bridge
+├── docs/                          canonical markdown docs (rendered in-app)
+├── legacy/                        80+ external reference submodules (read-only)
+└── scripts/                       workspace-level validation and smoke scripts
+```
 
 ## Quick Start
 
-Install workspace dependencies:
+### Prerequisites
+
+- Node.js >= 18
+- Python 3.11+ with PlatformIO CLI (`pip install platformio`) for firmware work
+
+### Install
 
 ```bash
+git clone https://github.com/babico/TeslaCANModder.git
+cd TeslaCANModder
 npm install
 ```
 
-Build firmware locally:
+### Build Firmware
 
 ```powershell
 cd firmware
-.\.pio.ps1 run -e esp32
-.\.pio.ps1 run -e esp32_wifi
-.\.pio.ps1 run -e esp32_ble
-.\.pio.ps1 run -e esp32_wifi_ble
+.\pio.ps1 run -e esp32_chassis_8mhz
 ```
 
-Run the browser client:
+### Run the Client (Web)
 
 ```bash
 npm run web -w @teslacanmodder/client
@@ -43,193 +69,168 @@ npm run web -w @teslacanmodder/client
 
 Open the Expo URL in Chrome or Edge for Web Serial flashing and runtime control.
 
-## Firmware Targets
+### Run Tests
 
-Supported release environments:
+```bash
+npm run test:all       # all workspaces + firmware native tests
+npm run lint:all       # ESLint + Prettier check
+```
 
-- `esp32`: USB serial only
-- `esp32_wifi`: USB serial + WiFi REST API/dashboard
-- `esp32_ble`: USB serial + BLE
-- `esp32_wifi_ble`: USB serial + WiFi + BLE
+## Firmware
 
-Bus lanes are controlled with build flags:
+### Environments
 
-| Bus     | X179 Pins | Build Flag           | Default |
-| ------- | --------- | -------------------- | ------- |
-| Chassis | 13-14     | `BUS_CHASSIS_ACTIVE` | On      |
-| Vehicle | 9-10      | `BUS_VEHICLE_ACTIVE` | Off     |
-| Body    | 2-3       | `BUS_BODY_ACTIVE`    | Off     |
+| Environment                   | Features                      |
+| ----------------------------- | ----------------------------- |
+| `esp32_chassis_8mhz`          | Serial + Chassis CAN          |
+| `esp32_wifi_chassis_8mhz`     | Serial + WiFi + Chassis       |
+| `esp32_ble_chassis_8mhz`      | Serial + BLE + Chassis        |
+| `esp32_wifi_ble_chassis_8mhz` | Serial + WiFi + BLE + Chassis |
+| `native`                      | Host-only tests               |
 
-Example with all three lanes enabled:
+Environments follow the naming convention: `esp32[_wifi][_ble][_chassis][_vehicle][_body][_8mhz|_16mhz]`
+
+### Bus Lanes (X179 Connector)
+
+| Bus     | Index | X179 Pins | Build Flag           |
+| ------- | ----- | --------- | -------------------- |
+| Chassis | 0     | 13-14     | `BUS_CHASSIS_ACTIVE` |
+| Vehicle | 1     | 9-10      | `BUS_VEHICLE_ACTIVE` |
+| Body    | 2     | 2-3       | `BUS_BODY_ACTIVE`    |
+
+All buses are opt-in. Enable multiple lanes:
 
 ```powershell
 $env:PLATFORMIO_BUILD_FLAGS = "-DBUS_CHASSIS_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
-.\.pio.ps1 run -e esp32_wifi_ble
+.\pio.ps1 run -e esp32_wifi_ble_chassis_8mhz
 ```
 
-Tagged releases publish merged flash-ready ESP32 images through GitHub Actions. The client flasher consumes those release assets directly.
+### Vehicle Features (48 modules)
 
-## Common Validation
+Air Recirculation, Auto Lane Change, Ban Detect/Shield, BMS, Charge, Climate, DAS Drive, Display, Drive Context, Drive Mode, FSD, ISA Chime, Lights, Lock, Mirror, Motor Temps, MQTT Bridge, Nag, Pedal, Power, Powertrain, Precondition, Profile, Regen, Region, Seat, Seatbelt, Sentry, Stop Mode, Stream, Summon, TLSSC, TPMS, Track Mode, Trunk, Turn Signal, Variant, Vehicle Config, Wheel Speeds, Window, Wiper, and more.
 
-```bash
-npm run test:all
-npm run lint:all
-npm run typecheck:client
-```
+## Client App
 
-Firmware-only validation:
+Cross-platform Expo application with six main screens:
 
-```powershell
-cd firmware
-.\.pio.ps1 test -e native
-```
+| Screen    | Purpose                                         |
+| --------- | ----------------------------------------------- |
+| Dashboard | Live vehicle state overview                     |
+| Controls  | Feature toggles, DAS Drive panel, Gamepad panel |
+| Drive     | DAS Drive real-time HUD                         |
+| Console   | Serial/WiFi command terminal                    |
+| Flasher   | Browser-based ESP32 firmware flasher            |
+| Docs      | In-app documentation (renders from `docs/`)     |
 
-## Documentation
+### Browser Support
 
-Start here:
+- ✅ Desktop Chrome/Edge — Web Serial flashing + runtime control
+- ✅ Android Chrome — Runtime control via Bluetooth
+- ⚠️ Other browsers — Guide mode only
 
-- `docs/README.md`
-- `docs/guides/getting-started.md`
-- `docs/guides/full-setup.md`
-- `docs/checklists/release-checklist.md`
-- `docs/architecture/unified-client-guide.md`
+## Commands
 
-The client docs screen and the repo docs folder are the same source of truth.
+### Basic Controls
 
-## Legacy Research
-
-`legacy/` contains archived upstream and community repositories used for comparison, reverse-engineering notes, and feature archaeology. Shipping code lives outside that tree.
-
-See:
-
-- `docs/legacy/README.md`
-- `docs/legacy/COMPARISON.md`
-- `THIRD_PARTY_LICENSES`
-
-## License
-
-GPL-3.0
-
-# Display (main center screen, 0-127)
-
-maindisplay:0-127
-
-# Power (vehicle state control)
-
+```text
 power:acc:on, power:acc:off, power:off, power:ready
-
-```
-
-### Advanced Features
-
-```
-
-# Window Vent (0x119)
-
-window:vent:N # N = 0..100
-window:vent:open, vent:open
-window:vent:close, vent:close
-
-# Sentry Mode (0x284)
-
+maindisplay:0-127
+window:vent:open, window:vent:close
 sentry:on, sentry:off
-
-# Climate Control (0x2F3 - requires frame caching)
-
 climate:keep, climate:off
-
-# Charge Control (0x333 - requires frame caching)
-
 charge:start, charge:stop
-charge:port, chargeport
+```
 
-# Drive Configuration (0x334 - requires frame caching)
+### Drive Configuration
 
-# Pedal Response
-
-pedal:standard, pedal:std, pedal:chill, pedal:sport
-
-# Regenerative Braking (0-200)
-
+```text
+pedal:standard, pedal:chill, pedal:sport
 regen:off, regen:low, regen:std, regen:max
-
-# Stop Mode
-
 stop:creep, stop:roll, stop:hold
-
 ```
 
-## Browser Support
+### DAS Drive (Gamepad CAN Injection)
 
-- ✅ Desktop Chrome/Edge - Web Serial flashing + runtime control
-- ✅ Android Chrome - Runtime control via Bluetooth
-- ⚠️ Other browsers - Guide mode only
-
-## Workspace
-
-This is an npm workspace monorepo:
-
+```text
+das:arm, das:disarm, das:status
+gamepad:scan, gamepad:pair, gamepad:unpair
+gamepad:bind:<n>:<cmd>, gamepad:axis:<n>:<dz|expo|inv>:<v>
 ```
 
-packages/protocol — shared types, commands, decoder, parser (@teslacanmodder/protocol)
-firmware — PlatformIO ESP32/Arduino firmware
-client — React Native + Expo client app for browser, iOS, and Android
-tools — CLI debug utilities
+See `docs/reference/commands.md` for the full command reference.
 
-````
+## Validation Commands
 
-```bash
-npm install          # install all workspaces
-npm run test:all     # run all tests (protocol + client + tools + firmware)
-````
+| Task                     | Command                            |
+| ------------------------ | ---------------------------------- |
+| Run all tests            | `npm run test:all`                 |
+| Lint + format check      | `npm run lint:all`                 |
+| Typecheck protocol       | `npm run typecheck:protocol`       |
+| Typecheck client         | `npm run typecheck:client`         |
+| Validate serial contract | `npm run validate:serial-contract` |
+| Firmware native tests    | `npm run test:firmware`            |
+| Protocol tests           | `npm run test:protocol`            |
+| Client tests             | `npm run test:client`              |
+| Tools tests              | `npm run test:tools`               |
 
 ## Testing
 
-| Layer    | Runner                    | Tests |
-| -------- | ------------------------- | ----- |
-| Firmware | PlatformIO Unity          | 178   |
-| Protocol | Jest (ESM)                | 102   |
-| Client   | Jest + Testing Library/RN | 138   |
+| Layer    | Runner                    | Location             |
+| -------- | ------------------------- | -------------------- |
+| Firmware | PlatformIO Unity (native) | `firmware/test/`     |
+| Protocol | Jest (ESM)                | `packages/protocol/` |
+| Client   | Jest + Testing Library/RN | `client/tests/`      |
+| Tools    | Jest (ESM)                | `tools/test/`        |
 
-## CI
+## CI/CD
 
-GitHub Actions runs on push to `main` and all PRs:
+GitHub Actions runs on push to `main` and all PRs with 10 jobs:
 
-- **firmware** — PlatformIO native tests
+- **firmware** — PlatformIO native tests + size regression check
 - **protocol** — shared package tests
-- **client** — Jest tests
+- **e2e-smoke** — end-to-end smoke tests
+- **client** — Jest + Testing Library tests
 - **tools** — CLI tests
 - **docker** — docker compose build
+- **docker-smoke** — container health check
+- **lint** — ESLint + Prettier
+- **markdown-lint** — markdownlint-cli2
+- **security-audit** — dependency audit + license compatibility
+
+Tagged releases publish flash-ready ESP32 images that the client flasher consumes directly.
 
 ## Documentation
 
-- `docs/unified-setup-guide.md` - Canonical end-to-end setup (build, flash, connect, validate)
-- `docs/unified-client-guide.md` - Canonical client architecture, setup, monitor workflows, and migration notes
-- `docs/reference/can-ids.md` - Master CAN ID reference table
-- `firmware/README.md` - Firmware details
-- `docs/WIFI_BOARD_GUIDE.md` - ESP32 WiFi dashboard setup
+| Topic               | Path                                        |
+| ------------------- | ------------------------------------------- |
+| Getting started     | `docs/guides/getting-started.md`            |
+| Full setup          | `docs/guides/full-setup.md`                 |
+| Hardware setup      | `docs/guides/hardware-setup.md`             |
+| Flasher quickstart  | `docs/guides/flasher-quickstart.md`         |
+| DAS Drive guide     | `docs/guides/das-drive.md`                  |
+| Security            | `docs/guides/security.md`                   |
+| Command reference   | `docs/reference/commands.md`                |
+| CAN IDs             | `docs/reference/can-ids.md`                 |
+| CAN protocol        | `docs/reference/can-protocol.md`            |
+| Signal matrix       | `docs/reference/signal-matrix.md`           |
+| WiFi API            | `docs/reference/wifi-api.md`                |
+| Vehicle features    | `docs/reference/vehicle-features.md`        |
+| Client architecture | `docs/architecture/unified-client-guide.md` |
+| Release checklist   | `docs/checklists/release-checklist.md`      |
+| Debug guide         | `docs/troubleshooting/debug-guide.md`       |
 
-## Legacy References
+## Legacy Research
 
-The `legacy/` directory contains **83 external repositories** added as read-only
-git submodules for research and comparison. No code is copied into the main
-codebase.
+The `legacy/` directory contains 80+ external repositories as read-only git submodules for reverse-engineering research and feature archaeology. No code is copied into the shipping codebase.
 
-| Category                     | Count | Examples                                    |
-| ---------------------------- | ----- | ------------------------------------------- |
-| FSD CAN Mod                  | 14    | jvanakker, juamiso, herrfrei, JelloEa       |
-| CAN Monitoring / Analysis    | 12    | ekr-candash, hanswolff, bruvv, mikegapinski |
-| CAN Database / Decoding      | 8     | joshwardell-model3dbc, krconv, talas9       |
-| Flipper Zero                 | 3     | hypery11, J0811, canhackers-jupiter         |
-| BLE / Bluetooth              | 2     | wimaha-TeslaBleHttpProxy, DemiVis           |
-| Steering / EPAS              | 3     | gregjhogan, sydneyg007 (×2)                 |
-| Battery / Charging           | 3     | jomytec-My_TeslaBMS, jamiejones85, oliwiah  |
-| Other (logging, apps, tools) | 38    | rossklonowski-CANserver, tesberry, uhi22    |
+- Individual analyses: `docs/legacy/<repo>.md`
+- Comparison report: `docs/legacy/COMPARISON.md`
+- License compliance: `THIRD_PARTY_LICENSES.md`
 
-- **Individual analyses** → [`docs/legacy/<repo>.md`](docs/legacy/)
-- **Synthesis report** → [`docs/legacy-summary.md`](docs/legacy-summary.md)
-- **License compliance** → [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md)
+## Contributing
+
+See `CONTRIBUTING.md` for setup instructions, coding standards, and PR guidelines.
 
 ## License
 
-GPL-3.0
+[WTFPL v2](LICENSE)

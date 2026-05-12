@@ -1,60 +1,136 @@
 ---
 title: ev-open-can-tools / ev-open-can-tools
-description: This is the **upstream repository** that our Tesla-CAN-Mod project is forked from / closely tracks. It is a general-purp
+description: Upstream open-source CAN bus modification firmware for Tesla vehicles. ESP32/RP2040/M4 hardware, multi-handler architecture, AP Injection Gate (v2.5.x), speed profiles, nag suppression, ISA chime, EVD, Smart Summon.
 category: legacy
 folder: legacy
 tags: [legacy, community, external]
-author: ev
-repo: open-can-tools-ev-open-can-tools
+author: ev-open-can-tools
+repo: ev-open-can-tools
 ---
 
 # ev-open-can-tools / ev-open-can-tools
 
 ## Overview
 
-This is the **upstream repository** that our Tesla-CAN-Mod project is forked from / closely tracks. It is a general-purpose, open-source CAN bus modification tool for Tesla vehicles that intercepts, modifies, and re-transmits CAN frames in real time to enable features like FSD region-gate bypass, nag suppression, speed profiles, ISA chime suppression, emergency vehicle detection, and Smart Summon compatibility. The current stable release is **v2.5.2** (April 2026), which includes the AP Injection Gate — a smart gate that opens injection only when Autopilot, Smart Summon, or Smart Park is active, required for Tesla firmware 2026.14.3+. It supports multiple hardware platforms and includes a WiFi web dashboard on ESP32 boards.
+Open-source CAN bus modification firmware for Tesla vehicles. Intercepts, modifies, and re-transmits CAN frames in real time to enable FSD region-gate bypass, nag suppression, speed profiles, ISA chime suppression, emergency vehicle detection, and Smart Summon compatibility. Current stable release is **v2.5.2** (April 2026). Supports multiple hardware platforms and includes a WiFi web dashboard on ESP32 boards.
+
+Submodule tracked on `main` branch.
 
 ## Technical Details
 
-- **Platform**: Adafruit Feather RP2040 CAN, Feather M4 CAN Express, ESP32 (multiple variants), M5Stack Atomic CAN Base
+- **Platform**: Adafruit Feather RP2040 CAN, Feather M4 CAN Express, ESP32 (TWAI, MCP2515 variants), M5Stack Atomic CAN Base, Waveshare ESP32-S3 RS485/CAN
 - **Language**: C++ (Arduino framework via PlatformIO)
-- **CAN Interface**: MCP2515 (SPI), Adafruit SAME51 built-in CAN, ESP32 TWAI (built-in)
+- **CAN Interface**: MCP2515 (SPI), ATSAME51 native CAN, ESP32 TWAI
 - **License**: GPL-3.0
 
 ## Architecture
 
-- `src/main.cpp` — PlatformIO entry point; selects driver at compile time via `#ifdef` flags
-- `include/app.h` — Core application logic (setup/loop templates)
-- `include/handlers.h` — CAN frame handlers for Legacy/HW3/HW4 vehicle variants
-- `include/drivers/` — Hardware abstraction: `mcp2515_driver.h`, `esp32_mcp2515_driver.h`, `same51_driver.h`, `twai_driver.h`
-- `include/can_frame_types.h`, `can_helpers.h` — CAN frame type definitions and bit manipulation helpers
-- `include/plugin_engine.h` — JSON-based runtime plugin system for custom CAN modifications
-- `include/log_buffer.h`, `shared_types.h` — Logging buffer and shared type definitions (added in 2.x series)
-- `include/web/` — WiFi web dashboard (ESP32 only) for real-time monitoring and OTA updates
-- `platformio_profile.h` — Compile-time feature selection (hardware variant, feature toggles)
-- `platformio.ini` — Build environments for each supported board
+```
+include/
+  app.h              — setup/loop templates, driver selection
+  handlers.h         — LegacyHandler, HW3Handler, NagHandler, HW4Handler structs
+  can_frame_types.h  — portable CanFrame type
+  can_helpers.h      — bit manipulation, checksum, mux helpers
+  shared_types.h     — Shared<T> atomic wrapper, runtime flags
+  log_buffer.h       — ring buffer for serial/dashboard log
+  drivers/           — mcp2515_driver.h, twai_driver.h, same51_driver.h, mock_driver.h
+  web/               — ESP32 WiFi dashboard (HTML/JS served over AP)
+src/main.cpp         — PlatformIO entry point
+platformio_profile.h — compile-time feature selection
+platformio.ini       — build environments
+```
 
-## CAN Bus Integration
+## Handler Architecture
 
-Directly intercepts and modifies CAN frames on the Tesla vehicle bus:
+All handlers inherit `CarManagerBase` which holds shared state: `speedProfile`, `ADEnabled`, `APActive`, `Parked`, `Summoning`, `gatewayAutopilot`, `speedOffset`.
 
-- **CAN ID 0x3FD (1021)** — `UI_autopilotControl`: FSD enable bit (bit46, bit60), nag suppression (bit19), speed profile
-- **CAN ID 0x3EE (1006)** — Legacy autopilot control
-- **CAN ID 0x3F8 (1016)** — Follow-distance stalk reading for speed profile mapping
-- **CAN ID 0x399 (921)** — ISA speed chime suppression (HW4)
-- **CAN ID 0x370 (880)** — EPAS nag killer (counter+1 echo)
-- Operates at 500 kbps CAN bus speed
+### AP Injection Gate (v2.5.x — required for Tesla FW 2026.14.3+)
+
+Tesla firmware 2026.14.3+ rejects always-on CAN injection. The gate opens injection only when one of three conditions is true:
+
+```cpp
+bool injectionGateOpen() const {
+    return (bool)APActive || (bool)Parked || (bool)Summoning;
+}
+```
+
+- **APActive** — set from `DAS_status` (CAN 921) `DAS_autopilotStatus` active states
+- **Parked** — set from `DI_systemStatus` (CAN 280) `DI_gear` and `DIF_torque` (CAN 390). Defaults `true` at boot so the gate is open when the DI is asleep (Sentry mode). Flips false on first R/N/D gear frame.
+- **Summoning** — requires both `DI_autonomyControlActive` (CAN 280 byte 6 bit 2) AND a `UI_selfParkRequest` non-zero command (CAN 1016 byte 3 bits 4-7) observed in the current autonomy episode. ACA falling edge clears the spr-seen flag so plain TACC re-engagement does not re-latch the gate.
+
+Gate signals consumed by all three handlers (Legacy, HW3, HW4):
+- CAN 280 `DI_systemStatus` — `DI_gear` (byte 2 bits 0-2), `DI_autonomyControlActive` (byte 6 bit 2)
+- CAN 390 `DIF_torque` / `DIR_torque` — `DI_gear` fallback
+- CAN 921 `DAS_status` — `DAS_autopilotStatus`
+- CAN 1016 `UI_driverAssistControl` — `UI_selfParkRequest` (byte 3 bits 4-7)
+
+### LegacyHandler (HW2.5 / pre-AP retrofit)
+
+Filters: CAN IDs 69, 280, 390, 921, 1006
+
+- **CAN 69** `STW_ACTN_RQ` — follow-distance stalk → speed profile (3 levels, byte 1 bits 7-5)
+- **CAN 1006** mux 0 — FSD enable (bit 46), speed profile injection (`setSpeedProfileV12V13`)
+- **CAN 1006** mux 1 — nag suppression (bit 19 clear), gated by `injectionGateOpen()` on dashboard builds
+
+### HW3Handler
+
+Filters: CAN IDs 280, 390, 921, 1016, 1021, 2047
+
+- **CAN 1016** — follow-distance stalk → speed profile (3 levels, byte 5 bits 7-5); `UI_selfParkRequest` for summon gate
+- **CAN 1021** mux 0 — FSD enable (bit 46), speed profile, speed offset read (byte 3 bits 6-1, scale ×5, range 0-100)
+- **CAN 1021** mux 1 — nag suppression (bit 19 clear, bit 46 set), gated by `injectionGateOpen()`
+- **CAN 1021** mux 2 — speed offset injection (byte 0 bits 7-6 + byte 1 bits 5-0)
+- **CAN 2047** — GTW_autopilot observation and logging
+
+### NagHandler (standalone, compile-time `-D NAG_KILLER`)
+
+Filters: CAN ID 880 only
+
+Echoes `EPAS3P_sysStatus` (0x370) with counter+1 and fixed 1.80 Nm torque when `handsOnLevel == 0`. This is the upstream's simple always-echo implementation — no DAS gating, no organic torque variation.
+
+Frame modification:
+- `data[2]` lower nibble = `0x08` (tRaw high byte)
+- `data[3]` = `0xB6` (tRaw low byte → 1.80 Nm fixed)
+- `data[4]` |= `0x40` (handsOnLevel = 1)
+- `data[6]` lower nibble = counter + 1 (mod 16)
+- `data[7]` = `(sum(b0..b6) + 0x73) & 0xFF`
+
+### HW4Handler
+
+Filters: CAN IDs 280, 390, 921, 1016, 1021, 2047
+
+- **CAN 921** — `DAS_autopilotStatus` for APActive; ISA chime suppression (bit 5 of byte 1, checksum recalc)
+- **CAN 1016** — follow-distance stalk → speed profile (5 levels); `UI_selfParkRequest` for summon gate
+- **CAN 1021** mux 0 — FSD enable (bit 46), FSD v14 (bit 60), EVD (bit 59), gated by `injectionGateOpen()`
+- **CAN 1021** mux 1 — nag suppression (bit 19 clear, bit 47 set), gated by `injectionGateOpen()`
+- **CAN 1021** mux 2 — speed profile injection (`setSpeedProfileHW4`, byte 7 bits 6-4)
+- **CAN 2047** — GTW_autopilot observation
+
+## CAN Signal Reference
+
+| CAN ID | Decimal | Signal | Location | Notes |
+|--------|---------|--------|----------|-------|
+| 0x045 | 69 | STW_ACTN_RQ follow-distance | byte 1 bits 7-5 | Legacy only |
+| 0x118 | 280 | DI_gear | byte 2 bits 2-0 | 1=P, 2=R, 3=N, 4=D, 7=SNA |
+| 0x118 | 280 | DI_autonomyControlActive | byte 6 bit 2 | Summon gate |
+| 0x186 | 390 | DIF/DIR gear | byte 0 bits 2-0 | Fallback gear source |
+| 0x370 | 880 | EPAS3P_sysStatus | full frame | Nag killer target |
+| 0x399 | 921 | DAS_autopilotStatus | byte 0 bits 3-0 | AP gate |
+| 0x399 | 921 | ISA chime | byte 1 bit 5 | HW4 only |
+| 0x3F8 | 1016 | UI_selfParkRequest | byte 3 bits 7-4 | Summon gate |
+| 0x3F8 | 1016 | follow-distance | byte 5 bits 7-5 | HW3/HW4 |
+| 0x3FD | 1021 | UI_autopilotControl mux 0 | bit 46 FSD, bit 60 FSDv14, bit 59 EVD | |
+| 0x3FD | 1021 | UI_autopilotControl mux 1 | bit 19 nag, bit 47 HW4 | |
+| 0x3FD | 1021 | UI_autopilotControl mux 2 | speed profile / offset | |
+| 0x7FF | 2047 | GTW_autopilot | mux 2 | Observation only |
 
 ## Relevance to Our Project
 
-This **is** the canonical upstream for our Tesla-CAN-Mod firmware. The `firmware/` directory in our monorepo is essentially a structured version of this codebase.
+This is the primary upstream reference for our firmware. Key differences from our codebase:
 
-- **Reusability**: High — this is our primary firmware source
-- **Key Takeaways**:
-  - Multi-driver architecture pattern (MCP2515, TWAI, SAME51) via compile-time selection
-  - Plugin engine for extensible CAN modifications without recompilation
-  - WiFi dashboard with OTA update capability
-  - Separation of CAN logic from hardware abstraction
-  - HW3/HW4/Legacy handler pattern for different Tesla hardware generations
-  - AP Injection Gate (v2.5.x+): gates CAN injection on AP/Summon/Smart Park active state — required for Tesla firmware 2026.14.3+ which rejects always-on injection; uses `DI_autonomyControlActive` (CAN 0x118/280) and `UI_selfParkRequest` (CAN 0x3F8) as gate signals
-  - Current stable version: 2.5.2 (see `VERSION` file and `CHANGELOG.md`)
+- **AP Injection Gate** — upstream has it (v2.5.x), our codebase does not. Required for Tesla FW 2026.14.3+.
+- **Speed profile auto-mapping** — upstream maps follow-distance stalk to AP aggressiveness profile automatically. Our `profile.h` exists but is not wired to the stalk.
+- **Speed offset injection** — upstream HW3 reads and re-injects speed offset from mux-2. Our `offsets.h` is a stub.
+- **Emergency vehicle detection** — upstream HW4 sets bit 59 on mux-0. Not in our codebase.
+- **NagHandler** — upstream uses simple always-echo with fixed 1.80 Nm. Our `nag.h` is more sophisticated (safe/natural modes, Gaussian jitter) but uses a smaller torque range.
+- **Nag suppression gating** — upstream gates bit-19 nag on `injectionGateOpen()`. Our nag suppress is ungated.

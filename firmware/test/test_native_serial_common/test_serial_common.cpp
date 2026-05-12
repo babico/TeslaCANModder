@@ -1,7 +1,8 @@
-// ── Serial Common — JsonLineBuilder & handleChar Tests ──────────────────────
-// Exercises the io/serial/common.h public API directly (JSON builder, ack/error
-// helpers, character buffer state machine). Complements test_native_serial which
-// goes through executeCommand; this focuses on the builder primitives.
+/** @file firmware/test/test_native_serial_common/test_serial_common.cpp
+ *  @brief Unit tests for shared serial parsing utilities
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -17,7 +18,6 @@
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Captured-output fakes ──────────────────────────────────────────────────
 static std::string capturedOutput;
 class __FlashStringHelper;
 #define F(s) (reinterpret_cast<const __FlashStringHelper *>(s))
@@ -51,7 +51,6 @@ unsigned long millis()
 	return 0;
 }
 
-// Stub: handleChar references executeCommand — needs a definition
 static int executedCount = 0;
 static std::string lastExecuted;
 void executeCommand(const char *cmd, State &, unsigned long)
@@ -70,7 +69,6 @@ void setUp()
 }
 void tearDown() {}
 
-// ── JsonLineBuilder ─────────────────────────────────────────────────────────
 void test_json_line_str_field()
 {
 	jsonLine().str("t", "ack").end();
@@ -93,7 +91,6 @@ void test_json_line_nested_object()
 	TEST_ASSERT_EQUAL_STRING("{\"inner\":{\"a\":\"1\",\"b\":2}}\n", capturedOutput.c_str());
 }
 
-// ── sendAck / sendError / sendLog ───────────────────────────────────────────
 void test_send_ack()
 {
 	sendAck("fsd:on");
@@ -110,7 +107,6 @@ void test_send_log()
 	TEST_ASSERT_EQUAL_STRING("{\"t\":\"log\",\"msg\":\"hello\"}\n", capturedOutput.c_str());
 }
 
-// ── sendFrame respects streamEnabled ────────────────────────────────────────
 void test_send_frame_stream_disabled()
 {
 	State s = {};
@@ -136,11 +132,10 @@ void test_send_frame_stream_enabled_increments_count()
 	sendFrame(f, "rx", BUS_VEHICLE, 100, s);
 	TEST_ASSERT_EQUAL_UINT32(1, s.streamCount);
 	TEST_ASSERT_TRUE(capturedOutput.find("\"t\":\"frame\"") != std::string::npos);
-	TEST_ASSERT_TRUE(capturedOutput.find("\"id\":291") != std::string::npos); // 0x123 == 291
+	TEST_ASSERT_TRUE(capturedOutput.find("\"id\":291") != std::string::npos);
 	TEST_ASSERT_TRUE(capturedOutput.find("\"d\":\"AA\"") != std::string::npos);
 }
 
-// ── handleChar — character-by-character command buffer ─────────────────────
 void test_handleChar_collects_until_newline()
 {
 	State s = {};
@@ -171,9 +166,8 @@ void test_handleChar_rejects_invalid_chars_resets_buffer()
 	uint8_t len = 0;
 	handleChar(buf, len, 'a', s);
 	handleChar(buf, len, 'b', s);
-	handleChar(buf, len, '!', s); // invalid → reset
+	handleChar(buf, len, '!', s);
 	TEST_ASSERT_EQUAL_UINT8(0, len);
-	// newline now should NOT execute (buffer empty)
 	handleChar(buf, len, '\n', s);
 	TEST_ASSERT_EQUAL(0, executedCount);
 }
@@ -182,11 +176,9 @@ void test_handleChar_overflow_blocks_execute()
 	State s = {};
 	char buf[SERIAL_CMD_BUFFER_SIZE];
 	uint8_t len = 0;
-	// fill past capacity
 	for (int i = 0; i < SERIAL_CMD_BUFFER_SIZE + 5; i++)
 		handleChar(buf, len, 'a', s);
 	handleChar(buf, len, '\n', s);
-	// executeCommand only runs when len < SERIAL_CMD_BUFFER_SIZE
 	TEST_ASSERT_EQUAL(0, executedCount);
 }
 void test_handleChar_accepts_alphanumeric_punctuation()
@@ -220,3 +212,4 @@ int main(int, char **)
 	RUN_TEST(test_handleChar_accepts_alphanumeric_punctuation);
 	return UNITY_END();
 }
+

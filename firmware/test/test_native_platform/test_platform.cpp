@@ -1,5 +1,8 @@
-// ── Vehicle Platform Tests ──────────────────────────────────────────────────
-// Tests for the unified platform identity system: Model → HW → SW.
+/** @file firmware/test/test_native_platform/test_platform.cpp
+ *  @brief Unit tests for platform abstraction layer
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -21,7 +24,6 @@ class __FlashStringHelper;
 void setUp() {}
 void tearDown() {}
 
-// ── TeslaModel enum tests ───────────────────────────────────────────────────
 
 void test_model_name_strings()
 {
@@ -51,7 +53,6 @@ void test_parse_model_invalid()
 	TEST_ASSERT_FALSE(parseTeslaModel("roadster", m));
 }
 
-// ── HWGeneration tests ──────────────────────────────────────────────────────
 
 void test_hw_gen_names()
 {
@@ -75,7 +76,6 @@ void test_hwgen_to_variant_mapping()
 	TEST_ASSERT_EQUAL(LEGACY, hwGenToVariant(HW_LEGACY));
 }
 
-// ── TeslaSoftwareVersion tests ──────────────────────────────────────────────
 
 void test_sw_version_valid()
 {
@@ -88,18 +88,18 @@ void test_sw_version_invalid()
 	TeslaSoftwareVersion v = {0, 0, 0, 0};
 	TEST_ASSERT_FALSE(v.valid());
 	TeslaSoftwareVersion v2 = {2018, 0, 0, 0};
-	TEST_ASSERT_FALSE(v2.valid()); // week 0 invalid
+	TEST_ASSERT_FALSE(v2.valid());
 }
 
 void test_sw_version_compare()
 {
 	TeslaSoftwareVersion a = {2026, 14, 1, 0};
 	TeslaSoftwareVersion b = {2026, 2, 9, 7};
-	TEST_ASSERT_TRUE(a >= b); // 2026.14.1 > 2026.2.9.7
+	TEST_ASSERT_TRUE(a >= b);
 	TEST_ASSERT_TRUE(b < a);
 
 	TeslaSoftwareVersion c = {2025, 45, 9, 0};
-	TEST_ASSERT_TRUE(a >= c); // 2026 > 2025
+	TEST_ASSERT_TRUE(a >= c);
 	TEST_ASSERT_TRUE(c < a);
 }
 
@@ -112,7 +112,6 @@ void test_sw_version_equal()
 	TEST_ASSERT_FALSE(a < b);
 }
 
-// ── FSD Protocol detection ──────────────────────────────────────────────────
 
 void test_fsd_proto_hw3_always_v12()
 {
@@ -156,7 +155,6 @@ void test_fsd_proto_invalid_sw_returns_unknown()
 	TEST_ASSERT_EQUAL(FSD_PROTO_UNKNOWN, detectFsdProtocol(sw, HW_4));
 }
 
-// ── VehiclePlatform resolve ─────────────────────────────────────────────────
 
 void test_platform_resolve_full()
 {
@@ -174,7 +172,7 @@ void test_platform_resolve_unknown_model()
 	VehiclePlatform p;
 	TeslaSoftwareVersion sw = {2026, 2, 9, 0};
 	p.resolve(MODEL_UNKNOWN, HW_4, sw);
-	TEST_ASSERT_FALSE(p.resolved); // model unknown → not resolved
+	TEST_ASSERT_FALSE(p.resolved);
 }
 
 void test_platform_resolve_from_state()
@@ -183,7 +181,7 @@ void test_platform_resolve_from_state()
 	s.vehicleModel = MODEL_3;
 	s.variant = HW4;
 	s.hwAutoDetected = true;
-	s.detectedHW = 3; // 3 → HW4
+	s.detectedHW = 3;
 	s.fwYear = 2026;
 	s.fwRelease = 14;
 	s.fwMinor = 1;
@@ -213,10 +211,9 @@ void test_platform_resolve_from_state_variant_fallback()
 	TEST_ASSERT_TRUE(p.resolved);
 	TEST_ASSERT_EQUAL(MODEL_S, p.model);
 	TEST_ASSERT_EQUAL(HW_3, p.hwGen);
-	TEST_ASSERT_EQUAL(FSD_PROTO_V12, p.fsdProto); // HW3 always uses v12
+	TEST_ASSERT_EQUAL(FSD_PROTO_V12, p.fsdProto);
 }
 
-// ── syncPlatformToState ─────────────────────────────────────────────────────
 
 void test_sync_platform_to_state()
 {
@@ -235,7 +232,6 @@ void test_sync_platform_to_state()
 	TEST_ASSERT_TRUE(s.platformResolved);
 }
 
-// ── Software compatibility ──────────────────────────────────────────────────
 
 void test_sw_compat_ok_hw4_2026_2_9()
 {
@@ -277,7 +273,6 @@ void test_sw_compat_unknown_no_sw()
 	TEST_ASSERT_EQUAL(SW_COMPAT_UNKNOWN, checkSoftwareCompat(p));
 }
 
-// ── PlatformCapabilities ────────────────────────────────────────────────────
 
 void test_capabilities_cybertruck()
 {
@@ -295,7 +290,6 @@ void test_capabilities_legacy_limited()
 	TEST_ASSERT_FALSE(cap.supportsBanShield);
 }
 
-// ── main ────────────────────────────────────────────────────────────────────
 
 int main()
 {
@@ -340,3 +334,4 @@ int main()
 
 	return UNITY_END();
 }
+

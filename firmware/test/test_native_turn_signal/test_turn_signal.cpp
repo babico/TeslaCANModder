@@ -1,5 +1,8 @@
-// ── Turn Signal Tests ────────────────────────────────────────────────────────
-// Tests turn signal CAN frame bit manipulation and command parsing.
+/** @file firmware/test/test_native_turn_signal/test_turn_signal.cpp
+ *  @brief Unit tests for turn signal commands
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -17,7 +20,6 @@ class __FlashStringHelper;
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
@@ -48,14 +50,13 @@ void setUp()
 }
 void tearDown() {}
 
-// ── setTurnSignalRequest ────────────────────────────────────────────────────
 
 void test_set_turn_off()
 {
 	Frame f = {};
 	f.data[0] = 0xFF;
 	setTurnSignalRequest(f, TURN_OFF);
-	TEST_ASSERT_EQUAL_HEX8(0xFC, f.data[0]); // bits 1:0 cleared
+	TEST_ASSERT_EQUAL_HEX8(0xFC, f.data[0]);
 }
 
 void test_set_turn_left()
@@ -82,12 +83,11 @@ void test_set_turn_hazard()
 void test_set_preserves_upper_bits()
 {
 	Frame f = {};
-	f.data[0] = 0xA8; // 10101000
+	f.data[0] = 0xA8;
 	setTurnSignalRequest(f, TURN_LEFT_3);
-	TEST_ASSERT_EQUAL_HEX8(0xA9, f.data[0]); // upper bits preserved, low 2 = 01
+	TEST_ASSERT_EQUAL_HEX8(0xA9, f.data[0]);
 }
 
-// ── enum values ─────────────────────────────────────────────────────────────
 
 void test_enum_values()
 {
@@ -97,7 +97,6 @@ void test_enum_values()
 	TEST_ASSERT_EQUAL(3, TURN_HAZARD);
 }
 
-// ── executeTurnSignalCmd ───────────────────────────────────────────────────────
 
 void test_cmd_left3()
 {
@@ -133,7 +132,6 @@ void test_cmd_unknown_returns_false()
 	TEST_ASSERT_FALSE(executeTurnSignalCmd("turn:invalid", s));
 }
 
-// ── runtime decode helpers (D-05) ─────────────────────────────────────────
 
 void test_decode_turn_signal_left_active()
 {
@@ -178,7 +176,6 @@ void test_decode_blind_spot_sna_maps_to_zero()
 	TEST_ASSERT_EQUAL_UINT8(0, decodeBlindSpotRightLevel(f));
 }
 
-// ── main ────────────────────────────────────────────────────────────────────
 
 int main(int, char **)
 {
@@ -201,3 +198,4 @@ int main(int, char **)
 	RUN_TEST(test_decode_blind_spot_sna_maps_to_zero);
 	return UNITY_END();
 }
+

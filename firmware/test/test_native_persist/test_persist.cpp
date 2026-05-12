@@ -1,17 +1,17 @@
-// ── ESP32 NVS Persistence Tests ──────────────────────────────────────────────
-// Tests loadSettings/saveSettings roundtrip using fake Preferences API.
+/** @file firmware/test/test_native_persist/test_persist.cpp
+ *  @brief Unit tests for NVS settings persistence
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
 
-// Provide fake Preferences before including persist
 #include "../support/fake_preferences.h"
-// Provide Preferences.h guard so persist/esp32.h doesn't try to include real one
 #define Preferences_h
 
 #include "core/types.h"
 
-// ── Inline the persist logic (matches persist/esp32.h) ──────────────────────
 #define NVS_NAMESPACE "tcm"
 #define NVS_KEY_MAGIC "magic"
 #define NVS_KEY_VERSION "ver"
@@ -33,15 +33,14 @@ static bool loadSettings(State &s)
 	s.variant = (Variant)prefs.getUChar("variant", 0);
 	s.fsdEnabled = prefs.getUChar("fsd", 0);
 	s.fsdForceEnabled = prefs.getUChar("ffsd", 0);
-	s.nagSuppress = prefs.getUChar("nag", 0);
 	s.speedProfile = prefs.getUChar("sp", 1);
 	s.profileOverride = prefs.getUChar("spPin", 0);
 	s.speedOffset = prefs.getUChar("offset", 0);
 	s.offsetOverride = prefs.getUChar("offPin", 0);
 	s.isaChimeSuppress = prefs.getUChar("isa", 0);
 	s.summonInject = prefs.getUChar("sumInj", 0);
-	s.nagKillerEnabled = prefs.getUChar("nagK", 0);
-	s.nagKillerMode = (NagKillerMode)prefs.getUChar("nagKM", (uint8_t)NAG_KILLER_LEGACY);
+	s.nagMode = (NagMode)prefs.getUChar("nagMode", (uint8_t)NAG_MODE_OFF);
+	s.nagOrganicDriverBypass = prefs.getUChar("nagOrgDB", 0);
 	s.preconditionEnabled = prefs.getUChar("precond", 0);
 	s.trackModeEnabled = prefs.getUChar("track", 0);
 	s.variantAutoDetect = prefs.getUChar("vAuto", 1);
@@ -64,15 +63,14 @@ static void saveSettings(const State &s)
 	prefs.putUChar("variant", (uint8_t)s.variant);
 	prefs.putUChar("fsd", s.fsdEnabled ? 1 : 0);
 	prefs.putUChar("ffsd", s.fsdForceEnabled ? 1 : 0);
-	prefs.putUChar("nag", s.nagSuppress ? 1 : 0);
 	prefs.putUChar("sp", (uint8_t)s.speedProfile);
 	prefs.putUChar("spPin", s.profileOverride ? 1 : 0);
 	prefs.putUChar("offset", (uint8_t)s.speedOffset);
 	prefs.putUChar("offPin", s.offsetOverride ? 1 : 0);
 	prefs.putUChar("isa", s.isaChimeSuppress ? 1 : 0);
 	prefs.putUChar("sumInj", s.summonInject ? 1 : 0);
-	prefs.putUChar("nagK", s.nagKillerEnabled ? 1 : 0);
-	prefs.putUChar("nagKM", (uint8_t)s.nagKillerMode);
+	prefs.putUChar("nagMode", (uint8_t)s.nagMode);
+	prefs.putUChar("nagOrgDB", s.nagOrganicDriverBypass ? 1 : 0);
 	prefs.putUChar("precond", s.preconditionEnabled ? 1 : 0);
 	prefs.putUChar("track", s.trackModeEnabled ? 1 : 0);
 	prefs.putUChar("vAuto", s.variantAutoDetect ? 1 : 0);
@@ -92,15 +90,14 @@ static State makeDefault()
 	s.variant = HW4;
 	s.fsdEnabled = false;
 	s.fsdForceEnabled = false;
-	s.nagSuppress = false;
 	s.speedProfile = 1;
 	s.profileOverride = false;
 	s.speedOffset = 0;
 	s.offsetOverride = false;
 	s.isaChimeSuppress = false;
 	s.summonInject = false;
-	s.nagKillerEnabled = false;
-	s.nagKillerMode = NAG_KILLER_LEGACY;
+	s.nagMode = NAG_MODE_OFF;
+	s.nagOrganicDriverBypass = false;
 	s.preconditionEnabled = false;
 	s.trackModeEnabled = false;
 	s.variantAutoDetect = true;
@@ -121,9 +118,6 @@ void setUp()
 
 void tearDown() {}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Save/Load Roundtrip
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_persist_save_load_roundtrip_default()
 {
@@ -134,7 +128,7 @@ void test_persist_save_load_roundtrip_default()
 	TEST_ASSERT_TRUE(loadSettings(loaded));
 	TEST_ASSERT_EQUAL(HW4, loaded.variant);
 	TEST_ASSERT_FALSE(loaded.fsdEnabled);
-	TEST_ASSERT_FALSE(loaded.nagSuppress);
+	TEST_ASSERT_EQUAL(NAG_MODE_OFF, loaded.nagMode);
 	TEST_ASSERT_EQUAL(1, loaded.speedProfile);
 	TEST_ASSERT_FALSE(loaded.profileOverride);
 	TEST_ASSERT_EQUAL(0, loaded.speedOffset);
@@ -147,7 +141,7 @@ void test_persist_save_load_roundtrip_hw3_full()
 	State s = makeDefault();
 	s.variant = HW3;
 	s.fsdEnabled = true;
-	s.nagSuppress = true;
+	s.nagMode = NAG_MODE_ORGANIC;
 	s.speedProfile = 5;
 	s.profileOverride = true;
 	s.speedOffset = 10;
@@ -159,7 +153,7 @@ void test_persist_save_load_roundtrip_hw3_full()
 	TEST_ASSERT_TRUE(loadSettings(loaded));
 	TEST_ASSERT_EQUAL(HW3, loaded.variant);
 	TEST_ASSERT_TRUE(loaded.fsdEnabled);
-	TEST_ASSERT_TRUE(loaded.nagSuppress);
+	TEST_ASSERT_EQUAL(NAG_MODE_ORGANIC, loaded.nagMode);
 	TEST_ASSERT_EQUAL(5, loaded.speedProfile);
 	TEST_ASSERT_TRUE(loaded.profileOverride);
 	TEST_ASSERT_EQUAL(10, loaded.speedOffset);
@@ -182,9 +176,6 @@ void test_persist_save_load_roundtrip_legacy()
 	TEST_ASSERT_EQUAL(3, loaded.speedProfile);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Corrupt/Missing NVS
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_persist_load_empty_nvs_returns_false()
 {
@@ -216,9 +207,6 @@ void test_persist_load_wrong_version_returns_false()
 	TEST_ASSERT_FALSE(loadSettings(s));
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Overwrite
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_persist_save_load_roundtrip_overwrite_preserves_latest()
 {
@@ -336,3 +324,4 @@ int main()
 
 	return UNITY_END();
 }
+

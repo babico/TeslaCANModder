@@ -1,19 +1,29 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/mirror.h
+ * @brief Mirror fold, heat, auto-fold, and dip control via CAN frame 0x273
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "vehicle/can/fwd.h"
 
-// ── Mirror Bit Helpers (0x273 UI_vehicleControl) ─────────────────────────────
-// These helpers set individual mirror-related bit fields in the 0x273 frame.
-// Tesla mirrors are controlled via the UI_vehicleControl CAN message shared
-// with wipers, windows, and other body controls.
-
+/**
+ * @brief Mirror fold request states for the fold/unfold control field.
+ */
 enum MirrorFoldRequest
 {
-	MIRROR_IDLE = 0,
-	MIRROR_FOLD = 1,
-	MIRROR_UNFOLD = 2
+	MIRROR_IDLE = 0,  // No fold action requested
+	MIRROR_FOLD = 1,  // Request mirror fold
+	MIRROR_UNFOLD = 2 // Request mirror unfold
 };
 
-// Set fold/unfold request in byte 3 bits [1:0]
+/**
+ * @brief Set the mirror fold/unfold request field in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param req Desired fold action.
+ */
 inline void setMirrorFold(Frame &f, MirrorFoldRequest req)
 {
 	if (f.dlc < 4)
@@ -21,7 +31,11 @@ inline void setMirrorFold(Frame &f, MirrorFoldRequest req)
 	f.data[3] = (f.data[3] & ~0x03) | (req & 0x03); // bits 24-25
 }
 
-// Enable/disable heated mirrors via byte 3 bit 2
+/**
+ * @brief Set the heated mirrors enable bit in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param enable True to activate mirror heating, false to deactivate.
+ */
 inline void setMirrorHeat(Frame &f, bool enable)
 {
 	if (f.dlc < 4)
@@ -32,7 +46,11 @@ inline void setMirrorHeat(Frame &f, bool enable)
 		f.data[3] &= ~0x04;
 }
 
-// Enable/disable automatic fold-on-lock via byte 6 bit 4
+/**
+ * @brief Set the automatic fold-on-lock bit in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param enable True to enable auto-fold on lock, false to disable.
+ */
 inline void setAutoFoldMirrors(Frame &f, bool enable)
 {
 	if (f.dlc < 7)
@@ -43,7 +61,11 @@ inline void setAutoFoldMirrors(Frame &f, bool enable)
 		f.data[6] &= ~0x10;
 }
 
-// Enable/disable mirror dip when shifting to reverse via byte 6 bit 5
+/**
+ * @brief Set the mirror dip-on-reverse bit in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param enable True to dip mirror when shifting to reverse, false to disable.
+ */
 inline void setMirrorDipOnReverse(Frame &f, bool enable)
 {
 	if (f.dlc < 7)
@@ -54,12 +76,15 @@ inline void setMirrorDipOnReverse(Frame &f, bool enable)
 		f.data[6] &= ~0x20;
 }
 
-// ── Mirror Control (0x273) ───────────────────────────────────────────────────
-// Each control function copies the last-seen 0x273 frame from State, modifies
-// the relevant bits, then burst-sends the modified frame on BUS_VEHICLE.
-// Burst ensures the ECU sees the command despite periodic factory frames.
-
-// Fold or unfold mirrors (50 burst frames, 20 ms interval)
+/**
+ * @brief Burst-send a mirror fold or unfold command on BUS_VEHICLE.
+ *
+ * Uses 50 burst frames at 20 ms intervals to ensure the ECU registers
+ * the fold command despite periodic factory frames.
+ *
+ * @param req Fold action to perform.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlMirrorFold(MirrorFoldRequest req, State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -68,7 +93,10 @@ static void controlMirrorFold(MirrorFoldRequest req, State &s)
 	startBurst(s, f, BUS_VEHICLE, 50, 20);
 }
 
-// Activate heated mirrors (30 burst frames, 20 ms interval)
+/**
+ * @brief Burst-send a heated mirrors activation command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlMirrorHeat(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -77,7 +105,10 @@ static void controlMirrorHeat(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
-// Toggle factory auto-fold-on-lock setting (30 burst frames)
+/**
+ * @brief Burst-send a factory auto-fold-on-lock toggle command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlAutoFoldMirrors(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -86,7 +117,10 @@ static void controlAutoFoldMirrors(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
-// Dip passenger mirror when reversing (30 burst frames)
+/**
+ * @brief Burst-send a mirror dip-on-reverse activation command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlMirrorDip(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -95,10 +129,16 @@ static void controlMirrorDip(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
-// ── Mirror Auto-Fold on Lock ────────────────────────────────────────────────
-// Monitors vehicle lock state transitions and automatically folds mirrors on
-// lock / unfolds on unlock. Requires mirrorAutoFoldEnabled and hasCtrl.
-
+/**
+ * @brief Monitor lock state transitions and auto-fold/unfold mirrors.
+ *
+ * When the vehicle transitions from unlocked to locked, mirrors are folded.
+ * When transitioning from locked to unlocked, mirrors are unfolded.
+ * Requires mirrorAutoFoldEnabled and hasCtrl to be active.
+ *
+ * @param s Vehicle state tracking lock transitions.
+ * @param vehicleLocked Current lock state reported by the vehicle.
+ */
 inline void mirrorAutoFoldCheck(State &s, bool vehicleLocked)
 {
 	if (!s.mirrorAutoFoldEnabled)
@@ -108,21 +148,28 @@ inline void mirrorAutoFoldCheck(State &s, bool vehicleLocked)
 
 	if (vehicleLocked && !s.vehicleLockedState)
 	{
-		// Just locked → fold mirrors
+		// Transition to locked: fold mirrors
 		controlMirrorFold(MIRROR_FOLD, s);
 	}
 	else if (!vehicleLocked && s.vehicleLockedState)
 	{
-		// Just unlocked → unfold mirrors
+		// Transition to unlocked: unfold mirrors
 		controlMirrorFold(MIRROR_UNFOLD, s);
 	}
 	s.vehicleLockedState = vehicleLocked;
 }
 
-// ── Mirror Command Execution ─────────────────────────────────────────────────
-// Handles all mirror:* commands including fold, unfold, heat, autofold, dip,
-// and the mirror:autofold:on/off toggle for lock-based auto-folding.
-
+/**
+ * @brief Execute a mirror control command string.
+ *
+ * Dispatches "mirror:fold", "mirror:unfold", "mirror:heat",
+ * "mirror:autofold", and "mirror:dip" commands.
+ * Requires the vehicle control frame to be available (hasCtrl).
+ *
+ * @param cmd Null-terminated command string.
+ * @param s Vehicle state to operate on.
+ * @return True if the command was recognized and executed.
+ */
 static bool executeMirrorCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)
@@ -156,7 +203,16 @@ static bool executeMirrorCmd(const char *cmd, State &s)
 	return false;
 }
 
-// Auto-fold enable/disable toggle (persisted via NVS)
+/**
+ * @brief Execute the mirror auto-fold on/off toggle command.
+ *
+ * Enables or disables the automatic fold-on-lock behavior that is
+ * persisted via NVS.
+ *
+ * @param cmd Null-terminated command string.
+ * @param s Vehicle state to modify.
+ * @return True if the command was recognized and executed.
+ */
 static bool executeMirrorAutoFoldCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "mirror:autofold:on") == 0)

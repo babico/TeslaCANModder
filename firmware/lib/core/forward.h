@@ -1,9 +1,16 @@
 #pragma once
+
+/**
+ * @file firmware/lib/core/forward.h
+ * @brief Shared forward declarations for platform-specific functions used across the firmware
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "core/types.h"
 
-// ── Arduino/native compatibility ─────────────────────────────────────────────
-// __FlashStringHelper and F() are Arduino-only. Provide no-op stubs for native
-// builds (unit tests, IntelliSense) so headers compile cleanly without Arduino.
+// Provide no-op stubs for __FlashStringHelper and F() on native builds
+// so headers compile cleanly without the Arduino framework.
 #ifndef ARDUINO
 class __FlashStringHelper;
 #ifndef F
@@ -11,29 +18,63 @@ class __FlashStringHelper;
 #endif
 #endif
 
-// ── Shared forward declarations ──────────────────────────────────────────────
-// Include this header instead of repeating individual forward declarations.
-// Each function is defined by the platform-specific implementation file.
-
-// Logging — implemented by platform serial layer (sendLog(F("...")) on device)
+/**
+ * @brief Send a log message via the platform serial layer
+ * @param msg Null-terminated log string
+ */
 void sendLog(const char *msg);
+
+/**
+ * @brief Send a flash-stored log message via the platform serial layer
+ * @param msg Flash string pointer (F() macro on Arduino)
+ */
 void sendLog(const __FlashStringHelper *msg);
 
-// ── One-shot log guard ───────────────────────────────────────────────────────
-// Logs msg exactly once per boot (or until the flag is reset).
-// Usage:  ONCE_LOG(hw4LoggedNag, F("HW4: Nag suppressed on CAN"));
+/**
+ * @brief Log a message exactly once per boot (or until the flag is reset)
+ *
+ * Usage: ONCE_LOG(hw4LoggedNag, F("HW4: Nag suppressed on CAN"));
+ */
 #define ONCE_LOG(flag, msg) \
 	do { if (!(flag)) { sendLog(msg); (flag) = true; } } while (0)
 
-// Defined by core/driver/<board>.h
+/**
+ * @brief Transmit a CAN frame on the specified bus via the MCP2515 driver
+ * @param f Frame to send
+ * @param bus Bus index (0=Chassis, 1=Vehicle, 2=Body)
+ */
 void driverSend(const Frame &f, uint8_t bus);
+
+/**
+ * @brief Get and atomically reset the accumulated TX failure counter
+ * @return Number of MCP2515 sendMessage() failures since last call
+ */
 uint32_t driverGetAndResetTxFails();
+
+/**
+ * @brief Get and atomically reset the accumulated bus-off event counter
+ * @return Number of CAN bus-off events since last call
+ */
 uint32_t driverGetAndResetBusOffEvents();
+
+/**
+ * @brief Poll MCP2515 error registers and update internal bus error state
+ */
 void driverPollBusErrors();
 
-// Defined by core/persist/<board>.h
+/**
+ * @brief Persist the current settings from State to non-volatile storage
+ * @param s State struct containing values to save
+ */
 void saveSettings(const State &s);
 
-// Defined by handler/dispatch/<board>.h
+/**
+ * @brief Reset all one-shot log flags in the handler layer
+ */
 void resetHandlerLogFlags();
+
+/**
+ * @brief Apply CAN ID filters to the MCP2515 hardware based on current state
+ * @param s State struct used to determine which filters to configure
+ */
 void applyFilters(State &s);

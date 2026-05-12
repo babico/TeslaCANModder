@@ -1,5 +1,8 @@
-// ── MQTT Bridge Tests ───────────────────────────────────────────────────────
-// Tests MQTT command parsing and interval publishing logic.
+/** @file firmware/test/test_native_mqtt/test_mqtt.cpp
+ *  @brief Unit tests for MQTT message formatting
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -16,7 +19,6 @@ class __FlashStringHelper;
 
 #include "core/types.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
@@ -26,7 +28,6 @@ void sendLog(const __FlashStringHelper *) {}
 void setUp() {}
 void tearDown() {}
 
-// ── Tests ───────────────────────────────────────────────────────────────────
 
 void test_mqtt_on()
 {
@@ -83,11 +84,8 @@ void test_mqtt_should_publish_interval()
 	s.mqttInterval = 2000;
 	s.mqttLastPublishMs = 0;
 	strcpy(s.mqttHost, "test.local");
-	// Before interval
 	TEST_ASSERT_FALSE(mqttShouldPublish(s, 1000));
-	// At interval
 	TEST_ASSERT_TRUE(mqttShouldPublish(s, 2000));
-	// After interval
 	TEST_ASSERT_TRUE(mqttShouldPublish(s, 5000));
 }
 
@@ -103,7 +101,6 @@ void test_mqtt_should_publish_disabled()
 void test_mqtt_broker_rejects_long_host()
 {
 	State s = {};
-	// 70-char host exceeds MQTT_HOST_MAX (63) — should be rejected
 	char longHost[100] = "mqtt:broker:";
 	for (int i = 12; i < 82; i++)
 		longHost[i] = 'a';
@@ -127,3 +124,4 @@ int main()
 	RUN_TEST(test_mqtt_broker_rejects_long_host);
 	return UNITY_END();
 }
+

@@ -1,11 +1,11 @@
 #pragma once
-// ── Tesla RoutableMessage / VCSEC / CarServer protobuf builders ───────────────
-//
-// Field numbers are taken from the Tesla vehicle-command SDK protos:
-//   universalmessage.proto, vcsec.proto, carserver.proto
-//
-// All functions write into a caller-supplied buffer and set *outLen on success.
-// Return false if the buffer is too small or encoding fails.
+
+/**
+ * @file firmware/lib/vehicle/ble/msg.h
+ * @brief Tesla RoutableMessage, VCSEC, and CarServer protobuf message builders for BLE
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #if BOARD_ENABLE_BLE
 
@@ -17,19 +17,26 @@
 namespace Tesla
 {
 
-// ── Domain enum (universalmessage.proto) ──────────────────────────────────────
+// Domain enum values from universalmessage.proto
 static const uint8_t DOMAIN_VEHICLE_SECURITY = 2;
 static const uint8_t DOMAIN_INFOTAINMENT = 3;
 
-// ── KeyFormFactor enum (vcsec.proto) ──────────────────────────────────────────
+// KeyFormFactor enum values from vcsec.proto
 static const uint8_t KEY_FORM_FACTOR_NFC_CARD = 3;
 static const uint8_t KEY_FORM_FACTOR_BLE_KEY = 2;
 
-// ── Component enum (universalmessage.proto) ───────────────────────────────────
+// Component enum values from universalmessage.proto
 static const uint8_t COMPONENT_INFOTAINMENT = 3;
 static const uint8_t COMPONENT_VEHICLE_SECURITY = 2;
 
-// ── Helper: encode Destination { domain = d } ─────────────────────────────────
+/**
+ * @brief Encode a Destination message containing a single domain field.
+ * @param domain Domain identifier (DOMAIN_VEHICLE_SECURITY or DOMAIN_INFOTAINMENT).
+ * @param buf Output buffer for the encoded Destination.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param len Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool encDestination(uint8_t domain, uint8_t *buf, size_t cap, size_t &len)
 {
 	Proto p(buf, cap);
@@ -38,77 +45,104 @@ static bool encDestination(uint8_t domain, uint8_t *buf, size_t cap, size_t &len
 	return p.ok();
 }
 
-// ── VCSEC: AddKeyToWhitelistAndAddPermissions ─────────────────────────────────
-//   pub65  : uncompressed P-256 public key (65 bytes)
-//   role   : ROLE_OWNER(4) or ROLE_CHARGING_MANAGER(5)
-//   formFactor: KEY_FORM_FACTOR_NFC_CARD(3) or KEY_FORM_FACTOR_BLE_KEY(2)
-//   Returns RoutableMessage bytes ready to send via BLE (no auth needed)
+/**
+ * @brief Build an AddKeyToWhitelistAndAddPermissions request as a RoutableMessage.
+ *
+ * Constructs a VCSEC unsigned message that adds a public key to the vehicle whitelist
+ * with the specified role and form factor. No authentication is required for this message.
+ *
+ * @param pub65 Uncompressed P-256 public key (65 bytes).
+ * @param role Key role (e.g. ROLE_OWNER=4, ROLE_CHARGING_MANAGER=5).
+ * @param formFactor Key form factor (KEY_FORM_FACTOR_NFC_CARD or KEY_FORM_FACTOR_BLE_KEY).
+ * @param uuid16 16-byte random UUID for request correlation.
+ * @param out Output buffer for the encoded RoutableMessage.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildAddKeyRequest(const uint8_t *pub65, uint8_t role, uint8_t formFactor, const uint8_t *uuid16,
 							   uint8_t *out, size_t cap, size_t &outLen)
 {
-	// ── inner: AddKeyToWhitelistAndAddPermissions ─────────────────────────────
+	// Encode AddKeyToWhitelistAndAddPermissions inner message
 	uint8_t addKeyBuf[80];
 	Proto addKey(addKeyBuf, sizeof(addKeyBuf));
-	addKey.fieldBytes(1, pub65, 65);   // .key       = field 1
-	addKey.fieldVarint(2, role);	   // .role      = field 2
+	addKey.fieldBytes(1, pub65, 65);   // .key = field 1
+	addKey.fieldVarint(2, role);	   // .role = field 2
 	addKey.fieldVarint(5, formFactor); // .form_factor = field 5
 	if (!addKey.ok())
 		return false;
 
-	// ── mid: UnsignedMessage { addKeyToWhitelistAndAddPermissions = field 2 }
+	// Wrap in UnsignedMessage (addKeyToWhitelistAndAddPermissions = field 2)
 	uint8_t umBuf[96];
 	Proto um(umBuf, sizeof(umBuf));
 	um.fieldMsg(2, addKey);
 	if (!um.ok())
 		return false;
 
-	// ── dest: Destination { domain = DOMAIN_VEHICLE_SECURITY }
+	// Encode Destination targeting vehicle security domain
 	uint8_t destBuf[4];
 	size_t destLen = 0;
 	if (!encDestination(DOMAIN_VEHICLE_SECURITY, destBuf, sizeof(destBuf), destLen))
 		return false;
 
-	// ── outer: RoutableMessage ────────────────────────────────────────────────
+	// Assemble outer RoutableMessage
 	Proto rm(out, cap);
 	rm.fieldBytes(2, destBuf, destLen); // to_destination = field 2
 	rm.fieldMsg(5, um);					// protobuf_message_as_bytes = field 5
-	rm.fieldBytes(14, uuid16, 16);		// uuid = field 14 (16-byte random)
+	rm.fieldBytes(14, uuid16, 16);		// uuid = field 14
 	outLen = rm.len;
 	return rm.ok();
 }
 
-// ── Session: SessionInfoRequest ───────────────────────────────────────────────
-//   eph65      : ephemeral P-256 public key (65 bytes, uncompressed)
-//   challenge16: random 16 bytes
-//   domain     : DOMAIN_INFOTAINMENT or DOMAIN_VEHICLE_SECURITY
+/**
+ * @brief Build a SessionInfoRequest as a RoutableMessage.
+ *
+ * Constructs a session info request containing an ephemeral public key and a random
+ * challenge, addressed to the specified domain.
+ *
+ * @param eph65 Ephemeral uncompressed P-256 public key (65 bytes).
+ * @param challenge16 Random 16-byte challenge for session negotiation.
+ * @param domain Target domain (DOMAIN_INFOTAINMENT or DOMAIN_VEHICLE_SECURITY).
+ * @param uuid16 16-byte random UUID for request correlation.
+ * @param out Output buffer for the encoded RoutableMessage.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildSessionInfoRequest(const uint8_t *eph65, const uint8_t *challenge16, uint8_t domain,
 									const uint8_t *uuid16, uint8_t *out, size_t cap, size_t &outLen)
 {
-	// ── inner: SessionInfoRequest ─────────────────────────────────────────────
+	// Encode SessionInfoRequest inner message
 	uint8_t sirBuf[96];
 	Proto sir(sirBuf, sizeof(sirBuf));
 	sir.fieldBytes(1, eph65, 65);		// .public_key = field 1
-	sir.fieldBytes(2, challenge16, 16); // .challenge  = field 2
+	sir.fieldBytes(2, challenge16, 16); // .challenge = field 2
 	if (!sir.ok())
 		return false;
 
-	// ── dest
+	// Encode Destination for the target domain
 	uint8_t destBuf[4];
 	size_t destLen = 0;
 	if (!encDestination(domain, destBuf, sizeof(destBuf), destLen))
 		return false;
 
-	// ── outer: RoutableMessage { session_info_request = field 6 }
+	// Assemble outer RoutableMessage (session_info_request = field 6)
 	Proto rm(out, cap);
-	rm.fieldBytes(2, destBuf, destLen); // to_destination
+	rm.fieldBytes(2, destBuf, destLen); // to_destination = field 2
 	rm.fieldMsg(6, sir);				// session_info_request = field 6
-	rm.fieldBytes(14, uuid16, 16);		// uuid
+	rm.fieldBytes(14, uuid16, 16);		// uuid = field 14
 	outLen = rm.len;
 	return rm.ok();
 }
 
-// ── CarServer: encode Action wrapping an already-serialised VehicleAction msg ─
-//   innerBuf/innerLen: the serialised VehicleAction oneof field
+/**
+ * @brief Wrap a VehicleAction proto into a CarServer Action message.
+ * @param vehicleAction Already-encoded Proto containing the VehicleAction oneof field.
+ * @param out Output buffer for the encoded Action.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildAction(const Proto &vehicleAction, uint8_t *out, size_t cap, size_t &outLen)
 {
 	uint8_t vaBuf[256];
@@ -121,9 +155,13 @@ static bool buildAction(const Proto &vehicleAction, uint8_t *out, size_t cap, si
 	return rm.ok() && va.ok();
 }
 
-// ── CarServer: specific vehicle actions ──────────────────────────────────────
-
-// VehicleControlWakeupAction (field 25, empty)
+/**
+ * @brief Build a VehicleControlWakeupAction (empty message at field 25).
+ * @param out Output buffer for the encoded Action.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildWakeAction(uint8_t *out, size_t cap, size_t &outLen)
 {
 	uint8_t waBuf[4];
@@ -132,12 +170,21 @@ static bool buildWakeAction(uint8_t *out, size_t cap, size_t &outLen)
 	return buildAction(wa, out, cap, outLen);
 }
 
-// ChargingStartStopAction { start: {} } – charge_start (field 11 → start field 1)
+/**
+ * @brief Build a ChargingStartStopAction to start charging.
+ *
+ * Encodes field 11 (chargingStartStopAction) with start (field 1) set to an empty message.
+ *
+ * @param out Output buffer for the encoded Action.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildChargeStartAction(uint8_t *out, size_t cap, size_t &outLen)
 {
 	uint8_t startBuf[4], cssBuf[8], vaBuf[16];
 	Proto start(startBuf, sizeof(startBuf));
-	start.fieldEmpty(1); // ChargeNow (empty message) at field 1
+	start.fieldEmpty(1); // ChargeNow (empty) at field 1
 	Proto css(cssBuf, sizeof(cssBuf));
 	css.fieldMsg(1, start); // start = field 1
 	Proto va(vaBuf, sizeof(vaBuf));
@@ -145,7 +192,16 @@ static bool buildChargeStartAction(uint8_t *out, size_t cap, size_t &outLen)
 	return buildAction(va, out, cap, outLen);
 }
 
-// ChargingStartStopAction { stop: {} } – charge_stop (field 11 → stop field 2)
+/**
+ * @brief Build a ChargingStartStopAction to stop charging.
+ *
+ * Encodes field 11 (chargingStartStopAction) with stop (field 2) set to an empty message.
+ *
+ * @param out Output buffer for the encoded Action.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildChargeStopAction(uint8_t *out, size_t cap, size_t &outLen)
 {
 	uint8_t stopBuf[4], cssBuf[8], vaBuf[16];
@@ -154,11 +210,18 @@ static bool buildChargeStopAction(uint8_t *out, size_t cap, size_t &outLen)
 	Proto css(cssBuf, sizeof(cssBuf));
 	css.fieldMsg(2, stop); // stop = field 2
 	Proto va(vaBuf, sizeof(vaBuf));
-	va.fieldMsg(11, css);
+	va.fieldMsg(11, css); // chargingStartStopAction = field 11
 	return buildAction(va, out, cap, outLen);
 }
 
-// ChargingSetAmpsAction { chargingAmps = n } (field 13 → amps field 1)
+/**
+ * @brief Build a ChargingSetAmpsAction to set the charging current.
+ * @param amps Desired charging current in amps.
+ * @param out Output buffer for the encoded Action.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildSetAmpsAction(int32_t amps, uint8_t *out, size_t cap, size_t &outLen)
 {
 	uint8_t ampBuf[8], vaBuf[16];
@@ -169,7 +232,14 @@ static bool buildSetAmpsAction(int32_t amps, uint8_t *out, size_t cap, size_t &o
 	return buildAction(va, out, cap, outLen);
 }
 
-// ChargingSetLimitAction { percent = n } (field 12 → percent field 1)
+/**
+ * @brief Build a ChargingSetLimitAction to set the charge limit percentage.
+ * @param pct Desired charge limit as a percentage (0-100).
+ * @param out Output buffer for the encoded Action.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildSetLimitAction(int32_t pct, uint8_t *out, size_t cap, size_t &outLen)
 {
 	uint8_t lmtBuf[8], vaBuf[16];
@@ -180,7 +250,14 @@ static bool buildSetLimitAction(int32_t pct, uint8_t *out, size_t cap, size_t &o
 	return buildAction(va, out, cap, outLen);
 }
 
-// HvacAutoAction { power_on = powerOn } (field 14 → power_on field 1)
+/**
+ * @brief Build an HvacAutoAction to turn climate control on or off.
+ * @param powerOn True to enable climate, false to disable.
+ * @param out Output buffer for the encoded Action.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildClimateAction(bool powerOn, uint8_t *out, size_t cap, size_t &outLen)
 {
 	uint8_t hvacBuf[8], vaBuf[16];
@@ -191,34 +268,45 @@ static bool buildClimateAction(bool powerOn, uint8_t *out, size_t cap, size_t &o
 	return buildAction(va, out, cap, outLen);
 }
 
-// ── Authenticated RoutableMessage (after ECDH session established) ────────────
-//   encPayload / encLen : AES-GCM ciphertext of CarServer.Action
-//   gcmTag16           : 16-byte AES-GCM authentication tag
-//   counter            : session counter (monotonically increasing)
-//   domain             : DOMAIN_INFOTAINMENT
-//   uuid16             : 16 random bytes for request correlation
+/**
+ * @brief Build an authenticated RoutableMessage after an ECDH session is established.
+ *
+ * Wraps AES-GCM encrypted payload with signature data containing the authentication
+ * tag, session counter, and component identifier.
+ *
+ * @param encPayload AES-GCM ciphertext of the CarServer.Action.
+ * @param encLen Length of the encrypted payload in bytes.
+ * @param gcmTag16 16-byte AES-GCM authentication tag.
+ * @param counter Monotonically increasing session counter.
+ * @param domain Target domain (typically DOMAIN_INFOTAINMENT).
+ * @param uuid16 16-byte random UUID for request correlation.
+ * @param out Output buffer for the encoded RoutableMessage.
+ * @param cap Capacity of the output buffer in bytes.
+ * @param outLen Set to the number of bytes written on success.
+ * @return True if encoding succeeded without overflow.
+ */
 static bool buildAuthMessage(const uint8_t *encPayload, size_t encLen, const uint8_t *gcmTag16, uint32_t counter,
 							 uint8_t domain, const uint8_t *uuid16, uint8_t *out, size_t cap, size_t &outLen)
 {
-	// AES_GCM_Personalized_Signature_Status { tag=field1, counter=field2, component_id=field3 }
+	// AES_GCM_Personalized_Signature_Status: tag, counter, component_id
 	uint8_t agpsBuf[32];
 	Proto agps(agpsBuf, sizeof(agpsBuf));
-	agps.fieldBytes(1, gcmTag16, 16);			 // tag
-	agps.fieldVarint(2, counter);				 // counter
-	agps.fieldVarint(3, COMPONENT_INFOTAINMENT); // component_id = 3
+	agps.fieldBytes(1, gcmTag16, 16);			 // tag = field 1
+	agps.fieldVarint(2, counter);				 // counter = field 2
+	agps.fieldVarint(3, COMPONENT_INFOTAINMENT); // component_id = field 3
 
-	// SignedData { AES_GCM_personalized_data = field 2 }
+	// SignedData wrapping the AES-GCM personalized data
 	uint8_t sdBuf[48];
 	Proto sd(sdBuf, sizeof(sdBuf));
-	sd.fieldMsg(2, agps);
+	sd.fieldMsg(2, agps); // AES_GCM_personalized_data = field 2
 
-	// Destination
+	// Encode Destination for the target domain
 	uint8_t destBuf[4];
 	size_t destLen = 0;
 	if (!encDestination(domain, destBuf, sizeof(destBuf), destLen))
 		return false;
 
-	// RoutableMessage
+	// Assemble outer RoutableMessage
 	Proto rm(out, cap);
 	rm.fieldBytes(2, destBuf, destLen);	  // to_destination = field 2
 	rm.fieldBytes(5, encPayload, encLen); // protobuf_message_as_bytes = field 5
@@ -228,10 +316,17 @@ static bool buildAuthMessage(const uint8_t *encPayload, size_t encLen, const uin
 	return rm.ok() && agps.ok() && sd.ok();
 }
 
-// ── Parse session_info from a received RoutableMessage ───────────────────────
-// Returns pointer to session_info bytes inside buf, sets siLen.
-// SessionInfo is in field 10 of RoutableMessage (sub_sigData oneof).
-// Returns nullptr if not found.
+/**
+ * @brief Parse session_info bytes from a received RoutableMessage.
+ *
+ * Walks the top-level protobuf fields looking for field 10 (session_info) which is
+ * a length-delimited payload within the RoutableMessage.
+ *
+ * @param buf Raw RoutableMessage bytes.
+ * @param bufLen Length of the buffer in bytes.
+ * @param siLen Set to the length of the session_info payload on success.
+ * @return Pointer to the session_info bytes within buf, or nullptr if not found.
+ */
 static const uint8_t *parseSessionInfo(const uint8_t *buf, size_t bufLen, size_t &siLen)
 {
 	size_t i = 0;
@@ -239,6 +334,7 @@ static const uint8_t *parseSessionInfo(const uint8_t *buf, size_t bufLen, size_t
 	{
 		if (i >= bufLen)
 			break;
+		// Decode field tag as varint
 		uint64_t tagV = 0;
 		uint8_t shift = 0;
 		while (i < bufLen && shift < 64)
@@ -254,6 +350,7 @@ static const uint8_t *parseSessionInfo(const uint8_t *buf, size_t bufLen, size_t
 
 		if (wire == 2)
 		{
+			// Length-delimited: decode the length varint
 			uint64_t len = 0;
 			shift = 0;
 			while (i < bufLen && shift < 64)
@@ -265,14 +362,16 @@ static const uint8_t *parseSessionInfo(const uint8_t *buf, size_t bufLen, size_t
 				shift += 7;
 			}
 			if (field == 10)
-			{ // session_info = field 10
+			{
+				// session_info = field 10
 				siLen = (size_t)len;
 				return buf + i;
 			}
-			i += (size_t)len; // skip
+			i += (size_t)len; // Skip payload of non-matching fields
 		}
 		else if (wire == 0)
 		{
+			// Varint: skip by consuming continuation bytes
 			while (i < bufLen)
 			{
 				if (!(buf[i++] & 0x80))
@@ -281,22 +380,34 @@ static const uint8_t *parseSessionInfo(const uint8_t *buf, size_t bufLen, size_t
 		}
 		else
 		{
-			break; // unsupported wire type, stop
+			break; // Unsupported wire type
 		}
 	}
 	return nullptr;
 }
 
-// ── Parse SessionInfo fields ──────────────────────────────────────────────────
+/**
+ * @brief Parsed fields from a SessionInfo protobuf message.
+ */
 struct SessionInfoFields
 {
-	uint8_t publicKey[65]; // vehicle ephemeral public key (field 1, should be 65 bytes)
-	size_t publicKeyLen;
-	uint8_t challenge[32]; // vehicle challenge (field 2, variable length)
-	size_t challengeLen;
-	bool valid;
+	uint8_t publicKey[65]; // Vehicle ephemeral P-256 public key (expected 65 bytes)
+	size_t publicKeyLen;   // Actual length of the public key received
+	uint8_t challenge[32]; // Vehicle challenge bytes (variable length)
+	size_t challengeLen;   // Actual length of the challenge received
+	bool valid;            // True if at least the public key was present
 };
 
+/**
+ * @brief Parse individual fields from a SessionInfo protobuf payload.
+ *
+ * Extracts the vehicle ephemeral public key (field 1) and challenge (field 2) from
+ * the raw SessionInfo bytes.
+ *
+ * @param buf Pointer to the SessionInfo payload bytes.
+ * @param bufLen Length of the SessionInfo payload.
+ * @return Parsed SessionInfoFields with valid set to true if the public key was found.
+ */
 static SessionInfoFields parseSessionInfoFields(const uint8_t *buf, size_t bufLen)
 {
 	SessionInfoFields f;
@@ -305,6 +416,7 @@ static SessionInfoFields parseSessionInfoFields(const uint8_t *buf, size_t bufLe
 	size_t i = 0;
 	while (i < bufLen)
 	{
+		// Decode field tag as varint
 		uint64_t tagV = 0;
 		uint8_t shift = 0;
 		while (i < bufLen && shift < 64)
@@ -320,6 +432,7 @@ static SessionInfoFields parseSessionInfoFields(const uint8_t *buf, size_t bufLe
 
 		if (wire == 2)
 		{
+			// Length-delimited: decode the length varint
 			uint64_t len = 0;
 			shift = 0;
 			while (i < bufLen && shift < 64)
@@ -331,12 +444,14 @@ static SessionInfoFields parseSessionInfoFields(const uint8_t *buf, size_t bufLe
 				shift += 7;
 			}
 			if (field == 1 && len <= 65)
-			{ // publicKey
+			{
+				// publicKey = field 1 (P-256 uncompressed, max 65 bytes)
 				memcpy(f.publicKey, buf + i, (size_t)len);
 				f.publicKeyLen = (size_t)len;
 			}
 			else if (field == 2 && len <= 32)
-			{ // challenge
+			{
+				// challenge = field 2 (variable length, max 32 bytes)
 				memcpy(f.challenge, buf + i, (size_t)len);
 				f.challengeLen = (size_t)len;
 			}
@@ -344,6 +459,7 @@ static SessionInfoFields parseSessionInfoFields(const uint8_t *buf, size_t bufLe
 		}
 		else if (wire == 0)
 		{
+			// Varint: skip by consuming continuation bytes
 			while (i < bufLen)
 			{
 				if (!(buf[i++] & 0x80))
@@ -352,7 +468,7 @@ static SessionInfoFields parseSessionInfoFields(const uint8_t *buf, size_t bufLe
 		}
 		else
 		{
-			break;
+			break; // Unsupported wire type
 		}
 	}
 

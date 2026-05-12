@@ -1,14 +1,15 @@
-// ── ESP32 MCP2515 Driver Tests ──────────────────────────────────────────────
-// Tests the software filter and driver API in core/driver/esp32.h.
-// All 3 buses are MCP2515. Runs natively on host — no hardware needed.
+/**
+ * @file firmware/test/test_native_driver/test_driver.cpp
+ * @brief Unit tests for MCP2515 software filter and driver API
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
 
-// Provide fake MCP2515 BEFORE including the real driver
 #include "../support/fake_mcp2515.h"
 
-// Now define config that the driver needs
 #define PIN_LED 2
 #define PIN_MCP2515_CHASSIS_CS 15
 #define PIN_MCP2515_CHASSIS_INT 34
@@ -24,15 +25,13 @@
 #define BUS_BODY_ACTIVE 1
 #define BOARD_CAN_CLOCK_MHZ 8
 
-// Types
 #include "core/types.h"
 
-// ── Software filter logic (extracted from the driver pattern) ───────────────
-// Bus 0 filter — same as driverSetFilters
 static uint32_t swFilterIds[8];
 static uint8_t swFilterCount = 0;
 static bool swPassAll = true;
 
+/** @brief Software filter acceptance check — returns true if ID is in the allow list or pass-all mode */
 static bool swAccepts(uint32_t id)
 {
 	if (swPassAll)
@@ -45,6 +44,7 @@ static bool swAccepts(uint32_t id)
 	return false;
 }
 
+/** @brief Configures the software filter allow list; nullptr or count==0 enables pass-all mode */
 void driverSetFilters(const uint32_t *ids, uint8_t count)
 {
 	if (ids == nullptr || count == 0)
@@ -59,7 +59,6 @@ void driverSetFilters(const uint32_t *ids, uint8_t count)
 		swFilterIds[i] = ids[i];
 }
 
-// Per-bus filter
 struct BusFilterCall
 {
 	uint8_t bus;
@@ -77,6 +76,7 @@ void driverSetBusFilters(uint8_t bus, const uint32_t *ids, uint8_t count)
 	}
 }
 
+/** @brief Resets software filter and bus filter log state before each test */
 void setUp()
 {
 	swPassAll = true;
@@ -84,12 +84,10 @@ void setUp()
 	busFilterLogCount = 0;
 }
 
+/** @brief Test fixture teardown — no cleanup required */
 void tearDown() {}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MCP2515 Software Filter Tests
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Verifies default pass-all mode accepts any CAN ID */
 void test_sw_filter_passall_by_default()
 {
 	TEST_ASSERT_TRUE(swAccepts(0x123));
@@ -97,6 +95,7 @@ void test_sw_filter_passall_by_default()
 	TEST_ASSERT_TRUE(swAccepts(0));
 }
 
+/** @brief Verifies setting specific IDs rejects non-matching frames */
 void test_sw_filter_set_ids_rejects_unmatched()
 {
 	uint32_t ids[] = {0x3F8, 0x3FD};
@@ -107,6 +106,7 @@ void test_sw_filter_set_ids_rejects_unmatched()
 	TEST_ASSERT_FALSE(swAccepts(0x000));
 }
 
+/** @brief Verifies clearing filters restores pass-all mode */
 void test_sw_filter_clear_returns_to_passall()
 {
 	uint32_t ids[] = {0x3F8};
@@ -116,6 +116,7 @@ void test_sw_filter_clear_returns_to_passall()
 	TEST_ASSERT_TRUE(swAccepts(0x100));
 }
 
+/** @brief Verifies filter list is capped at 8 entries; excess IDs are ignored */
 void test_sw_filter_max_8_ids()
 {
 	uint32_t ids[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -125,6 +126,7 @@ void test_sw_filter_max_8_ids()
 	TEST_ASSERT_FALSE(swAccepts(10));
 }
 
+/** @brief Verifies single-ID filter accepts only that ID */
 void test_sw_filter_single_id()
 {
 	uint32_t ids[] = {921};
@@ -133,6 +135,7 @@ void test_sw_filter_single_id()
 	TEST_ASSERT_FALSE(swAccepts(922));
 }
 
+/** @brief Verifies HW4-specific CAN IDs pass the filter */
 void test_sw_filter_hw4_ids()
 {
 	uint32_t ids[] = {921, 1016, 1021, 0x273};
@@ -144,6 +147,7 @@ void test_sw_filter_hw4_ids()
 	TEST_ASSERT_FALSE(swAccepts(0x100));
 }
 
+/** @brief Verifies HW3-specific CAN IDs pass the filter and HW4-only IDs are rejected */
 void test_sw_filter_hw3_ids()
 {
 	uint32_t ids[] = {1016, 1021, 0x273};
@@ -154,6 +158,7 @@ void test_sw_filter_hw3_ids()
 	TEST_ASSERT_FALSE(swAccepts(921));
 }
 
+/** @brief Verifies legacy-variant CAN IDs pass the filter */
 void test_sw_filter_legacy_ids()
 {
 	uint32_t ids[] = {69, 1006};
@@ -163,6 +168,7 @@ void test_sw_filter_legacy_ids()
 	TEST_ASSERT_FALSE(swAccepts(1021));
 }
 
+/** @brief Verifies a second driverSetFilters call fully replaces the previous list */
 void test_sw_filter_overwrite_previous()
 {
 	uint32_t ids1[] = {0x100};
@@ -176,6 +182,7 @@ void test_sw_filter_overwrite_previous()
 	TEST_ASSERT_TRUE(swAccepts(0x200));
 }
 
+/** @brief Verifies count==0 with non-null pointer still clears to pass-all */
 void test_sw_filter_zero_count_clears()
 {
 	uint32_t ids[] = {0x100};
@@ -184,16 +191,14 @@ void test_sw_filter_zero_count_clears()
 	TEST_ASSERT_TRUE(swAccepts(0xFFF));
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MCP2515 Fake Class Tests
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Verifies MCP2515 reset returns OK on success */
 void test_mcp_reset_success()
 {
 	MCP2515 mcp(15);
 	TEST_ASSERT_EQUAL(MCP2515_ERROR_OK, mcp.reset());
 }
 
+/** @brief Verifies MCP2515 reset returns FAIL when hardware error is simulated */
 void test_mcp_reset_fails()
 {
 	MCP2515 mcp(15);
@@ -201,6 +206,7 @@ void test_mcp_reset_fails()
 	TEST_ASSERT_EQUAL(MCP2515_ERROR_FAIL, mcp.reset());
 }
 
+/** @brief Verifies reading a queued RX frame returns correct ID, DLC, and payload */
 void test_mcp_read_message()
 {
 	MCP2515 mcp(15);
@@ -214,6 +220,7 @@ void test_mcp_read_message()
 	TEST_ASSERT_EQUAL_UINT8_ARRAY(data, frame.data, 8);
 }
 
+/** @brief Verifies reading from an empty RX queue returns NOMSG */
 void test_mcp_read_empty_returns_nomsg()
 {
 	MCP2515 mcp(15);
@@ -221,6 +228,7 @@ void test_mcp_read_empty_returns_nomsg()
 	TEST_ASSERT_EQUAL(MCP2515_ERROR_NOMSG, mcp.readMessage(&frame));
 }
 
+/** @brief Verifies sendMessage logs the transmitted frame for inspection */
 void test_mcp_send_logs_frame()
 {
 	MCP2515 mcp(15);
@@ -235,6 +243,7 @@ void test_mcp_send_logs_frame()
 	TEST_ASSERT_EQUAL(0xAA, mcp._tx_log[0].data[0]);
 }
 
+/** @brief Verifies CS pin is stored correctly per MCP2515 instance */
 void test_mcp_cs_pin_stored()
 {
 	MCP2515 m1(15);
@@ -249,7 +258,6 @@ int main()
 {
 	UNITY_BEGIN();
 
-	// Software filter
 	RUN_TEST(test_sw_filter_passall_by_default);
 	RUN_TEST(test_sw_filter_set_ids_rejects_unmatched);
 	RUN_TEST(test_sw_filter_clear_returns_to_passall);
@@ -261,7 +269,6 @@ int main()
 	RUN_TEST(test_sw_filter_overwrite_previous);
 	RUN_TEST(test_sw_filter_zero_count_clears);
 
-	// MCP2515 class
 	RUN_TEST(test_mcp_reset_success);
 	RUN_TEST(test_mcp_reset_fails);
 	RUN_TEST(test_mcp_read_message);

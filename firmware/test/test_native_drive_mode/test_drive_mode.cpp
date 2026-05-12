@@ -1,5 +1,9 @@
-// ── Drive Mode Tests ─────────────────────────────────────────────────────────
-// Tests drive mode override command parsing and CAN frame building.
+/**
+ * @file firmware/test/test_native_drive_mode/test_drive_mode.cpp
+ * @brief Unit tests for drive mode override commands and tick logic
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -18,7 +22,6 @@ class __FlashStringHelper;
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 static int saveCount = 0;
 void saveSettings(const State &)
 {
@@ -49,6 +52,7 @@ void driverSend(const Frame &f, uint8_t bus)
 
 #include "feature/drive_mode.h"
 
+/** @brief Creates a default HW4 State for drive mode tests */
 static State makeState()
 {
 	State s = {};
@@ -56,15 +60,17 @@ static State makeState()
 	return s;
 }
 
+/** @brief Resets save counter and send stub before each test */
 void setUp()
 {
 	saveCount = 0;
 	stub_send_count = 0;
 }
+
+/** @brief Test fixture teardown — no cleanup required */
 void tearDown() {}
 
-// ── executeDriveModeCmd ──────────────────────────────────────────────────────
-
+/** @brief Verifies drivemode:off sets override to NONE and persists */
 void test_drivemode_off()
 {
 	State s = makeState();
@@ -73,6 +79,7 @@ void test_drivemode_off()
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
+/** @brief Verifies drivemode:chill sets override to CHILL and persists */
 void test_drivemode_chill()
 {
 	State s = makeState();
@@ -81,6 +88,7 @@ void test_drivemode_chill()
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
+/** @brief Verifies drivemode:standard sets override to STANDARD and persists */
 void test_drivemode_standard()
 {
 	State s = makeState();
@@ -89,6 +97,7 @@ void test_drivemode_standard()
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
+/** @brief Verifies drivemode:performance sets override to PERFORMANCE and persists */
 void test_drivemode_performance()
 {
 	State s = makeState();
@@ -97,6 +106,7 @@ void test_drivemode_performance()
 	TEST_ASSERT_EQUAL(1, saveCount);
 }
 
+/** @brief Verifies unknown drive mode argument returns false without saving */
 void test_drivemode_unknown_returns_false()
 {
 	State s = makeState();
@@ -104,35 +114,33 @@ void test_drivemode_unknown_returns_false()
 	TEST_ASSERT_EQUAL(0, saveCount);
 }
 
+/** @brief Verifies wrong command prefix returns false */
 void test_drivemode_wrong_prefix_returns_false()
 {
 	State s = makeState();
 	TEST_ASSERT_FALSE(executeDriveModeCmd("fsd:on", s));
 }
 
-// ── buildDriveModeFrame ──────────────────────────────────────────────────────
-
+/** @brief Verifies chill mode frame uses correct CAN ID and mode bits */
 void test_build_frame_chill()
 {
 	uint8_t lastDrive[8] = {};
 	Frame f = buildDriveModeFrame(DRIVE_MODE_CHILL, lastDrive);
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_DRIVE_MODE, f.id);
 	TEST_ASSERT_EQUAL_UINT8(8, f.dlc);
-	// Chill = modeBits 0x00 → data[0] bits[6:5] = 0x00
 	TEST_ASSERT_EQUAL_UINT8(0x00, f.data[0] & 0x60);
 }
 
+/** @brief Verifies performance mode frame sets the correct mode bits */
 void test_build_frame_performance()
 {
 	uint8_t lastDrive[8] = {};
 	Frame f = buildDriveModeFrame(DRIVE_MODE_PERFORMANCE, lastDrive);
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_DRIVE_MODE, f.id);
-	// Performance = modeBits 0x02 → data[0] bits[6:5] = 0x40
 	TEST_ASSERT_EQUAL_UINT8(0x40, f.data[0] & 0x60);
 }
 
-// ── driveModeTick ────────────────────────────────────────────────────────────
-
+/** @brief Verifies tick does not send when override is NONE */
 void test_tick_off_no_send()
 {
 	State s = makeState();
@@ -141,6 +149,7 @@ void test_tick_off_no_send()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
+/** @brief Verifies tick sends a drive mode frame when override is active */
 void test_tick_active_sends_frame()
 {
 	State s = makeState();
@@ -152,21 +161,20 @@ void test_tick_active_sends_frame()
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_DRIVE_MODE, stub_sends[0].f.id);
 }
 
+/** @brief Verifies tick respects the 100ms send interval */
 void test_tick_respects_interval()
 {
 	State s = makeState();
 	s.hasDrive = true;
 	s.driveModeOverride = DRIVE_MODE_STANDARD;
 	s.driveModeLastMs = 0;
-	driveModeTick(s, 100); // Should send
+	driveModeTick(s, 100);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	driveModeTick(s, 120); // Too soon, should not send
+	driveModeTick(s, 120);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	driveModeTick(s, 200); // Should send again (>50ms interval)
+	driveModeTick(s, 200);
 	TEST_ASSERT_EQUAL(2, stub_send_count);
 }
-
-// ── main ─────────────────────────────────────────────────────────────────────
 
 int main(int, char **)
 {

@@ -1,5 +1,9 @@
-// ── GTW Shield Tests ──────────────────────────────────────────────────────────
-// Tests executeGtwShieldCmd() and handleGtwShield() from feature/ban_shield.h.
+/**
+ * @file firmware/test/test_native_gtw_shield/test_gtw_shield.cpp
+ * @brief Unit tests for gateway shield frame filtering
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -29,20 +33,23 @@ void applyFilters(State &) {}
 #include "feature/ban_shield.h"
 #include "support/helpers.h"
 
+/** @brief Creates a default empty State for gateway shield tests */
 static State makeState()
 {
 	State s = {};
 	return s;
 }
 
+/** @brief Resets save counter before each test */
 void setUp()
 {
 	saveCount = 0;
 }
+
+/** @brief Test fixture teardown — no cleanup required */
 void tearDown() {}
 
-// ── executeGtwShieldCmd ───────────────────────────────────────────────────────
-
+/** @brief Verifies gtwshield:arm command sets the armed flag */
 void test_gtw_cmd_arm()
 {
 	State s = makeState();
@@ -50,6 +57,7 @@ void test_gtw_cmd_arm()
 	TEST_ASSERT_TRUE(s.gtwShieldArmed);
 }
 
+/** @brief Verifies gtwshield:disarm command clears the armed flag */
 void test_gtw_cmd_disarm()
 {
 	State s = makeState();
@@ -58,6 +66,7 @@ void test_gtw_cmd_disarm()
 	TEST_ASSERT_FALSE(s.gtwShieldArmed);
 }
 
+/** @brief Verifies gtwshield:reset disarms, clears block counter, and wipes snapshots */
 void test_gtw_cmd_reset_clears_snapshots()
 {
 	State s = makeState();
@@ -72,46 +81,48 @@ void test_gtw_cmd_reset_clears_snapshots()
 	TEST_ASSERT_EQUAL(0, s.gtwSnapshot[0][0]);
 }
 
+/** @brief Verifies unknown subcommand returns false */
 void test_gtw_cmd_unknown_returns_false()
 {
 	State s = makeState();
 	TEST_ASSERT_FALSE(executeGtwShieldCmd("gtwshield:bogus", s));
 }
 
+/** @brief Verifies unrelated command prefix returns false */
 void test_gtw_cmd_unrelated_returns_false()
 {
 	State s = makeState();
 	TEST_ASSERT_FALSE(executeGtwShieldCmd("banshield:on", s));
 }
 
-// ── handleGtwShield - learning phase ─────────────────────────────────────────
-
+/** @brief Verifies learning mode captures a snapshot for the given mux index */
 void test_gtw_learning_captures_snapshot_per_mux()
 {
 	State s = makeState();
 	Frame f = makeFrame(CAN_ID_GTW_CONFIG_ETH);
-	f.data[0] = 0x02; // mux = 2
+	f.data[0] = 0x02; // mux index 2
 	f.data[3] = 0xDE;
 	bool result = handleGtwShield(f, s);
-	TEST_ASSERT_FALSE(result); // not armed, nothing retransmitted
+	TEST_ASSERT_FALSE(result);
 	TEST_ASSERT_TRUE(s.gtwSnapshotValid[2]);
 	TEST_ASSERT_EQUAL(0xDE, s.gtwSnapshot[2][3]);
 }
 
+/** @brief Verifies learning mode does not overwrite an already-captured snapshot */
 void test_gtw_learning_does_not_overwrite_existing_snapshot()
 {
 	State s = makeState();
 	s.gtwSnapshotValid[1] = true;
 	s.gtwSnapshot[1][0] = 0x01;
 	Frame f = makeFrame(CAN_ID_GTW_CONFIG_ETH);
-	f.data[0] = 0x01; // mux = 1
+	f.data[0] = 0x01;
 	f.data[0] = 0x01;
 	f.data[1] = 0xFF;
 	handleGtwShield(f, s);
-	// Snapshot byte 0 should still be 0x01 (first frame wins)
 	TEST_ASSERT_EQUAL(0x01, s.gtwSnapshot[1][0]);
 }
 
+/** @brief Verifies frames shorter than 8 bytes are ignored */
 void test_gtw_short_frame_ignored()
 {
 	State s = makeState();
@@ -122,8 +133,7 @@ void test_gtw_short_frame_ignored()
 	TEST_ASSERT_FALSE(s.gtwSnapshotValid[0]);
 }
 
-// ── handleGtwShield - armed phase ────────────────────────────────────────────
-
+/** @brief Verifies armed mode passes through frames that match the snapshot */
 void test_gtw_armed_matching_frame_not_blocked()
 {
 	State s = makeState();
@@ -135,10 +145,11 @@ void test_gtw_armed_matching_frame_not_blocked()
 	for (uint8_t i = 0; i < 8; i++)
 		f.data[i] = (uint8_t)(i * 10);
 	bool result = handleGtwShield(f, s);
-	TEST_ASSERT_FALSE(result); // identical — no block
+	TEST_ASSERT_FALSE(result);
 	TEST_ASSERT_EQUAL(0, s.gtwShieldBlocks);
 }
 
+/** @brief Verifies armed mode blocks a changed frame and restores snapshot data */
 void test_gtw_armed_changed_frame_restores_snapshot()
 {
 	State s = makeState();
@@ -149,26 +160,27 @@ void test_gtw_armed_changed_frame_restores_snapshot()
 	Frame f = makeFrame(CAN_ID_GTW_CONFIG_ETH);
 	for (uint8_t i = 0; i < 8; i++)
 		f.data[i] = 0xAA;
-	f.data[4] = 0xBB;			// tampered byte
-	f.data[0] = 0x00;			// force mux=0 (overwrite the 0xAA from loop)
-	s.gtwSnapshot[0][0] = 0x00; // keep snapshot's byte 0 matching
+	f.data[4] = 0xBB; // introduce a change
+	f.data[0] = 0x00; // mux index 0
+	s.gtwSnapshot[0][0] = 0x00;
 	bool result = handleGtwShield(f, s);
-	TEST_ASSERT_TRUE(result); // blocked
+	TEST_ASSERT_TRUE(result);
 	TEST_ASSERT_EQUAL(1, s.gtwShieldBlocks);
-	TEST_ASSERT_EQUAL_HEX8(0xAA, f.data[4]); // restored
+	TEST_ASSERT_EQUAL_HEX8(0xAA, f.data[4]);
 }
 
+/** @brief Verifies armed mode skips mux indices without a captured snapshot */
 void test_gtw_armed_no_snapshot_for_mux_skips()
 {
 	State s = makeState();
 	s.gtwShieldArmed = true;
-	// mux 3 has no snapshot
 	Frame f = makeFrame(CAN_ID_GTW_CONFIG_ETH);
 	f.data[0] = 0x03;
 	bool result = handleGtwShield(f, s);
 	TEST_ASSERT_FALSE(result);
 }
 
+/** @brief Verifies block counter increments on each blocked frame */
 void test_gtw_armed_block_counter_increments()
 {
 	State s = makeState();
@@ -181,7 +193,7 @@ void test_gtw_armed_block_counter_increments()
 		Frame f = makeFrame(CAN_ID_GTW_CONFIG_ETH);
 		for (uint8_t i = 0; i < 8; i++)
 			f.data[i] = (rep == 0 ? 0x22 : 0x33);
-		f.data[0] = (uint8_t)(f.data[0] & 0xF8); // force mux=0
+		f.data[0] = (uint8_t)(f.data[0] & 0xF8); // preserve mux index 0
 		handleGtwShield(f, s);
 	}
 	TEST_ASSERT_EQUAL(3, s.gtwShieldBlocks);

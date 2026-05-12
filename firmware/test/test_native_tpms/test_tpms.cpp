@@ -1,5 +1,8 @@
-// ── TPMS Decode Tests ────────────────────────────────────────────────────────
-// Tests TPMS tire pressure and temperature decoding from CAN 0x219.
+/** @file firmware/test/test_native_tpms/test_tpms.cpp
+ *  @brief Unit tests for tire pressure monitoring
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -11,7 +14,6 @@
 void setUp() {}
 void tearDown() {}
 
-// ── decodeTpms ───────────────────────────────────────────────────────────────
 
 void test_tpms_decode_all_zeros()
 {
@@ -26,7 +28,6 @@ void test_tpms_decode_all_zeros()
 	TEST_ASSERT_FLOAT_WITHIN(0.001, 0.0, s.tpmsPressure[1]);
 	TEST_ASSERT_FLOAT_WITHIN(0.001, 0.0, s.tpmsPressure[2]);
 	TEST_ASSERT_FLOAT_WITHIN(0.001, 0.0, s.tpmsPressure[3]);
-	// temp = raw - 40, so 0 - 40 = -40
 	TEST_ASSERT_EQUAL_INT8(-40, s.tpmsTemp[0]);
 	TEST_ASSERT_EQUAL_INT8(-40, s.tpmsTemp[1]);
 	TEST_ASSERT_EQUAL_INT8(-40, s.tpmsTemp[2]);
@@ -38,17 +39,14 @@ void test_tpms_decode_known_pressure()
 	Frame f = {};
 	f.id = CAN_ID_TPMS;
 	f.dlc = 8;
-	// Pressure = raw * 0.025 bar
-	// raw = 120 -> 3.0 bar
-	f.data[0] = 120; // FL pressure
-	f.data[1] = 100; // FR pressure -> 2.5 bar
-	f.data[2] = 80;	 // RL pressure -> 2.0 bar
-	f.data[3] = 140; // RR pressure -> 3.5 bar
-	// Temps
-	f.data[4] = 65; // FL temp -> 65 - 40 = 25°C
-	f.data[5] = 70; // FR temp -> 30°C
-	f.data[6] = 60; // RL temp -> 20°C
-	f.data[7] = 80; // RR temp -> 40°C
+	f.data[0] = 120;
+	f.data[1] = 100;
+	f.data[2] = 80;
+	f.data[3] = 140;
+	f.data[4] = 65;
+	f.data[5] = 70;
+	f.data[6] = 60;
+	f.data[7] = 80;
 	State s = {};
 	decodeTpms(f, s);
 	TEST_ASSERT_TRUE(s.hasTpms);
@@ -70,9 +68,7 @@ void test_tpms_decode_max_values()
 	memset(f.data, 0xFF, 8);
 	State s = {};
 	decodeTpms(f, s);
-	// 255 * 0.025 = 6.375 bar
 	TEST_ASSERT_FLOAT_WITHIN(0.001, 6.375, s.tpmsPressure[0]);
-	// 255 - 40 = 215°C
 	TEST_ASSERT_EQUAL_INT8((int8_t)(255 - 40), s.tpmsTemp[0]);
 }
 
@@ -102,7 +98,6 @@ void test_tpms_preserves_other_state()
 	TEST_ASSERT_EQUAL(HW4, s.variant);
 }
 
-// ── main ─────────────────────────────────────────────────────────────────────
 
 int main(int, char **)
 {
@@ -114,3 +109,4 @@ int main(int, char **)
 	RUN_TEST(test_tpms_preserves_other_state);
 	return UNITY_END();
 }
+

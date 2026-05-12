@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_seat/test_seat.cpp
+ *  @brief Unit tests for seat adjustment commands
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -86,3 +92,4 @@ int main(int, char **)
 	RUN_TEST(test_seat_unknown);
 	return UNITY_END();
 }
+

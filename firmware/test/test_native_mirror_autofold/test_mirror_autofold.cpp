@@ -1,5 +1,8 @@
-// ── Mirror Auto-Fold Tests ──────────────────────────────────────────────────
-// Tests mirror auto-fold on lock/unlock transitions.
+/** @file firmware/test/test_native_mirror_autofold/test_mirror_autofold.cpp
+ *  @brief Unit tests for mirror auto-fold on lock
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -17,7 +20,6 @@ class __FlashStringHelper;
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
@@ -27,7 +29,6 @@ void sendLog(const __FlashStringHelper *) {}
 void setUp() {}
 void tearDown() {}
 
-// ── mirrorAutoFoldCheck ─────────────────────────────────────────────────────
 
 void test_fold_on_lock()
 {
@@ -35,9 +36,9 @@ void test_fold_on_lock()
 	s.mirrorAutoFoldEnabled = true;
 	s.hasCtrl = true;
 	s.vehicleLockedState = false;
-	mirrorAutoFoldCheck(s, true); // transition to locked
+	mirrorAutoFoldCheck(s, true);
 	TEST_ASSERT_TRUE(s.vehicleLockedState);
-	TEST_ASSERT_TRUE(s.burstRemaining > 0); // burst started for fold
+	TEST_ASSERT_TRUE(s.burstRemaining > 0);
 }
 
 void test_unfold_on_unlock()
@@ -46,9 +47,9 @@ void test_unfold_on_unlock()
 	s.mirrorAutoFoldEnabled = true;
 	s.hasCtrl = true;
 	s.vehicleLockedState = true;
-	mirrorAutoFoldCheck(s, false); // transition to unlocked
+	mirrorAutoFoldCheck(s, false);
 	TEST_ASSERT_FALSE(s.vehicleLockedState);
-	TEST_ASSERT_TRUE(s.burstRemaining > 0); // burst started for unfold
+	TEST_ASSERT_TRUE(s.burstRemaining > 0);
 }
 
 void test_no_action_same_state()
@@ -57,7 +58,7 @@ void test_no_action_same_state()
 	s.mirrorAutoFoldEnabled = true;
 	s.hasCtrl = true;
 	s.vehicleLockedState = true;
-	mirrorAutoFoldCheck(s, true); // no transition
+	mirrorAutoFoldCheck(s, true);
 	TEST_ASSERT_EQUAL(0, s.burstRemaining);
 }
 
@@ -81,7 +82,6 @@ void test_no_ctrl_does_nothing()
 	TEST_ASSERT_EQUAL(0, s.burstRemaining);
 }
 
-// ── executeMirrorAutoFoldCmd ───────────────────────────────────────────────────
 
 void test_cmd_on()
 {
@@ -104,7 +104,6 @@ void test_cmd_unknown()
 	TEST_ASSERT_FALSE(executeMirrorAutoFoldCmd("mirror:autofold:toggle", s));
 }
 
-// ── main ────────────────────────────────────────────────────────────────────
 
 int main(int, char **)
 {
@@ -119,3 +118,4 @@ int main(int, char **)
 	RUN_TEST(test_cmd_unknown);
 	return UNITY_END();
 }
+

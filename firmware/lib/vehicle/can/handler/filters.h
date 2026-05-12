@@ -1,18 +1,31 @@
 #pragma once
-// ── Per-Bus Filter Setup ─────────────────────────────────────────────────────
-// Hard-coded Tesla X179 layout. Toggle-inject pattern: feature ON → intercept
-// + inject; feature OFF → don't intercept the line at all.
+
+/**
+ * @file firmware/lib/vehicle/can/handler/filters.h
+ * @brief Per-bus MCP2515 hardware filter configuration for the Tesla X179 connector
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include "core/forward.h"
 #include "core/can/bus.h"
 #include "core/can/id_filter.h"
 #include "core/driver/esp32/board.h"
 #include "vehicle/can/ids.h"
-#include "vehicle/can/feature/fw_compat.h" // CAN_ID_GTW_VERSION
+#include "vehicle/can/feature/fw_compat.h"
 
+/**
+ * @brief Configure hardware acceptance filters on all three CAN buses
+ *
+ * Applies a toggle-inject pattern: when a feature is enabled its CAN IDs are
+ * added to the acceptance list so the frame can be intercepted and mutated.
+ * When raw listen mode is active, all filters are cleared to pass every frame.
+ *
+ * @param s Reference to the global firmware state used to determine active features
+ */
 void applyFilters(State &s)
 {
-	// Bus 0 (Chassis bus, X179 pins 13-14): dynamic filters based on enabled features
+	// Bus 0 — Chassis (X179 pins 13-14): dynamic filter set based on enabled features
 	if (s.rawCanListen)
 	{
 		driverSetBusFilters(0, nullptr, 0);
@@ -22,10 +35,10 @@ void applyFilters(State &s)
 		uint32_t ids[14];
 		uint8_t count = 0;
 		ids[count++] = CAN_ID_DAS_CONTROL;
-		ids[count++] = CAN_ID_DAS_STEERING_CTRL; // observed for cruise-set decode
+		ids[count++] = CAN_ID_DAS_STEERING_CTRL;
 		ids[count++] = CAN_ID_DAS_STATUS2;
 		ids[count++] = CAN_ID_UI_GPS_SPEED;
-		ids[count++] = CAN_ID_WHEEL_SPEED; // wheel speed telemetry (read-only)
+		ids[count++] = CAN_ID_WHEEL_SPEED;
 		switch (s.variant)
 		{
 		case HW4:
@@ -33,32 +46,32 @@ void applyFilters(State &s)
 				ids[count++] = CAN_ID_ISA_SPEED;
 			if (s.fsdEnabled)
 				ids[count++] = CAN_ID_FOLLOW_DIST;
-			if (s.fsdEnabled || s.nagSuppress)
+			if (s.fsdEnabled || nagModeUsesBit19(s.nagMode))
 				ids[count++] = CAN_ID_FSD_MUX;
 			break;
 		case HW3:
 			if (s.fsdEnabled)
 				ids[count++] = CAN_ID_FOLLOW_DIST;
-			if (s.fsdEnabled || s.nagSuppress)
+			if (s.fsdEnabled || nagModeUsesBit19(s.nagMode))
 				ids[count++] = CAN_ID_FSD_MUX;
 			break;
 		case LEGACY:
 			if (s.fsdEnabled)
 				ids[count++] = CAN_ID_LEGACY_STALK;
-			if (s.fsdEnabled || s.nagSuppress)
+			if (s.fsdEnabled || nagModeUsesBit19(s.nagMode))
 				ids[count++] = CAN_ID_LEGACY_FSD_MUX;
 			break;
 		}
-		// P2-06: Fallback variant detection — when auto-detect is on and 0x398 not yet seen,
-		// include discriminating frames so variant can be inferred from bus traffic presence.
+		// Include discriminating frames for variant auto-detection when 0x398 has not been seen
 		if (s.variantAutoDetect && !s.hwAutoDetected)
 		{
 			bool isaAlready = (s.variant == HW4 && s.isaChimeSuppress);
-			bool legacyMuxAlready = (s.variant == LEGACY && (s.fsdEnabled || s.nagSuppress));
+			bool legacyMuxAlready =
+				(s.variant == LEGACY && (s.fsdEnabled || nagModeUsesBit19(s.nagMode)));
 			if (!isaAlready)
-				ids[count++] = CAN_ID_ISA_SPEED; // HW4-only frame (ISA speed chime)
+				ids[count++] = CAN_ID_ISA_SPEED; // HW4-only discriminator
 			if (!legacyMuxAlready)
-				ids[count++] = CAN_ID_LEGACY_FSD_MUX; // Legacy-only frame
+				ids[count++] = CAN_ID_LEGACY_FSD_MUX; // Legacy-only discriminator
 		}
 		if (count > 0)
 		{
@@ -71,7 +84,7 @@ void applyFilters(State &s)
 		}
 	}
 
-	// Bus 1 (Vehicle bus, X179 pins 9-10): vehicle control + BMS + new feature frames
+	// Bus 1 — Vehicle (X179 pins 9-10): vehicle control, BMS, and telemetry frames
 	if (s.rawCanListen)
 	{
 		driverSetBusFilters(BUS_VEHICLE, nullptr, 0);
@@ -122,7 +135,7 @@ void applyFilters(State &s)
 		driverSetBusFilters(BUS_VEHICLE, vehIds, sizeof(vehIds) / sizeof(vehIds[0]));
 	}
 
-	// Bus 2 (Body bus, X179 pins 2-3): body control frames
+	// Bus 2 — Body (X179 pins 2-3): body control frames
 	if (s.rawCanListen)
 	{
 		driverSetBusFilters(BUS_BODY, nullptr, 0);

@@ -1,43 +1,71 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/summon.h
+ * @brief Autopark Summon System (ASS) frame mutation and command handlers
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "core/forward.h"
 #include "core/util/parse.h"
 
-// ── ASS (Autopark Summon System) Commands ────────────────────────────────────
-// SummonDirection and SummonMode enums are defined in types.h
-
-// ── ASS Summon Control (0x273 UI_vehicleControl) ─────────────────────────────
+/**
+ * @brief Set the summon active flag in a UI_vehicleControl frame (0x273).
+ * @param f CAN frame to modify (must have dlc >= 1).
+ * @param active true to activate summon, false to deactivate.
+ */
 inline void setSummonActive(Frame &f, bool active)
 {
 	if (f.dlc < 1)
 		return;
 	if (active)
-		f.data[0] |= 0x10; // bit 4
+		f.data[0] |= 0x10;		// Bit 4: summon active
 	else
 		f.data[0] &= ~0x10;
 }
 
+/**
+ * @brief Set the summon direction in a UI_vehicleControl frame (0x273).
+ * @param f CAN frame to modify (must have dlc >= 1).
+ * @param dir Desired summon direction (SUMMON_FORWARD or SUMMON_REVERSE).
+ */
 inline void setSummonDirection(Frame &f, SummonDirection dir)
 {
 	if (f.dlc < 1)
 		return;
 	if (dir == SUMMON_REVERSE)
-		f.data[0] |= 0x20; // bit 5
+		f.data[0] |= 0x20;		// Bit 5: direction = reverse
 	else
 		f.data[0] &= ~0x20;
 }
 
+/**
+ * @brief Set the summon mode (start/stop) in a UI_vehicleControl frame (0x273).
+ * @param f CAN frame to modify (must have dlc >= 1).
+ * @param mode Desired summon mode (SUMMON_START or SUMMON_STOP).
+ */
 inline void setSummonMode(Frame &f, SummonMode mode)
 {
 	if (f.dlc < 1)
 		return;
 	if (mode == SUMMON_START)
-		f.data[0] |= 0x01; // bit 0
+		f.data[0] |= 0x01;		// Bit 0: summon start
 	else
 		f.data[0] &= ~0x01;
 }
 
-// ── Summon Injection Enable/Disable Command ──────────────────────────────────
-// Controls whether summon injection is allowed. Persisted to EEPROM/NVS.
+/**
+ * @brief Execute the summon injection enable/disable command.
+ *
+ * Parses "summon-inject:<on|off>" to control whether summon frame injection
+ * is permitted. When injection is disabled, any active summon burst is stopped.
+ * The setting is persisted to EEPROM/NVS.
+ *
+ * @param cmd Null-terminated command string (expected prefix "summon-inject:").
+ * @param s Global state reference.
+ * @return true if the command was recognized and executed successfully.
+ */
 static bool executeSummonInjectCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "summon-inject:", 14) == 0)
@@ -46,9 +74,9 @@ static bool executeSummonInjectCmd(const char *cmd, State &s)
 			return false;
 		if (!parseBoolCmd(cmd + 14, s.summonInject, s.summonInject))
 			return false;
-		// If injection is disabled, stop any active burst
 		if (!s.summonInject)
 		{
+			// Halt any in-progress summon burst when injection is disabled
 			s.summonMode = SUMMON_STOP;
 			s.summonRemaining = 0;
 		}
@@ -59,8 +87,18 @@ static bool executeSummonInjectCmd(const char *cmd, State &s)
 	return false;
 }
 
-// ── Summon Command (summon, summon:forward, summon:reverse, summon:stop) ─────
-// Requires summonInject to be enabled (except for stop, which always works).
+/**
+ * @brief Execute a summon movement command.
+ *
+ * Accepts "summon", "summon:forward", "summon:fwd", "summon:reverse",
+ * "summon:rev", or "summon:stop". Requires the summon feature to be enabled
+ * and summon injection to be active (except for stop, which always works).
+ * Initiates a 30-frame burst in the requested direction.
+ *
+ * @param cmd Null-terminated command string.
+ * @param s Global state reference.
+ * @return true if the command was recognized and executed successfully.
+ */
 static bool executeSummonCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "summon:stop") == 0)
@@ -99,7 +137,7 @@ static bool executeSummonCmd(const char *cmd, State &s)
 		}
 
 		s.summonMode = SUMMON_START;
-		s.summonRemaining = 30;
+		s.summonRemaining = 30;	// Burst length in frames
 		return true;
 	}
 

@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_mirror/test_mirror.cpp
+ *  @brief Unit tests for mirror fold and unfold commands
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -88,3 +94,4 @@ int main(int, char **)
 	RUN_TEST(test_mirror_autofold_persist_off);
 	return UNITY_END();
 }
+

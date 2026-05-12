@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_pedal/test_pedal.cpp
+ *  @brief Unit tests for pedal mapping commands
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -77,3 +83,4 @@ int main(int, char **)
 	RUN_TEST(test_pedal_unknown);
 	return UNITY_END();
 }
+

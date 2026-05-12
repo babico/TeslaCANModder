@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_sentry/test_sentry.cpp
+ *  @brief Unit tests for sentry mode commands
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -56,3 +62,4 @@ int main(int, char **)
 	RUN_TEST(test_sentry_unknown);
 	return UNITY_END();
 }
+

@@ -1,46 +1,76 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/motor_temps.h
+ * @brief Decodes motor and inverter temperature signals from Tesla CAN frames
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include <stdint.h>
 
-// ── Motor / Inverter Temperature Decoder ────────────────────────────────────
-// Source: legacy/ColinM-sys-tesla-can-boost + DBC Model3CAN.dbc
-//
-// Rear motor (all Model 3/Y) — CAN ID 0x315 (VehicleBus):
-//   DBC: BO_ 789 ID315RearInverterTemps: 8 VehicleBus
-//   RearTempInverter315 :  8|8@1+  scale=1  offset=-40  °C
-//   RearTempStator315   : 16|8@1+  scale=1  offset=-40  °C
-//   RearTempInvHeatsink315 : 32|8@1+  scale=1  offset=-40  °C
-//
-// Front motor (dual-motor only) — CAN ID 0x376 (VehicleBus):
-//   DBC: BO_ 886 ID376FrontInverterTemps: 8 VehicleBus
-//   TempInverter376     :  8|8@1+  scale=1  offset=-40  °C
-//   TempStator376       : 16|8@1+  scale=1  offset=-40  °C
-//   TempInvHeatsink376  : 32|8@1+  scale=1  offset=-40  °C
-//
-// All signals: raw byte value − 40 → temperature in °C.
-// Range: 0..255 raw → −40..+215 °C.
-
+/**
+ * @brief Decode rear inverter temperature from CAN ID 0x315 frame data.
+ * @param d Pointer to the 8-byte CAN frame payload.
+ * @return Temperature in degrees Celsius (-40 to +215 range).
+ */
 inline int8_t decodeRearInvTemp(const uint8_t *d)
 {
+	// Byte 1: raw value with -40 offset per DBC signal RearTempInverter315
 	return (int8_t)((int16_t)d[1] - 40);
 }
+
+/**
+ * @brief Decode rear stator temperature from CAN ID 0x315 frame data.
+ * @param d Pointer to the 8-byte CAN frame payload.
+ * @return Temperature in degrees Celsius (-40 to +215 range).
+ */
 inline int8_t decodeRearStatorTemp(const uint8_t *d)
 {
+	// Byte 2: raw value with -40 offset per DBC signal RearTempStator315
 	return (int8_t)((int16_t)d[2] - 40);
 }
+
+/**
+ * @brief Decode rear inverter heatsink temperature from CAN ID 0x315 frame data.
+ * @param d Pointer to the 8-byte CAN frame payload.
+ * @return Temperature in degrees Celsius (-40 to +215 range).
+ */
 inline int8_t decodeRearHeatsinkTemp(const uint8_t *d)
 {
+	// Byte 4: raw value with -40 offset per DBC signal RearTempInvHeatsink315
 	return (int8_t)((int16_t)d[4] - 40);
 }
 
+/**
+ * @brief Decode front inverter temperature from CAN ID 0x376 frame data (dual-motor only).
+ * @param d Pointer to the 8-byte CAN frame payload.
+ * @return Temperature in degrees Celsius (-40 to +215 range).
+ */
 inline int8_t decodeFrontInvTemp(const uint8_t *d)
 {
+	// Byte 1: raw value with -40 offset per DBC signal TempInverter376
 	return (int8_t)((int16_t)d[1] - 40);
 }
+
+/**
+ * @brief Decode front stator temperature from CAN ID 0x376 frame data (dual-motor only).
+ * @param d Pointer to the 8-byte CAN frame payload.
+ * @return Temperature in degrees Celsius (-40 to +215 range).
+ */
 inline int8_t decodeFrontStatorTemp(const uint8_t *d)
 {
+	// Byte 2: raw value with -40 offset per DBC signal TempStator376
 	return (int8_t)((int16_t)d[2] - 40);
 }
+
+/**
+ * @brief Decode front inverter heatsink temperature from CAN ID 0x376 frame data (dual-motor only).
+ * @param d Pointer to the 8-byte CAN frame payload.
+ * @return Temperature in degrees Celsius (-40 to +215 range).
+ */
 inline int8_t decodeFrontHeatsinkTemp(const uint8_t *d)
 {
+	// Byte 4: raw value with -40 offset per DBC signal TempInvHeatsink376
 	return (int8_t)((int16_t)d[4] - 40);
 }

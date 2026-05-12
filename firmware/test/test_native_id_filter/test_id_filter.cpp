@@ -1,5 +1,8 @@
-// ── ID Filter Tests ──────────────────────────────────────────────────────────
-// Tests O(1) bitmask-based CAN ID filtering (2048 standard IDs).
+/** @file firmware/test/test_native_id_filter/test_id_filter.cpp
+ *  @brief Unit tests for CAN ID filter configuration
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -15,11 +18,9 @@ void setUp()
 }
 void tearDown() {}
 
-// ── idFilterClear ────────────────────────────────────────────────────────────
 
 void test_filter_clear_all_zero()
 {
-	// Set one bit first
 	idFilterAdd(filter, 0x100);
 	idFilterClear(filter);
 	for (int i = 0; i < ID_FILTER_WORDS; i++)
@@ -28,7 +29,6 @@ void test_filter_clear_all_zero()
 	}
 }
 
-// ── idFilterAdd / idFilterTest ───────────────────────────────────────────────
 
 void test_filter_add_and_test_single_id()
 {
@@ -93,7 +93,6 @@ void test_filter_all_ids_set()
 	}
 }
 
-// ── main ─────────────────────────────────────────────────────────────────────
 
 int main(int, char **)
 {
@@ -109,3 +108,4 @@ int main(int, char **)
 	RUN_TEST(test_filter_all_ids_set);
 	return UNITY_END();
 }
+

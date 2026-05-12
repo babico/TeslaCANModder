@@ -1,14 +1,15 @@
-// ── ESP32 Dispatch Tests ─────────────────────────────────────────────────────
-// Tests handleMessage() routing, applyFilters(), summonTick(), and frame caching.
-// Uses stubs to avoid hardware dependencies.
+/**
+ * @file firmware/test/test_native_dispatch/test_dispatch.cpp
+ * @brief Unit tests for message dispatch, filter application, summon tick, and frame caching
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
 
-// Native build: Arduino's __FlashStringHelper doesn't exist
 class __FlashStringHelper;
 
-// Build flags for 3-bus ESP32
 #define BUS_CHASSIS_ACTIVE 1
 #define BUS_VEHICLE_ACTIVE 1
 #define BUS_BODY_ACTIVE 1
@@ -16,20 +17,16 @@ class __FlashStringHelper;
 #define BOARD_ENABLE_WIFI 0
 #define BOARD_ENABLE_BLE 0
 
-// Forward-declare millis() so inline functions in headers can reference it
 unsigned long millis();
 
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 #include "feature/summon.h"
 
-// ── Stubs for driver + handler functions ────────────────────────────────────
-// We stub out the actual driver and handler calls, tracking what was invoked.
-
 struct McpFilterCall {
   uint8_t idx;
   uint8_t count;
-  bool cleared;  // true if ids==nullptr
+  bool cleared;
 };
 static McpFilterCall stub_mcp_calls[8];
 static uint8_t stub_mcp_call_count = 0;
@@ -58,7 +55,6 @@ static int log_call_count = 0;
 void sendLog(const char*) { log_call_count++; }
 void sendLog(const __FlashStringHelper*) { log_call_count++; }
 
-// Stub handler functions — just track calls
 static int hw4_call_count = 0;
 static int hw3_call_count = 0;
 static int legacy_call_count = 0;
@@ -76,21 +72,14 @@ void resetHandlerLogFlags() {
 }
 void saveSettings(const State&) {}
 
-// F() macro stub for native builds
 #ifndef F
 #define F(x) (reinterpret_cast<const __FlashStringHelper*>(x))
 #endif
 
-// Fake millis
 static unsigned long fake_millis = 0;
 unsigned long millis() { return fake_millis; }
 
-// ── Include dispatch logic (inlined, since it's header-only) ────────────────
-// We can't include dispatch/esp32.h directly because it includes handler/*.h
-// and driver/esp32.h. Instead we replicate the key functions:
-
 void applyFilters(State& s) {
-  // Bus 0 (Chassis): dynamic filters based on enabled features
   if (s.rawCanListen) {
     driverSetBusFilters(0, nullptr, 0);
   } else {
@@ -102,18 +91,17 @@ void applyFilters(State& s) {
       case HW4:
         if (s.isaChimeSuppress) { ids[count++] = CAN_ID_ISA_SPEED; isaAdded = true; }
         if (s.fsdEnabled) ids[count++] = CAN_ID_FOLLOW_DIST;
-        if (s.fsdEnabled || s.nagSuppress) ids[count++] = CAN_ID_FSD_MUX;
+        if (s.fsdEnabled || nagModeUsesBit19(s.nagMode)) ids[count++] = CAN_ID_FSD_MUX;
         break;
       case HW3:
         if (s.fsdEnabled) ids[count++] = CAN_ID_FOLLOW_DIST;
-        if (s.fsdEnabled || s.nagSuppress) ids[count++] = CAN_ID_FSD_MUX;
+        if (s.fsdEnabled || nagModeUsesBit19(s.nagMode)) ids[count++] = CAN_ID_FSD_MUX;
         break;
       case LEGACY:
         if (s.fsdEnabled) ids[count++] = CAN_ID_LEGACY_STALK;
-        if (s.fsdEnabled || s.nagSuppress) { ids[count++] = CAN_ID_LEGACY_FSD_MUX; legacyMuxAdded = true; }
+        if (s.fsdEnabled || nagModeUsesBit19(s.nagMode)) { ids[count++] = CAN_ID_LEGACY_FSD_MUX; legacyMuxAdded = true; }
         break;
     }
-    // P2-06: Fallback variant detection
     if (s.variantAutoDetect && !s.hwAutoDetected) {
       if (!isaAdded) ids[count++] = CAN_ID_ISA_SPEED;
       if (!legacyMuxAdded) ids[count++] = CAN_ID_LEGACY_FSD_MUX;
@@ -127,7 +115,6 @@ void applyFilters(State& s) {
   }
 
 #if BUS_VEHICLE_ACTIVE
-  // Bus 1 (Vehicle): vehicle control frames
   if (s.rawCanListen) {
     driverSetBusFilters(BUS_VEHICLE, nullptr, 0);
   } else {
@@ -135,7 +122,6 @@ void applyFilters(State& s) {
     driverSetBusFilters(BUS_VEHICLE, vehIds, 4);
   }
 
-  // Bus 2 (Body): body control frames
   if (s.rawCanListen) {
     driverSetBusFilters(BUS_BODY, nullptr, 0);
   } else {
@@ -146,14 +132,12 @@ void applyFilters(State& s) {
 }
 
 void handleMessage(Frame& f, uint8_t bus, State& s) {
-  // Bus 0 (Chassis): variant-specific handler
   if (bus == BUS_CHASSIS) {
-    // P2-06: Fallback variant inference from distinctive frame presence
     if (s.variantAutoDetect && !s.hwAutoDetected) {
       if (f.id == CAN_ID_ISA_SPEED && s.variant != HW4) {
         bool fromLegacy = (s.variant == LEGACY);
         s.variant = HW4;
-        if (fromLegacy) s.speedProfile = 1; // P2-07
+        if (fromLegacy) s.speedProfile = 1;
         applyFilters(s);
         resetHandlerLogFlags();
         sendLog(F("Fallback: HW4 inferred from ISA_SPEED"));
@@ -173,7 +157,6 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
   }
 
 #if BUS_VEHICLE_ACTIVE
-  // Bus 1 (Vehicle): cache control frames
   if (bus == BUS_VEHICLE) {
     if (f.id == CAN_ID_UI_VEHICLE_CTRL && f.dlc >= 8) {
       memcpy(s.lastCtrl, f.data, 8);
@@ -196,22 +179,20 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
       return;
     }
 
-    // Auto HW detection from GTW_carConfig
-    // Fix (hypery11 v2.11): hw=0/1 now maps to LEGACY (MCU2/HW1/HW2 retrofit)
     if (f.id == CAN_ID_GTW_CAR_CFG && f.dlc >= 1) {
-      uint8_t hw = (f.data[0] >> 6) & 0x03;
+      uint8_t hw = (f.data[0] >> 6) & 0x03; // HW version in bits [7:6]
       s.detectedHW = hw;
       s.hwAutoDetected = true;
       if (s.variantAutoDetect) {
         Variant detected;
         if (hw == 3) detected = HW4;
         else if (hw == 2) detected = HW3;
-        else detected = LEGACY; // hw==0 or hw==1: MCU2/HW1 retrofit
+        else detected = LEGACY;
         if (s.variant != detected) {
           bool fromLegacy = (s.variant == LEGACY);
           s.variant = detected;
           if (fromLegacy && detected != LEGACY)
-            s.speedProfile = 1; // P2-07: reset stale legacy stalk profile
+            s.speedProfile = 1;
           applyFilters(s);
           resetHandlerLogFlags();
           if (detected == HW4) sendLog(F("Auto-detected HW4"));
@@ -222,7 +203,6 @@ void handleMessage(Frame& f, uint8_t bus, State& s) {
       return;
     }
   }
-  // Bus 2 (Body): no caching needed
 #endif
 }
 
@@ -260,16 +240,17 @@ void burstTick(State& s) {
   s.burstRemaining--;
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
 
+/** @brief Creates a State with the given variant and autodetect disabled */
 static State makeState(Variant v = HW4) {
   State s = {};
   s.variant = v;
   s.speedProfile = 1;
-    s.variantAutoDetect = false; // P2-06: tests that need fallback set this explicitly
+    s.variantAutoDetect = false;
   return s;
 }
 
+/** @brief Creates a Frame with the given CAN ID and DLC */
 static Frame makeFrame(uint32_t id, uint8_t dlc = 8) {
   Frame f = {};
   f.id = id;
@@ -277,6 +258,7 @@ static Frame makeFrame(uint32_t id, uint8_t dlc = 8) {
   return f;
 }
 
+/** @brief Resets all stub counters and fake clock before each test */
 void setUp() {
   stub_mcp_call_count = 0;
   stub_send_count = 0;
@@ -287,12 +269,10 @@ void setUp() {
   fake_millis = 0;
 }
 
+/** @brief Test fixture teardown — no cleanup required */
 void tearDown() {}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// handleMessage — Frame Caching
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Verifies UI_VEHICLE_CTRL frame is cached in state.lastCtrl */
 void test_dispatch_caches_ctrl_frame() {
   State s = makeState();
   Frame f = makeFrame(CAN_ID_UI_VEHICLE_CTRL);
@@ -302,6 +282,7 @@ void test_dispatch_caches_ctrl_frame() {
   TEST_ASSERT_EQUAL(0xAA, s.lastCtrl[0]);
 }
 
+/** @brief Verifies CLIMATE frame is cached in state.lastClimate */
 void test_dispatch_caches_climate_frame() {
   State s = makeState();
   Frame f = makeFrame(CAN_ID_CLIMATE, 5);
@@ -311,6 +292,7 @@ void test_dispatch_caches_climate_frame() {
   TEST_ASSERT_EQUAL(0xBB, s.lastClimate[0]);
 }
 
+/** @brief Verifies CHARGE frame is cached in state.lastCharge */
 void test_dispatch_caches_charge_frame() {
   State s = makeState();
   Frame f = makeFrame(CAN_ID_CHARGE, 5);
@@ -320,6 +302,7 @@ void test_dispatch_caches_charge_frame() {
   TEST_ASSERT_EQUAL(0xCC, s.lastCharge[2]);
 }
 
+/** @brief Verifies DRIVE_CONFIG frame is cached in state.lastDrive */
 void test_dispatch_caches_drive_frame() {
   State s = makeState();
   Frame f = makeFrame(CAN_ID_DRIVE_CONFIG);
@@ -329,10 +312,7 @@ void test_dispatch_caches_drive_frame() {
   TEST_ASSERT_EQUAL(0xDD, s.lastDrive[7]);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// handleMessage — Handler Dispatch by Variant
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Verifies HW4 variant routes chassis frames to the HW4 handler */
 void test_dispatch_hw4_routes_to_hw4_handler() {
   State s = makeState(HW4);
   Frame f = makeFrame(CAN_ID_FSD_MUX);
@@ -342,6 +322,7 @@ void test_dispatch_hw4_routes_to_hw4_handler() {
   TEST_ASSERT_EQUAL(0, legacy_call_count);
 }
 
+/** @brief Verifies HW3 variant routes chassis frames to the HW3 handler */
 void test_dispatch_hw3_routes_to_hw3_handler() {
   State s = makeState(HW3);
   Frame f = makeFrame(CAN_ID_FSD_MUX);
@@ -350,6 +331,7 @@ void test_dispatch_hw3_routes_to_hw3_handler() {
   TEST_ASSERT_EQUAL(1, hw3_call_count);
 }
 
+/** @brief Verifies LEGACY variant routes chassis frames to the legacy handler */
 void test_dispatch_legacy_routes_to_legacy_handler() {
   State s = makeState(LEGACY);
   Frame f = makeFrame(CAN_ID_LEGACY_FSD_MUX);
@@ -357,35 +339,34 @@ void test_dispatch_legacy_routes_to_legacy_handler() {
   TEST_ASSERT_EQUAL(1, legacy_call_count);
 }
 
+/** @brief Verifies handler frames from bus 1 (vehicle) are not routed to chassis handlers */
 void test_dispatch_ignores_handler_frames_from_bus1() {
   State s = makeState(HW4);
   Frame f = makeFrame(CAN_ID_FSD_MUX);
-  handleMessage(f, 1, s);  // bus 1, not bus 0
+  handleMessage(f, 1, s);
   TEST_ASSERT_EQUAL(0, hw4_call_count);
 }
 
+/** @brief Verifies ctrl frame with DLC < 8 is not cached */
 void test_dispatch_ctrl_short_frame_ignored() {
   State s = makeState();
-  Frame f = makeFrame(CAN_ID_UI_VEHICLE_CTRL, 4);  // dlc < 8
+  Frame f = makeFrame(CAN_ID_UI_VEHICLE_CTRL, 4);
   handleMessage(f, BUS_VEHICLE, s);
   TEST_ASSERT_FALSE(s.hasCtrl);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// applyFilters
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Verifies HW4 with ISA + FSD enabled sets 3 chassis filter IDs */
 void test_apply_filters_hw4_sets_fsd_3_ids() {
   State s = makeState(HW4);
   s.isaChimeSuppress = true;
   s.fsdEnabled = true;
   applyFilters(s);
-  // Bus 0 (Chassis): 3 IDs for HW4 (ISA + FOLLOW + MUX)
   TEST_ASSERT_TRUE(stub_mcp_call_count >= 1);
   TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
   TEST_ASSERT_EQUAL(3, stub_mcp_calls[0].count);
 }
 
+/** @brief Verifies HW3 with FSD enabled sets 2 chassis filter IDs */
 void test_apply_filters_hw3_sets_fsd_2_ids() {
   State s = makeState(HW3);
   s.fsdEnabled = true;
@@ -395,31 +376,32 @@ void test_apply_filters_hw3_sets_fsd_2_ids() {
   TEST_ASSERT_EQUAL(2, stub_mcp_calls[0].count);
 }
 
+/** @brief Verifies LEGACY with FSD + NAG sets 2 chassis filter IDs */
 void test_apply_filters_legacy_sets_fsd_2_ids() {
   State s = makeState(LEGACY);
   s.fsdEnabled = true;
-  s.nagSuppress = true;
+  s.nagMode = NAG_MODE_BIT19;
   applyFilters(s);
   TEST_ASSERT_TRUE(stub_mcp_call_count >= 1);
   TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
   TEST_ASSERT_EQUAL(2, stub_mcp_calls[0].count);
 }
 
+/** @brief Verifies raw CAN listen mode clears all bus filters */
 void test_apply_filters_raw_can_clears_all() {
   State s = makeState(HW4);
   s.rawCanListen = true;
   applyFilters(s);
-  // All 3 buses should be cleared
   for (uint8_t i = 0; i < stub_mcp_call_count; i++) {
     TEST_ASSERT_TRUE(stub_mcp_calls[i].cleared);
   }
 }
 
+/** @brief Verifies vehicle bus gets 4 IDs and body bus gets 3 IDs */
 void test_apply_filters_sets_vehicle_and_body_buses() {
   State s = makeState(HW4);
   s.fsdEnabled = true;
   applyFilters(s);
-  // 3-bus config: bus 0 (chassis) + bus 1 (vehicle, 4 IDs) + bus 2 (body, 3 IDs)
   TEST_ASSERT_EQUAL(3, stub_mcp_call_count);
   TEST_ASSERT_EQUAL(BUS_VEHICLE, stub_mcp_calls[1].idx);
   TEST_ASSERT_EQUAL(4, stub_mcp_calls[1].count);
@@ -427,36 +409,35 @@ void test_apply_filters_sets_vehicle_and_body_buses() {
   TEST_ASSERT_EQUAL(3, stub_mcp_calls[2].count);
 }
 
-// Toggle-inject: features off → don't intercept CAN line (dummy filter blocks all)
+/** @brief Verifies no features enabled sets a single blocking filter on chassis */
 void test_apply_filters_no_features_blocks_fsd_bus() {
   State s = makeState(HW4);
-  // All features off (default)
   applyFilters(s);
   TEST_ASSERT_TRUE(stub_mcp_call_count >= 1);
   TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
-  TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count); // dummy filter
-  TEST_ASSERT_FALSE(stub_mcp_calls[0].cleared);   // not "pass all"
+  TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count);
+  TEST_ASSERT_FALSE(stub_mcp_calls[0].cleared);
 }
 
-// Toggle-inject: only nag enabled → only FSD_MUX in filter
+/** @brief Verifies NAG mode alone adds the FSD mux filter */
 void test_apply_filters_nag_only_sets_mux_filter() {
   State s = makeState(HW4);
-  s.nagSuppress = true;
+  s.nagMode = NAG_MODE_BIT19;
   applyFilters(s);
   TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
-  TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count); // only FSD_MUX
+  TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count);
 }
 
-// Toggle-inject: only ISA chime enabled → only ISA_SPEED in filter
+/** @brief Verifies ISA chime suppress alone adds the ISA speed filter */
 void test_apply_filters_isa_only_sets_isa_filter() {
   State s = makeState(HW4);
   s.isaChimeSuppress = true;
   applyFilters(s);
   TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
-  TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count); // only ISA_SPEED
+  TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count);
 }
 
-// P2-06: when 0x398 has not been seen yet, include fallback discriminator IDs
+/** @brief Verifies fallback discriminator IDs are added when HW is unknown */
 void test_apply_filters_fallback_adds_discriminator_ids_when_hw_unknown() {
   State s = makeState(HW3);
   s.variantAutoDetect = true;
@@ -464,9 +445,10 @@ void test_apply_filters_fallback_adds_discriminator_ids_when_hw_unknown() {
   applyFilters(s);
   TEST_ASSERT_TRUE(stub_mcp_call_count >= 1);
   TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
-  TEST_ASSERT_EQUAL(2, stub_mcp_calls[0].count); // ISA_SPEED + LEGACY_FSD_MUX
+  TEST_ASSERT_EQUAL(2, stub_mcp_calls[0].count);
 }
 
+/** @brief Verifies no fallback IDs are added when HW is already detected */
 void test_apply_filters_no_fallback_ids_when_hw_already_detected() {
   State s = makeState(HW3);
   s.variantAutoDetect = true;
@@ -474,13 +456,10 @@ void test_apply_filters_no_fallback_ids_when_hw_already_detected() {
   applyFilters(s);
   TEST_ASSERT_TRUE(stub_mcp_call_count >= 1);
   TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_mcp_calls[0].idx);
-  TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count); // dummy filter only
+  TEST_ASSERT_EQUAL(1, stub_mcp_calls[0].count);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Summon Tick
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Verifies summon tick does nothing when remaining count is zero */
 void test_summon_tick_does_nothing_when_remaining_zero() {
   State s = makeState();
   s.summonRemaining = 0;
@@ -488,6 +467,7 @@ void test_summon_tick_does_nothing_when_remaining_zero() {
   TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
+/** @brief Verifies summon tick does nothing without a cached ctrl frame */
 void test_summon_tick_does_nothing_without_ctrl() {
   State s = makeState();
   s.summonRemaining = 5;
@@ -496,6 +476,7 @@ void test_summon_tick_does_nothing_without_ctrl() {
   TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
+/** @brief Verifies summon tick sends a frame and decrements remaining */
 void test_summon_tick_sends_burst_frame() {
   State s = makeState();
   s.summonRemaining = 3;
@@ -512,10 +493,10 @@ void test_summon_tick_sends_burst_frame() {
   TEST_ASSERT_EQUAL(2, s.summonRemaining);
   TEST_ASSERT_EQUAL(CAN_ID_UI_VEHICLE_CTRL, stub_sends[0].f.id);
   TEST_ASSERT_EQUAL(BUS_VEHICLE, stub_sends[0].bus);
-  // Check summon bits: active (bit4) + start (bit0)
   TEST_ASSERT_BITS(0x11, 0x11, stub_sends[0].f.data[0]);
 }
 
+/** @brief Verifies summon tick respects the 20ms minimum interval */
 void test_summon_tick_respects_20ms_interval() {
   State s = makeState();
   s.summonRemaining = 5;
@@ -523,13 +504,14 @@ void test_summon_tick_respects_20ms_interval() {
   s.summonInject = true;
   memset(s.lastCtrl, 0, 8);
   s.summonLastMs = 90;
-  fake_millis = 100;  // only 10ms since last — too soon
+  fake_millis = 100;
 
   summonTick(s);
   TEST_ASSERT_EQUAL(0, stub_send_count);
   TEST_ASSERT_EQUAL(5, s.summonRemaining);
 }
 
+/** @brief Verifies summon tick decrements remaining to zero on last frame */
 void test_summon_tick_decrements_to_zero() {
   State s = makeState();
   s.summonRemaining = 1;
@@ -543,6 +525,7 @@ void test_summon_tick_decrements_to_zero() {
   TEST_ASSERT_EQUAL(0, s.summonRemaining);
 }
 
+/** @brief Verifies summon tick sets the reverse direction bit */
 void test_summon_tick_reverse_direction() {
   State s = makeState();
   s.summonRemaining = 1;
@@ -555,77 +538,76 @@ void test_summon_tick_reverse_direction() {
   fake_millis = 100;
 
   summonTick(s);
-  // Check reverse bit (bit5) set
   TEST_ASSERT_BITS(0x20, 0x20, stub_sends[0].f.data[0]);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Auto HW Detection (variant auto-switch from GTW_carConfig 0x398)
-// ═══════════════════════════════════════════════════════════════════════════════
 
+/** @brief Verifies GTW_CAR_CFG with hw==3 switches variant to HW4 */
 void test_autodetect_hw4_switches_variant() {
   State s = makeState(LEGACY);
   s.variantAutoDetect = true;
   Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-  f.data[0] = 3 << 6;  // hw=3 → HW4
+  f.data[0] = 3 << 6;
   handleMessage(f, BUS_VEHICLE, s);
   TEST_ASSERT_EQUAL(3, s.detectedHW);
   TEST_ASSERT_TRUE(s.hwAutoDetected);
   TEST_ASSERT_EQUAL(HW4, s.variant);
-  TEST_ASSERT_TRUE(log_call_count > 0); // logged variant switch
+  TEST_ASSERT_TRUE(log_call_count > 0);
 }
 
+/** @brief Verifies GTW_CAR_CFG with hw==2 switches variant to HW3 */
 void test_autodetect_hw3_switches_variant() {
   State s = makeState(HW4);
   s.variantAutoDetect = true;
   Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-  f.data[0] = 2 << 6;  // hw=2 → HW3
+  f.data[0] = 2 << 6;
   handleMessage(f, BUS_VEHICLE, s);
   TEST_ASSERT_EQUAL(2, s.detectedHW);
   TEST_ASSERT_EQUAL(HW3, s.variant);
 }
 
+/** @brief Verifies autodetect disabled does not switch variant even with valid HW byte */
 void test_autodetect_disabled_no_variant_switch() {
   State s = makeState(LEGACY);
   s.variantAutoDetect = false;
   Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-  f.data[0] = 3 << 6;  // hw=3 → would be HW4
+  f.data[0] = 3 << 6;
   handleMessage(f, BUS_VEHICLE, s);
   TEST_ASSERT_EQUAL(3, s.detectedHW);
   TEST_ASSERT_TRUE(s.hwAutoDetected);
-  TEST_ASSERT_EQUAL(LEGACY, s.variant); // NOT switched
+  TEST_ASSERT_EQUAL(LEGACY, s.variant);
 }
 
+/** @brief Verifies no log is emitted when detected variant matches current */
 void test_autodetect_same_variant_no_log() {
   State s = makeState(HW4);
   s.variantAutoDetect = true;
   Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-  f.data[0] = 3 << 6;  // hw=3 → HW4, same as current
+  f.data[0] = 3 << 6;
   handleMessage(f, BUS_VEHICLE, s);
   TEST_ASSERT_EQUAL(3, s.detectedHW);
   TEST_ASSERT_EQUAL(HW4, s.variant);
-  TEST_ASSERT_EQUAL(0, log_call_count); // no switch, no log
+  TEST_ASSERT_EQUAL(0, log_call_count);
 }
 
+/** @brief Verifies hw==1 maps to LEGACY variant */
 void test_autodetect_invalid_hw_ignored() {
-  // hw=1 now maps to LEGACY (MCU2 retrofit) — no longer "invalid"
-  // This test is renamed/kept for historical API compat but behavior changed (v2.11 port)
   State s = makeState(HW4);
   s.variantAutoDetect = true;
   Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-  f.data[0] = 1 << 6;  // hw=1 → Legacy (MCU2/HW1 retrofit)
+  f.data[0] = 1 << 6;
   handleMessage(f, BUS_VEHICLE, s);
   TEST_ASSERT_EQUAL(1, s.detectedHW);
   TEST_ASSERT_TRUE(s.hwAutoDetected);
-  TEST_ASSERT_EQUAL(LEGACY, s.variant); // fixed: was silently ignored before
+  TEST_ASSERT_EQUAL(LEGACY, s.variant);
 }
 
+/** @brief Verifies hw==0 maps to LEGACY variant */
 void test_autodetect_legacy_hw0_switches_variant() {
-  // das_hw=0 → Legacy (MCU2/HW1 retrofit Model S/X)
   State s = makeState(HW3);
   s.variantAutoDetect = true;
   Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-  f.data[0] = 0 << 6;  // hw=0
+  f.data[0] = 0 << 6;
   handleMessage(f, BUS_VEHICLE, s);
   TEST_ASSERT_EQUAL(0, s.detectedHW);
   TEST_ASSERT_TRUE(s.hwAutoDetected);
@@ -633,32 +615,31 @@ void test_autodetect_legacy_hw0_switches_variant() {
   TEST_ASSERT_TRUE(log_call_count > 0);
 }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // P2-06: Fallback Variant Detection (from frame presence when 0x398 absent)
-  // ═══════════════════════════════════════════════════════════════════════════════
-
+  /** @brief Verifies ISA_SPEED on chassis infers HW4 from LEGACY and resets speed profile */
   void test_fallback_isa_speed_infers_hw4_from_legacy() {
     State s = makeState(LEGACY);
     s.variantAutoDetect = true;
     s.hwAutoDetected = false;
-    s.speedProfile = 2; // stale legacy stalk value
+    s.speedProfile = 2;
     Frame f = makeFrame(CAN_ID_ISA_SPEED);
     handleMessage(f, BUS_CHASSIS, s);
     TEST_ASSERT_EQUAL(HW4, s.variant);
-    TEST_ASSERT_EQUAL(1, s.speedProfile); // P2-07: reset on Legacy→HW4
+    TEST_ASSERT_EQUAL(1, s.speedProfile);
     TEST_ASSERT_TRUE(log_call_count > 0);
   }
 
+  /** @brief Verifies ISA_SPEED does not switch variant if already HW4 */
   void test_fallback_isa_speed_no_switch_if_already_hw4() {
     State s = makeState(HW4);
     s.variantAutoDetect = true;
     s.hwAutoDetected = false;
     Frame f = makeFrame(CAN_ID_ISA_SPEED);
     handleMessage(f, BUS_CHASSIS, s);
-    TEST_ASSERT_EQUAL(HW4, s.variant); // unchanged
-    TEST_ASSERT_EQUAL(0, log_call_count); // no switch log
+    TEST_ASSERT_EQUAL(HW4, s.variant);
+    TEST_ASSERT_EQUAL(0, log_call_count);
   }
 
+  /** @brief Verifies legacy mux frame on chassis infers LEGACY from HW4 */
   void test_fallback_legacy_mux_infers_legacy_from_hw4() {
     State s = makeState(HW4);
     s.variantAutoDetect = true;
@@ -669,65 +650,63 @@ void test_autodetect_legacy_hw0_switches_variant() {
     TEST_ASSERT_TRUE(log_call_count > 0);
   }
 
+  /** @brief Verifies fallback does not switch when HW is already detected */
   void test_fallback_no_switch_when_hw_already_detected() {
     State s = makeState(LEGACY);
     s.variantAutoDetect = true;
-    s.hwAutoDetected = true; // 0x398 already seen
+    s.hwAutoDetected = true;
     Frame f = makeFrame(CAN_ID_ISA_SPEED);
     handleMessage(f, BUS_CHASSIS, s);
-    TEST_ASSERT_EQUAL(LEGACY, s.variant); // no change
+    TEST_ASSERT_EQUAL(LEGACY, s.variant);
   }
 
+  /** @brief Verifies fallback does not switch when autodetect is off */
   void test_fallback_no_switch_when_autodetect_off() {
     State s = makeState(LEGACY);
     s.variantAutoDetect = false;
     s.hwAutoDetected = false;
     Frame f = makeFrame(CAN_ID_ISA_SPEED);
     handleMessage(f, BUS_CHASSIS, s);
-    TEST_ASSERT_EQUAL(LEGACY, s.variant); // no change
+    TEST_ASSERT_EQUAL(LEGACY, s.variant);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // P2-07: Legacy→HW3/HW4 speedProfile reset (via 0x398 or fallback)
-  // ═══════════════════════════════════════════════════════════════════════════════
-
+  /** @brief Verifies LEGACY to HW3 via 0x398 resets speed profile to 1 */
   void test_legacy_to_hw3_via_0x398_resets_speed_profile() {
     State s = makeState(LEGACY);
     s.variantAutoDetect = true;
     s.speedProfile = 2;
     Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-    f.data[0] = 2 << 6; // hw=2 → HW3
+    f.data[0] = 2 << 6;
     handleMessage(f, BUS_VEHICLE, s);
     TEST_ASSERT_EQUAL(HW3, s.variant);
-    TEST_ASSERT_EQUAL(1, s.speedProfile); // reset to default
+    TEST_ASSERT_EQUAL(1, s.speedProfile);
   }
 
+  /** @brief Verifies LEGACY to HW4 via 0x398 resets speed profile to 1 */
   void test_legacy_to_hw4_via_0x398_resets_speed_profile() {
     State s = makeState(LEGACY);
     s.variantAutoDetect = true;
     s.speedProfile = 0;
     Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-    f.data[0] = 3 << 6; // hw=3 → HW4
+    f.data[0] = 3 << 6;
     handleMessage(f, BUS_VEHICLE, s);
     TEST_ASSERT_EQUAL(HW4, s.variant);
-    TEST_ASSERT_EQUAL(1, s.speedProfile); // reset to default
+    TEST_ASSERT_EQUAL(1, s.speedProfile);
   }
 
+  /** @brief Verifies HW4 to HW3 via 0x398 does not reset speed profile */
   void test_hw4_to_hw3_via_0x398_does_not_reset_speed_profile() {
     State s = makeState(HW4);
     s.variantAutoDetect = true;
-    s.speedProfile = 3; // user-set, NOT stale from legacy
+    s.speedProfile = 3;
     Frame f = makeFrame(CAN_ID_GTW_CAR_CFG);
-    f.data[0] = 2 << 6; // hw=2 → HW3
+    f.data[0] = 2 << 6;
     handleMessage(f, BUS_VEHICLE, s);
     TEST_ASSERT_EQUAL(HW3, s.variant);
-    TEST_ASSERT_EQUAL(3, s.speedProfile); // preserved
+    TEST_ASSERT_EQUAL(3, s.speedProfile);
   }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// txPaused Safety
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Verifies summon tick cancels burst immediately when TX is paused */
 void test_summon_tick_cancels_on_tx_paused() {
   State s = makeState();
   s.summonRemaining = 10;
@@ -738,13 +717,10 @@ void test_summon_tick_cancels_on_tx_paused() {
   fake_millis = 100;
   summonTick(s);
   TEST_ASSERT_EQUAL(0, stub_send_count);
-  TEST_ASSERT_EQUAL(0, s.summonRemaining);  // burst cancelled
+  TEST_ASSERT_EQUAL(0, s.summonRemaining);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Burst Tick (non-blocking one-shot sends)
-// ═══════════════════════════════════════════════════════════════════════════════
-
+/** @brief Verifies burst tick does nothing when remaining is zero */
 void test_burst_tick_does_nothing_when_remaining_zero() {
   State s = makeState();
   s.burstRemaining = 0;
@@ -752,6 +728,7 @@ void test_burst_tick_does_nothing_when_remaining_zero() {
   TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
+/** @brief Verifies burst tick sends the configured frame and decrements remaining */
 void test_burst_tick_sends_frame() {
   State s = makeState();
   Frame f = makeFrame(0x284, 5);
@@ -770,6 +747,7 @@ void test_burst_tick_sends_frame() {
   TEST_ASSERT_EQUAL(BUS_BODY, stub_sends[0].bus);
 }
 
+/** @brief Verifies burst tick respects the configured delay interval */
 void test_burst_tick_respects_delay() {
   State s = makeState();
   Frame f = makeFrame(0x284, 5);
@@ -778,13 +756,14 @@ void test_burst_tick_respects_delay() {
   s.burstRemaining = 5;
   s.burstDelayMs = 100;
   s.burstLastMs = 90;
-  fake_millis = 100;  // only 10ms since last — too soon
+  fake_millis = 100;
 
   burstTick(s);
   TEST_ASSERT_EQUAL(0, stub_send_count);
   TEST_ASSERT_EQUAL(5, s.burstRemaining);
 }
 
+/** @brief Verifies burst tick cancels immediately when TX is paused */
 void test_burst_tick_cancels_on_tx_paused() {
   State s = makeState();
   Frame f = makeFrame(0x284, 5);
@@ -797,26 +776,23 @@ void test_burst_tick_cancels_on_tx_paused() {
 
   burstTick(s);
   TEST_ASSERT_EQUAL(0, stub_send_count);
-  TEST_ASSERT_EQUAL(0, s.burstRemaining);  // cancelled
+  TEST_ASSERT_EQUAL(0, s.burstRemaining);
 }
 
 int main() {
   UNITY_BEGIN();
 
-  // Frame caching
   RUN_TEST(test_dispatch_caches_ctrl_frame);
   RUN_TEST(test_dispatch_caches_climate_frame);
   RUN_TEST(test_dispatch_caches_charge_frame);
   RUN_TEST(test_dispatch_caches_drive_frame);
   RUN_TEST(test_dispatch_ctrl_short_frame_ignored);
 
-  // Handler routing
   RUN_TEST(test_dispatch_hw4_routes_to_hw4_handler);
   RUN_TEST(test_dispatch_hw3_routes_to_hw3_handler);
   RUN_TEST(test_dispatch_legacy_routes_to_legacy_handler);
   RUN_TEST(test_dispatch_ignores_handler_frames_from_bus1);
 
-  // Filters
   RUN_TEST(test_apply_filters_hw4_sets_fsd_3_ids);
   RUN_TEST(test_apply_filters_hw3_sets_fsd_2_ids);
   RUN_TEST(test_apply_filters_legacy_sets_fsd_2_ids);
@@ -828,7 +804,6 @@ int main() {
   RUN_TEST(test_apply_filters_fallback_adds_discriminator_ids_when_hw_unknown);
   RUN_TEST(test_apply_filters_no_fallback_ids_when_hw_already_detected);
 
-  // Summon
   RUN_TEST(test_summon_tick_does_nothing_when_remaining_zero);
   RUN_TEST(test_summon_tick_does_nothing_without_ctrl);
   RUN_TEST(test_summon_tick_sends_burst_frame);
@@ -836,7 +811,6 @@ int main() {
   RUN_TEST(test_summon_tick_decrements_to_zero);
   RUN_TEST(test_summon_tick_reverse_direction);
 
-  // Auto HW detection
   RUN_TEST(test_autodetect_hw4_switches_variant);
   RUN_TEST(test_autodetect_hw3_switches_variant);
   RUN_TEST(test_autodetect_disabled_no_variant_switch);
@@ -844,22 +818,18 @@ int main() {
   RUN_TEST(test_autodetect_invalid_hw_ignored);
   RUN_TEST(test_autodetect_legacy_hw0_switches_variant);
 
-    // P2-06: Fallback variant detection (frame presence when 0x398 absent)
     RUN_TEST(test_fallback_isa_speed_infers_hw4_from_legacy);
     RUN_TEST(test_fallback_isa_speed_no_switch_if_already_hw4);
     RUN_TEST(test_fallback_legacy_mux_infers_legacy_from_hw4);
     RUN_TEST(test_fallback_no_switch_when_hw_already_detected);
     RUN_TEST(test_fallback_no_switch_when_autodetect_off);
 
-    // P2-07: Legacy→HW3/HW4 speedProfile reset
     RUN_TEST(test_legacy_to_hw3_via_0x398_resets_speed_profile);
     RUN_TEST(test_legacy_to_hw4_via_0x398_resets_speed_profile);
     RUN_TEST(test_hw4_to_hw3_via_0x398_does_not_reset_speed_profile);
 
-  // txPaused safety
   RUN_TEST(test_summon_tick_cancels_on_tx_paused);
 
-  // Burst tick
   RUN_TEST(test_burst_tick_does_nothing_when_remaining_zero);
   RUN_TEST(test_burst_tick_sends_frame);
   RUN_TEST(test_burst_tick_respects_delay);

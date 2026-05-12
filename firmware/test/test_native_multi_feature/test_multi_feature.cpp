@@ -1,6 +1,8 @@
-// ── Multi-Feature Integration ──────────────────────────────────────────────
-// Verifies that multiple feature handlers run independently, mutating their
-// own State fields without trampling each other's flags.
+/** @file firmware/test/test_native_multi_feature/test_multi_feature.cpp
+ *  @brief Unit tests for multi-feature command dispatch
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -50,7 +52,6 @@ void test_independent_persist_flags_dont_collide()
 	TEST_ASSERT_TRUE(executeWiperPersistCmd("wiperpersist:on", s));
 	TEST_ASSERT_TRUE(s.mirrorAutoFoldEnabled);
 	TEST_ASSERT_TRUE(s.wiperPersistEnabled);
-	// Toggling one must not toggle the other.
 	TEST_ASSERT_TRUE(executeMirrorAutoFoldCmd("mirror:autofold:off", s));
 	TEST_ASSERT_FALSE(s.mirrorAutoFoldEnabled);
 	TEST_ASSERT_TRUE(s.wiperPersistEnabled);
@@ -83,7 +84,6 @@ void test_disabling_one_feature_leaves_others_intact()
 
 void test_handlers_do_not_steal_each_others_commands()
 {
-	// precondition handler must reject trackmode commands and vice-versa.
 	State s = allEnabledState();
 	TEST_ASSERT_FALSE(executePreconditionCmd("trackmode:on", s));
 	TEST_ASSERT_FALSE(executeTrackModeCmd("precondition:on", s));
@@ -103,3 +103,4 @@ int main(int, char **)
 	RUN_TEST(test_handlers_do_not_steal_each_others_commands);
 	return UNITY_END();
 }
+

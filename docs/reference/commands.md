@@ -170,8 +170,6 @@ Status payload (`gamepad` field) includes:
 | `fsd:off`       | Disable FSD CAN modification                              |
 | `fsd:force:on`  | Force FSD CAN edits even when UI FSD selection bit is off |
 | `fsd:force:off` | Require UI FSD selection bit before FSD edits             |
-| `nag:on`        | Enable nag suppression                                    |
-| `nag:off`       | Disable nag suppression                                   |
 
 ## Speed Profile
 
@@ -211,26 +209,55 @@ Auto-routes to HW4 (0–63) or HW3 (0–100) based on detected hardware variant.
 | `variant:legacy` | Set vehicle variant to Legacy      |
 | `variant:auto`   | Enable automatic variant detection |
 
-## Nag Killer (EPAS Torque Spoofing)
+## Nag Alert Suppression (unified)
 
-| Command                   | Description                                                    |
-| ------------------------- | -------------------------------------------------------------- |
-| `nag:killer:on`           | Enable EPAS torque spoofing (zero steering torque)             |
-| `nag:killer:off`          | Disable EPAS torque spoofing                                   |
-| `nag:killer:mode:legacy`  | Use legacy echo behavior (always echo when enabled)            |
-| `nag:killer:mode:safe`    | Use safe DAS-aware mode (echo only when DAS requests hands-on) |
-| `nag:killer:mode:natural` | Use natural mode (Gaussian jitter, steering-aware, human-like) |
+Tesla's autopilot nag ("Apply pressure to steering wheel") can be suppressed
+with different strategies, ranging from a cheap CAN-UI bit clear to a full
+DAS-aware torque echo. All strategies are selected through one unified
+command interface.
 
-### Nag Killer Modes
+### Unified command
 
-- `legacy`: preserves previous behavior and emits spoof frames whenever `nag:killer:on` is active.
-- `safe`: checks `DAS_autopilotHandsOnState` before spoofing to reduce unnecessary CAN traffic.
-- `natural`: applies Gaussian-jittered torque (0.08–0.18 Nm) with steering angle feedback and non-linear timing (150–350ms intervals) to simulate human hand tremor. Most realistic mode.
+| Command            | Description                                                            |
+| ------------------ | ---------------------------------------------------------------------- |
+| `nag:mode:off`     | Disable all nag suppression                                            |
+| `nag:mode:bit19`   | Clear ECE R79 hands-on bit on UI_autopilotControl mux=1 (cheapest)     |
+| `nag:mode:legacy`  | 0x370 EPAS echo, fixed zero torque, always-on                          |
+| `nag:mode:safe`    | 0x370 EPAS echo, only when DAS actively requests hands-on              |
+| `nag:mode:natural` | 0x370 EPAS echo, Gaussian-jittered 0.08–0.18 Nm with steering feedback |
+| `nag:mode:organic` | 0x370 EPAS echo, full DAS state machine + grip excursions ±1.0–3.3 Nm  |
+| `nag:mode:full`    | `bit19` + whichever echo mode was last selected (max suppression)      |
+| `nag:bypass:on`    | Organic mode only: stop injection when real driver hands-on detected   |
+| `nag:bypass:off`   | Organic mode only: keep injecting regardless of driver input           |
 
-Status payload now includes:
+### Strategy summary
 
-- `nagKillerMode` — current mode (`legacy`, `safe`, or `natural`)
-- `dasHandsOn` — parsed DAS hands-on state value
+- `bit19` — clears a single bit on a CAN-UI frame. No torque spoofing.
+  Works on older firmware where DAS honours the UI bit. Matches the
+  historical `nag:on` behaviour.
+- `legacy` — echoes 0x370 with zeroed torque and handsOnLevel=1 on every
+  real frame. Simple and loud; visible in every CAN trace.
+- `safe` — same as legacy but only when `DAS_autopilotHandsOnState` is in
+  a requesting state. Roughly 90 % less CAN traffic during normal AP
+  driving.
+- `natural` — Gaussian-jittered torque (0.08–0.18 Nm) with steering angle
+  feedback and non-linear 150–350 ms timing. Simulates hand tremor.
+- `organic` — most effective on modern Tesla firmware. Full state machine
+  with mandatory pause windows, random-walk torque ±0.5–2.0 Nm, and
+  periodic grip excursions ±3.1–3.3 Nm. Ported from linuchoicoegwangsu v2
+  spec + zdenekbouresh grip-excursion pattern. Requires AP active
+  (`dasApState in {3,4,5,6}`).
+- `full` — applies both `bit19` and the last-selected echo mode
+  simultaneously for maximum suppression on newer firmware that may
+  ignore the bit-19 clear on its own.
+
+### Status payload
+
+```
+"nagMode":      "<off|bit19|legacy|safe|natural|organic|full>"  — active mode
+"nagOrgBypass": <bool>    — organic-mode driver-feedback bypass
+"dasHandsOn":   <uint>    — decoded DAS hands-on-state
+```
 
 ## Battery Preconditioning
 

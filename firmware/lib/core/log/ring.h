@@ -1,28 +1,40 @@
 #pragma once
 
-// ── Log Ring Buffer ──────────────────────────────────────────────────────────
-// 256-entry ring buffer for debug event logging, queryable via web/serial.
-// Each entry stores a short message and timestamp.
+/**
+ * @file firmware/lib/core/log/ring.h
+ * @brief Fixed-size ring buffer for debug event logging, queryable via web or serial
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
-#define LOG_RING_SIZE 256
-#define LOG_MSG_MAX_LEN 64
+#define LOG_RING_SIZE 256    // Maximum number of log entries retained
+#define LOG_MSG_MAX_LEN 64   // Maximum characters per log message (including null terminator)
 
+/**
+ * @brief Single entry in the log ring buffer
+ */
 struct LogEntry
 {
-	char msg[LOG_MSG_MAX_LEN];
-	unsigned long timestamp;
-	bool used;
+	char msg[LOG_MSG_MAX_LEN];  // Null-terminated log message text
+	unsigned long timestamp;    // Capture time in milliseconds since boot
+	bool used;                  // Whether this slot contains a valid entry
 };
 
+/**
+ * @brief Circular buffer holding the most recent LOG_RING_SIZE log entries
+ */
 struct LogRing
 {
-	LogEntry entries[LOG_RING_SIZE];
-	uint16_t head;
-	uint16_t count;
+	LogEntry entries[LOG_RING_SIZE];  // Fixed storage for all log slots
+	uint16_t head;                   // Next write position (points past the newest entry)
+	uint16_t count;                  // Total valid entries currently stored
 };
 
 static LogRing logRing = {{{"\0", 0, false}}, 0, 0};
 
+/**
+ * @brief Reset the log ring to an empty state
+ */
 inline void logRingInit()
 {
 	logRing.head = 0;
@@ -33,10 +45,16 @@ inline void logRingInit()
 	}
 }
 
+/**
+ * @brief Push a new message into the ring buffer, overwriting the oldest entry if full
+ * @param msg Null-terminated message string to store
+ * @param ms Timestamp in milliseconds (typically millis())
+ */
 inline void logRingPush(const char *msg, unsigned long ms)
 {
 	LogEntry &e = logRing.entries[logRing.head];
 	uint8_t len = 0;
+	// Manual copy to avoid pulling in full string library
 	while (msg[len] && len < LOG_MSG_MAX_LEN - 1)
 	{
 		e.msg[len] = msg[len];
@@ -50,7 +68,11 @@ inline void logRingPush(const char *msg, unsigned long ms)
 		logRing.count++;
 }
 
-// Get entry at index (0 = oldest available)
+/**
+ * @brief Retrieve a log entry by logical index (0 = oldest available)
+ * @param index Zero-based index from the oldest retained entry
+ * @return Pointer to the log entry, or nullptr if index is out of range
+ */
 inline const LogEntry *logRingGet(uint16_t index)
 {
 	if (index >= logRing.count)
@@ -62,30 +84,41 @@ inline const LogEntry *logRingGet(uint16_t index)
 	}
 	else
 	{
+		// Buffer has wrapped; oldest entry starts at current head position
 		pos = (logRing.head + index) % LOG_RING_SIZE;
 	}
 	return &logRing.entries[pos];
 }
 
+/**
+ * @brief Return the number of valid entries currently in the ring
+ * @return Entry count (0 to LOG_RING_SIZE)
+ */
 inline uint16_t logRingCount()
 {
 	return logRing.count;
 }
 
-// Return entries newer than 'since' (a previously returned head index).
-// 'since' should be the value of logRingHead() from the last poll.
-// Fills up to maxOut entries into 'out', returns count filled.
-// Use logRingHead() after calling this to get the new cursor for next poll.
+/**
+ * @brief Return the current head (write cursor) position for polling
+ * @return Raw head index into the entries array
+ */
 inline uint16_t logRingHead()
 {
 	return logRing.head;
 }
 
+/**
+ * @brief Read entries pushed since a previous head snapshot
+ * @param since Head value from a prior call to logRingHead()
+ * @param out Output array to fill with new entries (oldest first)
+ * @param maxOut Maximum number of entries to copy into out
+ * @return Number of entries actually written to out
+ */
 inline uint16_t logRingReadSince(uint16_t since, LogEntry *out, uint16_t maxOut)
 {
-	// Compute how many new entries were pushed since 'since'
 	uint16_t total = logRing.count;
-	// since is a raw head position; delta = (current head - since) mod ring size
+	// Delta = entries pushed between the saved cursor and current head
 	uint16_t current = logRing.head;
 	uint16_t delta = (current >= since) ? (current - since) : (LOG_RING_SIZE - since + current);
 	if (delta > total)
@@ -95,7 +128,7 @@ inline uint16_t logRingReadSince(uint16_t since, LogEntry *out, uint16_t maxOut)
 	if (delta == 0)
 		return 0;
 
-	// Oldest of the delta entries starts at (current - delta) mod LOG_RING_SIZE
+	// Walk forward from the oldest of the new entries
 	uint16_t pos = (current + LOG_RING_SIZE - delta) % LOG_RING_SIZE;
 	for (uint16_t i = 0; i < delta; i++)
 	{

@@ -1,35 +1,50 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/region.h
+ * @brief Region detection, spoofing, and ECE R79 bypass for Tesla CAN
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
 #include "core/util/parse.h"
 
-// ── Region Detection & Spoofing ──────────────────────────────────────────────
-// Detects region from GTW_carConfig (0x398) and supports optional spoofing.
-// Spoofing overwrites the region bits in-frame before other modules read them,
-// enabling FSD in geographically restricted regions.
-//
-// Also handles ECE R79 bypass for EU-region vehicles.
-
-// Region codes from 0x398 byte[2] bits[7:4]
+// Region codes extracted from GTW_carConfig (0x398) byte[2] bits[7:4]
 #define REGION_UNKNOWN 0
-#define REGION_NORTH_AM 1 // North America
-#define REGION_EUROPE 2	  // Europe (ECE)
-#define REGION_CHINA 3	  // China (PRC)
-#define REGION_ASIA_PAC 4 // Asia-Pacific (non-China)
-#define REGION_MIDDLE_E 5 // Middle East
+#define REGION_NORTH_AM 1
+#define REGION_EUROPE 2
+#define REGION_CHINA 3
+#define REGION_ASIA_PAC 4
+#define REGION_MIDDLE_E 5
 
+/**
+ * @brief Decode the region code from raw CAN data
+ * @param data Pointer to frame payload (requires at least 3 bytes)
+ * @return Region code from the upper nibble of byte 2
+ */
 inline uint8_t decodeRegionCode(const uint8_t *data)
 {
 	return (data[2] >> 4) & 0x0F;
 }
 
-// Overload: decode region from Frame and populate State
+/**
+ * @brief Decode region code from a CAN frame and store in vehicle state
+ * @param f CAN frame containing GTW_carConfig data
+ * @param s Global vehicle state to populate
+ */
 inline void decodeRegionCode(const Frame &f, State &s)
 {
 	s.regionCode = decodeRegionCode(f.data);
 	s.hasRegion = true;
 }
 
+/**
+ * @brief Get a short human-readable name for a region code
+ * @param code Region code constant
+ * @return Two-to-four character region abbreviation, or "UNK" if unrecognized
+ */
 inline const char *regionName(uint8_t code)
 {
 	switch (code)
@@ -49,31 +64,47 @@ inline const char *regionName(uint8_t code)
 	}
 }
 
+/**
+ * @brief Check if the region code indicates the Chinese market
+ * @param region Region code to test
+ * @return True if the region is China (PRC)
+ */
 inline bool isChineseMarket(uint8_t region)
 {
 	return region == REGION_CHINA;
 }
 
+/**
+ * @brief Check if the region code indicates the European market
+ * @param region Region code to test
+ * @return True if the region is Europe (ECE)
+ */
 inline bool isEuropeanMarket(uint8_t region)
 {
 	return region == REGION_EUROPE;
 }
 
-// ── ECE R79 Bypass ───────────────────────────────────────────────────────────
-// Set UI_applyEceR79 bit in mux 1 to enable full Autopilot in EU vehicles.
-// Bit 20 in mux 1 of CAN ID 1021 (FSD_MUX).
-
+/**
+ * @brief Apply ECE R79 bypass by clearing the restriction bit in the FSD mux frame
+ * @param f CAN frame (mux 1 of CAN ID 1021) to modify
+ *
+ * @note Clears bit 20 in mux 1 to enable full Autopilot functionality
+ *       on EU-region vehicles that are otherwise restricted by ECE R79.
+ */
 inline void applyEceR79Bypass(Frame &f)
 {
 	if (f.dlc >= 3)
 	{
-		setBit(f, 20, false); // Clear ECE R79 restriction bit
+		setBit(f, 20, false);
 	}
 }
 
-// ── Region Spoofing ──────────────────────────────────────────────────────────
-// Overwrites region nibble in 0x398 byte[2] bits[7:4] to the spoofed value.
-// Returns true if the frame was modified.
+/**
+ * @brief Overwrite the region nibble in a GTW_carConfig frame with a spoofed value
+ * @param f CAN frame (0x398) to modify
+ * @param spoofCode Region code to inject into bits[7:4] of byte 2
+ * @return True if the frame was modified, false if spoofing is disabled or DLC too short
+ */
 inline bool applySpoofRegion(Frame &f, uint8_t spoofCode)
 {
 	if (spoofCode == REGION_UNKNOWN)
@@ -84,20 +115,22 @@ inline bool applySpoofRegion(Frame &f, uint8_t spoofCode)
 	return true;
 }
 
-// Get the effective region code (spoofed if active, otherwise detected)
+/**
+ * @brief Get the effective region code, preferring the spoofed value if active
+ * @param s Global vehicle state
+ * @return Spoofed region code if set, otherwise the detected region code
+ */
 inline uint8_t effectiveRegion(const State &s)
 {
 	return (s.regionSpoofCode != REGION_UNKNOWN) ? s.regionSpoofCode : s.regionCode;
 }
 
-// ── Region Spoof Command ─────────────────────────────────────────────────────
-// Commands:
-//   region:spoof:na   — spoof to North America
-//   region:spoof:eu   — spoof to Europe
-//   region:spoof:cn   — spoof to China
-//   region:spoof:apac — spoof to Asia-Pacific
-//   region:spoof:me   — spoof to Middle East
-//   region:spoof:off  — disable spoofing (use real region)
+/**
+ * @brief Parse a region name string into its corresponding region code
+ * @param name Short region identifier ("na", "eu", "cn", "apac", "me", "off")
+ * @param out Output region code on success
+ * @return True if the name was recognized
+ */
 inline bool parseRegionCode(const char *name, uint8_t &out)
 {
 	if (strcmp(name, "na") == 0)
@@ -133,6 +166,12 @@ inline bool parseRegionCode(const char *name, uint8_t &out)
 	return false;
 }
 
+/**
+ * @brief Execute a region spoof command
+ * @param cmd Command string (e.g. "region:spoof:na", "region:spoof:eu", "region:spoof:off")
+ * @param s Global vehicle state
+ * @return True if the command was recognized and executed
+ */
 static bool executeRegionSpoofCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "region:spoof:", 13) != 0)

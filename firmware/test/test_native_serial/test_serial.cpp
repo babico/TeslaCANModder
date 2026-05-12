@@ -1,6 +1,8 @@
-// ── ESP32 Serial & Command Tests ─────────────────────────────────────────────
-// Tests handleChar, executeCommand, sendAck, sendError, and JSON output.
-// Uses a captured output buffer instead of real Serial.
+/** @file firmware/test/test_native_serial/test_serial.cpp
+ *  @brief Unit tests for serial transport protocol
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -16,11 +18,9 @@
 #define BOARD_CAN_NAME "MCP2515_3x"
 #define BOARD_DRIVER_NAME "arduino-mcp2515"
 
-// Provide types
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Fake Serial / Arduino ───────────────────────────────────────────────────
 static std::string capturedOutput;
 
 class FakeSerial
@@ -57,7 +57,6 @@ class FakeSerial
 
 static FakeSerial Serial;
 
-// F() macro for native — just return the string
 #define __FlashStringHelper char
 #define F(s) (s)
 
@@ -67,7 +66,6 @@ unsigned long millis()
 	return fake_millis_val;
 }
 
-// ── Stub out driver, persist, dispatch functions ────────────────────────────
 bool mcpAvailable[BUS_MAX] = {true, true, true};
 static int save_settings_calls = 0;
 
@@ -79,13 +77,10 @@ void saveSettings(const State &)
 	save_settings_calls++;
 }
 
-// Stub the needed handler fns
 void resetHW4LogFlags() {}
 void resetHW3LogFlags() {}
 void resetLegacyLogFlags() {}
 
-// ── Stub command modules ────────────────────────────────────────────────────
-// These return true if the command matches, and modify state
 
 bool executeStreamCmd(const char *cmd, State &s)
 {
@@ -134,14 +129,14 @@ bool executeFsdCmd(const char *cmd, State &s)
 
 bool executeNagCmd(const char *cmd, State &s)
 {
-	if (strcmp(cmd, "nag:on") == 0)
+	if (strcmp(cmd, "nag:mode:bit19") == 0)
 	{
-		s.nagSuppress = true;
+		s.nagMode = NAG_MODE_BIT19;
 		return true;
 	}
-	if (strcmp(cmd, "nag:off") == 0)
+	if (strcmp(cmd, "nag:mode:off") == 0)
 	{
-		s.nagSuppress = false;
+		s.nagMode = NAG_MODE_OFF;
 		return true;
 	}
 	return false;
@@ -243,8 +238,6 @@ bool executeVehicleCmd(const char *, State &)
 	return false;
 }
 
-// ── Now define the serial functions we're testing ───────────────────────────
-// (Inline replicas from serial/esp32.h, adapted for test env)
 
 void printStr(const char *s)
 {
@@ -291,7 +284,6 @@ void sendLog(const char *msg)
 
 void sendStatus(State &s, unsigned long now)
 {
-	// Simplified version — just emit key fields for testing
 	printStr("{\"t\":\"status\",\"variant\":\"");
 	printStr(variantName(s.variant));
 	printStr("\",\"fsd\":");
@@ -434,7 +426,6 @@ void handleChar(char *buf, uint8_t &len, char c, State &s)
 	}
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
 
 static State makeState(Variant v = HW4)
 {
@@ -452,9 +443,6 @@ void setUp()
 }
 void tearDown() {}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// executeCommand — Basic Commands
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_cmd_ping()
 {
@@ -532,8 +520,8 @@ void test_cmd_isa_chime_off()
 void test_cmd_nag_on()
 {
 	State s = makeState();
-	executeCommand("nag:on", s, 1000);
-	TEST_ASSERT_TRUE(s.nagSuppress);
+	executeCommand("nag:mode:bit19", s, 1000);
+	TEST_ASSERT_EQUAL(NAG_MODE_BIT19, s.nagMode);
 }
 
 void test_cmd_unknown()
@@ -584,9 +572,6 @@ void test_cmd_apgate_status_reports_reason_flags()
 	TEST_ASSERT_TRUE(capturedOutput.find("\"open\":1") != std::string::npos);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// handleChar — Buffer Parsing
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_handlechar_builds_command_on_newline()
 {
@@ -616,11 +601,10 @@ void test_handlechar_rejects_invalid_chars()
 	State s = makeState();
 	char buf[32] = {};
 	uint8_t len = 0;
-	// Inject an invalid char (space) mid-command → should clear buffer
 	handleChar(buf, len, 'p', s);
 	handleChar(buf, len, 'i', s);
 	TEST_ASSERT_EQUAL(2, len);
-	handleChar(buf, len, ' ', s); // invalid
+	handleChar(buf, len, ' ', s);
 	TEST_ASSERT_EQUAL(0, len);
 }
 
@@ -638,19 +622,13 @@ void test_handlechar_overflow_ignored()
 	State s = makeState();
 	char buf[32] = {};
 	uint8_t len = 0;
-	// Fill buffer to 31 chars
 	for (int i = 0; i < 35; i++)
 		handleChar(buf, len, 'a', s);
-	// len should be 32 (overflow marker)
 	TEST_ASSERT_EQUAL(32, len);
-	// Newline should NOT execute (len >= 32)
 	handleChar(buf, len, '\n', s);
 	TEST_ASSERT_TRUE(capturedOutput.empty());
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// sendAck / sendError / sendLog format
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_send_ack_format()
 {
@@ -674,7 +652,6 @@ int main()
 {
 	UNITY_BEGIN();
 
-	// Commands
 	RUN_TEST(test_cmd_ping);
 	RUN_TEST(test_cmd_status);
 	RUN_TEST(test_cmd_fsd_on);
@@ -691,17 +668,16 @@ int main()
 	RUN_TEST(test_cmd_apgate_off_sets_state_and_persists);
 	RUN_TEST(test_cmd_apgate_status_reports_reason_flags);
 
-	// handleChar
 	RUN_TEST(test_handlechar_builds_command_on_newline);
 	RUN_TEST(test_handlechar_ignores_cr);
 	RUN_TEST(test_handlechar_rejects_invalid_chars);
 	RUN_TEST(test_handlechar_empty_line_does_nothing);
 	RUN_TEST(test_handlechar_overflow_ignored);
 
-	// Message format
 	RUN_TEST(test_send_ack_format);
 	RUN_TEST(test_send_error_format);
 	RUN_TEST(test_send_log_format);
 
 	return UNITY_END();
 }
+

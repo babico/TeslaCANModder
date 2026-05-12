@@ -1,7 +1,8 @@
-// ── Variant Gating Integration ──────────────────────────────────────────────
-// Verifies that variant-specific commands are correctly blocked/allowed
-// across LEGACY / HW3 / HW4 hardware generations. Catches regressions where
-// a feature handler forgets to check `s.variant == LEGACY`.
+/** @file firmware/test/test_native_variant_gating/test_variant_gating.cpp
+ *  @brief Unit tests for feature gating by variant
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -134,3 +135,4 @@ int main(int, char **)
 	RUN_TEST(test_hw3_also_allows_modern_features);
 	return UNITY_END();
 }
+

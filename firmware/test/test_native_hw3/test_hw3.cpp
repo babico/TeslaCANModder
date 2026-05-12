@@ -1,5 +1,8 @@
-// ── HW3 Handler Tests ────────────────────────────────────────────────────────
-// Tests handleHW3() CAN frame processing: FSD, nag suppress, speed offset, profile.
+/** @file firmware/test/test_native_hw3/test_hw3.cpp
+ *  @brief Unit tests for HW3 variant frame handler
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -19,7 +22,6 @@ class __FlashStringHelper;
 #include "feature/profile.h"
 #include "feature/offsets.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 #include "support/stubs.h"
 
 #include "handler/variant/hw3.h"
@@ -32,7 +34,7 @@ static State makeState()
 	s.variant = HW3;
 	s.speedProfile = 1;
 	s.fsdEnabled = true;
-	s.nagSuppress = true;
+	s.nagMode = NAG_MODE_BIT19;
 	return s;
 }
 
@@ -43,13 +45,12 @@ void setUp()
 }
 void tearDown() {}
 
-// ── Follow Distance → Profile ────────────────────────────────────────────────
 
 void test_hw3_follow_distance_1_sets_profile_2()
 {
 	State s = makeState();
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-	f.data[5] = 0b00100000; // fd=1
+	f.data[5] = 0b00100000;
 	handleHW3(f, s);
 	TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
 	TEST_ASSERT_EQUAL(0, stub_send_count);
@@ -77,7 +78,7 @@ void test_hw3_follow_distance_0_keeps_default()
 {
 	State s = makeState();
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-	f.data[5] = 0x00; // fd=0 → maps to -1 (no change)
+	f.data[5] = 0x00;
 	handleHW3(f, s);
 	TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
 }
@@ -93,7 +94,6 @@ void test_hw3_follow_dist_pinned_unchanged()
 	TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
 }
 
-// ── FSD Mux 0 ────────────────────────────────────────────────────────────────
 
 void test_hw3_fsd_mux0_sends_with_bit46()
 {
@@ -155,7 +155,6 @@ void test_hw3_fsd_mux0_allows_when_ap_gate_open_by_park()
 	TEST_ASSERT_EQUAL(1, stub_send_count);
 }
 
-// ── Nag Mux 1 ────────────────────────────────────────────────────────────────
 
 void test_hw3_nag_mux1_clears_bit19()
 {
@@ -171,14 +170,13 @@ void test_hw3_nag_mux1_clears_bit19()
 void test_hw3_nag_mux1_no_send_when_disabled()
 {
 	State s = makeState();
-	s.nagSuppress = false;
+	s.nagMode = NAG_MODE_OFF;
 	Frame f = makeFrame(CAN_ID_FSD_MUX);
 	f.data[0] = 0x01;
 	handleHW3(f, s);
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── Speed Offset Mux 2 ──────────────────────────────────────────────────────
 
 void test_hw3_mux2_sends_when_fsd_enabled()
 {
@@ -186,7 +184,7 @@ void test_hw3_mux2_sends_when_fsd_enabled()
 	s.speedOffset = 25;
 	Frame f = makeFrame(CAN_ID_FSD_MUX);
 	f.data[0] = 0x02;
-	f.data[4] = 0x40; // FSD selected
+	f.data[4] = 0x40;
 	handleHW3(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
 }
@@ -202,7 +200,6 @@ void test_hw3_mux2_no_send_when_fsd_disabled()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── Misc ─────────────────────────────────────────────────────────────────────
 
 void test_hw3_ignores_unrelated_id()
 {
@@ -222,7 +219,6 @@ void test_hw3_sends_on_bus_0()
 	TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_sends[0].bus);
 }
 
-// ── P2-08: Parity toggles (mirror of hw4 tests) ──────────────────────────────
 
 void test_hw3_assist_nav_sets_bits_13_48_49()
 {
@@ -231,11 +227,8 @@ void test_hw3_assist_nav_sets_bits_13_48_49()
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
 	handleHW3(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 13 = byte 1 bit 5
 	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[1] & 0x20);
-	// bit 48 = byte 6 bit 0
 	TEST_ASSERT_EQUAL_HEX8(0x01, stub_sends[0].f.data[6] & 0x01);
-	// bit 49 = byte 6 bit 1
 	TEST_ASSERT_EQUAL_HEX8(0x02, stub_sends[0].f.data[6] & 0x02);
 }
 
@@ -259,7 +252,6 @@ void test_hw3_assist_hands_off_sets_bit14()
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
 	handleHW3(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 14 = byte 1 bit 6
 	TEST_ASSERT_EQUAL_HEX8(0x40, stub_sends[0].f.data[1] & 0x40);
 }
 
@@ -270,7 +262,6 @@ void test_hw3_assist_dev_mode_sets_bit5()
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
 	handleHW3(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 5 = byte 0 bit 5
 	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[0] & 0x20);
 }
 
@@ -279,10 +270,9 @@ void test_hw3_assist_tel_off_clears_bit43()
 	State s = makeState();
 	s.assistTelemetryOff = true;
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-	f.data[5] = 0xFF; // set all bits, including bit 43 (byte 5 bit 3)
+	f.data[5] = 0xFF;
 	handleHW3(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 43 = byte 5 bit 3 — must be cleared
 	TEST_ASSERT_EQUAL_HEX8(0x00, stub_sends[0].f.data[5] & 0x08);
 }
 
@@ -291,11 +281,10 @@ void test_hw3_lane_graph_sets_bit45_on_mux1()
 	State s = makeState();
 	s.laneGraphEnable = true;
 	Frame f = makeFrame(CAN_ID_FSD_MUX);
-	f.data[0] = 0x01; // mux selector = 1
-	f.data[4] = 0x40; // keep bit 46 set so nag mux1 fires
+	f.data[0] = 0x01;
+	f.data[4] = 0x40;
 	handleHW3(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 45 = byte 5 bit 5
 	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[5] & 0x20);
 }
 
@@ -333,3 +322,4 @@ int main()
 
 	return UNITY_END();
 }
+

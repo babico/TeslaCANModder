@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_stream/test_stream.cpp
+ *  @brief Unit tests for CAN stream output formatting
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -53,3 +59,4 @@ int main(int, char **)
 	RUN_TEST(test_stream_unknown);
 	return UNITY_END();
 }
+

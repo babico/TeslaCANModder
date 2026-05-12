@@ -1,23 +1,11 @@
 #pragma once
-// ── Tesla BLE command dispatch (board-agnostic) ───────────────────────────────
-//
-// executeTeslaCommand<Board>(board, sub) is the platform-independent entry point.
-// The Board adapter provides all platform services.
-//
-// Board concept — must provide:
-//   makeTransport()              → Transport object (connect/disconnect/send/exchange)
-//   random(uint8_t *out, size_t) → fill with random bytes
-//   loadKey(KeyPair &)           → bool   (false = not stored)
-//   saveKey(const KeyPair &)     → bool
-//   loadRole(char *out, size_t)  → fills buffer, e.g. "owner"
-//   saveRole(const char *)
-//   loadVin(char *out, size_t)   → fills buffer with stored VIN
-//   saveVin(const char *)
-//   roleValue(const char *)      → uint8_t  (e.g. ROLE_OWNER)
-//   log(const char *)
-//   err(const char *)
-//   print(const char *)
-//   println()
+
+/**
+ * @file firmware/lib/vehicle/ble/handler/dispatch.h
+ * @brief Tesla BLE command dispatcher that routes sub-commands to key, session, and vehicle actions
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #if BOARD_ENABLE_BLE
 
@@ -32,8 +20,12 @@
 namespace Tesla
 {
 
-// ── Internal helpers ──────────────────────────────────────────────────────────
-
+/**
+ * @brief Connect to a Tesla vehicle over BLE using the last 8 characters of the stored VIN as a suffix filter.
+ * @param board Platform adapter providing VIN storage and logging.
+ * @param client BLE transport used for scanning and connecting.
+ * @return True if the connection was established successfully.
+ */
 template <typename Board, typename Transport> static bool connectToVehicle(Board &board, Transport &client)
 {
 	char vin[18] = {};
@@ -44,6 +36,7 @@ template <typename Board, typename Transport> static bool connectToVehicle(Board
 	size_t vinLen = strlen(vin);
 	if (vinLen >= 8)
 	{
+		// Use the last 8 characters of the VIN as the BLE advertisement suffix filter
 		memcpy(sfxBuf, vin + vinLen - 8, 8);
 		sfxBuf[8] = '\0';
 		suffix = sfxBuf;
@@ -59,8 +52,13 @@ template <typename Board, typename Transport> static bool connectToVehicle(Board
 	return true;
 }
 
-// BuildFn: any callable with signature bool(uint8_t *out, size_t cap, size_t &outLen)
-// This accepts both free functions and lambdas (including capturing ones).
+/**
+ * @brief Establish an authenticated BLE session and send a single command to the vehicle.
+ * @param board Platform adapter providing transport, key storage, and logging.
+ * @param buildFn Callable with signature bool(uint8_t *out, size_t cap, size_t &outLen) that encodes the action.
+ * @param desc Human-readable description logged on success.
+ * @return True if the command was sent successfully.
+ */
 template <typename Board, typename BuildFn>
 static bool runAuthCommand(Board &board, BuildFn &&buildFn, const char *desc)
 {
@@ -98,11 +96,18 @@ static bool runAuthCommand(Board &board, BuildFn &&buildFn, const char *desc)
 	return true;
 }
 
-// ── executeTeslaCommand ───────────────────────────────────────────────────────
-// sub = everything after the "tesla:" prefix (caller strips it).
+/**
+ * @brief Top-level Tesla BLE command dispatcher.
+ *
+ * Routes the sub-command string (everything after the "tesla:" prefix) to the appropriate
+ * handler: key management, VIN storage, wake, charge control, or climate control.
+ *
+ * @param board Platform adapter satisfying the Board concept (transport, keys, logging, etc.).
+ * @param sub Sub-command string with the "tesla:" prefix already stripped by the caller.
+ */
 template <typename Board> static void executeTeslaCommand(Board &board, const char *sub)
 {
-	// ── tesla:key:gen ─────────────────────────────────────────────────────────
+	// --- tesla:key:gen ---
 	if (strcmp(sub, "key:gen") == 0)
 	{
 		KeyPair kp;
@@ -120,7 +125,7 @@ template <typename Board> static void executeTeslaCommand(Board &board, const ch
 		return;
 	}
 
-	// ── tesla:key:show ────────────────────────────────────────────────────────
+	// --- tesla:key:show ---
 	if (strcmp(sub, "key:show") == 0)
 	{
 		KeyPair kp;
@@ -140,10 +145,10 @@ template <typename Board> static void executeTeslaCommand(Board &board, const ch
 		return;
 	}
 
-	// ── tesla:key:role:<role> ─────────────────────────────────────────────────
+	// --- tesla:key:role:<role> ---
 	if (strncmp(sub, "key:role:", 9) == 0)
 	{
-		const char *role = sub + 9;
+		const char *role = sub + 9; // Skip "key:role:" prefix to get the role name
 		if (strcmp(role, "owner") == 0 || strcmp(role, "charging_manager") == 0)
 		{
 			board.saveRole(role);
@@ -158,10 +163,10 @@ template <typename Board> static void executeTeslaCommand(Board &board, const ch
 		return;
 	}
 
-	// ── tesla:vin:<VIN> ───────────────────────────────────────────────────────
+	// --- tesla:vin:<VIN> ---
 	if (strncmp(sub, "vin:", 4) == 0)
 	{
-		const char *vin = sub + 4;
+		const char *vin = sub + 4; // Skip "vin:" prefix to get the VIN string
 		size_t vlen = strlen(vin);
 		if (vlen < 5 || vlen > 17)
 		{
@@ -175,7 +180,7 @@ template <typename Board> static void executeTeslaCommand(Board &board, const ch
 		return;
 	}
 
-	// ── tesla:key:send ────────────────────────────────────────────────────────
+	// --- tesla:key:send ---
 	if (strcmp(sub, "key:send") == 0)
 	{
 		KeyPair kp;
@@ -193,7 +198,7 @@ template <typename Board> static void executeTeslaCommand(Board &board, const ch
 			return;
 
 		uint8_t uuid[16];
-		board.random(uuid, 16);
+		board.random(uuid, 16); // Generate random UUID for the add-key request
 		uint8_t reqBuf[200];
 		size_t reqLen = 0;
 		if (!buildAddKeyRequest(kp.pub_xy, role, KEY_FORM_FACTOR_NFC_CARD, uuid, reqBuf, sizeof(reqBuf), reqLen))
@@ -213,31 +218,31 @@ template <typename Board> static void executeTeslaCommand(Board &board, const ch
 		return;
 	}
 
-	// ── tesla:wake ────────────────────────────────────────────────────────────
+	// --- tesla:wake ---
 	if (strcmp(sub, "wake") == 0)
 	{
 		runAuthCommand(board, buildWakeAction, "Tesla: wake sent");
 		return;
 	}
 
-	// ── tesla:charge:start ────────────────────────────────────────────────────
+	// --- tesla:charge:start ---
 	if (strcmp(sub, "charge:start") == 0)
 	{
 		runAuthCommand(board, buildChargeStartAction, "Tesla: charge start sent");
 		return;
 	}
 
-	// ── tesla:charge:stop ─────────────────────────────────────────────────────
+	// --- tesla:charge:stop ---
 	if (strcmp(sub, "charge:stop") == 0)
 	{
 		runAuthCommand(board, buildChargeStopAction, "Tesla: charge stop sent");
 		return;
 	}
 
-	// ── tesla:charge:amps:<n> ─────────────────────────────────────────────────
+	// --- tesla:charge:amps:<n> ---
 	if (strncmp(sub, "charge:amps:", 12) == 0)
 	{
-		int amps = atoi(sub + 12);
+		int amps = atoi(sub + 12); // Parse amperage value from sub-command suffix
 		if (amps < 1 || amps > 32)
 		{
 			board.err("Tesla: amps must be 1-32");
@@ -251,10 +256,10 @@ template <typename Board> static void executeTeslaCommand(Board &board, const ch
 		return;
 	}
 
-	// ── tesla:charge:limit:<n> ────────────────────────────────────────────────
+	// --- tesla:charge:limit:<n> ---
 	if (strncmp(sub, "charge:limit:", 13) == 0)
 	{
-		int pct = atoi(sub + 13);
+		int pct = atoi(sub + 13); // Parse charge limit percentage from sub-command suffix
 		if (pct < 50 || pct > 100)
 		{
 			board.err("Tesla: limit must be 50-100");
@@ -268,7 +273,7 @@ template <typename Board> static void executeTeslaCommand(Board &board, const ch
 		return;
 	}
 
-	// ── tesla:climate:on ──────────────────────────────────────────────────────
+	// --- tesla:climate:on ---
 	if (strcmp(sub, "climate:on") == 0)
 	{
 		runAuthCommand(
@@ -277,7 +282,7 @@ template <typename Board> static void executeTeslaCommand(Board &board, const ch
 		return;
 	}
 
-	// ── tesla:climate:off ─────────────────────────────────────────────────────
+	// --- tesla:climate:off ---
 	if (strcmp(sub, "climate:off") == 0)
 	{
 		runAuthCommand(

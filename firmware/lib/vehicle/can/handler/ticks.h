@@ -1,7 +1,11 @@
 #pragma once
-// ── Periodic Tick Functions ──────────────────────────────────────────────────
-// Non-blocking timed senders driven from the main loop. Each respects the
-// AP gate, OTA tx-pause, and 0x39B/0x118 freshness rules via apGateOpen().
+
+/**
+ * @file firmware/lib/vehicle/can/handler/ticks.h
+ * @brief Non-blocking periodic tick functions for summon, precondition, burst, and drive mode
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include "core/forward.h"
 #include "core/can/bus.h"
@@ -11,6 +15,14 @@
 #include "vehicle/can/feature/summon.h"
 #include "vehicle/can/feature/drive_mode.h"
 
+/**
+ * @brief Transmit summon control frames at 20 ms intervals until the burst completes
+ *
+ * Respects the AP gate, OTA tx-pause flag, and control frame freshness.
+ * Clears the remaining count if transmission is paused mid-burst.
+ *
+ * @param s Reference to the global firmware state
+ */
 void summonTick(State &s)
 {
 	if (s.summonRemaining == 0 || !s.hasCtrl || !s.summonInject)
@@ -40,6 +52,14 @@ void summonTick(State &s)
 		sendLog(F("Summon burst complete"));
 }
 
+/**
+ * @brief Transmit cabin precondition keep-alive frames at 500 ms intervals
+ *
+ * Sends a fixed precondition request on the vehicle bus while the feature
+ * is enabled and the AP gate is open.
+ *
+ * @param s Reference to the global firmware state
+ */
 void preconditionTick(State &s)
 {
 	if (!s.preconditionEnabled)
@@ -56,11 +76,18 @@ void preconditionTick(State &s)
 	f.id = CAN_ID_PRECONDITION;
 	f.dlc = 8;
 	memset(f.data, 0, 8);
-	f.data[0] = 0x05;
+	f.data[0] = 0x05; // Precondition request command byte
 	driverSend(f, BUS_VEHICLE);
 }
 
-// Burst Tick (non-blocking one-shot sends)
+/**
+ * @brief Transmit queued burst frames at the configured delay interval
+ *
+ * Sends one frame per tick until the burst count reaches zero.
+ * Aborts immediately if transmission is paused.
+ *
+ * @param s Reference to the global firmware state
+ */
 void burstTick(State &s)
 {
 	if (s.burstRemaining == 0)
@@ -80,6 +107,10 @@ void burstTick(State &s)
 	s.burstRemaining--;
 }
 
+/**
+ * @brief Wrapper that invokes the drive mode tick with the current timestamp
+ * @param s Reference to the global firmware state
+ */
 void driveModeTick_dispatch(State &s)
 {
 	driveModeTick(s, millis());

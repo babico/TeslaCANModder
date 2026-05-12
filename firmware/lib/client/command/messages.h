@@ -1,9 +1,19 @@
 #pragma once
+
+/**
+ * @file firmware/lib/client/command/messages.h
+ * @brief JSON message builders for status, boot, and telemetry responses
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "io/serial/usb/esp32/output.h"
 
-// kBusName[] lives in core/can/bus.h — one canonical compile-time table indexed
-// by the BUS_* ids (BUS_CHASSIS=0, BUS_VEHICLE=1, BUS_BODY=2).
-
+/**
+ * @brief Determine the human-readable reason the AP injection gate is in its current state.
+ * @param s Current device state
+ * @return Static string describing the gate reason ("disabled", "ap", "park", "summon", or "waiting")
+ */
 inline const char *apGateReason(const State &s)
 {
 	if (!s.apInjectionGateEnabled)
@@ -17,7 +27,10 @@ inline const char *apGateReason(const State &s)
 	return "waiting";
 }
 
-// ── JSON Messages ────────────────────────────────────────────────────────────
+/**
+ * @brief Emit the full boot JSON message with hardware, connectivity, state, and feature info.
+ * @param s Current device state (may be mutated for stream counters)
+ */
 void sendBoot(State &s)
 {
 	Features f = getFeatures(s.variant);
@@ -88,11 +101,10 @@ void sendBoot(State &s)
 				{
 					o.boolean("fsd", s.fsdEnabled)
 						.boolean("fsdForce", s.fsdForceEnabled)
-						.boolean("nag", s.nagSuppress)
 						.boolean("isaChime", s.isaChimeSuppress)
 						.boolean("summonInject", s.summonInject)
-						.boolean("nagKiller", s.nagKillerEnabled)
-						.str("nagKillerMode", nagKillerModeName(s.nagKillerMode))
+						.boolean("nagOrgBypass", s.nagOrganicDriverBypass)
+						.str("nagMode", nagModeName(s.nagMode))
 						.num("dasHandsOn", s.dasHandsOnState)
 						.object("profile", [&](JsonLineBuilder::JsonObjectBuilder &p)
 								{ p.num("value", s.speedProfile).boolean("pinned", s.profileOverride); })
@@ -268,6 +280,11 @@ void sendBoot(State &s)
 		.end();
 }
 
+/**
+ * @brief Emit the full status JSON message with all device state sections.
+ * @param s Current device state
+ * @param now Uptime in milliseconds since boot
+ */
 void sendStatus(State &s, unsigned long now)
 {
 	Features f = getFeatures(s.variant);
@@ -331,11 +348,10 @@ void sendStatus(State &s, unsigned long now)
 				{
 					o.boolean("fsd", s.fsdEnabled)
 						.boolean("fsdForce", s.fsdForceEnabled)
-						.boolean("nag", s.nagSuppress)
 						.boolean("isaChime", s.isaChimeSuppress)
 						.boolean("summonInject", s.summonInject)
-						.boolean("nagKiller", s.nagKillerEnabled)
-						.str("nagKillerMode", nagKillerModeName(s.nagKillerMode))
+						.boolean("nagOrgBypass", s.nagOrganicDriverBypass)
+						.str("nagMode", nagModeName(s.nagMode))
 						.num("dasHandsOn", s.dasHandsOnState)
 						.object("profile", [&](JsonLineBuilder::JsonObjectBuilder &p)
 								{ p.num("value", s.speedProfile).boolean("pinned", s.profileOverride); })
@@ -511,6 +527,11 @@ void sendStatus(State &s, unsigned long now)
 		.end();
 }
 
+/**
+ * @brief Emit a lightweight metadata-only status message.
+ * @param s Current device state
+ * @param now Uptime in milliseconds since boot
+ */
 void sendStatusMeta(State &s, unsigned long now)
 {
 	JsonLineBuilder line = jsonLine();
@@ -531,6 +552,10 @@ void sendStatusMeta(State &s, unsigned long now)
 	line.str("ready", "runtime-ready").num("up", now).end();
 }
 
+/**
+ * @brief Emit a status message containing only the variant-resolved feature flags.
+ * @param s Current device state
+ */
 void sendStatusFeatures(State &s)
 {
 	Features f = getFeatures(s.variant);
@@ -550,6 +575,10 @@ void sendStatusFeatures(State &s)
 		.end();
 }
 
+/**
+ * @brief Emit a status message with CAN clock and per-bus health information.
+ * @param s Current device state
+ */
 void sendStatusCan(State &s)
 {
 	extern bool mcpAvailable[];
@@ -569,6 +598,10 @@ void sendStatusCan(State &s)
 		.end();
 }
 
+/**
+ * @brief Emit a status message with core state fields (FSD, nag, profile, offset, gates).
+ * @param s Current device state
+ */
 void sendStatusState(State &s)
 {
 	jsonLine()
@@ -578,8 +611,7 @@ void sendStatusState(State &s)
 				{
 					o.boolean("fsd", s.fsdEnabled)
 						.boolean("fsdForce", s.fsdForceEnabled)
-						.boolean("nag", s.nagSuppress)
-						.boolean("nagKiller", s.nagKillerEnabled)
+						.str("nagMode", nagModeName(s.nagMode))
 						.object("profile", [&](JsonLineBuilder::JsonObjectBuilder &p)
 								{ p.num("value", s.speedProfile).boolean("pinned", s.profileOverride); })
 						.object("offset", [&](JsonLineBuilder::JsonObjectBuilder &off)
@@ -595,6 +627,11 @@ void sendStatusState(State &s)
 		.end();
 }
 
+/**
+ * @brief Emit a compact status message suitable for bandwidth-constrained transports.
+ * @param s Current device state
+ * @param now Uptime in milliseconds since boot
+ */
 void sendStatusCompact(State &s, unsigned long now)
 {
 	extern bool mcpAvailable[];
@@ -640,7 +677,7 @@ void sendStatusCompact(State &s, unsigned long now)
 				{
 					o.boolean("fsd", s.fsdEnabled)
 						.boolean("fsdForce", s.fsdForceEnabled)
-						.boolean("nag", s.nagSuppress)
+						.str("nagMode", nagModeName(s.nagMode))
 						.num("profile", s.speedProfile)
 						.num("offset", s.speedOffset)
 						.boolean("precondition", s.preconditionEnabled)

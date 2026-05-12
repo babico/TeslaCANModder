@@ -1,31 +1,45 @@
 #pragma once
+
+/**
+ * @file firmware/lib/core/can/health.h
+ * @brief MCP2515 CAN bus health checking and diagnostic reporting
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include <stdint.h>
 #include "core/can/bus.h"
 
-// ── MCP2515 CAN Bus Health Check ────────────────────────────────────────────
-// Validates that all configured MCP2515 modules are physically connected
-// and responding on SPI. Uses existing mcpAvailable[] from driver layer.
-
+/**
+ * @brief Health status for a single CAN bus slot
+ */
 struct BusHealth
 {
 	bool configured;   // Bus is enabled in build config
 	bool detected;	   // MCP2515 physically detected on SPI
 	bool receiving;	   // At least one frame received since boot
-	uint32_t lastRxMs; // millis() of last received frame on this bus
+	uint32_t lastRxMs; // millis() timestamp of last received frame
 };
 
+/**
+ * @brief Aggregated health report across all CAN bus slots
+ */
 struct CanHealthReport
 {
 	BusHealth bus[BUS_MAX];
-	uint8_t configuredCount; // How many buses are enabled
-	uint8_t detectedCount;	 // How many MCP2515 chips responded
-	uint8_t receivingCount;	 // How many buses have received frames
-	bool allDetected;		 // All configured buses have MCP2515 detected
-	bool anyDetected;		 // At least one MCP2515 detected
+	uint8_t configuredCount; // Number of buses enabled in build config
+	uint8_t detectedCount;	 // Number of MCP2515 chips responding on SPI
+	uint8_t receivingCount;	 // Number of buses that have received frames
+	bool allDetected;		 // True when every configured bus has a detected MCP2515
+	bool anyDetected;		 // True when at least one MCP2515 is detected
 };
 
-// Build health report from driver state
-// Requires: extern bool mcpAvailable[] from driver layer
+/**
+ * @brief Build a health report by probing driver-layer MCP2515 state
+ * @param mcpDetected Array of per-bus detection flags from the driver layer
+ * @param chassisOnline Whether the Chassis bus (index 0) is actively receiving frames
+ * @return Populated CanHealthReport summarizing all bus states
+ */
 inline CanHealthReport checkCanHealth(const bool mcpDetected[], bool chassisOnline)
 {
 	CanHealthReport r = {};
@@ -45,7 +59,7 @@ inline CanHealthReport checkCanHealth(const bool mcpDetected[], bool chassisOnli
 		}
 	}
 
-	// Bus 0 (Chassis) receiving status comes from chassisOnline flag
+	// Bus 0 (Chassis) receiving status is derived from the chassisOnline flag
 	if (r.bus[0].configured && r.bus[0].detected && chassisOnline)
 	{
 		r.bus[0].receiving = true;
@@ -57,7 +71,11 @@ inline CanHealthReport checkCanHealth(const bool mcpDetected[], bool chassisOnli
 	return r;
 }
 
-// Diagnostic summary names
+/**
+ * @brief Get a human-readable status name for a single bus
+ * @param b BusHealth struct to evaluate
+ * @return Status string: "disabled", "NOT_DETECTED", "online", or "idle"
+ */
 inline const char *busHealthName(const BusHealth &b)
 {
 	if (!b.configured)
@@ -69,6 +87,11 @@ inline const char *busHealthName(const BusHealth &b)
 	return "idle";
 }
 
+/**
+ * @brief Get the display name for a bus by its slot index
+ * @param i Bus index (0-2)
+ * @return Bus name string: "Chassis", "Vehicle", "Body", or "?" for invalid
+ */
 inline const char *busIndexName(uint8_t i)
 {
 	switch (i)

@@ -1,18 +1,32 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/seatbelt.h
+ * @brief Rear seatbelt buckle emulation via periodic CAN frame injection
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Rear Seatbelt Buckle Emulation ──────────────────────────────────────────
-// Suppress rear seatbelt warnings by injecting a CAN frame that signals
-// all rear seatbelts are buckled.
-// CAN ID 0x3F3 = VCRIGHT_seatbeltStatus
-// Byte[0] bits[2:0] = rear-left buckled | rear-center buckled | rear-right buckled
-
+/**
+ * @brief Enable or disable rear seatbelt buckle emulation
+ * @param s Device state reference
+ * @param enable True to activate emulation, false to deactivate
+ */
 inline void controlSeatbeltEmulation(State &s, bool enable)
 {
 	s.seatbeltEmulation = enable;
 }
 
+/**
+ * @brief Periodic tick that injects a seatbelt-status frame when emulation is active
+ * @param s Device state reference
+ *
+ * @note Transmits at 500 ms intervals on the vehicle bus. The injected frame
+ *       signals all three rear seatbelts as buckled, suppressing dashboard warnings.
+ */
 inline void seatbeltEmulationTick(State &s)
 {
 	if (!s.seatbeltEmulation)
@@ -29,10 +43,17 @@ inline void seatbeltEmulationTick(State &s)
 	f.id = CAN_ID_SEATBELT_STATUS;
 	f.dlc = 8;
 	memset(f.data, 0, 8);
-	f.data[0] = 0x07; // all 3 rear seatbelts "buckled"
+	// Bits [2:0] = rear-left | rear-center | rear-right buckled
+	f.data[0] = 0x07;
 	driverSend(f, BUS_VEHICLE);
 }
 
+/**
+ * @brief Execute a seatbelt emulation command string
+ * @param cmd Null-terminated command (e.g. "seatbelt:on" or "seatbelt:off")
+ * @param s Device state reference
+ * @return True if the command was recognized and handled
+ */
 static bool executeSeatbeltCmd(const char *cmd, State &s)
 {
 	if (strcmp(cmd, "seatbelt:on") == 0)

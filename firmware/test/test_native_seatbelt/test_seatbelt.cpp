@@ -1,5 +1,8 @@
-// ── Seatbelt Emulation Tests ────────────────────────────────────────────────
-// Tests seatbelt emulation enable/disable and tick logic.
+/** @file firmware/test/test_native_seatbelt/test_seatbelt.cpp
+ *  @brief Unit tests for seatbelt emulation
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -17,7 +20,6 @@ class __FlashStringHelper;
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
@@ -55,7 +57,6 @@ void setUp()
 }
 void tearDown() {}
 
-// ── controlSeatbeltEmulation ────────────────────────────────────────────────
 
 void test_enable_sets_flag()
 {
@@ -72,7 +73,6 @@ void test_disable_clears_flag()
 	TEST_ASSERT_FALSE(s.seatbeltEmulation);
 }
 
-// ── seatbeltEmulationTick ───────────────────────────────────────────────────
 
 void test_tick_does_nothing_when_disabled()
 {
@@ -113,12 +113,11 @@ void test_tick_respects_interval()
 	s.seatbeltEmulation = true;
 	s.txPaused = false;
 	s.seatbeltLastMs = 500;
-	fake_millis_val = 800; // only 300ms since last
+	fake_millis_val = 800;
 	seatbeltEmulationTick(s);
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── executeSeatbeltCmd ─────────────────────────────────────────────────────────
 
 void test_cmd_on()
 {
@@ -141,7 +140,6 @@ void test_cmd_unknown()
 	TEST_ASSERT_FALSE(executeSeatbeltCmd("seatbelt:toggle", s));
 }
 
-// ── main ────────────────────────────────────────────────────────────────────
 
 int main(int, char **)
 {
@@ -157,3 +155,4 @@ int main(int, char **)
 	RUN_TEST(test_cmd_unknown);
 	return UNITY_END();
 }
+

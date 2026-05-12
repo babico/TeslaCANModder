@@ -1,6 +1,8 @@
-// ── HW4 Handler Tests ────────────────────────────────────────────────────────
-// Tests handleHW4() CAN frame processing: FSD activation, ISA chime, nag, profile.
-// Stubs driverSend/sendLog to capture output without hardware.
+/** @file firmware/test/test_native_hw4/test_hw4.cpp
+ *  @brief Unit tests for HW4 variant frame handler
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -20,10 +22,8 @@ class __FlashStringHelper;
 #include "feature/profile.h"
 #include "feature/isa_chime.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 #include "support/stubs.h"
 
-// Include handler (uses our stubs)
 #include "handler/variant/hw4.h"
 
 #include "support/helpers.h"
@@ -34,7 +34,7 @@ static State makeState()
 	s.variant = HW4;
 	s.speedProfile = 1;
 	s.fsdEnabled = true;
-	s.nagSuppress = true;
+	s.nagMode = NAG_MODE_BIT19;
 	s.isaChimeSuppress = false;
 	return s;
 }
@@ -46,7 +46,6 @@ void setUp()
 }
 void tearDown() {}
 
-// ── ISA Speed Chime ──────────────────────────────────────────────────────────
 
 void test_hw4_isa_suppress_disabled_ignores_921()
 {
@@ -98,7 +97,6 @@ void test_hw4_isa_suppress_checksum()
 	TEST_ASSERT_EQUAL_HEX8(0xD1, stub_sends[0].f.data[7]);
 }
 
-// ── Follow Distance → Profile ────────────────────────────────────────────────
 
 void test_hw4_follow_distance_1_sets_profile_3()
 {
@@ -157,7 +155,6 @@ void test_hw4_follow_dist_pinned_unchanged()
 	TEST_ASSERT_EQUAL_INT(3, s.speedProfile);
 }
 
-// ── FSD Mux 0 ────────────────────────────────────────────────────────────────
 
 void test_hw4_fsd_mux0_sets_bits_46_and_60()
 {
@@ -220,7 +217,6 @@ void test_hw4_fsd_mux0_allows_when_ap_gate_open_by_ap_active()
 	TEST_ASSERT_EQUAL(1, stub_send_count);
 }
 
-// ── Nag Mux 1 ────────────────────────────────────────────────────────────────
 
 void test_hw4_nag_mux1_clears_bit19_sets_bit47()
 {
@@ -237,14 +233,13 @@ void test_hw4_nag_mux1_clears_bit19_sets_bit47()
 void test_hw4_nag_mux1_no_send_when_disabled()
 {
 	State s = makeState();
-	s.nagSuppress = false;
+	s.nagMode = NAG_MODE_OFF;
 	Frame f = makeFrame(CAN_ID_FSD_MUX);
 	f.data[0] = 0x01;
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── Speed Profile Mux 2 ─────────────────────────────────────────────────────
 
 void test_hw4_mux2_injects_speed_profile()
 {
@@ -276,7 +271,7 @@ void test_hw4_mux2_applies_hw4_offset_override_when_enabled()
 	s.speedOffset = 17;
 	Frame f = makeFrame(CAN_ID_FSD_MUX);
 	f.data[0] = 0x02;
-	f.data[1] = 0xC0; // preserve upper 2 bits
+	f.data[1] = 0xC0;
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
 	TEST_ASSERT_EQUAL_HEX8(0xD1, stub_sends[0].f.data[1]);
@@ -311,7 +306,6 @@ void test_hw4_sends_on_bus_0()
 	TEST_ASSERT_EQUAL(BUS_CHASSIS, stub_sends[0].bus);
 }
 
-// ── Enhanced Autopilot (EAP) bit 46 on mux=1 ─────────────────────────────────
 
 void test_hw4_eap_sets_bit46_on_mux1()
 {
@@ -321,7 +315,6 @@ void test_hw4_eap_sets_bit46_on_mux1()
 	f.data[0] = 0x01;
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 46 = byte 5, bit 6
 	TEST_ASSERT_EQUAL_HEX8(0x40, stub_sends[0].f.data[5] & 0x40);
 }
 
@@ -339,20 +332,17 @@ void test_hw4_eap_off_does_not_set_bit46_on_mux1()
 
 void test_hw4_eap_does_not_affect_mux0()
 {
-	// EAP is mux=1 only; with fsdEnabled=false the mux=0 path is not taken
-	// so no frame should be sent when only EAP is enabled
 	State s = makeState();
 	s.fsdEnabled = false;
-	s.nagSuppress = false;
+	s.nagMode = NAG_MODE_OFF;
 	s.enhancedAutopilot = true;
 	Frame f = makeFrame(CAN_ID_FSD_MUX);
-	f.data[0] = 0x00; // mux 0
-	f.data[4] = 0x40; // UI selected bit
+	f.data[0] = 0x00;
+	f.data[4] = 0x40;
 	handleHW4(f, s);
-	TEST_ASSERT_EQUAL_INT(0, stub_send_count); // no send — EAP only applies on mux=1
+	TEST_ASSERT_EQUAL_INT(0, stub_send_count);
 }
 
-// ── Emergency Vehicle Detection (EVD) bit 59 on mux=0 ────────────────────────
 
 void test_hw4_evd_sets_bit59_on_mux0()
 {
@@ -360,10 +350,9 @@ void test_hw4_evd_sets_bit59_on_mux0()
 	s.evdEnabled = true;
 	Frame f = makeFrame(CAN_ID_FSD_MUX);
 	f.data[0] = 0x00;
-	f.data[4] = 0x40; // UI selected
+	f.data[4] = 0x40;
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 59 = byte 7, bit 3
 	TEST_ASSERT_EQUAL_HEX8(0x08, stub_sends[0].f.data[7] & 0x08);
 }
 
@@ -379,7 +368,6 @@ void test_hw4_evd_off_does_not_set_bit59()
 	TEST_ASSERT_EQUAL_HEX8(0x00, stub_sends[0].f.data[7] & 0x08);
 }
 
-// ── P2-01 Assist Nav Enable (bits 13, 48, 49 on 0x3F8) ───────────────────────
 
 void test_hw4_assist_nav_sets_bits_13_48_49()
 {
@@ -388,11 +376,8 @@ void test_hw4_assist_nav_sets_bits_13_48_49()
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 13 = byte 1 bit 5
 	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[1] & 0x20);
-	// bit 48 = byte 6 bit 0
 	TEST_ASSERT_EQUAL_HEX8(0x01, stub_sends[0].f.data[6] & 0x01);
-	// bit 49 = byte 6 bit 1
 	TEST_ASSERT_EQUAL_HEX8(0x02, stub_sends[0].f.data[6] & 0x02);
 }
 
@@ -418,7 +403,6 @@ void test_hw4_assist_nav_blocked_when_ap_gate_closed()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── P2-02 Assist Hands-Off (bit 14 on 0x3F8) ─────────────────────────────────
 
 void test_hw4_assist_hands_off_sets_bit14()
 {
@@ -427,7 +411,6 @@ void test_hw4_assist_hands_off_sets_bit14()
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 14 = byte 1 bit 6
 	TEST_ASSERT_EQUAL_HEX8(0x40, stub_sends[0].f.data[1] & 0x40);
 }
 
@@ -441,7 +424,6 @@ void test_hw4_assist_hands_off_disabled_no_bit14()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── P2-03 Assist Dev Mode (bit 5 on 0x3F8) ───────────────────────────────────
 
 void test_hw4_assist_dev_mode_sets_bit5()
 {
@@ -450,7 +432,6 @@ void test_hw4_assist_dev_mode_sets_bit5()
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 5 = byte 0 bit 5
 	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[0] & 0x20);
 }
 
@@ -464,17 +445,15 @@ void test_hw4_assist_dev_mode_disabled_no_bit5()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── P2-04 Lane Graph (bit 45 on 0x3FD mux1) ─────────────────────────────────
 
 void test_hw4_lane_graph_sets_bit45_on_mux1()
 {
 	State s = makeState();
 	s.laneGraphEnable = true;
 	Frame f = makeFrame(CAN_ID_FSD_MUX);
-	f.data[0] = 0x01; // mux 1
+	f.data[0] = 0x01;
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 45 = byte 5 bit 5
 	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[5] & 0x20);
 }
 
@@ -490,17 +469,15 @@ void test_hw4_lane_graph_disabled_no_bit45()
 	TEST_ASSERT_EQUAL_HEX8(0x00, stub_sends[0].f.data[5] & 0x20);
 }
 
-// ── P2-05 Assist Telemetry Off (bit 43 cleared on 0x3F8) ─────────────────────
 
 void test_hw4_assist_telemetry_off_clears_bit43()
 {
 	State s = makeState();
 	s.assistTelemetryOff = true;
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-	f.data[5] = 0xFF; // all bits set
+	f.data[5] = 0xFF;
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 43 = byte 5 bit 3
 	TEST_ASSERT_EQUAL_HEX8(0x00, stub_sends[0].f.data[5] & 0x08);
 }
 
@@ -509,12 +486,11 @@ void test_hw4_assist_telemetry_off_disabled_preserves_bit43()
 	State s = makeState();
 	s.assistTelemetryOff = false;
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
-	f.data[5] = 0x08; // bit 43 set
+	f.data[5] = 0x08;
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── Combined: multiple assist flags together ──────────────────────────────────
 
 void test_hw4_assist_nav_and_hands_off_combined()
 {
@@ -524,9 +500,7 @@ void test_hw4_assist_nav_and_hands_off_combined()
 	Frame f = makeFrame(CAN_ID_FOLLOW_DIST);
 	handleHW4(f, s);
 	TEST_ASSERT_EQUAL(1, stub_send_count);
-	// bit 13 = byte 1 bit 5
 	TEST_ASSERT_EQUAL_HEX8(0x20, stub_sends[0].f.data[1] & 0x20);
-	// bit 14 = byte 1 bit 6
 	TEST_ASSERT_EQUAL_HEX8(0x40, stub_sends[0].f.data[1] & 0x40);
 }
 
@@ -571,29 +545,24 @@ int main()
 	RUN_TEST(test_hw4_evd_sets_bit59_on_mux0);
 	RUN_TEST(test_hw4_evd_off_does_not_set_bit59);
 
-	// P2-01: Assist Nav Enable
 	RUN_TEST(test_hw4_assist_nav_sets_bits_13_48_49);
 	RUN_TEST(test_hw4_assist_nav_off_does_not_send);
 	RUN_TEST(test_hw4_assist_nav_blocked_when_ap_gate_closed);
 
-	// P2-02: Assist Hands-Off
 	RUN_TEST(test_hw4_assist_hands_off_sets_bit14);
 	RUN_TEST(test_hw4_assist_hands_off_disabled_no_bit14);
 
-	// P2-03: Assist Dev Mode
 	RUN_TEST(test_hw4_assist_dev_mode_sets_bit5);
 	RUN_TEST(test_hw4_assist_dev_mode_disabled_no_bit5);
 
-	// P2-04: Lane Graph
 	RUN_TEST(test_hw4_lane_graph_sets_bit45_on_mux1);
 	RUN_TEST(test_hw4_lane_graph_disabled_no_bit45);
 
-	// P2-05: Assist Telemetry Off
 	RUN_TEST(test_hw4_assist_telemetry_off_clears_bit43);
 	RUN_TEST(test_hw4_assist_telemetry_off_disabled_preserves_bit43);
 
-	// P2-01+02 combined
 	RUN_TEST(test_hw4_assist_nav_and_hands_off_combined);
 
 	return UNITY_END();
 }
+

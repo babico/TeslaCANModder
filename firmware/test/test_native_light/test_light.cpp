@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_light/test_light.cpp
+ *  @brief Unit tests for light control commands
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -92,3 +98,4 @@ int main(int, char **)
 	RUN_TEST(test_light_unknown);
 	return UNITY_END();
 }
+

@@ -1,4 +1,12 @@
 #pragma once
+
+/**
+ * @file firmware/lib/client/api/routes.h
+ * @brief REST API route handlers, CORS helpers, and JSON state builder for the WiFi server.
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "client/common/api_fwd.h"
 #include "io/wifi/esp32/cmd.h"
 #include "auth.h"
@@ -8,7 +16,16 @@
 #include "client/gamepad/gamepad.h"
 #endif
 
-// ── JSON State Builder ──────────────────────────────────────────────────────
+/**
+ * @brief Build a comprehensive JSON representation of the current application state.
+ *
+ * Serializes vehicle status, feature flags, hardware info, CAN recorder stats,
+ * and optional BLE/gamepad subsystem snapshots into a single JSON string suitable
+ * for the GET /api/status response.
+ *
+ * @param s Global application state to serialize.
+ * @return Serialized JSON string containing the full state snapshot.
+ */
 static String buildStateJson(State &s)
 {
 	JsonDocument doc;
@@ -16,7 +33,9 @@ static String buildStateJson(State &s)
 
 	doc["variant"] = variantName(s.variant);
 	doc["fsd"] = s.fsdEnabled;
-	doc["nag"] = s.nagSuppress;
+	doc["nagMode"] = nagModeName(s.nagMode);
+	doc["nagOrgBypass"] = s.nagOrganicDriverBypass;
+	doc["dasHandsOn"] = s.dasHandsOnState;
 	doc["profile"] = s.speedProfile;
 	doc["profilePin"] = s.profileOverride;
 	doc["offset"] = s.speedOffset;
@@ -61,10 +80,10 @@ static String buildStateJson(State &s)
 	doc["anyDoorOpen"] = s.anyDoorOpen;
 	doc["frunkOpen"] = s.frunkOpen;
 	doc["trunkOpen"] = s.trunkOpen;
-	doc["cruiseSetSpeed"] = (int)(s.cruiseSetSpeedKph * 10);
-	doc["accSpeedLimit"] = (int)(s.accSpeedLimitKph * 10);
-	doc["mapSpeedLimit"] = (int)(s.mapSpeedLimitKph * 10);
-	doc["maxSpeed"] = (int)(s.maxSpeedKph * 10);
+	doc["cruiseSetSpeed"] = (int)(s.cruiseSetSpeedKph * 10); // Fixed-point: kph * 10
+	doc["accSpeedLimit"] = (int)(s.accSpeedLimitKph * 10);   // Fixed-point: kph * 10
+	doc["mapSpeedLimit"] = (int)(s.mapSpeedLimitKph * 10);   // Fixed-point: kph * 10
+	doc["maxSpeed"] = (int)(s.maxSpeedKph * 10);             // Fixed-point: kph * 10
 	doc["dasDriveEnabled"] = dasDriveIsEnabled();
 	doc["dasSpeedLimitKph"] = (int)dasSpeedLimitKph;
 	doc["dasSpeedCapKph"] = (int)dasSpeedCapKph;
@@ -73,7 +92,7 @@ static String buildStateJson(State &s)
 	if (s.hasTpms)
 	{
 		JsonObject tpms = doc["tpms"].to<JsonObject>();
-		tpms["fl"] = (int)(s.tpmsPressure[0] * 100);
+		tpms["fl"] = (int)(s.tpmsPressure[0] * 100); // Pressure in centi-bar
 		tpms["fr"] = (int)(s.tpmsPressure[1] * 100);
 		tpms["rl"] = (int)(s.tpmsPressure[2] * 100);
 		tpms["rr"] = (int)(s.tpmsPressure[3] * 100);
@@ -86,18 +105,18 @@ static String buildStateJson(State &s)
 	if (s.hasPowertrain)
 	{
 		JsonObject pt = doc["powertrain"].to<JsonObject>();
-		pt["speed"] = (int)(s.vehicleSpeed * 100);
+		pt["speed"] = (int)(s.vehicleSpeed * 100); // Fixed-point: speed * 100
 		pt["gear"] = s.gearState;
 		pt["pedal"] = s.accelPedal;
 		pt["brake"] = s.brakePedalState;
-		pt["steer"] = (int)(s.steeringAngle * 10);
+		pt["steer"] = (int)(s.steeringAngle * 10); // Fixed-point: degrees * 10
 		pt["rpmR"] = s.rearMotorRpm;
 		pt["rpmF"] = s.frontMotorRpm;
 	}
 	if (s.hasWheelSpeeds)
 	{
 		JsonObject ws = doc["wheelSpeeds"].to<JsonObject>();
-		ws["fl"] = (int)(s.wheelSpeedFL * 100);
+		ws["fl"] = (int)(s.wheelSpeedFL * 100); // Fixed-point: kph * 100
 		ws["fr"] = (int)(s.wheelSpeedFR * 100);
 		ws["rl"] = (int)(s.wheelSpeedRL * 100);
 		ws["rr"] = (int)(s.wheelSpeedRR * 100);
@@ -135,8 +154,7 @@ static String buildStateJson(State &s)
 	hw["wifi"] = true;
 	hw["ip"] = wifiCurrentIP();
 
-	// Aggregated subsystem snapshots — replaces the old /api/ble/status,
-	// /api/recorder/status and /api/gamepad/status endpoints.
+	// Aggregated subsystem snapshots — replaces legacy per-subsystem status endpoints
 	JsonObject rec = doc["recorder"].to<JsonObject>();
 	rec["enabled"] = canRecorderEnabled();
 	rec["count"] = canRecorderCount();
@@ -183,12 +201,22 @@ static String buildStateJson(State &s)
 	return output;
 }
 
-// ── REST API Route Handlers ─────────────────────────────────────────────────
-
-// Forward declare command executor (defined in serial/board.h)
+/**
+ * @brief Forward declaration for the serial command executor.
+ *
+ * Defined in serial/board.h; executes a wire command against the application state.
+ *
+ * @param cmd Null-terminated command string (e.g. "fsd:on", "recorder:clear").
+ * @param s Global application state.
+ * @param now Current timestamp in milliseconds (from millis()).
+ */
 void executeCommand(const char *cmd, State &s, unsigned long now);
 
-// ── CORS Handling ───────────────────────────────────────────────────────────
+/**
+ * @brief Send standard CORS headers on the current HTTP response.
+ *
+ * Allows all origins, GET/POST/OPTIONS methods, and Content-Type + X-API-Key headers.
+ */
 static void handleCors()
 {
 	server.sendHeader("Access-Control-Allow-Origin", "*");
@@ -196,23 +224,37 @@ static void handleCors()
 	server.sendHeader("Access-Control-Allow-Headers", "Content-Type, X-API-Key");
 }
 
+/**
+ * @brief Send a JSON response with CORS headers.
+ * @param code HTTP status code.
+ * @param json Serialized JSON response body.
+ */
 static void sendJsonResponse(int code, const String &json)
 {
 	handleCors();
 	server.send(code, "application/json", json);
 }
 
+/**
+ * @brief Handle CORS preflight OPTIONS requests with a 204 No Content response.
+ */
 static void handleOptions()
 {
 	handleCors();
 	server.send(204);
 }
 
+/**
+ * @brief Serve the embedded HTML dashboard on the root path.
+ */
 static void handleRoot()
 {
 	server.send_P(200, "text/html", DASH_HTML);
 }
 
+/**
+ * @brief Handle GET /api/status — returns the full application state as JSON.
+ */
 static void handleGetStatus()
 {
 	if (!restState)
@@ -223,6 +265,13 @@ static void handleGetStatus()
 	sendJsonResponse(200, buildStateJson(*restState));
 }
 
+/**
+ * @brief Handle POST /api/command — parse and execute a wire command via REST.
+ *
+ * Expects a JSON body with a "cmd" field containing the command string.
+ * Validates auth, parses JSON, checks command characters, attempts WiFi-specific
+ * handling first, then falls back to the general command executor.
+ */
 static void handlePostCommand()
 {
 	if (!restState)
@@ -255,7 +304,7 @@ static void handlePostCommand()
 		return;
 	}
 
-	// Validate that the extracted cmd method only contains allowed characters
+	// Whitelist allowed characters to prevent injection via command strings
 	for (size_t i = 0; i < strlen(cmd); i++)
 	{
 		char c = cmd[i];
@@ -268,23 +317,32 @@ static void handlePostCommand()
 		}
 	}
 
+	// Try WiFi-specific command handler first (e.g. wifi:config, wifi:status)
 	if (executeWifiCmd(cmd, doc))
 		return;
 
 	executeCommand(cmd, *restState, millis());
 
-	// Return RpcResponse (Ack) — same contract as serial/BLE.
-	// Clients that need updated state should call GET /api/status.
+	// Return RpcResponse (Ack) — same contract as serial/BLE transports.
+	// Clients needing updated state should follow up with GET /api/status.
 	char ackJson[72];
 	snprintf(ackJson, sizeof(ackJson), "{\"t\":\"ack\",\"cmd\":\"%s\"}", cmd);
 	sendJsonResponse(200, String(ackJson));
 }
 
+/**
+ * @brief Handle GET /api/ping — lightweight health check endpoint.
+ */
 static void handleGetPing()
 {
 	sendJsonResponse(200, "{\"t\":\"pong\",\"v\":1}");
 }
 
+/**
+ * @brief Handle GET /api/disable — emergency kill switch for all active injections.
+ *
+ * Requires authentication. Disables FSD injection and clears summon remaining count.
+ */
 static void handleDisable()
 {
 	if (!restState)
@@ -299,6 +357,9 @@ static void handleDisable()
 	sendJsonResponse(200, "{\"ok\":true,\"msg\":\"All injections disabled\"}");
 }
 
+/**
+ * @brief Handle unmatched routes — returns a 404 JSON error with CORS headers.
+ */
 static void handleNotFound()
 {
 	handleCors();

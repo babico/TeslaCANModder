@@ -1,5 +1,8 @@
-// ── Single-Shot TX Tests ────────────────────────────────────────────────────
-// Tests single-shot TX mode enable/disable via command parsing.
+/** @file firmware/test/test_native_single_shot/test_single_shot.cpp
+ *  @brief Unit tests for single-shot CAN frame injection
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -16,7 +19,6 @@ class __FlashStringHelper;
 
 #include "core/types.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
@@ -26,7 +28,6 @@ void sendLog(const __FlashStringHelper *) {}
 void setUp() {}
 void tearDown() {}
 
-// ── Tests ───────────────────────────────────────────────────────────────────
 
 void test_singleshot_on_enables()
 {
@@ -67,3 +68,4 @@ int main()
 	RUN_TEST(test_singleshot_default_off);
 	return UNITY_END();
 }
+

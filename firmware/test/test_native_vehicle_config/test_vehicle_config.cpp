@@ -1,5 +1,8 @@
-// ── Vehicle Config Tests ────────────────────────────────────────────────────
-// Tests CAN 0x398 decode for vehicle model/year identification.
+/** @file firmware/test/test_native_vehicle_config/test_vehicle_config.cpp
+ *  @brief Unit tests for vehicle configuration decoding
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -17,7 +20,6 @@ class __FlashStringHelper;
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
@@ -27,7 +29,6 @@ void sendLog(const __FlashStringHelper *) {}
 void setUp() {}
 void tearDown() {}
 
-// ── Tests ───────────────────────────────────────────────────────────────────
 
 void test_decode_model3()
 {
@@ -35,9 +36,8 @@ void test_decode_model3()
 	Frame f = {};
 	f.id = 0x398;
 	f.dlc = 8;
-	// Platform in byte[1] bits[7:4] → 3 = Model 3
 	f.data[1] = 0x30;
-	f.data[2] = 10; // year offset → 2016 + 10 = 2026
+	f.data[2] = 10;
 	decodeVehicleConfig(f, s);
 	TEST_ASSERT_EQUAL(VEHICLE_MODEL_3, s.vehicleModel);
 	TEST_ASSERT_EQUAL(2026, s.vehicleYear);
@@ -50,8 +50,8 @@ void test_decode_model_y()
 	Frame f = {};
 	f.id = 0x398;
 	f.dlc = 8;
-	f.data[1] = 0x40; // platform 4 = Model Y
-	f.data[2] = 6;	  // year offset → 2016 + 6 = 2022
+	f.data[1] = 0x40;
+	f.data[2] = 6;
 	decodeVehicleConfig(f, s);
 	TEST_ASSERT_EQUAL(VEHICLE_MODEL_Y, s.vehicleModel);
 	TEST_ASSERT_EQUAL(2022, s.vehicleYear);
@@ -63,7 +63,7 @@ void test_decode_model_s()
 	Frame f = {};
 	f.id = 0x398;
 	f.dlc = 8;
-	f.data[1] = 0x10; // platform 1 = Model S
+	f.data[1] = 0x10;
 	f.data[2] = 0;
 	decodeVehicleConfig(f, s);
 	TEST_ASSERT_EQUAL(VEHICLE_MODEL_S, s.vehicleModel);
@@ -75,7 +75,7 @@ void test_decode_model_x()
 	Frame f = {};
 	f.id = 0x398;
 	f.dlc = 8;
-	f.data[1] = 0x20; // platform 2 = Model X
+	f.data[1] = 0x20;
 	f.data[2] = 5;
 	decodeVehicleConfig(f, s);
 	TEST_ASSERT_EQUAL(VEHICLE_MODEL_X, s.vehicleModel);
@@ -87,7 +87,7 @@ void test_decode_cybertruck()
 	Frame f = {};
 	f.id = 0x398;
 	f.dlc = 8;
-	f.data[1] = 0x50; // platform 5 = Cybertruck
+	f.data[1] = 0x50;
 	f.data[2] = 5;
 	decodeVehicleConfig(f, s);
 	TEST_ASSERT_EQUAL(VEHICLE_CYBERTRUCK, s.vehicleModel);
@@ -99,7 +99,7 @@ void test_decode_unknown_platform()
 	Frame f = {};
 	f.id = 0x398;
 	f.dlc = 8;
-	f.data[1] = 0xF0; // unknown platform
+	f.data[1] = 0xF0;
 	decodeVehicleConfig(f, s);
 	TEST_ASSERT_EQUAL(VEHICLE_UNKNOWN, s.vehicleModel);
 	TEST_ASSERT_TRUE(s.hasVehicleConfig);
@@ -132,3 +132,4 @@ int main()
 	RUN_TEST(test_exec_vehicle_cmd);
 	return UNITY_END();
 }
+

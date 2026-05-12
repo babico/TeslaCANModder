@@ -1,12 +1,18 @@
 #pragma once
+
+/**
+ * @file firmware/lib/io/wifi/esp32/cmd.h
+ * @brief WiFi wire command handlers for wifi:status and wifi:config dispatched from the REST API
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "config.h"
 
-// ── WiFi Wire Commands ────────────────────────────────────────────────────────
-//
-// Handles wifi:status and wifi:config dispatched from POST /api/command.
-// Returns true if the command was consumed (response already sent).
-// sendJsonResponse and server are declared in io/wifi/esp32/state.h (same TU).
-
+/**
+ * @brief Build a JSON string describing the current WiFi status.
+ * @return Serialized JSON with mode, SSID, IP, and connection details.
+ */
 static String buildWifiStatusJson()
 {
 	JsonDocument doc;
@@ -35,6 +41,12 @@ static String buildWifiStatusJson()
 	return out;
 }
 
+/**
+ * @brief Execute a WiFi-related command received via the REST API.
+ * @param cmd Command name string (e.g. "wifi:status", "wifi:config").
+ * @param doc Parsed JSON document containing command parameters.
+ * @return True if the command was recognized and handled, false otherwise.
+ */
 static bool executeWifiCmd(const char *cmd, const JsonDocument &doc)
 {
 	if (strcmp(cmd, "wifi:status") == 0)
@@ -63,7 +75,7 @@ static bool executeWifiCmd(const char *cmd, const JsonDocument &doc)
 				return true;
 			}
 			strncpy(wifiCfg.staSSID, ssid, 32);
-			wifiCfg.staSSID[32] = '\0';
+			wifiCfg.staSSID[32] = '\0'; // Ensure null termination after strncpy
 			if (password && strlen(password) > 0)
 			{
 				strncpy(wifiCfg.staPassword, password, 64);
@@ -77,6 +89,7 @@ static bool executeWifiCmd(const char *cmd, const JsonDocument &doc)
 			saveWifiConfig();
 			if (!startSTA())
 			{
+				// STA failed — revert to AP mode so the device remains reachable
 				wifiCfg.mode = TCM_WIFI_MODE_AP;
 				saveWifiConfig();
 				startAP();
@@ -93,7 +106,7 @@ static bool executeWifiCmd(const char *cmd, const JsonDocument &doc)
 			{
 				if (strlen(password) == 0)
 				{
-					wifiCfg.apPassword[0] = '\0';
+					wifiCfg.apPassword[0] = '\0'; // Clear password to create an open AP
 				}
 				else if (strlen(password) >= 8 && strlen(password) <= 64)
 				{
@@ -110,7 +123,7 @@ static bool executeWifiCmd(const char *cmd, const JsonDocument &doc)
 			saveWifiConfig();
 			startAP();
 		}
-		server.begin();
+		server.begin(); // Restart the HTTP server on the new network interface
 		sendJsonResponse(200, buildWifiStatusJson());
 		return true;
 	}

@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_track_mode/test_track_mode.cpp
+ *  @brief Unit tests for track mode activation
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -57,3 +63,4 @@ int main(int, char **)
 	RUN_TEST(test_trackmode_unknown);
 	return UNITY_END();
 }
+

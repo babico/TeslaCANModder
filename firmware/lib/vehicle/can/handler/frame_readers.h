@@ -1,32 +1,56 @@
 #pragma once
-// ── Pure Frame Readers ───────────────────────────────────────────────────────
-// Stateless decoders that only depend on Frame layout. Split out from
-// handler/helpers.h so unit tests can exercise them without dragging in the
-// dispatch / variant / DAS-drive subsystem.
+
+/**
+ * @file firmware/lib/vehicle/can/handler/frame_readers.h
+ * @brief Stateless CAN frame decoders for DAS and gateway signals
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include "core/types.h"
 
-// DAS_status from 0x399 byte0 bits[3:0].
+/**
+ * @brief Read DAS autopilot status from a 0x399 frame
+ * @param f Reference to the CAN frame to decode
+ * @return Autopilot status nibble from byte 0 bits [3:0], or 0 if frame too short
+ */
 inline uint8_t readDASAutopilotStatus(const Frame &f)
 {
 	return f.dlc >= 1 ? (f.data[0] & 0x0F) : 0;
 }
 
-// DAS_autopilotState from 0x39B byte1 bits[7:4].
-// 0=UNAVAIL 1=AVAIL 2=ACTIVE_NOMINAL 3=ACTIVE_MIN_DRIVER ...
-// Used by AP-First mode to delay 0x3FD injection until AP is running.
+/**
+ * @brief Read DAS autopilot state from a 0x39B frame
+ *
+ * Values: 0=UNAVAIL, 1=AVAIL, 2=ACTIVE_NOMINAL, 3=ACTIVE_MIN_DRIVER, etc.
+ * Used by AP-First mode to delay 0x3FD injection until AP is running.
+ *
+ * @param f Reference to the CAN frame to decode
+ * @return Autopilot state nibble from byte 1 bits [7:4], or 0 if frame too short
+ */
 inline uint8_t readDASAutopilotState(const Frame &f)
 {
 	return f.dlc >= 2 ? ((f.data[1] >> 4) & 0x0F) : 0;
 }
 
+/**
+ * @brief Check whether the DAS autopilot status indicates an active engagement
+ * @param status Autopilot status value previously read from a DAS frame
+ * @return True if status is in the active range (3-5)
+ */
 inline bool isDASAutopilotActive(uint8_t status)
 {
 	return status >= 3 && status <= 5;
 }
 
-// GTW_carConfig mux=2 byte5 bits[4:2] — autopilot HW tier.
-// Returns -1 when the frame is not the mux=2 selector or is too short.
+/**
+ * @brief Read autopilot hardware tier from a GTW_carConfig mux=2 frame
+ *
+ * Extracts byte 5 bits [4:2] which encode the autopilot hardware tier.
+ *
+ * @param f Reference to the CAN frame to decode
+ * @return Hardware tier (0-7), or -1 if the frame is not mux=2 or is too short
+ */
 inline int8_t readGtwAutopilotTier(const Frame &f)
 {
 	if (f.dlc < 6)

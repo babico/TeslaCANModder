@@ -1,12 +1,11 @@
 #pragma once
-// ── BLE HID Gamepad Central ──────────────────────────────────────────────────
-// Public include point. Implementation is split by concern:
-//   state.h   — shared constants/globals
-//   events.h  — HID report decode + button event queue
-//   storage.h — NVS load/save
-//   ble.h     — NimBLE callbacks, scan/connect helpers
-//   api.h     — command/API-facing gamepad functions
-//   drive.h   — analog axes → DAS drive control
+
+/**
+ * @file firmware/lib/client/gamepad/gamepad.h
+ * @brief Public include point for the BLE HID Gamepad Central subsystem
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #if BOARD_ENABLE_BLE
 

@@ -1,8 +1,8 @@
-// ── State Persistence Integration ──────────────────────────────────────────
-// Verifies that user-toggled feature flags survive a State serialization
-// roundtrip via the same memcpy-based snapshot pattern the firmware uses for
-// NVS persistence. Detects regressions where a new field is added but not
-// included in the persisted struct.
+/** @file firmware/test/test_native_state_persistence/test_state_persistence.cpp
+ *  @brief Unit tests for state persistence across reboots
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -19,7 +19,6 @@
 void setUp() {}
 void tearDown() {}
 
-// Round-trip a State through a fake NVS blob (same shape persist.h uses).
 static State roundtrip(const State &in)
 {
 	uint8_t blob[sizeof(State)];
@@ -34,7 +33,7 @@ void test_persist_preserves_feature_toggles()
 	State s = {};
 	s.variant = HW4;
 	s.fsdEnabled = true;
-	s.nagSuppress = true;
+	s.nagMode = NAG_MODE_ORGANIC;
 	s.preconditionEnabled = true;
 	s.trackModeEnabled = true;
 	s.streamEnabled = true;
@@ -48,7 +47,7 @@ void test_persist_preserves_feature_toggles()
 	State r = roundtrip(s);
 	TEST_ASSERT_EQUAL(HW4, r.variant);
 	TEST_ASSERT_TRUE(r.fsdEnabled);
-	TEST_ASSERT_TRUE(r.nagSuppress);
+	TEST_ASSERT_EQUAL(NAG_MODE_ORGANIC, r.nagMode);
 	TEST_ASSERT_TRUE(r.preconditionEnabled);
 	TEST_ASSERT_TRUE(r.trackModeEnabled);
 	TEST_ASSERT_TRUE(r.streamEnabled);
@@ -65,7 +64,7 @@ void test_persist_zero_initialized_state_roundtrip_clean()
 	State s = {};
 	State r = roundtrip(s);
 	TEST_ASSERT_FALSE(r.fsdEnabled);
-	TEST_ASSERT_FALSE(r.nagSuppress);
+	TEST_ASSERT_EQUAL(NAG_MODE_OFF, r.nagMode);
 	TEST_ASSERT_FALSE(r.streamEnabled);
 	TEST_ASSERT_FALSE(r.preconditionEnabled);
 }
@@ -93,3 +92,4 @@ int main(int, char **)
 	RUN_TEST(test_persist_distinct_states_remain_distinct);
 	return UNITY_END();
 }
+

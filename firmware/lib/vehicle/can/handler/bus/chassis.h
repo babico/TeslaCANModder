@@ -1,8 +1,11 @@
 #pragma once
-// ── Bus 0 (Chassis) Frame Handler ────────────────────────────────────────────
-// Variant-specific FSD frame processing on the chassis bus (X179 pins 13-14).
-// Decodes cruise / ACC / GPS / wheel-speed observables, runs P2-06 fallback
-// variant inference, then dispatches to the per-variant FSD handler.
+
+/**
+ * @file firmware/lib/vehicle/can/handler/bus/chassis.h
+ * @brief Bus 0 (Chassis) frame handler for FSD variant-specific processing
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include "core/forward.h"
 #include "core/can/bus.h"
@@ -17,6 +20,16 @@
 #include "handler/variant/hw3.h"
 #include "handler/variant/legacy.h"
 
+/**
+ * @brief Handle an incoming frame on the chassis bus (X179 pins 13-14).
+ *
+ * Decodes cruise/ACC/GPS/wheel-speed observables, runs P2-06 fallback
+ * variant inference when the primary detection frame (0x398) is absent,
+ * then dispatches to the per-variant FSD handler.
+ *
+ * @param f Reference to the received CAN frame.
+ * @param s Reference to the shared vehicle state.
+ */
 inline void handleChassisBus(Frame &f, State &s)
 {
 	if (f.id == CAN_ID_DAS_CONTROL && f.dlc >= 2)
@@ -43,7 +56,8 @@ inline void handleChassisBus(Frame &f, State &s)
 			s.maxSpeedKph = s.mapSpeedLimitKph;
 		return;
 	}
-	// Wheel speeds — all four wheels packed in one 8-byte frame (read-only telemetry)
+
+	// All four wheel speeds packed in one 8-byte frame (read-only telemetry)
 	if (f.id == CAN_ID_WHEEL_SPEED && f.dlc >= 7)
 	{
 		s.wheelSpeedFL = decodeWheelSpeedFL(f.data);
@@ -53,12 +67,13 @@ inline void handleChassisBus(Frame &f, State &s)
 		s.hasWheelSpeeds = true;
 		return;
 	}
-	// P2-06: Fallback variant inference from distinctive frame presence (when 0x398 absent)
+
+	// P2-06: Fallback variant inference from distinctive frame presence
 	if (s.variantAutoDetect && !s.hwAutoDetected)
 	{
 		if (f.id == CAN_ID_ISA_SPEED && s.variant != HW4)
 		{
-			// ISA speed chime (921) is HW4-only; infer variant from its presence
+			// ISA speed chime (0x399) is HW4-exclusive; infer variant from its presence
 			bool fromLegacy = (s.variant == LEGACY);
 			s.variant = HW4;
 			if (fromLegacy)
@@ -69,13 +84,15 @@ inline void handleChassisBus(Frame &f, State &s)
 		}
 		else if (f.id == CAN_ID_LEGACY_FSD_MUX && s.variant != LEGACY)
 		{
-			// Legacy FSD mux (1006) is Legacy-only; infer variant from its presence
+			// Legacy FSD mux (0x3EE) is Legacy-exclusive; infer variant
 			s.variant = LEGACY;
 			applyFilters(s);
 			resetHandlerLogFlags();
 			sendLog(F("Fallback: LEGACY inferred from legacy mux frame"));
 		}
 	}
+
+	// Dispatch to the variant-specific FSD handler
 	switch (s.variant)
 	{
 	case HW4:

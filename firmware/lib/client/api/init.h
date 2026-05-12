@@ -1,4 +1,12 @@
 #pragma once
+
+/**
+ * @file firmware/lib/client/api/init.h
+ * @brief REST API initialization, HTTP route registration, and tick loop for the WiFi server.
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "client/common/api_fwd.h"
 #include "auth.h"
 #include "routes.h"
@@ -8,31 +16,26 @@
 #include "client/gamepad/gamepad.h"
 #endif
 
-// ── REST API Init & Tick ─────────────────────────────────────────────────────
-//
-// HTTP route registration table.
-//
-// Per-feature endpoints (BLE config, gamepad pairing, recorder start/stop)
-// have been removed in favour of the wire-command dispatch endpoint
-// `POST /api/command`. Use `ble:on|off|name:<n>|status`, `gamepad:*`, and
-// `recorder:on|off|clear|status` instead. The only feature-specific
-// endpoint that survives is `GET /api/recorder/download` (binary CSV file
-// — has no wire-command equivalent).
-
+/**
+ * @brief Initialize the REST API server, register all HTTP routes, and start listening.
+ *
+ * Loads or generates the API key, configures BLE if enabled, registers all endpoint
+ * handlers, and starts the HTTP server. Per-feature endpoints have been removed in
+ * favour of the wire-command dispatch endpoint POST /api/command. The only
+ * feature-specific route that remains is GET /api/recorder/download (binary CSV).
+ *
+ * @param s Global application state shared across all route handlers.
+ */
 void restApiInit(State &s)
 {
 	restState = &s;
 	canRecorderInit();
 
-	// Load or generate API key
 	loadOrCreateApiKey(s);
 
 #if BOARD_ENABLE_BLE
-	// Load saved BLE configuration from NVS
 	loadBleConfig();
-
-	// Apply persisted BLE device name before serving BLE status endpoints.
-	bleSetDeviceName(bleNameCfg);
+	bleSetDeviceName(bleNameCfg); // Apply persisted BLE device name before serving status
 
 	if (!bleEnabledCfg && bleIsReady())
 	{
@@ -40,15 +43,18 @@ void restApiInit(State &s)
 		sendLog("BLE disabled (saved config)");
 	}
 
-	// Initialize BLE gamepad central role
 	gamepadInit();
 #endif
 
-	// Register routes
+	// Collect auth header so requireAuth() can read it from incoming requests
 	const char *headerKeys[] = {"X-API-Key"};
 	server.collectHeaders(headerKeys, 1);
+
+	// Static page routes
 	server.on("/", HTTP_GET, handleRoot);
 	server.on("/api/ping", HTTP_GET, handleGetPing);
+
+	// Auth verification endpoint
 	server.on("/api/auth/verify", HTTP_GET,
 			  []()
 			  {
@@ -57,10 +63,11 @@ void restApiInit(State &s)
 				  sendJsonResponse(200, "{\"ok\":true}");
 			  });
 	server.on("/api/auth/verify", HTTP_OPTIONS, handleOptions);
+
+	// API key retrieval — intended for same-origin dashboard access only
 	server.on("/api/auth/key", HTTP_GET,
 			  []()
 			  {
-				  // Only available from dashboard (same origin) — returns current API key
 				  if (!restState)
 				  {
 					  sendJsonResponse(500, "{\"error\":\"not initialized\"}");
@@ -74,16 +81,19 @@ void restApiInit(State &s)
 				  sendJsonResponse(200, out);
 			  });
 	server.on("/api/auth/key", HTTP_OPTIONS, handleOptions);
+
+	// Core state and command endpoints
 	server.on("/api/status", HTTP_GET, handleGetStatus);
 	server.on("/api/command", HTTP_POST, handlePostCommand);
 	server.on("/api/command", HTTP_OPTIONS, handleOptions);
 	server.on("/api/status", HTTP_OPTIONS, handleOptions);
 	server.on("/api/disable", HTTP_GET, handleDisable);
-	// WiFi status/config are handled via POST /api/command with cmd=wifi:status or wifi:config.
+
 #if BOARD_ENABLE_BLE
-	// All BLE/gamepad operations are wire commands; see client/command/dispatch.h
+	// BLE/gamepad operations use wire commands via POST /api/command
 #endif
-	// Log endpoint
+
+	// Log ring buffer endpoint — returns the most recent 64 entries
 	server.on("/api/log", HTTP_GET,
 			  []()
 			  {
@@ -106,8 +116,8 @@ void restApiInit(State &s)
 			  });
 	server.on("/api/log", HTTP_OPTIONS, handleOptions);
 
-	// CAN recorder — only the binary CSV download remains a dedicated route.
-	// Use wire commands `recorder:on|off|clear|status` for control.
+	// CAN recorder binary CSV download — the only feature-specific route remaining.
+	// Control via wire commands: recorder:on|off|clear|status
 	server.on("/api/recorder/download", HTTP_GET,
 			  []()
 			  {
@@ -141,6 +151,11 @@ void restApiInit(State &s)
 	wifiReady = true;
 }
 
+/**
+ * @brief Process pending HTTP requests and run gamepad tick if BLE is enabled.
+ *
+ * Must be called from the main loop at a regular interval.
+ */
 void restApiTick()
 {
 	if (wifiReady)
@@ -152,6 +167,10 @@ void restApiTick()
 #endif
 }
 
+/**
+ * @brief Check whether the REST API server has been initialized and is accepting requests.
+ * @return true if the server is running; false otherwise.
+ */
 bool restApiIsReady()
 {
 	return wifiReady;

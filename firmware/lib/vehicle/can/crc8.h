@@ -1,17 +1,15 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/crc8.h
+ * @brief CRC-8/OPENSAFETY engine for Tesla CAN frame checksums
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include <stdint.h>
 
-// ── CRC-8/OPENSAFETY Engine ──────────────────────────────────────────────────
-// Tesla CAN frames (EPAS, DI, steering) use CRC-8 with polynomial 0x2F
-// and per-ID magic-byte tables indexed by the alive counter.
-//
-// Algorithm:
-//   crc = CRC8(payload_without_crc + [0x00])
-//   final = crc ^ magic_table[counter & 0x0F]
-//
-// Verified against uhi22 tesla-crc samples (0x229, 0x249, 1048 frames).
-
-// CRC-8/OPENSAFETY lookup table (poly 0x2F, init 0x00, no reflect)
+// CRC-8/OPENSAFETY lookup table (polynomial 0x2F, init 0x00, no reflect)
 static const uint8_t CRC8_TABLE[256] = {
 	0x00, 0x2F, 0x5E, 0x71, 0xBC, 0x93, 0xE2, 0xCD, 0x57, 0x78, 0x09, 0x26, 0xEB, 0xC4, 0xB5, 0x9A, 0xAE, 0x81, 0xF0,
 	0xDF, 0x12, 0x3D, 0x4C, 0x63, 0xF9, 0xD6, 0xA7, 0x88, 0x45, 0x6A, 0x1B, 0x34, 0x73, 0x5C, 0x2D, 0x02, 0xCF, 0xE0,
@@ -28,7 +26,12 @@ static const uint8_t CRC8_TABLE[256] = {
 	0xCA, 0xE5, 0x94, 0xBB, 0x21, 0x0E, 0x7F, 0x50, 0x9D, 0xB2, 0xC3, 0xEC, 0xD8, 0xF7, 0x86, 0xA9, 0x64, 0x4B, 0x3A,
 	0x15, 0x8F, 0xA0, 0xD1, 0xFE, 0x33, 0x1C, 0x6D, 0x42};
 
-// Compute CRC-8/OPENSAFETY over a byte array
+/**
+ * @brief Compute CRC-8/OPENSAFETY over a byte array.
+ * @param data Pointer to input byte array.
+ * @param len Number of bytes to process.
+ * @return Computed CRC-8 value.
+ */
 inline uint8_t crc8_opensafety(const uint8_t *data, uint8_t len)
 {
 	uint8_t crc = 0x00;
@@ -39,32 +42,39 @@ inline uint8_t crc8_opensafety(const uint8_t *data, uint8_t len)
 	return crc;
 }
 
-// ── Per-ID Magic Tables ──────────────────────────────────────────────────────
-// CAN 0x229 (EPAS_internalHarness) — verified against 1048 real frames
+// Per-ID magic XOR tables indexed by alive counter (0–15).
+// Used to finalize CRC: final = crc8(payload + 0x00) ^ magic[counter & 0x0F].
+
+// CAN 0x229 — EPAS_internalHarness (verified against 1048 real frames)
 static const uint8_t MAGIC_0x229[16] = {0x07, 0x3F, 0x92, 0xE5, 0x4B, 0xD1, 0xA6, 0x78,
 										0x23, 0x9C, 0x56, 0xBB, 0xF4, 0x0D, 0xCA, 0x61};
 
-// CAN 0x249 (DI_steerAssist) — verified
+// CAN 0x249 — DI_steerAssist (verified)
 static const uint8_t MAGIC_0x249[16] = {0x44, 0xBA, 0x2E, 0x97, 0x51, 0xD3, 0x0F, 0xC8,
 										0x76, 0xA1, 0x63, 0x1D, 0xE9, 0x35, 0x8A, 0xFC};
 
-// CAN 0x370 (EPAS_sysStatus / nag killer) — verified
+// CAN 0x370 — EPAS_sysStatus / nag killer (verified)
 static const uint8_t MAGIC_0x370[16] = {0xE2, 0x7A, 0x14, 0xD8, 0x0B, 0xA3, 0x96, 0x4F,
 										0x3D, 0xCE, 0xB5, 0x51, 0x67, 0x89, 0xF0, 0x2C};
 
-// Compute final CRC for a Tesla CAN frame
-// payload: frame data EXCLUDING the CRC byte (usually byte 7 or last byte)
-// payloadLen: number of payload bytes
-// counter: alive counter value (usually byte[0] & 0x0F or byte[1] & 0x0F)
-// magicTable: per-ID 16-entry magic table
+/**
+ * @brief Compute final CRC-8 for a Tesla CAN frame using per-ID magic table.
+ *
+ * Algorithm: crc = CRC8(payload + 0x00), then final = crc ^ magic[counter & 0x0F].
+ *
+ * @param payload Frame data excluding the CRC byte (usually byte 7 or last byte).
+ * @param payloadLen Number of payload bytes (clamped to 7 max).
+ * @param counter Alive counter value (usually byte[0] & 0x0F or byte[1] & 0x0F).
+ * @param magicTable Per-ID 16-entry XOR table for CRC finalization.
+ * @return Final CRC-8 byte to place in the frame.
+ */
 inline uint8_t teslaCrc8(const uint8_t *payload, uint8_t payloadLen, uint8_t counter, const uint8_t *magicTable)
 {
-	// Append a zero byte per Tesla convention
 	uint8_t buf[8];
 	uint8_t len = payloadLen < 7 ? payloadLen : 7;
 	for (uint8_t i = 0; i < len; i++)
 		buf[i] = payload[i];
-	buf[len] = 0x00;
+	buf[len] = 0x00; // Append zero byte per Tesla CRC convention
 	uint8_t crc = crc8_opensafety(buf, len + 1);
-	return crc ^ magicTable[counter & 0x0F];
+	return crc ^ magicTable[counter & 0x0F]; // XOR with per-ID magic for this counter slot
 }

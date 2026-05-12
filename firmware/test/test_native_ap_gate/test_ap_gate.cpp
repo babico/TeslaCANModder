@@ -1,3 +1,10 @@
+/**
+ * @file firmware/test/test_native_ap_gate/test_ap_gate.cpp
+ * @brief Unit tests for autopilot injection gate logic
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -42,14 +49,22 @@ void driverSend(const Frame &f, uint8_t bus)
 #include "feature/seatbelt.h"
 #include "vehicle/can/burst.h"
 
+/** @brief Reset fake millis and stub send buffer before each test */
 void setUp()
 {
 	fake_millis_val = 0;
 	stub_send_count = 0;
 }
 
+/** @brief Cleanup after each test */
 void tearDown() {}
 
+/**
+ * @brief Simulate the standby transition that occurs on CAN timeout
+ *
+ * Mirrors the real firmware behavior: clears online flags, sets standby and parked state,
+ * and cancels any active summon session.
+ */
 static void applyStandbyTransitionOnCanTimeout(State &s)
 {
 	s.chassisOnline = false;
@@ -63,6 +78,7 @@ static void applyStandbyTransitionOnCanTimeout(State &s)
 	s.apGateParked = true;
 }
 
+/** @brief Gate is always open when the injection gate feature is disabled */
 void test_apgate_open_when_disabled()
 {
 	State s = {};
@@ -73,6 +89,7 @@ void test_apgate_open_when_disabled()
 	TEST_ASSERT_TRUE(s.apGateOpen());
 }
 
+/** @brief Gate is closed when enabled but no qualifying condition is met */
 void test_apgate_closed_waiting_state()
 {
 	State s = {};
@@ -83,6 +100,7 @@ void test_apgate_closed_waiting_state()
 	TEST_ASSERT_FALSE(s.apGateOpen());
 }
 
+/** @brief Gate opens when autopilot is active */
 void test_apgate_open_ap_only()
 {
 	State s = {};
@@ -93,6 +111,7 @@ void test_apgate_open_ap_only()
 	TEST_ASSERT_TRUE(s.apGateOpen());
 }
 
+/** @brief Gate opens when vehicle is parked */
 void test_apgate_open_park_only()
 {
 	State s = {};
@@ -103,6 +122,7 @@ void test_apgate_open_park_only()
 	TEST_ASSERT_TRUE(s.apGateOpen());
 }
 
+/** @brief Gate opens when summon is active */
 void test_apgate_open_summon_only()
 {
 	State s = {};
@@ -113,6 +133,7 @@ void test_apgate_open_summon_only()
 	TEST_ASSERT_TRUE(s.apGateOpen());
 }
 
+/** @brief Drive mode tick produces no output when the gate is closed */
 void test_drive_mode_tick_blocked_when_gate_closed()
 {
 	State s = {};
@@ -128,6 +149,7 @@ void test_drive_mode_tick_blocked_when_gate_closed()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
+/** @brief Drive mode tick sends a frame when the gate is open via AP active */
 void test_drive_mode_tick_allows_when_ap_open()
 {
 	State s = {};
@@ -144,6 +166,7 @@ void test_drive_mode_tick_allows_when_ap_open()
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_DRIVE_MODE, stub_sends[0].f.id);
 }
 
+/** @brief Seatbelt emulation tick is suppressed when the gate is closed */
 void test_seatbelt_tick_blocked_when_gate_closed()
 {
 	State s = {};
@@ -158,6 +181,7 @@ void test_seatbelt_tick_blocked_when_gate_closed()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
+/** @brief Seatbelt emulation tick sends when the gate is open via summoning */
 void test_seatbelt_tick_allows_when_summoning_open()
 {
 	State s = {};
@@ -174,6 +198,7 @@ void test_seatbelt_tick_allows_when_summoning_open()
 	TEST_ASSERT_EQUAL(BUS_VEHICLE, stub_sends[0].bus);
 }
 
+/** @brief startBurst is blocked and burstRemaining stays zero when gate is closed */
 void test_start_burst_blocked_when_gate_closed()
 {
 	State s = {};
@@ -190,6 +215,7 @@ void test_start_burst_blocked_when_gate_closed()
 	TEST_ASSERT_EQUAL_UINT8(0, s.burstRemaining);
 }
 
+/** @brief startBurst succeeds and populates burst state when gate is open via park */
 void test_start_burst_allows_when_gate_open()
 {
 	State s = {};
@@ -208,6 +234,7 @@ void test_start_burst_allows_when_gate_open()
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_UI_VEHICLE_CTRL, s.burstFrame.id);
 }
 
+/** @brief Standby transition sets parked flag, opening the gate for parked injection */
 void test_apgate_standby_transition_opens_by_park()
 {
 	State s = {};
@@ -228,6 +255,7 @@ void test_apgate_standby_transition_opens_by_park()
 	TEST_ASSERT_EQUAL(0, s.summonRemaining);
 }
 
+/** @brief Standby transition keeps gate open when the feature is disabled entirely */
 void test_apgate_standby_transition_stays_open_when_gate_disabled()
 {
 	State s = {};

@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_trunk/test_trunk.cpp
+ *  @brief Unit tests for trunk open and close commands
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -78,3 +84,4 @@ int main(int, char **)
 	RUN_TEST(test_trunk_legacy_blocks);
 	return UNITY_END();
 }
+

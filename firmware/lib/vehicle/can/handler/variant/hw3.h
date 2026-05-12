@@ -1,14 +1,25 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/handler/variant/hw3.h
+ * @brief HW3 (Autopilot 3.0) variant CAN frame handler for FSD, nag suppression, and speed offset
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
 #include "feature/profile.h"
 #include "feature/offsets.h"
-#include "handler/variant/nag.h" // applyNagSuppressBits + ONCE_LOG + region
+#include "feature/region.h"
 
 static bool hw3LoggedFSD = false;
 static bool hw3LoggedNag = false;
 static bool hw3LoggedOffset = false;
 
+/**
+ * @brief Reset one-shot log flags for the HW3 handler
+ */
 void resetHW3LogFlags()
 {
 	hw3LoggedFSD = false;
@@ -16,21 +27,54 @@ void resetHW3LogFlags()
 	hw3LoggedOffset = false;
 }
 
-// ── HW3 Handler ──────────────────────────────────────────────────────────────
+/**
+ * @brief Apply nag suppression bit pattern on mux=1 frames for HW3
+ *
+ * Duplicated locally in hw3.h and hw4.h to avoid cross-include between handler
+ * and feature layers. Both handlers are the only callers.
+ *
+ * @param f CAN frame to modify (mux=1 of FSD mux message)
+ * @param s Global vehicle state
+ */
+inline void applyHW3NagSuppressBits(Frame &f, State &s)
+{
+	setBit(f, 19, false); // ECE R79 hands-on nag disable
+	setBit(f, 47, true);  // Summon EU unlock
+	if (s.enhancedAutopilot)
+		setBit(f, 46, true); // EAP/Summon unlock on mux=1
+	if (s.laneGraphEnable)
+		setBit(f, 45, true); // Lane graph visualization enable
+	// Clear EU speed restriction bit for European-market vehicles
+	if (s.eceR79Bypass && s.hasRegion && isEuropeanMarket(s.regionCode))
+		applyEceR79Bypass(f);
+	driverSend(f, 0);
+	s.canDiag.eapModCount++;
+}
+
+/**
+ * @brief Main CAN frame handler for HW3 (Autopilot 3.0) vehicles
+ *
+ * Processes follow-distance, FSD mux, and nag suppression frames. Applies
+ * speed profile mapping, UI bit injection, and speed offset writes depending
+ * on the mux index and current feature state.
+ *
+ * @param f Incoming CAN frame to inspect and potentially modify
+ * @param s Global vehicle state containing feature flags and diagnostics
+ */
 void handleHW3(Frame &f, State &s)
 {
 	const bool apGateOpen = s.apGateOpen();
 
-	// OTA safety: pass-through unmodified frames during OTA update
+	// Pass-through unmodified frames during OTA update for safety
 	if (s.txPaused)
 	{
 		driverSend(f, 0);
 		return;
 	}
 
-	// Follow distance → profile mapping (auto-track from stalk unless pinned)
 	if (f.id == CAN_ID_FOLLOW_DIST)
 	{
+		// Map follow-distance stalk position to speed profile unless pinned
 		if (!s.profileOverride)
 		{
 			int profile = mapHW3FollowDistToProfile(readFollowDistance(f));
@@ -42,7 +86,7 @@ void handleHW3(Frame &f, State &s)
 			bool fdModified = false;
 			if (s.lhdEnabled)
 			{
-				setBit(f, 41, false); // UI_drivingSide: 0=LHD
+				setBit(f, 41, false); // UI_drivingSide: 0 = LHD
 				fdModified = true;
 			}
 			if (s.assistNavEnable)
@@ -64,7 +108,7 @@ void handleHW3(Frame &f, State &s)
 			}
 			if (s.assistTelemetryOff)
 			{
-				setBit(f, 43, false); // UI_enableTripTelemetry = 0
+				setBit(f, 43, false); // UI_enableTripTelemetry disable
 				fdModified = true;
 			}
 			if (fdModified)
@@ -73,10 +117,9 @@ void handleHW3(Frame &f, State &s)
 		return;
 	}
 
-	// FSD mux handling
 	if (f.id == CAN_ID_FSD_MUX)
 	{
-		// AP-First mode (2026.14.x): suppress injection until AP is already active.
+		// AP-First mode: suppress injection until Autopilot state >= 2
 		if (s.apFirstEnabled && s.dasApState < 2)
 			return;
 		uint8_t mux = readMuxID(f);
@@ -92,7 +135,7 @@ void handleHW3(Frame &f, State &s)
 				s.speedOffset = calculateHW3SpeedOffset(steps);
 
 			setBit(f, 38, true);
-			setBit(f, 39, true); // UI_fsdContinueOnGreenWithCIPV: continue on green with lead car (ev-open-can-tools-plugins)
+			setBit(f, 39, true); // UI_fsdContinueOnGreenWithCIPV
 			setBit(f, 46, true);
 			setSpeedProfileV12V13(f, s.speedProfile);
 			driverSend(f, 0);
@@ -100,9 +143,9 @@ void handleHW3(Frame &f, State &s)
 			return;
 		}
 
-		if (mux == 1 && s.nagSuppress && apGateOpen)
+		if (mux == 1 && nagModeUsesBit19(s.nagMode) && apGateOpen)
 		{
-			applyNagSuppressBits(f, s);
+			applyHW3NagSuppressBits(f, s);
 			ONCE_LOG(hw3LoggedNag, F("HW3: Nag suppressed on CAN"));
 			return;
 		}

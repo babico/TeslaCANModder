@@ -1,21 +1,19 @@
 #pragma once
+
+/**
+ * @file firmware/lib/core/platform.h
+ * @brief Vehicle platform identity: model, hardware generation, software version, and capability matrix
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include <stdint.h>
 #include <string.h>
 #include "types.h"
 
-// ── Vehicle Platform ────────────────────────────────────────────────────────
-// Top-level vehicle identity: Model → HW Set → Software Version
-// Decoded from CAN bus (0x398 GTW_carConfig, 0x392 GTW_versionInfo)
-//
-// Hierarchy:
-//   TeslaModel  — physical vehicle (Model S, 3, X, Y, Cybertruck)
-//   HWGeneration — autopilot computer (legacy, hw3, hw4)
-//   Software    — year.week.release.patch from 0x392
-//
-// After platform is resolved, the system validates that all enabled
-// MCP2515 CAN bus modules are physically responding on SPI.
-
-// ── Tesla Model ─────────────────────────────────────────────────────────────
+/**
+ * @brief Physical Tesla vehicle model decoded from 0x398 GTW_carConfig
+ */
 enum TeslaModel : uint8_t
 {
 	MODEL_UNKNOWN = 0,
@@ -26,6 +24,11 @@ enum TeslaModel : uint8_t
 	MODEL_CYBERTRUCK = 5
 };
 
+/**
+ * @brief Return a human-readable name for a TeslaModel value
+ * @param m Tesla model enum
+ * @return Null-terminated model name string
+ */
 inline const char *teslaModelName(TeslaModel m)
 {
 	switch (m)
@@ -45,6 +48,12 @@ inline const char *teslaModelName(TeslaModel m)
 	}
 }
 
+/**
+ * @brief Parse a string into a TeslaModel enum value
+ * @param name Input string (e.g. "s", "models", "3", "ct")
+ * @param out Output TeslaModel on success
+ * @return True if parsing succeeded
+ */
 inline bool parseTeslaModel(const char *name, TeslaModel &out)
 {
 	if (strcmp(name, "s") == 0 || strcmp(name, "models") == 0)
@@ -75,15 +84,22 @@ inline bool parseTeslaModel(const char *name, TeslaModel &out)
 	return false;
 }
 
-// ── HW Generation ───────────────────────────────────────────────────────────
+/**
+ * @brief Autopilot computer hardware generation decoded from CAN
+ */
 enum HWGeneration : uint8_t
 {
 	HW_UNKNOWN = 0,
-	HW_LEGACY = 1,
-	HW_3 = 2,
-	HW_4 = 3
+	HW_LEGACY = 1, // Pre-HW3 (AP1/AP2)
+	HW_3 = 2,      // HW3 autopilot computer
+	HW_4 = 3       // HW4 / AI4 autopilot computer
 };
 
+/**
+ * @brief Return a human-readable name for a HWGeneration value
+ * @param g Hardware generation enum
+ * @return Null-terminated generation name string
+ */
 inline const char *hwGenerationName(HWGeneration g)
 {
 	switch (g)
@@ -99,6 +115,12 @@ inline const char *hwGenerationName(HWGeneration g)
 	}
 }
 
+/**
+ * @brief Parse a string into a HWGeneration enum value
+ * @param name Input string (e.g. "legacy", "hw3", "hw4")
+ * @param out Output HWGeneration on success
+ * @return True if parsing succeeded
+ */
 inline bool parseHWGeneration(const char *name, HWGeneration &out)
 {
 	if (strcmp(name, "legacy") == 0)
@@ -119,7 +141,11 @@ inline bool parseHWGeneration(const char *name, HWGeneration &out)
 	return false;
 }
 
-// Map existing Variant enum to HWGeneration
+/**
+ * @brief Convert a Variant enum to the corresponding HWGeneration
+ * @param v Variant value
+ * @return Matching HWGeneration, or HW_UNKNOWN if unrecognized
+ */
 inline HWGeneration variantToHWGen(Variant v)
 {
 	switch (v)
@@ -135,7 +161,11 @@ inline HWGeneration variantToHWGen(Variant v)
 	}
 }
 
-// Map HWGeneration back to Variant enum (inverse of variantToHWGen)
+/**
+ * @brief Convert a HWGeneration back to the corresponding Variant enum
+ * @param hw Hardware generation value
+ * @return Matching Variant, or HW4 as fallback
+ */
 inline Variant hwGenToVariant(HWGeneration hw)
 {
 	switch (hw)
@@ -147,26 +177,36 @@ inline Variant hwGenToVariant(HWGeneration hw)
 	case HW_LEGACY:
 		return LEGACY;
 	default:
-		return HW4; // fallback
+		return HW4; // fallback to newest variant
 	}
 }
 
-// ── Software Version ────────────────────────────────────────────────────────
-// Tesla versions follow: YYYY.WW[.release[.patch]]
-// Examples: 2026.14.1, 2026.2.9.7, 2025.45.9
+/**
+ * @brief Tesla software version following YYYY.WW[.release[.patch]] format
+ *
+ * Examples: 2026.14.1, 2026.2.9.7, 2025.45.9
+ */
 struct TeslaSoftwareVersion
 {
-	uint16_t year;	 // e.g. 2026
-	uint8_t week;	 // e.g. 14 (week-of-year)
-	uint8_t release; // e.g. 1  (major release within week branch)
-	uint8_t patch;	 // e.g. 7  (patch, 0 if not present)
+	uint16_t year;   // e.g. 2026
+	uint8_t week;    // Week-of-year (1-53)
+	uint8_t release; // Major release within week branch
+	uint8_t patch;   // Patch number (0 if not present)
 
+	/**
+	 * @brief Check if this version has plausible year and week values
+	 * @return True if year >= 2019 and week is in [1, 53]
+	 */
 	bool valid() const
 	{
 		return year >= 2019 && week >= 1 && week <= 53;
 	}
 
-	// Compare: returns <0 if this < other, 0 if equal, >0 if this > other
+	/**
+	 * @brief Lexicographic comparison of two software versions
+	 * @param o Other version to compare against
+	 * @return Negative if this < o, zero if equal, positive if this > o
+	 */
 	int compare(const TeslaSoftwareVersion &o) const
 	{
 		if (year != o.year)
@@ -188,7 +228,9 @@ struct TeslaSoftwareVersion
 	}
 };
 
-// ── FSD Protocol Version ────────────────────────────────────────────────────
+/**
+ * @brief FSD protocol version determined by software version and hardware generation
+ */
 enum FsdProtocol : uint8_t
 {
 	FSD_PROTO_UNKNOWN = 0,
@@ -197,6 +239,11 @@ enum FsdProtocol : uint8_t
 	FSD_PROTO_V14 = 3  // AI4 / HW4 native (v14.x)
 };
 
+/**
+ * @brief Return a human-readable name for an FsdProtocol value
+ * @param p FSD protocol enum
+ * @return Null-terminated protocol name string
+ */
 inline const char *fsdProtoName(FsdProtocol p)
 {
 	switch (p)
@@ -212,13 +259,14 @@ inline const char *fsdProtoName(FsdProtocol p)
 	}
 }
 
-// Determine FSD protocol from software version + HW generation
-// Based on teslascope.com observations:
-//   2026.2.9+  on HW4 → v14 (AI4)
-//   2026.8.x   on HW4 → v13 (transitional)
-//   2026.2.9.x on HW3 → v12.6.4
-//   2025.45.5+ on HW4 → v14.2.2+
-//   Older      on HW3 → v12
+/**
+ * @brief Determine FSD protocol from software version and hardware generation
+ * @param sw Software version struct
+ * @param hw Hardware generation
+ * @return Detected FSD protocol level
+ *
+ * @note Based on teslascope.com observations of production vehicles
+ */
 inline FsdProtocol detectFsdProtocol(const TeslaSoftwareVersion &sw, HWGeneration hw)
 {
 	if (!sw.valid())
@@ -228,13 +276,13 @@ inline FsdProtocol detectFsdProtocol(const TeslaSoftwareVersion &sw, HWGeneratio
 	if (hw == HW_3)
 		return FSD_PROTO_V12;
 
-	// HW4 path
+	// HW4 path — version thresholds from teslascope observations
 	if (sw.year >= 2026)
 	{
 		if (sw.week >= 14)
 			return FSD_PROTO_V14; // 2026.14+
 		if (sw.week >= 8)
-			return FSD_PROTO_V13; // 2026.8.x
+			return FSD_PROTO_V13; // 2026.8.x transitional
 		if (sw.week == 2 && sw.release >= 9)
 			return FSD_PROTO_V14; // 2026.2.9+
 		if (sw.week >= 2)
@@ -247,20 +295,28 @@ inline FsdProtocol detectFsdProtocol(const TeslaSoftwareVersion &sw, HWGeneratio
 	return FSD_PROTO_V13;
 }
 
-// ── Platform Identity (composite) ──────────────────────────────────────────
+/**
+ * @brief Composite vehicle platform identity combining model, hardware, and software
+ */
 struct VehiclePlatform
 {
 	TeslaModel model;
 	HWGeneration hwGen;
 	TeslaSoftwareVersion software;
 	FsdProtocol fsdProto;
-	bool resolved; // true = at least model + hwGen known
+	bool resolved; // True = at least model + hwGen known
 
 	VehiclePlatform()
 		: model(MODEL_UNKNOWN), hwGen(HW_UNKNOWN), software{0, 0, 0, 0}, fsdProto(FSD_PROTO_UNKNOWN), resolved(false)
 	{
 	}
 
+	/**
+	 * @brief Resolve platform identity from explicit model, hardware, and software version
+	 * @param m Tesla model
+	 * @param hw Hardware generation
+	 * @param sw Software version
+	 */
 	void resolve(TeslaModel m, HWGeneration hw, const TeslaSoftwareVersion &sw)
 	{
 		model = m;
@@ -270,13 +326,16 @@ struct VehiclePlatform
 		resolved = (m != MODEL_UNKNOWN && hw != HW_UNKNOWN);
 	}
 
-	// Quick resolve from variant auto-detect + vehicle config CAN
+	/**
+	 * @brief Resolve platform identity from the global State struct fields
+	 * @param s State containing auto-detected HW, variant, and firmware version fields
+	 */
 	void resolveFromState(const State &s)
 	{
 		TeslaModel m = (TeslaModel)s.vehicleModel;
 		HWGeneration hw = HW_UNKNOWN;
 
-		// Use auto-detected HW if available, else fallback to variant setting
+		// Prefer auto-detected HW from 0x398, fall back to variant setting
 		if (s.hwAutoDetected)
 		{
 			if (s.detectedHW == 3)
@@ -299,13 +358,9 @@ struct VehiclePlatform
 	}
 };
 
-// ── Model-HW Compatibility Matrix ──────────────────────────────────────────
-// Not all combinations exist in production
-// Model S/X: legacy (pre-2021), hw3 (2021+), hw4 (2024+)
-// Model 3:   hw3 (2017+), hw4 (2024+ Highland)
-// Model Y:   hw3 (2020+), hw4 (2024+)
-// Cybertruck: hw4 only (2024+)
-
+/**
+ * @brief Per-model/HW feature capability flags
+ */
 struct PlatformCapabilities
 {
 	bool supportsFsd;
@@ -318,6 +373,12 @@ struct PlatformCapabilities
 	bool supportsBanShield;
 };
 
+/**
+ * @brief Determine platform capabilities based on vehicle model and hardware generation
+ * @param model Tesla model
+ * @param hw Hardware generation
+ * @return PlatformCapabilities with per-feature support flags
+ */
 inline PlatformCapabilities getPlatformCapabilities(TeslaModel model, HWGeneration hw)
 {
 	PlatformCapabilities cap = {
@@ -331,7 +392,7 @@ inline PlatformCapabilities getPlatformCapabilities(TeslaModel model, HWGenerati
 		true   // supportsBanShield
 	};
 
-	// ECE R79 bypass only relevant for EU-market vehicles (any model)
+	// ECE R79 bypass relevant for EU-market vehicles (any model)
 	cap.supportsEceR79Bypass = true;
 
 	switch (model)
@@ -368,17 +429,22 @@ inline PlatformCapabilities getPlatformCapabilities(TeslaModel model, HWGenerati
 	return cap;
 }
 
-// ── Software Compatibility Check ────────────────────────────────────────────
-// Known-bad combinations from teslascope and community reports
-
+/**
+ * @brief Software compatibility level for known-good/bad version combinations
+ */
 enum SwCompatLevel : uint8_t
 {
 	SW_COMPAT_UNKNOWN = 0,
 	SW_COMPAT_OK = 1,
-	SW_COMPAT_WARN = 2,	  // Works with limitations
+	SW_COMPAT_WARN = 2,   // Works with limitations
 	SW_COMPAT_BLOCKED = 3 // Known incompatible
 };
 
+/**
+ * @brief Return a human-readable name for a SwCompatLevel value
+ * @param c Compatibility level enum
+ * @return Null-terminated level name string
+ */
 inline const char *swCompatName(SwCompatLevel c)
 {
 	switch (c)
@@ -394,16 +460,17 @@ inline const char *swCompatName(SwCompatLevel c)
 	}
 }
 
+/**
+ * @brief Check software compatibility for a resolved vehicle platform
+ * @param p Resolved VehiclePlatform
+ * @return Compatibility level based on known-good/bad version combinations
+ */
 inline SwCompatLevel checkSoftwareCompat(const VehiclePlatform &p)
 {
 	if (!p.software.valid())
 		return SW_COMPAT_UNKNOWN;
 
-	// Chinese gateway lockout: 2026.3.31+ on CN-market, always blocked at GTW
-	// (handled separately via region detection, not here)
-
-	// 2026.8.6 on HW4: known CAN protocol mismatch (v13 protocol, but
-	// some CAN IDs shifted — use with caution)
+	// 2026.8.6 on HW4: known CAN protocol mismatch (v13 protocol with shifted IDs)
 	if (p.hwGen == HW_4 && p.software.year == 2026 && p.software.week == 8 && p.software.release == 6)
 	{
 		return SW_COMPAT_WARN;
@@ -415,7 +482,7 @@ inline SwCompatLevel checkSoftwareCompat(const VehiclePlatform &p)
 		return SW_COMPAT_OK;
 	}
 
-	// Old software (pre-2024) on HW4: untested, warn
+	// Old software (pre-2024) on HW4: untested combination
 	if (p.hwGen == HW_4 && p.software.year < 2024)
 	{
 		return SW_COMPAT_WARN;
@@ -427,7 +494,7 @@ inline SwCompatLevel checkSoftwareCompat(const VehiclePlatform &p)
 		return SW_COMPAT_OK;
 	}
 
-	// Legacy with any recent sw: OK but limited features
+	// Legacy with any recent software: OK but limited features
 	if (p.hwGen == HW_LEGACY)
 	{
 		return SW_COMPAT_OK;
@@ -436,9 +503,13 @@ inline SwCompatLevel checkSoftwareCompat(const VehiclePlatform &p)
 	return SW_COMPAT_OK;
 }
 
-// ── Sync platform into State flat fields ────────────────────────────────────
-// Call after VehiclePlatform::resolveFromState() to copy computed values
-// into the flat State struct for serial/JSON output.
+/**
+ * @brief Copy computed platform fields into the flat State struct for serial/JSON output
+ * @param p Resolved VehiclePlatform
+ * @param s State struct to update
+ *
+ * @note Call after VehiclePlatform::resolveFromState() to sync computed values
+ */
 inline void syncPlatformToState(const VehiclePlatform &p, State &s)
 {
 	s.platformModel = (uint8_t)p.model;

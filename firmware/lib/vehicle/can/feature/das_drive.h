@@ -1,120 +1,119 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/das_drive.h
+ * @brief DAS Drive — openpilot-style autopilot CAN injection for gamepad-driven longitudinal
+ *        and lateral control on BUS_CHASSIS (X179 pins 13-14).
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "core/forward.h"
 #include "core/can/bus.h"
 #include "vehicle/can/ids.h"
 #include <Preferences.h>
 
-// ── DAS Drive: openpilot-style autopilot CAN injection ───────────────────────
-// Sends three frames on BUS_CHASSIS (autopilot party CAN, X179 pins 13-14):
-//
+// Sends three frames on BUS_CHASSIS (autopilot party CAN):
 //   DAS_control         0x2B9 (697)  — longitudinal ACC, 25 Hz
 //   DAS_steeringControl 0x488 (1160) — steering angle,   50 Hz
 //   APS_eacMonitor      0x27D (637)  — EPAS steer-allow, 10 Hz
 //
-// REQUIRES: X179 connector physically wired to Tesla autopilot harness.
-//
 // HW variant mapping (matches openpilot carcontroller.py):
-//   HW3  → DAS_steeringControlType = ANGLE_CONTROL (1)
-//   HW4  → DAS_steeringControlType = LANE_KEEP_ASSIST (2)  [FSD14 semantics]
-//   LEGACY → ANGLE_CONTROL (1)  (HW2.5, steering support uncertain)
+//   HW3    → DAS_steeringControlType = ANGLE_CONTROL (1)
+//   HW4    → DAS_steeringControlType = LANE_KEEP_ASSIST (2)
+//   LEGACY → ANGLE_CONTROL (1)
 //
 // Safety gates (openpilot Tesla CarController port — opendbc/car/tesla):
-//   accel_max  ≤  2.0 m/s²        (CarControllerParams.ACCEL_MAX)
-//   accel_min  ≥ -3.48 m/s²       (CarControllerParams.ACCEL_MIN)
+//   accel_max  ≤  2.0 m/s²       (ACCEL_MAX)
+//   accel_min  ≥ -3.48 m/s²      (ACCEL_MIN)
 //   speed cap  ≤ runtime dasSpeedCapKph (NVS, default 25, max 200 kph)
-//   jerk       ±4.9 m/s³          (JERK_LIMIT_MAX/MIN, ACC faults at ±5.0)
-//   angle rate ≤ 5°/20 ms frame   (MAX_ANGLE_RATE — EPS faults at 12)
-//   max angle  ≤ 360° absolute, additionally clamped by speed-aware
-//              bicycle-model lateral-accel cap (≤ 3.0 m/s²) above 8 kph
+//   jerk       ±4.9 m/s³         (fault threshold ±5.0)
+//   angle rate ≤ 5°/20 ms frame  (EPS faults at 12)
+//   max angle  ≤ 360° absolute, speed-aware lateral-accel clamp above 8 kph
 //   standstill brake-hold = -0.4 m/s² when no input near zero speed
 //   dead-man   frames stop if dasSetControl() not called within 150 ms
-//   cancel     5× DAS_ACC_CANCEL frames sent before going silent,
-//              counter pre-synced to last observed AP frame +1
+//   cancel     5× DAS_ACC_CANCEL frames before going silent
 
-// ── DAS CAN IDs (defined here, also registered in ids.h) ─────────────────────
-// These IDs already exist in ids.h; they are listed here for clarity only.
-// #define CAN_ID_DAS_CONTROL      0x2B9  (see ids.h)
-// #define CAN_ID_DAS_STEERING_CTRL 0x488 (see ids.h)
-// #define CAN_ID_APS_EAC_MONITOR  0x27D  (see ids.h)
+#define DAS_ACC_ON              4     // DAS_accState value: ACC engaged
+#define DAS_ACC_CANCEL          13    // DAS_accState value: disengage ACC
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-#define DAS_ACC_ON              4
-#define DAS_ACC_CANCEL          13
+#define DAS_STEER_NONE          0     // No steering control
+#define DAS_STEER_ANGLE_CTRL    1     // HW3 / LEGACY angle control mode
+#define DAS_STEER_LKA           2     // HW4 FSD14+ lane keep assist mode
 
-#define DAS_STEER_NONE          0
-#define DAS_STEER_ANGLE_CTRL    1   // HW3 / LEGACY
-#define DAS_STEER_LKA           2   // HW4 FSD14+
-
-#define DAS_CTRL_INTERVAL_MS    40   // 25 Hz
-#define DAS_STEER_INTERVAL_MS   20   // 50 Hz
-#define DAS_EAC_INTERVAL_MS     100  // 10 Hz
-#define DAS_CANCEL_FRAMES       5    // cancel burst length
+#define DAS_CTRL_INTERVAL_MS    40    // 25 Hz longitudinal frame rate
+#define DAS_STEER_INTERVAL_MS   20    // 50 Hz steering frame rate
+#define DAS_EAC_INTERVAL_MS     100   // 10 Hz EPAS allow frame rate
+#define DAS_CANCEL_FRAMES       5     // Number of cancel frames in disengage burst
 
 #define DAS_ACCEL_MAX_MS2       2.0f
 #define DAS_ACCEL_MIN_MS2      -3.48f
-#define DAS_SPEED_CAP_DEFAULT   25.0f   // default safety cap on first boot (overridden by NVS)
-#define DAS_SPEED_CAP_MIN_KPH   1.0f    // never below this
-#define DAS_SPEED_CAP_MAX_KPH   200.0f  // absolute compile-time ceiling (DAS_control byte limit)
-#define DAS_SPEED_LIMIT_DEFAULT 25.0f   // default user speed limit (overridden by NVS)
+#define DAS_SPEED_CAP_DEFAULT   25.0f   // Default safety cap on first boot (NVS-overridden)
+#define DAS_SPEED_CAP_MIN_KPH   1.0f    // Minimum allowed safety cap
+#define DAS_SPEED_CAP_MAX_KPH   200.0f  // Absolute compile-time ceiling (DAS_control byte limit)
+#define DAS_SPEED_LIMIT_DEFAULT 25.0f   // Default user speed limit (NVS-overridden)
 #define DAS_JERK_MAX_MS3        4.9f
 #define DAS_JERK_MIN_MS3       -4.9f
-#define DAS_DEADMAN_MS          150
-// openpilot Tesla CarControllerParams (opendbc/car/tesla/values.py):
-//   MAX_ANGLE_RATE = 5°/20ms (steering frame interval). EPS faults at 12.
-//   STEER_STEP = 2 → angle frame at 50 Hz (matches our DAS_STEER_INTERVAL_MS).
-#define DAS_MAX_ANGLE_RATE_DEG  5.0f    // per 20 ms steering frame
-#define DAS_MAX_ANGLE_DEG       360.0f  // EPAS hard fault above this
-// Speed-aware angle clamp: openpilot uses VehicleModel + MAX_LATERAL_ACCEL.
-// We approximate with constant lateral-accel cap a_y_max ≈ 3.0 m/s² and
-// Tesla Model 3 wheelbase 2.875 m. max_angle_rad ≈ a_y_max * L / v² for
-// small angles. Below DAS_LOW_SPEED_KPH the clamp is bypassed (full lock).
+#define DAS_DEADMAN_MS          150     // Dead-man timeout before auto-cancel
+
+// Steering angle rate limit: 5° per 20 ms frame (openpilot MAX_ANGLE_RATE). EPS faults at 12.
+#define DAS_MAX_ANGLE_RATE_DEG  5.0f
+// EPAS hard fault above 360° absolute
+#define DAS_MAX_ANGLE_DEG       360.0f
+// Below this speed the lateral-accel angle clamp is bypassed (full lock for parking)
 #define DAS_LOW_SPEED_KPH       8.0f
+// Lateral acceleration cap for speed-aware angle limiting (bicycle model approximation)
 #define DAS_LAT_ACCEL_MAX_MS2   3.0f
+// Tesla Model 3 wheelbase used in bicycle-model angle calculation
 #define DAS_WHEELBASE_M         2.875f
-// Standstill brake-hold: if no longitudinal input and we're near stop,
-// inject a small negative accel so the car doesn't roll. openpilot uses a
-// similar "creep prevention" / brake-hold strategy on Tesla port.
+// Standstill brake-hold threshold speed
 #define DAS_STANDSTILL_KPH      1.5f
+// Brake-hold deceleration injected at standstill to prevent creep/roll
 #define DAS_STANDSTILL_HOLD_MS2 -0.4f
 
-// ── Static state ──────────────────────────────────────────────────────────────
 static bool          dasDriveEnabled   = false;
-static bool          dasActive         = false;   // has live control input
-static float         dasSteerAngle     = 0.0f;    // degrees, signed
-static float         dasAccelMin       = 0.0f;    // m/s²  (≤ 0, brake)
-static float         dasAccelMax       = 0.0f;    // m/s²  (≥ 0, accel)
+static bool          dasActive         = false;     // Has live control input from gamepad
+static float         dasSteerAngle     = 0.0f;      // Requested steer angle (degrees, signed)
+static float         dasAccelMin       = 0.0f;      // Brake command (m/s², ≤ 0)
+static float         dasAccelMax       = 0.0f;      // Throttle command (m/s², ≥ 0)
 static float         dasSetSpeedKph    = DAS_SPEED_CAP_DEFAULT;
-static float         dasSpeedCapKph    = DAS_SPEED_CAP_DEFAULT;   // runtime safety cap (NVS-backed)
-static float         dasSpeedLimitKph  = DAS_SPEED_LIMIT_DEFAULT; // user-configured speed limit
-static uint8_t       dasCounter3       = 0;       // DAS_controlCounter  [0..7]
-static uint8_t       dasCounter4       = 0;       // steeringControlCounter [0..15]
-static uint8_t       dasEacCounter     = 0;       // APS_eacMonitorCounter [0..15]
+static float         dasSpeedCapKph    = DAS_SPEED_CAP_DEFAULT;   // Runtime safety cap (NVS-backed)
+static float         dasSpeedLimitKph  = DAS_SPEED_LIMIT_DEFAULT; // User-configured speed limit
+static uint8_t       dasCounter3       = 0;         // DAS_controlCounter [0..7]
+static uint8_t       dasCounter4       = 0;         // steeringControlCounter [0..15]
+static uint8_t       dasEacCounter     = 0;         // APS_eacMonitorCounter [0..15]
 static unsigned long dasCtrlLastMs     = 0;
 static unsigned long dasSteerLastMs    = 0;
 static unsigned long dasEacLastMs      = 0;
-static unsigned long dasLastUpdateMs   = 0;       // dead-man timer
-static uint8_t       dasCancelCount    = 0;       // cancel frames left to send
-static float         dasAppliedAngle   = 0.0f;    // last commanded steer angle (post rate-limit)
+static unsigned long dasLastUpdateMs   = 0;         // Dead-man timer reference
+static uint8_t       dasCancelCount    = 0;         // Cancel frames remaining to send
+static float         dasAppliedAngle   = 0.0f;      // Last commanded steer angle (post rate-limit)
 static Preferences   dasPrefs;
 
-// ── AP Computer observation ────────────────────────────────────────────────────
-// REMOVED. The previous implementation passively sniffed AP DAS frames and
-// implemented YIELD/COPILOT/OVERRIDE co-existence modes. That feature has
-// been deleted: this firmware is the sole authority on the chassis bus and
-// the user drives the car with a gamepad — no AP computer participates.
-
-// Force a 5-frame DAS cancel burst (tells the car to disengage AP cruise).
-// Safe to call any time; only takes effect if dasDriveEnabled is true so we
-// actually own the bus right now.
+/**
+ * @brief Force a 5-frame DAS cancel burst to disengage AP cruise.
+ *
+ * Safe to call any time; only takes effect if dasDriveEnabled is true
+ * so we actually own the chassis bus.
+ */
 static void dasSendCancelBurst()
 {
     dasActive      = false;
     dasCancelCount = DAS_CANCEL_FRAMES;
 }
 
-// ── Tesla CAN checksum ────────────────────────────────────────────────────────
-// Matches teslacan.py: sum = (addr & 0xFF) + (addr >> 8), then add all bytes
-// except the checksum byte, result & 0xFF.
+/**
+ * @brief Compute the Tesla CAN checksum for a DAS frame.
+ *
+ * Algorithm matches teslacan.py: sum = (addr & 0xFF) + (addr >> 8), then add
+ * all payload bytes except the checksum byte position, result masked to 8 bits.
+ *
+ * @param canId The CAN arbitration ID.
+ * @param data Pointer to the frame payload bytes.
+ * @param len Total payload length in bytes.
+ * @param checksumByte Index of the byte reserved for the checksum (excluded from sum).
+ * @return The computed 8-bit checksum value.
+ */
 static uint8_t dasChecksum(uint32_t canId, const uint8_t *data, uint8_t len, uint8_t checksumByte)
 {
     uint8_t sum = (uint8_t)(canId & 0xFF) + (uint8_t)((canId >> 8) & 0xFF);
@@ -124,24 +123,33 @@ static uint8_t dasChecksum(uint32_t canId, const uint8_t *data, uint8_t len, uin
     return sum & 0xFF;
 }
 
-// ── Frame builders ────────────────────────────────────────────────────────────
-
-// DAS_control (0x2B9, 8 bytes) — little-endian (Intel) bit order:
-//   bits  0-11: DAS_setSpeed    (factor 0.1)
-//   bits 12-15: DAS_accState    (4=ACC_ON, 13=CANCEL)
-//   bits 16-17: DAS_aebEvent    (0)
-//   bits 18-26: DAS_jerkMin     (factor 0.018, offset -9.1)
-//   bits 27-34: DAS_jerkMax     (factor 0.034)
-//   bits 35-43: DAS_accelMin    (factor 0.04, offset -15)
-//   bits 44-52: DAS_accelMax    (factor 0.04, offset -15)
-//   bits 53-55: DAS_controlCounter
-//   bits 56-63: DAS_controlChecksum
+/**
+ * @brief Build a DAS_control frame (0x2B9, 8 bytes, little-endian).
+ *
+ * Bit layout:
+ *   bits  0-11: DAS_setSpeed (factor 0.1)
+ *   bits 12-15: DAS_accState (4=ACC_ON, 13=CANCEL)
+ *   bits 16-17: DAS_aebEvent (always 0)
+ *   bits 18-26: DAS_jerkMin (factor 0.018, offset -9.1)
+ *   bits 27-34: DAS_jerkMax (factor 0.034)
+ *   bits 35-43: DAS_accelMin (factor 0.04, offset -15)
+ *   bits 44-52: DAS_accelMax (factor 0.04, offset -15)
+ *   bits 53-55: DAS_controlCounter
+ *   bits 56-63: DAS_controlChecksum
+ *
+ * @param d Output buffer (8 bytes, zeroed and filled by this function).
+ * @param speed_kph Desired set speed in km/h (clamped to safety cap).
+ * @param accel_min Minimum acceleration in m/s² (brake, ≤ 0).
+ * @param accel_max Maximum acceleration in m/s² (throttle, ≥ 0).
+ * @param counter Rolling counter value [0..7].
+ * @param active True if ACC is engaged, false to send CANCEL state.
+ */
 static void buildDasControlFrame(uint8_t *d, float speed_kph, float accel_min,
                                   float accel_max, uint8_t counter, bool active)
 {
     memset(d, 0, 8);
 
-    // Hard clamp
+    // Hard clamp inputs to safe operating range
     if (speed_kph < 0)               speed_kph = 0;
     if (speed_kph > dasSpeedCapKph) speed_kph = dasSpeedCapKph;
     if (accel_min < DAS_ACCEL_MIN_MS2) accel_min = DAS_ACCEL_MIN_MS2;
@@ -151,13 +159,13 @@ static void buildDasControlFrame(uint8_t *d, float speed_kph, float accel_min,
 
     uint16_t setSpeedRaw = (uint16_t)(speed_kph / 0.1f + 0.5f);
     uint8_t  accState    = active ? DAS_ACC_ON : DAS_ACC_CANCEL;
-    // Fixed jerk limits (safe operating range, below 5.0 m/s³ fault threshold)
-    uint16_t jerkMinRaw  = (uint16_t)((DAS_JERK_MIN_MS3 + 9.1f) / 0.018f + 0.5f); // ≈233
-    uint8_t  jerkMaxRaw  = (uint8_t) (DAS_JERK_MAX_MS3 / 0.034f + 0.5f);          // ≈144
+    // Fixed jerk limits (safe range, below ±5.0 m/s³ fault threshold)
+    uint16_t jerkMinRaw  = (uint16_t)((DAS_JERK_MIN_MS3 + 9.1f) / 0.018f + 0.5f);
+    uint8_t  jerkMaxRaw  = (uint8_t) (DAS_JERK_MAX_MS3 / 0.034f + 0.5f);
     uint16_t accelMinRaw = (uint16_t)((accel_min + 15.0f) / 0.04f + 0.5f);
     uint16_t accelMaxRaw = (uint16_t)((accel_max + 15.0f) / 0.04f + 0.5f);
 
-    // Pack LE fields
+    // Pack little-endian bit fields
     d[0]  = (uint8_t)(setSpeedRaw & 0xFF);              // bits  0-7
     d[1] |= (uint8_t)((setSpeedRaw >> 8) & 0x0F);       // bits  8-11
     d[1] |= (uint8_t)((accState & 0x0F) << 4);          // bits 12-15
@@ -174,16 +182,22 @@ static void buildDasControlFrame(uint8_t *d, float speed_kph, float accel_min,
     d[7]  = dasChecksum(CAN_ID_DAS_CONTROL, d, 8, 7);   // bits 56-63
 }
 
-// DAS_steeringControl (0x488, 4 bytes) — mixed endianness:
-//   DAS_steeringAngleRequest    : bit  6, len 15, @0+ (Motorola/BE, factor 0.1, offset -1638.35)
-//   DAS_steeringHapticRequest   : bit  7, len  1, @0+ (Motorola/BE) — bit 7 of byte 0
-//   DAS_steeringControlCounter  : bit 16, len  4, @1+ (Intel/LE)    — byte 2 bits[3:0]
-//   DAS_steeringControlType     : bit 23, len  2, @0+ (Motorola/BE) — byte 2 bits[7:6]
-//   DAS_steeringControlChecksum : bit 24, len  8, @1+ (Intel/LE)    — byte 3
-//
-// Motorola start bit 6, length 15:
-//   byte[0] bits[6:0] = raw[14:8]  (7 MSBs of 15-bit value)
-//   byte[1]           = raw[7:0]   (8 LSBs)
+/**
+ * @brief Build a DAS_steeringControl frame (0x488, 4 bytes, mixed endianness).
+ *
+ * Bit layout:
+ *   DAS_steeringAngleRequest   : Motorola bit 6, len 15 (factor 0.1, offset -1638.35)
+ *   DAS_steeringHapticRequest  : Motorola bit 7, len 1 (byte 0 bit 7)
+ *   DAS_steeringControlCounter : Intel bit 16, len 4 (byte 2 bits[3:0])
+ *   DAS_steeringControlType    : Motorola bit 23, len 2 (byte 2 bits[7:6])
+ *   DAS_steeringControlChecksum: Intel bit 24, len 8 (byte 3)
+ *
+ * @param d Output buffer (4 bytes, zeroed and filled by this function).
+ * @param angle_deg Requested steering angle in degrees (signed, ±360 max).
+ * @param enabled True if steering control is active.
+ * @param counter Rolling counter value [0..15].
+ * @param hw4 True for HW4 (LKA mode), false for HW3/LEGACY (angle control mode).
+ */
 static void buildDasSteeringFrame(uint8_t *d, float angle_deg, bool enabled,
                                    uint8_t counter, bool hw4)
 {
@@ -199,9 +213,9 @@ static void buildDasSteeringFrame(uint8_t *d, float angle_deg, bool enabled,
     if (raw_f > 32767) raw_f = 32767;
     uint16_t raw = (uint16_t)(raw_f + 0.5f);
 
-    // byte[0]: haptic(b7)=0, angle[14:8] in bits[6:0]
+    // byte[0]: haptic(b7)=0, angle[14:8] in bits[6:0] (Motorola MSB first)
     d[0] = (uint8_t)((raw >> 8) & 0x7F);
-    // byte[1]: angle[7:0]
+    // byte[1]: angle[7:0] (Motorola LSB portion)
     d[1] = (uint8_t)(raw & 0xFF);
     // byte[2]: steeringControlType[7:6] | counter[3:0]
     uint8_t ctrl_type = 0;
@@ -212,26 +226,37 @@ static void buildDasSteeringFrame(uint8_t *d, float angle_deg, bool enabled,
     d[3] = dasChecksum(CAN_ID_DAS_STEERING_CTRL, d, 4, 3);
 }
 
-// APS_eacMonitor (0x27D, 3 bytes) — all little-endian:
-//   bits  0-1: APS_eacAllow       (1 = ALLOW EPAS to accept steer commands)
-//   bits  8-11: APS_eacMonitorCounter
-//   bits 16-23: APS_eacMonitorChecksum
+/**
+ * @brief Build an APS_eacMonitor frame (0x27D, 3 bytes, little-endian).
+ *
+ * Bit layout:
+ *   bits  0-1:  APS_eacAllow (1 = allow EPAS to accept steer commands)
+ *   bits  8-11: APS_eacMonitorCounter
+ *   bits 16-23: APS_eacMonitorChecksum
+ *
+ * @param d Output buffer (3 bytes, zeroed and filled by this function).
+ * @param counter Rolling counter value [0..15].
+ */
 static void buildApsEacFrame(uint8_t *d, uint8_t counter)
 {
     memset(d, 0, 3);
-    d[0] = 0x01;            // APS_eacAllow = 1 (ALLOW)
+    d[0] = 0x01;            // APS_eacAllow = 1 (permit EPAS steering)
     d[1] = counter & 0x0F; // APS_eacMonitorCounter
     d[2] = dasChecksum(CAN_ID_APS_EAC_MONITOR, d, 3, 2);
 }
 
-// ── NVS ───────────────────────────────────────────────────────────────────────
+/**
+ * @brief Load DAS configuration from NVS (non-volatile storage).
+ *
+ * Reads enabled state, speed cap, and speed limit from the "tcm_das" namespace.
+ * Values are clamped to compile-time min/max bounds.
+ */
 static void dasLoadNvs()
 {
     dasPrefs.begin("tcm_das", true);
     dasDriveEnabled  = dasPrefs.getBool("en", false);
-    // Runtime safety cap (was DAS_SPEED_CAP_KPH compile-time constant; now
-    // changeable from API/serial/dashboard so users with a closed track or
-    // private property can raise it. Hard ceiling is DAS_SPEED_CAP_MAX_KPH.)
+    // Runtime safety cap — changeable from API/serial/dashboard for closed-track use.
+    // Hard ceiling is DAS_SPEED_CAP_MAX_KPH.
     uint16_t cap     = dasPrefs.getUShort("cap", (uint16_t)DAS_SPEED_CAP_DEFAULT);
     if (cap < (uint16_t)DAS_SPEED_CAP_MIN_KPH) cap = (uint16_t)DAS_SPEED_CAP_MIN_KPH;
     if (cap > (uint16_t)DAS_SPEED_CAP_MAX_KPH) cap = (uint16_t)DAS_SPEED_CAP_MAX_KPH;
@@ -242,6 +267,11 @@ static void dasLoadNvs()
     dasPrefs.end();
 }
 
+/**
+ * @brief Persist current DAS configuration to NVS.
+ *
+ * Writes enabled state, speed cap, and speed limit to the "tcm_das" namespace.
+ */
 static void dasSaveNvs()
 {
     dasPrefs.begin("tcm_das", false);
@@ -251,15 +281,21 @@ static void dasSaveNvs()
     dasPrefs.end();
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
-
+/**
+ * @brief Initialize the DAS drive subsystem by loading persisted configuration.
+ */
 static void dasInit()
 {
     dasLoadNvs();
 }
 
-// Enable/disable drive mode — persisted to NVS.
-// Disabling immediately queues 5 cancel frames.
+/**
+ * @brief Enable or disable DAS drive mode (persisted to NVS).
+ *
+ * Disabling immediately queues a 5-frame cancel burst and resets the applied angle.
+ *
+ * @param en True to enable drive mode, false to disable and disengage.
+ */
 static void dasDriveSetEnabled(bool en)
 {
     dasDriveEnabled = en;
@@ -272,11 +308,29 @@ static void dasDriveSetEnabled(bool en)
     dasSaveNvs();
 }
 
+/**
+ * @brief Check if DAS drive mode is enabled.
+ * @return True if drive mode is enabled.
+ */
 static bool dasDriveIsEnabled() { return dasDriveEnabled; }
+
+/**
+ * @brief Check if DAS drive has active live control input.
+ * @return True if actively receiving gamepad commands.
+ */
 static bool dasDriveIsActive()  { return dasActive; }
 
-// Update live control values. Call every ~20 ms (gamepad axis tick).
-// Dead-man: if not called for DAS_DEADMAN_MS, auto-cancel.
+/**
+ * @brief Update live control values from the gamepad. Call every ~20 ms.
+ *
+ * Resets the dead-man timer. If not called within DAS_DEADMAN_MS, auto-cancel triggers.
+ *
+ * @param steer_deg Requested steering angle in degrees (signed).
+ * @param accel_min_ms2 Brake command in m/s² (≤ 0).
+ * @param accel_max_ms2 Throttle command in m/s² (≥ 0).
+ * @param speed_kph Desired set speed in km/h.
+ * @param now Current timestamp in milliseconds (millis()).
+ */
 static void dasSetControl(float steer_deg, float accel_min_ms2, float accel_max_ms2,
                            float speed_kph, unsigned long now)
 {
@@ -289,25 +343,34 @@ static void dasSetControl(float steer_deg, float accel_min_ms2, float accel_max_
     dasActive       = true;
 }
 
-// ── Safety shaping (openpilot Tesla CarController port) ──────────────────────
-// Speed-aware steering angle clamp. Below DAS_LOW_SPEED_KPH the full ±360°
-// is permitted (parking-lot maneuvers). Above that we cap to whichever
-// produces lateral accel ≤ DAS_LAT_ACCEL_MAX_MS2 at the given speed using
-// the bicycle-model small-angle approximation max_angle = a_y_max·L / v².
+/**
+ * @brief Compute the maximum allowed steering angle at a given speed.
+ *
+ * Below DAS_LOW_SPEED_KPH the full ±360° is permitted for parking maneuvers.
+ * Above that threshold, the angle is capped to limit lateral acceleration to
+ * DAS_LAT_ACCEL_MAX_MS2 using the bicycle-model approximation:
+ * max_angle_rad = a_y_max * L / v².
+ *
+ * @param v_kph Current vehicle speed in km/h (absolute value).
+ * @return Maximum allowed steering angle in degrees.
+ */
 static float dasMaxSteerAtSpeed(float v_kph)
 {
     if (v_kph < DAS_LOW_SPEED_KPH) return DAS_MAX_ANGLE_DEG;
     float v_ms  = v_kph / 3.6f;
     float lim_rad = (DAS_LAT_ACCEL_MAX_MS2 * DAS_WHEELBASE_M) / (v_ms * v_ms);
-    float lim_deg = lim_rad * 57.29578f;
+    float lim_deg = lim_rad * 57.29578f; // rad to deg conversion
     if (lim_deg > DAS_MAX_ANGLE_DEG) lim_deg = DAS_MAX_ANGLE_DEG;
     if (lim_deg < 1.0f)              lim_deg = 1.0f;
     return lim_deg;
 }
 
-// Per-frame angle rate limit (openpilot MAX_ANGLE_RATE = 5°/20ms frame).
-// `target` is the externally-requested angle, `last` is what we sent last
-// frame (dasAppliedAngle). Returns the new commanded angle.
+/**
+ * @brief Apply per-frame angle rate limiting (openpilot MAX_ANGLE_RATE = 5°/20ms).
+ * @param target Externally-requested steering angle in degrees.
+ * @param last Previously commanded angle (dasAppliedAngle).
+ * @return New commanded angle after rate limiting.
+ */
 static float dasRateLimitAngle(float target, float last)
 {
     float delta = target - last;
@@ -316,9 +379,16 @@ static float dasRateLimitAngle(float target, float last)
     return last + delta;
 }
 
-// Standstill brake-hold: if we are commanded "no input" near zero speed,
-// inject a small negative accel so the car does not creep/roll. Mirrors
-// openpilot's brake-hold behaviour for Tesla long control.
+/**
+ * @brief Apply standstill brake-hold to prevent creep/roll at near-zero speed.
+ *
+ * If no meaningful longitudinal input is present and the vehicle is nearly stopped,
+ * a small negative acceleration is injected. Mirrors openpilot's brake-hold strategy.
+ *
+ * @param v_kph Current vehicle speed in km/h.
+ * @param accel_min Reference to minimum acceleration (modified in-place if hold applies).
+ * @param accel_max Reference to maximum acceleration (read to detect "no input").
+ */
 static void dasApplyStandstillHold(float v_kph, float &accel_min, float &accel_max)
 {
     bool noInput = (accel_max < 0.05f) && (accel_min > -0.05f);
@@ -329,26 +399,31 @@ static void dasApplyStandstillHold(float v_kph, float &accel_min, float &accel_m
     }
 }
 
-// Rate-limited CAN frame sender. Call every loop iteration.
+/**
+ * @brief Rate-limited CAN frame sender — call every loop iteration.
+ *
+ * Manages timing for all three DAS frames (control, steering, EAC) and handles
+ * dead-man timeout, cancel burst sequencing, and speed-aware angle clamping.
+ *
+ * @param now Current timestamp in milliseconds (millis()).
+ * @param s Global state reference (provides vehicle speed, variant, txPaused flag).
+ */
 static void dasTick(unsigned long now, const State &s)
 {
     if (s.txPaused) return;
     if (!dasDriveEnabled && dasCancelCount == 0) return;
 
-    // Dead-man: auto-cancel if no update received recently
+    // Dead-man: auto-cancel if no control update received within timeout
     if (dasActive && (now - dasLastUpdateMs) > DAS_DEADMAN_MS)
     {
         dasActive      = false;
         dasCancelCount = DAS_CANCEL_FRAMES;
     }
 
-    // AP co-existence has been removed — we are the sole authority on the
-    // chassis bus when dasDriveEnabled is true. No per-frame AP gating.
-
     const bool active = dasActive;
     const bool hw4    = (s.variant == HW4);
 
-    // APS_eacMonitor — 10 Hz
+    // APS_eacMonitor — 10 Hz (EPAS steer-allow keepalive)
     if (now - dasEacLastMs >= DAS_EAC_INTERVAL_MS)
     {
         dasEacLastMs = now;
@@ -365,20 +440,20 @@ static void dasTick(unsigned long now, const State &s)
         }
     }
 
-    // DAS_steeringControl — 50 Hz
+    // DAS_steeringControl — 50 Hz (lateral angle command)
     if (now - dasSteerLastMs >= DAS_STEER_INTERVAL_MS)
     {
         dasSteerLastMs = now;
         if (dasDriveEnabled)
         {
-            // openpilot Tesla port: speed-aware angle clamp + 5°/frame rate limit.
+            // Speed-aware angle clamp + 5°/frame rate limit (openpilot Tesla port)
             float vKph    = fabsf(s.vehicleSpeed);
             float maxAng  = dasMaxSteerAtSpeed(vKph);
             float target  = dasSteerAngle;
             if (target >  maxAng) target =  maxAng;
             if (target < -maxAng) target = -maxAng;
             float commanded = active ? dasRateLimitAngle(target, dasAppliedAngle)
-                                     : 0.0f;  // disengaged → relax to centre
+                                     : 0.0f; // Disengaged — relax to centre
             dasAppliedAngle = commanded;
 
             uint8_t d[4];
@@ -392,14 +467,13 @@ static void dasTick(unsigned long now, const State &s)
         }
     }
 
-    // DAS_control — 25 Hz
+    // DAS_control — 25 Hz (longitudinal ACC command)
     if (now - dasCtrlLastMs >= DAS_CTRL_INTERVAL_MS)
     {
         dasCtrlLastMs = now;
         if (dasDriveEnabled && (active || dasCancelCount > 0))
         {
-            // Standstill brake-hold so car doesn't creep when the user lets
-            // go of both triggers. Only applied while actively driving.
+            // Standstill brake-hold prevents creep when user releases both triggers
             float aMin = dasAccelMin, aMax = dasAccelMax;
             if (active) dasApplyStandstillHold(s.vehicleSpeed, aMin, aMax);
 
@@ -418,9 +492,15 @@ static void dasTick(unsigned long now, const State &s)
     }
 }
 
-// ── Command Execution ─────────────────────────────────────────────────────────
-// Handles: drive:on  drive:off
-// Caller (dispatch.h) handles sendAck/sendLog/sendStatus.
+/**
+ * @brief Execute a DAS drive command string received from the client.
+ *
+ * Supported commands: "drive:on", "drive:off", "drive:speed:<kph>", "drive:cap:<kph>".
+ *
+ * @param cmd Null-terminated command string.
+ * @param s Global state reference (unused but required by dispatch signature).
+ * @return True if the command was recognized and executed, false otherwise.
+ */
 static bool executeDasCmd(const char *cmd, State &)
 {
     if (strncmp(cmd, "drive:", 6) != 0) return false;
@@ -447,14 +527,13 @@ static bool executeDasCmd(const char *cmd, State &)
     }
     if (strncmp(sub, "cap:", 4) == 0)
     {
-        // Runtime safety cap. Bounded by DAS_SPEED_CAP_MIN/MAX_KPH so users
-        // can't accidentally lock themselves out (min) or send a value that
-        // overflows the DAS_control speed byte (max).
+        // Runtime safety cap — bounded so users can't lock themselves out (min)
+        // or overflow the DAS_control speed byte (max).
         int v = atoi(sub + 4);
         if (v < (int)DAS_SPEED_CAP_MIN_KPH) v = (int)DAS_SPEED_CAP_MIN_KPH;
         if (v > (int)DAS_SPEED_CAP_MAX_KPH) v = (int)DAS_SPEED_CAP_MAX_KPH;
         dasSpeedCapKph = (float)v;
-        // If the user-facing limit is now above the new cap, pull it down.
+        // Pull user-facing limit down if it now exceeds the new cap
         if (dasSpeedLimitKph > dasSpeedCapKph) dasSpeedLimitKph = dasSpeedCapKph;
         dasSaveNvs();
         return true;

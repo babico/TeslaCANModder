@@ -368,11 +368,30 @@
 						></label>
 					</div>
 					<div class="row">
-						<span>Nag Suppress</span>
+						<span>Nag Mode</span>
+						<select
+							class="input"
+							id="nagModeSel"
+							onchange="setNagMode(this.value)"
+							style="width: auto"
+						>
+							<option value="off">off — no suppression</option>
+							<option value="bit19">bit19 — clear ECE R79 bit</option>
+							<option value="legacy">legacy — EPAS echo, fixed 0 Nm</option>
+							<option value="safe">safe — DAS-gated echo</option>
+							<option value="natural">natural — Gaussian 0.08-0.18 Nm</option>
+							<option value="organic">organic — DAS state machine</option>
+							<option value="full">full — bit19 + organic</option>
+						</select>
+					</div>
+					<div class="row">
+						<span>Nag Organic Driver Bypass</span>
 						<label class="switch"
-							><input type="checkbox" id="nagTg" onchange="toggleNag()" /><span
-								class="slider"
-							></span
+							><input
+								type="checkbox"
+								id="nagBypassTg"
+								onchange="toggleNagBypass()"
+							/><span class="slider"></span
 						></label>
 					</div>
 					<div class="row">
@@ -474,8 +493,8 @@
 					<select class="input" id="probeCmd">
 						<option value="apgate:on">apgate:on → apGateEnabled=true</option>
 						<option value="apgate:off">apgate:off → apGateEnabled=false</option>
-						<option value="nag:on">nag:on → nag=true</option>
-						<option value="nag:off">nag:off → nag=false</option>
+						<option value="nag:mode:off">nag:mode:off → nagMode=off</option>
+						<option value="nag:mode:organic">nag:mode:organic → nagMode=organic</option>
 						<option value="mirror:autofold:on">
 							mirror:autofold:on → mirrorAutoFold=true
 						</option>
@@ -724,8 +743,8 @@
 			const WRITE_PROBE_CASES = {
 				"apgate:on": { key: "apGateEnabled", expected: true },
 				"apgate:off": { key: "apGateEnabled", expected: false },
-				"nag:on": { key: "nag", expected: true },
-				"nag:off": { key: "nag", expected: false },
+				"nag:mode:off": { key: "nagMode", expected: "off" },
+				"nag:mode:organic": { key: "nagMode", expected: "organic" },
 				"mirror:autofold:on": { key: "mirrorAutoFold", expected: true },
 				"mirror:autofold:off": { key: "mirrorAutoFold", expected: false },
 			};
@@ -864,8 +883,12 @@
 				cmd(S.fsd ? "fsd:off" : "fsd:on");
 			}
 
-			function toggleNag() {
-				cmd(S.nag ? "nag:off" : "nag:on");
+			function setNagMode(mode) {
+				cmd("nag:mode:" + mode);
+			}
+
+			function toggleNagBypass() {
+				cmd(S.nagOrgBypass ? "nag:bypass:off" : "nag:bypass:on");
 			}
 
 			function toggleIsa() {
@@ -1229,7 +1252,7 @@
 				let h = "<b>Variant:</b> " + escapeHtml(S.variant || "?");
 				h += " &nbsp; <b>CAN:</b> " + (S.chassisOnline ? "Online" : "Offline");
 				h += "<br><b>FSD:</b> " + (S.fsd ? "ON" : "OFF");
-				h += " &nbsp; <b>Nag:</b> " + (S.nag ? "ON" : "OFF");
+				h += " &nbsp; <b>Nag:</b> " + escapeHtml(S.nagMode || "off");
 				h += " &nbsp; <b>Mirror Auto:</b> " + (S.mirrorAutoFold ? "ON" : "OFF");
 				const pn =
 					["Chill", "Normal", "Hurry", "Max", "Sloth"][S.profile] ||
@@ -1251,7 +1274,8 @@
 				$("chipUptime").textContent = "Up: " + Math.floor((S.uptime || 0) / 1000) + "s";
 
 				$("fsdTg").checked = !!S.fsd;
-				$("nagTg").checked = !!S.nag;
+				if ($("nagModeSel")) $("nagModeSel").value = S.nagMode || "off";
+				if ($("nagBypassTg")) $("nagBypassTg").checked = !!S.nagOrgBypass;
 				$("isaTg").checked = !!S.isaChime;
 				$("mirrorAutoTg").checked = !!S.mirrorAutoFold;
 				$("apGateTg").checked = !!S.apGateEnabled;

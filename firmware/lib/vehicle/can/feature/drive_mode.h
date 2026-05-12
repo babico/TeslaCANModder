@@ -1,25 +1,34 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/drive_mode.h
+ * @brief Drive mode override ("Ghost Mode") via CAN ID 0x334 injection
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
-
-// ── Drive Mode Override ("Ghost Mode") ───────────────────────────────────────
-// Injects CAN ID 0x334 to override drive mode mapping at runtime.
-// Motor controller accepts the latest CAN value at 50ms intervals.
-//
-// Byte 0 Bits 5-6: 00=Chill, 01=Standard, 10=Performance
-// Also sets regen torque limit byte for consistent feel.
 
 #define CAN_ID_DRIVE_MODE 0x334
 #define DRIVE_MODE_INTERVAL_MS 50
 
+/**
+ * @brief Available drive mode override values for CAN injection.
+ */
 enum DriveMode
 {
-	DRIVE_MODE_NONE = 0, // No injection (pass-through)
-	DRIVE_MODE_CHILL = 1,
-	DRIVE_MODE_STANDARD = 2,
-	DRIVE_MODE_PERFORMANCE = 3
+	DRIVE_MODE_NONE = 0,        // No injection (pass-through)
+	DRIVE_MODE_CHILL = 1,       // Chill mode — reduced torque response
+	DRIVE_MODE_STANDARD = 2,    // Standard mode — default torque mapping
+	DRIVE_MODE_PERFORMANCE = 3  // Performance mode — maximum torque response
 };
 
+/**
+ * @brief Get a human-readable name for a drive mode value.
+ * @param mode Drive mode enum value.
+ * @return Null-terminated string name ("chill", "standard", "performance", or "none").
+ */
 inline const char *driveModeName(uint8_t mode)
 {
 	switch (mode)
@@ -35,6 +44,12 @@ inline const char *driveModeName(uint8_t mode)
 	}
 }
 
+/**
+ * @brief Parse a drive mode name string into its numeric enum value.
+ * @param name Null-terminated mode name ("chill", "standard", "performance", "off", "none").
+ * @param out Output parameter receiving the parsed DriveMode value.
+ * @return True if the name was recognized and parsed successfully.
+ */
 inline bool parseDriveMode(const char *name, uint8_t &out)
 {
 	if (strcmp(name, "chill") == 0)
@@ -60,39 +75,47 @@ inline bool parseDriveMode(const char *name, uint8_t &out)
 	return false;
 }
 
-// Build a drive mode injection frame
+/**
+ * @brief Build a drive mode injection frame for CAN ID 0x334.
+ * @param mode Target drive mode to inject.
+ * @param lastDrive Pointer to the last cached 8-byte drive config frame payload.
+ * @return Fully constructed Frame ready for transmission on the vehicle bus.
+ */
 inline Frame buildDriveModeFrame(uint8_t mode, const uint8_t *lastDrive)
 {
 	Frame f;
 	f.id = CAN_ID_DRIVE_MODE;
 	f.dlc = 8;
-	// Copy base from last cached drive config frame
+	// Copy base payload from last cached drive config frame
 	for (uint8_t i = 0; i < 8; i++)
 		f.data[i] = lastDrive[i];
-	// Set mode bits: byte[0] bits[6:5]
+	// Map mode enum to 2-bit CAN encoding for byte[0] bits[6:5]
 	uint8_t modeBits = 0;
 	switch (mode)
 	{
 	case DRIVE_MODE_CHILL:
-		modeBits = 0x00;
+		modeBits = 0x00; // 00 = Chill
 		break;
 	case DRIVE_MODE_STANDARD:
-		modeBits = 0x01;
+		modeBits = 0x01; // 01 = Standard
 		break;
 	case DRIVE_MODE_PERFORMANCE:
-		modeBits = 0x02;
+		modeBits = 0x02; // 10 = Performance
 		break;
 	default:
-		modeBits = 0x01;
+		modeBits = 0x01; // Default to Standard
 		break;
 	}
-	f.data[0] = (f.data[0] & ~0x60) | ((modeBits & 0x03) << 5);
-	// Recalculate checksum (same as pedal/regen/stop)
-	f.data[7] = driveChecksum(f.data, 8);
+	f.data[0] = (f.data[0] & ~0x60) | ((modeBits & 0x03) << 5); // bits 6:5 of byte 0
+	f.data[7] = driveChecksum(f.data, 8); // Recalculate frame checksum
 	return f;
 }
 
-// Drive mode tick — call from main loop, injects at DRIVE_MODE_INTERVAL_MS
+/**
+ * @brief Periodic tick for drive mode injection, called from the main loop.
+ * @param s Global state containing drive mode override settings and timing.
+ * @param now Current timestamp in milliseconds.
+ */
 inline void driveModeTick(State &s, unsigned long now)
 {
 	if (s.driveModeOverride == DRIVE_MODE_NONE)
@@ -110,7 +133,12 @@ inline void driveModeTick(State &s, unsigned long now)
 	driverSend(f, BUS_VEHICLE);
 }
 
-// ── Drive Mode Command ───────────────────────────────────────────────────────
+/**
+ * @brief Execute the "drivemode:<mode>" command to set the drive mode override.
+ * @param cmd Full command string (expected prefix "drivemode:").
+ * @param s Global state to update with the new drive mode.
+ * @return True if the command was recognized and executed successfully.
+ */
 static bool executeDriveModeCmd(const char *cmd, State &s)
 {
 	if (strncmp(cmd, "drivemode:", 10) != 0)

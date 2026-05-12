@@ -1,5 +1,8 @@
-// ── Wiper Persist Tests ─────────────────────────────────────────────────────
-// Tests wiper speed persistence save/restore and command handling.
+/** @file firmware/test/test_native_wiper_persist/test_wiper_persist.cpp
+ *  @brief Unit tests for wiper setting persistence
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -17,7 +20,6 @@ class __FlashStringHelper;
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
@@ -48,7 +50,6 @@ void setUp()
 }
 void tearDown() {}
 
-// ── wiperPersistSave ────────────────────────────────────────────────────────
 
 void test_save_stores_speed_when_enabled()
 {
@@ -67,7 +68,6 @@ void test_save_does_nothing_when_disabled()
 	TEST_ASSERT_EQUAL(0, s.savedWiperSpeed);
 }
 
-// ── wiperPersistRestore ─────────────────────────────────────────────────────
 
 void test_restore_sends_frame_when_enabled()
 {
@@ -109,7 +109,6 @@ void test_restore_skips_without_ctrl()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── executeWiperPersistCmd ─────────────────────────────────────────────────────
 
 void test_cmd_on()
 {
@@ -132,7 +131,6 @@ void test_cmd_unknown()
 	TEST_ASSERT_FALSE(executeWiperPersistCmd("wiperpersist:toggle", s));
 }
 
-// ── main ────────────────────────────────────────────────────────────────────
 
 int main(int, char **)
 {
@@ -148,3 +146,4 @@ int main(int, char **)
 	RUN_TEST(test_cmd_unknown);
 	return UNITY_END();
 }
+

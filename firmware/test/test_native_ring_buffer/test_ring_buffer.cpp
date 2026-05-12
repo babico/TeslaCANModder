@@ -1,5 +1,8 @@
-// ── Ring Buffer Tests ───────────────────────────────────────────────────────
-// Tests the lock-free ring buffer for CAN frame distribution.
+/** @file firmware/test/test_native_ring_buffer/test_ring_buffer.cpp
+ *  @brief Unit tests for generic ring buffer data structure
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -20,13 +23,11 @@ class __FlashStringHelper;
 
 void setUp()
 {
-	// Reset ring buffer between tests
 	canRingBuffer.writeIdx = 0;
 	canRingBuffer.seqCounter = 0;
 }
 void tearDown() {}
 
-// ── Tests ───────────────────────────────────────────────────────────────────
 
 void test_push_increments_head()
 {
@@ -59,9 +60,7 @@ void test_push_wraps_at_capacity()
 		f.id = i;
 		ringPush(f, 0, i * 10);
 	}
-	// Head should have wrapped
 	TEST_ASSERT_EQUAL(RING_BUF_SIZE + 5, canRingBuffer.writeIdx);
-	// Last entry should be at (RING_BUF_SIZE + 4) % RING_BUF_SIZE = 4
 	TEST_ASSERT_EQUAL(RING_BUF_SIZE + 4, canRingBuffer.entries[4].frame.id);
 }
 
@@ -91,7 +90,6 @@ void test_consumer_detects_overflow()
 	RingConsumer c = {};
 	ringReset(c);
 
-	// Push more than ring capacity
 	for (int i = 0; i < RING_BUF_SIZE + 10; i++)
 	{
 		Frame f = {};
@@ -99,9 +97,7 @@ void test_consumer_detects_overflow()
 		ringPush(f, 0, i);
 	}
 
-	// Consumer should detect it was lapped
 	const RingEntry *e = ringPeek(c);
-	// Consumer dropped count should be set
 	TEST_ASSERT_TRUE(c.dropped > 0);
 	(void)e;
 }
@@ -117,11 +113,9 @@ void test_multiple_consumers_independent()
 	f.id = 0x400;
 	ringPush(f, 0, 4000);
 
-	// Both see the frame
 	TEST_ASSERT_TRUE(ringHasData(c1));
 	TEST_ASSERT_TRUE(ringHasData(c2));
 
-	// Advance c1 only
 	ringAdvance(c1);
 	TEST_ASSERT_FALSE(ringHasData(c1));
 	TEST_ASSERT_TRUE(ringHasData(c2));
@@ -136,7 +130,6 @@ void test_seq_increments()
 	uint32_t s2 = canRingBuffer.entries[1].seq;
 	TEST_ASSERT_EQUAL(s1 + 1, s2);
 
-	// ── logRingHead / logRingReadSince ─────────────────────────────────────────
 }
 
 static void resetLogRing()
@@ -235,3 +228,4 @@ int main()
 	RUN_TEST(test_log_ring_read_since_cursor_at_current_head_returns_zero);
 	return UNITY_END();
 }
+

@@ -1,14 +1,29 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/lock.h
+ * @brief Door lock, child lock, and horn control via CAN frame 0x273
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "vehicle/can/fwd.h"
 
-// ── Lock Bit Helpers (0x273 UI_vehicleControl) ───────────────────────────────
+/**
+ * @brief Lock request states for the door lock control field.
+ */
 enum LockRequest
 {
-	LOCK_IDLE = 0,
-	LOCK = 1,
-	UNLOCK = 2
+	LOCK_IDLE = 0, // No lock action requested
+	LOCK = 1,      // Request door lock
+	UNLOCK = 2     // Request door unlock
 };
 
+/**
+ * @brief Set the door lock request field in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param req Desired lock action.
+ */
 inline void setLockRequest(Frame &f, LockRequest req)
 {
 	if (f.dlc < 3)
@@ -16,6 +31,11 @@ inline void setLockRequest(Frame &f, LockRequest req)
 	f.data[2] = (f.data[2] & ~0x0E) | ((req & 0x07) << 1); // bits 17-19
 }
 
+/**
+ * @brief Set the child door lock bit in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param enable True to engage child lock, false to disengage.
+ */
 inline void setChildDoorLock(Frame &f, bool enable)
 {
 	if (f.dlc < 3)
@@ -26,7 +46,15 @@ inline void setChildDoorLock(Frame &f, bool enable)
 		f.data[2] &= ~0x01;
 }
 
-// Horn uses 0x273 bit 61 — kept here as it's lock-adjacent (security)
+/**
+ * @brief Set the horn request bit in a UI_vehicleControl frame.
+ *
+ * Horn uses 0x273 bit 61. Placed in the lock module as it is
+ * security-adjacent functionality.
+ *
+ * @param f CAN frame (0x273) to modify.
+ * @param honk True to activate horn, false to deactivate.
+ */
 inline void setHornRequest(Frame &f, bool honk)
 {
 	if (f.dlc < 8)
@@ -37,8 +65,11 @@ inline void setHornRequest(Frame &f, bool honk)
 		f.data[7] &= ~0x20;
 }
 
-// ── Lock Control (0x273) ─────────────────────────────────────────────────────
-
+/**
+ * @brief Burst-send a door lock or unlock command on BUS_VEHICLE.
+ * @param req Lock action to perform.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlLock(LockRequest req, State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -47,6 +78,10 @@ static void controlLock(LockRequest req, State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
+/**
+ * @brief Burst-send a child door lock activation command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlChildLock(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -55,6 +90,10 @@ static void controlChildLock(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
+/**
+ * @brief Burst-send a horn activation command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlHorn(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -63,8 +102,16 @@ static void controlHorn(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
-// ── Lock Command Execution ───────────────────────────────────────────────────
-
+/**
+ * @brief Execute a lock-related command string.
+ *
+ * Dispatches "lock", "unlock", "lock:child", and "horn" commands.
+ * Requires the vehicle control frame to be available (hasCtrl).
+ *
+ * @param cmd Null-terminated command string.
+ * @param s Vehicle state to operate on.
+ * @return True if the command was recognized and executed.
+ */
 static bool executeLockCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)

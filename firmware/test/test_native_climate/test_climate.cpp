@@ -1,3 +1,10 @@
+/**
+ * @file firmware/test/test_native_climate/test_climate.cpp
+ * @brief Unit tests for climate control commands
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -21,31 +28,44 @@ static State makeState()
 	s.hasClimate = true;
 	return s;
 }
+
+/** @brief Reset test state before each test */
 void setUp() {}
+
+/** @brief Cleanup after each test */
 void tearDown() {}
 
+/** @brief "climate:keep" is accepted when climate cache is available */
 void test_climate_keep()
 {
 	State s = makeState();
 	TEST_ASSERT_TRUE(executeClimateCmd("climate:keep", s));
 }
+
+/** @brief "climate:off" is accepted when climate cache is available */
 void test_climate_off()
 {
 	State s = makeState();
 	TEST_ASSERT_TRUE(executeClimateCmd("climate:off", s));
 }
+
+/** @brief Climate commands are blocked on LEGACY variant */
 void test_climate_legacy_blocks()
 {
 	State s = makeState();
 	s.variant = LEGACY;
 	TEST_ASSERT_FALSE(executeClimateCmd("climate:keep", s));
 }
+
+/** @brief Climate commands are blocked when no climate cache is available */
 void test_climate_no_cache_blocks()
 {
 	State s = makeState();
 	s.hasClimate = false;
 	TEST_ASSERT_FALSE(executeClimateCmd("climate:keep", s));
 }
+
+/** @brief Unknown climate subcommands return false */
 void test_climate_unknown()
 {
 	State s = makeState();

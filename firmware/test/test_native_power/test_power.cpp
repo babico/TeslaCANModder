@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_power/test_power.cpp
+ *  @brief Unit tests for power management commands
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -68,3 +74,4 @@ int main(int, char **)
 	RUN_TEST(test_power_unknown);
 	return UNITY_END();
 }
+

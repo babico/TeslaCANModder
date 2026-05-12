@@ -1,22 +1,27 @@
 #pragma once
+
+/**
+ * @file firmware/lib/core/persist/esp32/board.h
+ * @brief NVS-based settings persistence for ESP32, replacing AVR EEPROM storage
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include <Preferences.h>
 #include "core/types.h"
 
-// ── NVS Persistence (ESP32 replacement for AVR EEPROM) ──────────────────────
-// Uses the ESP32 Preferences library (NVS flash) instead of EEPROM.
-// Namespace: "tcm" (TeslaCANModder)
-
-#define NVS_NAMESPACE "tcm"
-#define NVS_KEY_MAGIC "magic"
-#define NVS_KEY_VERSION "ver"
-#define NVS_SETTINGS_MAGIC 0xCA
-#define NVS_SETTINGS_VERSION 0x0D
+#define NVS_NAMESPACE "tcm"           // NVS namespace for all TeslaCANModder keys
+#define NVS_KEY_MAGIC "magic"         // Key storing the settings magic byte
+#define NVS_KEY_VERSION "ver"         // Key storing the settings schema version
+#define NVS_SETTINGS_MAGIC 0xCA       // Magic byte identifying valid TCM settings
+#define NVS_SETTINGS_VERSION 0x0E     // Current settings schema version (14)
 
 static Preferences prefs;
 
-// ── NVS Corruption Recovery ──────────────────────────────────────────────────
-// Auto-detect corrupt NVS on boot. If magic matches but version doesn't,
-// attempt migration. If magic is wrong, reset to defaults gracefully.
+/**
+ * @brief Check whether the NVS settings store is corrupt
+ * @return true if magic byte is present but does not match expected value
+ */
 inline bool nvsIsCorrupt()
 {
 	prefs.begin(NVS_NAMESPACE, true);
@@ -25,6 +30,9 @@ inline bool nvsIsCorrupt()
 	return magic != 0 && magic != NVS_SETTINGS_MAGIC;
 }
 
+/**
+ * @brief Erase all keys in the TCM NVS namespace
+ */
 inline void nvsReset()
 {
 	prefs.begin(NVS_NAMESPACE, false);
@@ -32,6 +40,11 @@ inline void nvsReset()
 	prefs.end();
 }
 
+/**
+ * @brief Load all persisted settings from NVS into the runtime state
+ * @param s Reference to the global State struct to populate
+ * @return true if settings were loaded successfully, false if missing or version mismatch
+ */
 inline bool loadSettings(State &s)
 {
 	prefs.begin(NVS_NAMESPACE, true); // read-only
@@ -51,15 +64,15 @@ inline bool loadSettings(State &s)
 	s.variant = (Variant)prefs.getUChar("variant", 0);
 	s.fsdEnabled = prefs.getUChar("fsd", 0);
 	s.fsdForceEnabled = prefs.getUChar("ffsd", 0);
-	s.nagSuppress = prefs.getUChar("nag", 0);
 	s.speedProfile = prefs.getUChar("sp", 1);
 	s.profileOverride = prefs.getUChar("spPin", 0);
 	s.speedOffset = prefs.getUChar("offset", 0);
 	s.offsetOverride = prefs.getUChar("offPin", 0);
 	s.isaChimeSuppress = prefs.getUChar("isa", 0);
 	s.summonInject = prefs.getUChar("sumInj", 0);
-	s.nagKillerEnabled = prefs.getUChar("nagK", 0);
-	s.nagKillerMode = (NagKillerMode)prefs.getUChar("nagKM", (uint8_t)NAG_KILLER_LEGACY);
+	// Nag suppression mode and organic-driver bypass flag (see NagMode in core/types.h)
+	s.nagMode = (NagMode)prefs.getUChar("nagMode", (uint8_t)NAG_MODE_OFF);
+	s.nagOrganicDriverBypass = prefs.getUChar("nagOrgDB", 0);
 	s.preconditionEnabled = prefs.getUChar("precond", 0);
 	s.trackModeEnabled = prefs.getUChar("track", 0);
 	s.variantAutoDetect = prefs.getUChar("vAuto", 1);
@@ -92,6 +105,10 @@ inline bool loadSettings(State &s)
 	return true;
 }
 
+/**
+ * @brief Persist all runtime settings from State into NVS flash
+ * @param s Reference to the global State struct to save
+ */
 inline void saveSettings(const State &s)
 {
 	prefs.begin(NVS_NAMESPACE, false); // read-write
@@ -100,15 +117,15 @@ inline void saveSettings(const State &s)
 	prefs.putUChar("variant", (uint8_t)s.variant);
 	prefs.putUChar("fsd", s.fsdEnabled ? 1 : 0);
 	prefs.putUChar("ffsd", s.fsdForceEnabled ? 1 : 0);
-	prefs.putUChar("nag", s.nagSuppress ? 1 : 0);
 	prefs.putUChar("sp", (uint8_t)s.speedProfile);
 	prefs.putUChar("spPin", s.profileOverride ? 1 : 0);
 	prefs.putUChar("offset", (uint8_t)s.speedOffset);
 	prefs.putUChar("offPin", s.offsetOverride ? 1 : 0);
 	prefs.putUChar("isa", s.isaChimeSuppress ? 1 : 0);
 	prefs.putUChar("sumInj", s.summonInject ? 1 : 0);
-	prefs.putUChar("nagK", s.nagKillerEnabled ? 1 : 0);
-	prefs.putUChar("nagKM", (uint8_t)s.nagKillerMode);
+	// Nag suppression mode and organic-driver bypass flag
+	prefs.putUChar("nagMode", (uint8_t)s.nagMode);
+	prefs.putUChar("nagOrgDB", s.nagOrganicDriverBypass ? 1 : 0);
 	prefs.putUChar("precond", s.preconditionEnabled ? 1 : 0);
 	prefs.putUChar("track", s.trackModeEnabled ? 1 : 0);
 	prefs.putUChar("vAuto", s.variantAutoDetect ? 1 : 0);

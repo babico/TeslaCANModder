@@ -372,11 +372,30 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 						></label>
 					</div>
 					<div class="row">
-						<span>Nag Suppress</span>
+						<span>Nag Mode</span>
+						<select
+							class="input"
+							id="nagModeSel"
+							onchange="setNagMode(this.value)"
+							style="width: auto"
+						>
+							<option value="off">off — no suppression</option>
+							<option value="bit19">bit19 — clear ECE R79 bit</option>
+							<option value="legacy">legacy — EPAS echo, fixed 0 Nm</option>
+							<option value="safe">safe — DAS-gated echo</option>
+							<option value="natural">natural — Gaussian 0.08-0.18 Nm</option>
+							<option value="organic">organic — DAS state machine</option>
+							<option value="full">full — bit19 + organic</option>
+						</select>
+					</div>
+					<div class="row">
+						<span>Nag Organic Driver Bypass</span>
 						<label class="switch"
-							><input type="checkbox" id="nagTg" onchange="toggleNag()" /><span
-								class="slider"
-							></span
+							><input
+								type="checkbox"
+								id="nagBypassTg"
+								onchange="toggleNagBypass()"
+							/><span class="slider"></span
 						></label>
 					</div>
 					<div class="row">
@@ -413,16 +432,17 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 						Gamepad / DAS Drive Speed
 					</div>
 					<div class="warning-box">
-						Raises the absolute longitudinal-request ceiling sent to the car. Default
-						25 km/h is parking-lot safe; higher values are for closed-track / private-property
-						use only. Hard upper bound is the protocol byte limit.
+						Raises the absolute longitudinal-request ceiling sent to the car. Default 25
+						km/h is parking-lot safe; higher values are for closed-track /
+						private-property use only. Hard upper bound is the protocol byte limit.
 					</div>
 					<div class="row">
 						<span>DAS Drive Enabled</span>
 						<label class="switch"
-							><input type="checkbox" id="dasDriveTg" onchange="toggleDasDrive()" /><span
-								class="slider"
-							></span
+							><input
+								type="checkbox"
+								id="dasDriveTg"
+								onchange="toggleDasDrive()" /><span class="slider"></span
 						></label>
 					</div>
 					<div class="row" style="gap: 8px; flex-wrap: wrap">
@@ -432,14 +452,16 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 							id="dasSpeedLimitIn"
 							min="1"
 							style="width: 70px"
-							onchange="sendDasSpeedLimit()" />
+							onchange="sendDasSpeedLimit()"
+						/>
 						<span>Hard cap (km/h)</span>
 						<input
 							type="number"
 							id="dasSpeedCapIn"
 							min="1"
 							style="width: 70px"
-							onchange="sendDasSpeedCap()" />
+							onchange="sendDasSpeedCap()"
+						/>
 						<span class="status-line" id="dasSpeedCapMaxLbl"></span>
 					</div>
 				</div>
@@ -475,8 +497,8 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					<select class="input" id="probeCmd">
 						<option value="apgate:on">apgate:on → apGateEnabled=true</option>
 						<option value="apgate:off">apgate:off → apGateEnabled=false</option>
-						<option value="nag:on">nag:on → nag=true</option>
-						<option value="nag:off">nag:off → nag=false</option>
+						<option value="nag:mode:off">nag:mode:off → nagMode=off</option>
+						<option value="nag:mode:organic">nag:mode:organic → nagMode=organic</option>
 						<option value="mirror:autofold:on">
 							mirror:autofold:on → mirrorAutoFold=true
 						</option>
@@ -606,18 +628,52 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 						<button onclick="gpScan()">Scan</button>
 						<button onclick="gpUnpair()">Unpair</button>
 					</div>
-					<div id="gpScanResults" style="display:none; margin-top: 10px">
-						<div style="font-size: 12px; color: var(--muted); margin-bottom: 6px">Found HID devices:</div>
+					<div id="gpScanResults" style="display: none; margin-top: 10px">
+						<div style="font-size: 12px; color: var(--muted); margin-bottom: 6px">
+							Found HID devices:
+						</div>
 						<div id="gpDeviceList"></div>
 					</div>
 					<div style="margin-top: 14px">
-						<div style="font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em">Button Bindings</div>
-						<table id="gpBindTable" style="width:100%; border-collapse:collapse; font-size:12px">
+						<div
+							style="
+								font-size: 12px;
+								font-weight: 600;
+								color: var(--muted);
+								margin-bottom: 6px;
+								text-transform: uppercase;
+								letter-spacing: 0.05em;
+							"
+						>
+							Button Bindings
+						</div>
+						<table
+							id="gpBindTable"
+							style="width: 100%; border-collapse: collapse; font-size: 12px"
+						>
 							<thead>
 								<tr>
-									<th style="text-align:left; padding:3px 6px; color:var(--muted); font-weight:600">Button</th>
-									<th style="text-align:left; padding:3px 6px; color:var(--muted); font-weight:600">Command</th>
-									<th style="padding:3px 6px"></th>
+									<th
+										style="
+											text-align: left;
+											padding: 3px 6px;
+											color: var(--muted);
+											font-weight: 600;
+										"
+									>
+										Button
+									</th>
+									<th
+										style="
+											text-align: left;
+											padding: 3px 6px;
+											color: var(--muted);
+											font-weight: 600;
+										"
+									>
+										Command
+									</th>
+									<th style="padding: 3px 6px"></th>
 								</tr>
 							</thead>
 							<tbody id="gpBindBody"></tbody>
@@ -691,8 +747,8 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 			const WRITE_PROBE_CASES = {
 				"apgate:on": { key: "apGateEnabled", expected: true },
 				"apgate:off": { key: "apGateEnabled", expected: false },
-				"nag:on": { key: "nag", expected: true },
-				"nag:off": { key: "nag", expected: false },
+				"nag:mode:off": { key: "nagMode", expected: "off" },
+				"nag:mode:organic": { key: "nagMode", expected: "organic" },
 				"mirror:autofold:on": { key: "mirrorAutoFold", expected: true },
 				"mirror:autofold:off": { key: "mirrorAutoFold", expected: false },
 			};
@@ -831,8 +887,12 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 				cmd(S.fsd ? "fsd:off" : "fsd:on");
 			}
 
-			function toggleNag() {
-				cmd(S.nag ? "nag:off" : "nag:on");
+			function setNagMode(mode) {
+				cmd("nag:mode:" + mode);
+			}
+
+			function toggleNagBypass() {
+				cmd(S.nagOrgBypass ? "nag:bypass:off" : "nag:bypass:on");
 			}
 
 			function toggleIsa() {
@@ -885,7 +945,12 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					alert("Cap cannot exceed protocol max " + max + " km/h.");
 					return;
 				}
-				if (v > 25 && !confirm("Raising the DAS hard cap above 25 km/h is for closed-track use only. Continue?"))
+				if (
+					v > 25 &&
+					!confirm(
+						"Raising the DAS hard cap above 25 km/h is for closed-track use only. Continue?",
+					)
+				)
 					return;
 				cmd("drive:cap:" + v);
 			}
@@ -962,27 +1027,41 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 
 			function toggleBle() {
 				const en = $("bleTg").checked;
-				cmd(en ? "ble:on" : "ble:off")
-					.then((d) => {
-						if (d && d.ble) { B = d.ble; renderBle(); }
-					});
+				cmd(en ? "ble:on" : "ble:off").then((d) => {
+					if (d && d.ble) {
+						B = d.ble;
+						renderBle();
+					}
+				});
 			}
 
 			function renderGamepad() {
-				const enabled   = !!G.enabled;
+				const enabled = !!G.enabled;
 				const connected = !!G.connected;
-				const scanning  = !!G.scanning;
-				const addr      = G.pairedAddr || "";
+				const scanning = !!G.scanning;
+				const addr = G.pairedAddr || "";
 				let h = "<b>Status:</b> ";
 				if (!enabled) {
 					h += '<span style="color:var(--muted)">Disabled</span>';
 				} else if (connected) {
 					h += '<span style="color:var(--ok)">Connected</span>';
-					h += " &nbsp; <b>Buttons:</b> 0x" + ((G.buttons || 0).toString(16).padStart(4,"0"));
+					h +=
+						" &nbsp; <b>Buttons:</b> 0x" +
+						(G.buttons || 0).toString(16).padStart(4, "0");
 					if (G.axes && G.axes.length >= 6) {
-						h += "<br><b>Axes:</b> LX=" + G.axes[0] + " LY=" + G.axes[1] +
-							" RX=" + G.axes[2] + " RY=" + G.axes[3] +
-							" LT=" + G.axes[4] + " RT=" + G.axes[5];
+						h +=
+							"<br><b>Axes:</b> LX=" +
+							G.axes[0] +
+							" LY=" +
+							G.axes[1] +
+							" RX=" +
+							G.axes[2] +
+							" RY=" +
+							G.axes[3] +
+							" LT=" +
+							G.axes[4] +
+							" RT=" +
+							G.axes[5];
 					}
 				} else if (addr) {
 					h += '<span style="color:var(--warn)">Disconnected</span>';
@@ -1010,26 +1089,42 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 
 			function renderGpScan(devices) {
 				let h = "";
-				(devices || []).forEach(function(d) {
-					h += '<div style="display:flex;align-items:center;gap:8px;margin:3px 0">' +
-						'<span style="font-family:monospace;font-size:11px">' + escapeHtml(d.addr) + '</span>' +
-						' ' + escapeHtml(d.name) +
-						' <button style="padding:2px 8px;font-size:11px" onclick="gpPair(\'' + escapeHtml(d.addr) + '\')">Pair</button>' +
-						'</div>';
+				(devices || []).forEach(function (d) {
+					h +=
+						'<div style="display:flex;align-items:center;gap:8px;margin:3px 0">' +
+						'<span style="font-family:monospace;font-size:11px">' +
+						escapeHtml(d.addr) +
+						"</span>" +
+						" " +
+						escapeHtml(d.name) +
+						' <button style="padding:2px 8px;font-size:11px" onclick="gpPair(\'' +
+						escapeHtml(d.addr) +
+						"')\">Pair</button>" +
+						"</div>";
 				});
-				$("gpDeviceList").innerHTML = h || '<span style="color:var(--muted)">No HID devices found yet</span>';
+				$("gpDeviceList").innerHTML =
+					h || '<span style="color:var(--muted)">No HID devices found yet</span>';
 				$("gpScanResults").style.display = "block";
 			}
 
 			function renderGpBindings(bindings) {
 				let rows = "";
-				(bindings || []).forEach(function(b) {
-					rows += '<tr>' +
-						'<td style="padding:2px 6px;white-space:nowrap">' + escapeHtml(b.button) + '</td>' +
+				(bindings || []).forEach(function (b) {
+					rows +=
+						"<tr>" +
+						'<td style="padding:2px 6px;white-space:nowrap">' +
+						escapeHtml(b.button) +
+						"</td>" +
 						'<td style="padding:2px 6px"><input type="text" class="input" style="padding:3px 6px;font-size:12px;width:100%" ' +
-						'id="gpBind' + b.index + '" value="' + escapeHtml(b.command) + '" placeholder="command e.g. fsd:on" /></td>' +
-						'<td style="padding:2px 6px"><button style="padding:2px 8px;font-size:11px" onclick="gpSaveBind(' + b.index + ')">Save</button></td>' +
-						'</tr>';
+						'id="gpBind' +
+						b.index +
+						'" value="' +
+						escapeHtml(b.command) +
+						'" placeholder="command e.g. fsd:on" /></td>' +
+						'<td style="padding:2px 6px"><button style="padding:2px 8px;font-size:11px" onclick="gpSaveBind(' +
+						b.index +
+						')">Save</button></td>' +
+						"</tr>";
 				});
 				$("gpBindBody").innerHTML = rows;
 			}
@@ -1037,9 +1132,10 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 			function gpScan() {
 				cmd("gamepad:scan").then(() => {
 					$("gpScanResults").style.display = "block";
-					$("gpDeviceList").innerHTML = '<span style="color:var(--muted)">Scanning…</span>';
+					$("gpDeviceList").innerHTML =
+						'<span style="color:var(--muted)">Scanning…</span>';
 					// Poll /api/status after 7 s to render scan results.
-					setTimeout(function() {
+					setTimeout(function () {
 						fetch("/api/status")
 							.then((r) => r.json())
 							.then((d) => {
@@ -1080,11 +1176,21 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 			}
 
 			function startRecorder() {
-				cmd("recorder:on").then((d) => { if (d && d.recorder) { R = d.recorder; renderRecorder(); } });
+				cmd("recorder:on").then((d) => {
+					if (d && d.recorder) {
+						R = d.recorder;
+						renderRecorder();
+					}
+				});
 			}
 
 			function stopRecorder() {
-				cmd("recorder:off").then((d) => { if (d && d.recorder) { R = d.recorder; renderRecorder(); } });
+				cmd("recorder:off").then((d) => {
+					if (d && d.recorder) {
+						R = d.recorder;
+						renderRecorder();
+					}
+				});
 			}
 
 			function downloadRecorder() {
@@ -1150,7 +1256,7 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 				let h = "<b>Variant:</b> " + escapeHtml(S.variant || "?");
 				h += " &nbsp; <b>CAN:</b> " + (S.chassisOnline ? "Online" : "Offline");
 				h += "<br><b>FSD:</b> " + (S.fsd ? "ON" : "OFF");
-				h += " &nbsp; <b>Nag:</b> " + (S.nag ? "ON" : "OFF");
+				h += " &nbsp; <b>Nag:</b> " + escapeHtml(S.nagMode || "off");
 				h += " &nbsp; <b>Mirror Auto:</b> " + (S.mirrorAutoFold ? "ON" : "OFF");
 				const pn =
 					["Chill", "Normal", "Hurry", "Max", "Sloth"][S.profile] ||
@@ -1172,13 +1278,16 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 				$("chipUptime").textContent = "Up: " + Math.floor((S.uptime || 0) / 1000) + "s";
 
 				$("fsdTg").checked = !!S.fsd;
-				$("nagTg").checked = !!S.nag;
+				if ($("nagModeSel")) $("nagModeSel").value = S.nagMode || "off";
+				if ($("nagBypassTg")) $("nagBypassTg").checked = !!S.nagOrgBypass;
 				$("isaTg").checked = !!S.isaChime;
 				$("mirrorAutoTg").checked = !!S.mirrorAutoFold;
 				$("apGateTg").checked = !!S.apGateEnabled;
 				if ($("dasDriveTg")) {
 					$("dasDriveTg").checked = !!S.dasDriveEnabled;
-					const lim = $("dasSpeedLimitIn"), cap = $("dasSpeedCapIn"), lbl = $("dasSpeedCapMaxLbl");
+					const lim = $("dasSpeedLimitIn"),
+						cap = $("dasSpeedCapIn"),
+						lbl = $("dasSpeedCapMaxLbl");
 					if (lim && document.activeElement !== lim) lim.value = S.dasSpeedLimitKph ?? "";
 					if (cap) {
 						if (document.activeElement !== cap) cap.value = S.dasSpeedCapKph ?? "";
@@ -1229,8 +1338,14 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 						render();
 						// /api/status now carries ble/recorder/gamepad subsystem
 						// snapshots — no need for per-feature polls anymore.
-						if (d.ble) { B = d.ble; renderBle(); }
-						if (d.recorder) { R = d.recorder; renderRecorder(); }
+						if (d.ble) {
+							B = d.ble;
+							renderBle();
+						}
+						if (d.recorder) {
+							R = d.recorder;
+							renderRecorder();
+						}
 						if (d.gamepad) {
 							G = d.gamepad;
 							if (G.bindings && !$("gpBindBody").dataset.loaded) {

@@ -1,15 +1,9 @@
-// ── io/bluetooth/board.h Contract Test ─────────────────────────────────────
-// The real esp32.h includes Arduino's BluetoothSerial which is not available
-// in the native test environment. This file documents and enforces the BT
-// adapter contract expected by serial/common.h:
-//   - btInit() initializes the adapter and flips a ready flag
-//   - btIsReady() reports the flag
-//   - btPrint*() are guarded by the ready flag
-//   - btAvailable() returns 0 when not ready
-// We re-implement the contract here against an in-memory fake. If
-// io/bluetooth/board.h ever changes its surface, the parallel implementation
-// in this test must be updated to match — which is the whole point of a
-// contract test for hardware-bound code.
+/**
+ * @file firmware/test/test_native_bluetooth/test_bluetooth.cpp
+ * @brief Unit tests for Bluetooth serial adapter contract
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -18,7 +12,6 @@
 
 class __FlashStringHelper;
 
-// ── Fake BluetoothSerial ───────────────────────────────────────────────────
 struct FakeBT
 {
 	bool started = false;
@@ -113,34 +106,46 @@ char btRead()
 	return (char)btSerial.read();
 }
 
+/** @brief Reset BT ready flag and clear fake serial state before each test */
 void setUp()
 {
 	btReady = false;
 	btSerial = FakeBT();
 }
+
+/** @brief Cleanup after each test */
 void tearDown() {}
 
+/** @brief btIsReady returns false before btInit is called */
 void test_bt_not_ready_before_init()
 {
 	TEST_ASSERT_FALSE(btIsReady());
 }
+
+/** @brief btInit sets ready flag and starts the underlying serial port */
 void test_bt_init_sets_ready_and_starts_serial()
 {
 	btInit();
 	TEST_ASSERT_TRUE(btIsReady());
 	TEST_ASSERT_TRUE(btSerial.started);
 }
+
+/** @brief btPrint does not emit output when BT is not ready */
 void test_btPrint_guarded_when_not_ready()
 {
 	btPrint("hello");
 	TEST_ASSERT_EQUAL_STRING("", btSerial.out.c_str());
 }
+
+/** @brief btPrint emits the string when BT is ready */
 void test_btPrint_emits_when_ready()
 {
 	btInit();
 	btPrint("hello");
 	TEST_ASSERT_EQUAL_STRING("hello", btSerial.out.c_str());
 }
+
+/** @brief btPrintHex zero-pads single-digit hex values */
 void test_btPrintHex_zero_pads()
 {
 	btInit();
@@ -148,23 +153,31 @@ void test_btPrintHex_zero_pads()
 	btPrintHex(0xAB);
 	TEST_ASSERT_EQUAL_STRING("05AB", btSerial.out.c_str());
 }
+
+/** @brief btPrintLn emits a newline character */
 void test_btPrintLn_emits_newline()
 {
 	btInit();
 	btPrintLn();
 	TEST_ASSERT_EQUAL_STRING("\n", btSerial.out.c_str());
 }
+
+/** @brief btAvailable returns zero when BT is not ready regardless of buffer content */
 void test_btAvailable_zero_when_not_ready()
 {
 	btSerial.inbuf = "abc";
 	TEST_ASSERT_EQUAL(0, btAvailable());
 }
+
+/** @brief btAvailable reflects the input buffer length when BT is ready */
 void test_btAvailable_reflects_buffer_when_ready()
 {
 	btInit();
 	btSerial.inbuf = "abc";
 	TEST_ASSERT_EQUAL(3, btAvailable());
 }
+
+/** @brief btRead consumes characters from the input buffer in FIFO order */
 void test_btRead_consumes_chars_in_order()
 {
 	btInit();

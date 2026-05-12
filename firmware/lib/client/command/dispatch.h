@@ -1,4 +1,12 @@
 #pragma once
+
+/**
+ * @file firmware/lib/client/command/dispatch.h
+ * @brief Central command dispatcher that routes string commands to feature handlers
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "messages.h"
 #include "core/can/recorder.h"
 
@@ -7,7 +15,12 @@
 #include "io/ble/esp32/config.h"
 #endif
 
-// ── Command Parser ───────────────────────────────────────────────────────────
+/**
+ * @brief Parse and execute a command string received from any transport (serial, WiFi, BLE).
+ * @param cmd Null-terminated command string to dispatch
+ * @param s Device state reference (read and mutated by feature handlers)
+ * @param now Current uptime in milliseconds since boot
+ */
 void executeCommand(const char *cmd, State &s, unsigned long now)
 {
 	if (strcmp(cmd, "ping") == 0)
@@ -193,7 +206,11 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 	if (executeNagCmd(cmd, s))
 	{
 		sendAck(cmd);
-		sendLog(s.nagSuppress ? F("Nag suppress ON - saved") : F("Nag suppress OFF - saved"));
+		if (strncmp(cmd, "nag:mode:", 9) == 0)
+			sendLog(F("Nag mode updated - saved"));
+		else if (strncmp(cmd, "nag:bypass:", 11) == 0)
+			sendLog(s.nagOrganicDriverBypass ? F("Nag organic driver bypass ON - saved")
+											 : F("Nag organic driver bypass OFF - saved"));
 		sendStatus(s, now);
 		return;
 	}
@@ -279,20 +296,6 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	if (executeNagKillerCmd(cmd, s))
-	{
-		sendAck(cmd);
-		if (strncmp(cmd, "nag:killer:mode:", 16) == 0)
-		{
-			sendLog(F("Nag killer mode updated - saved"));
-		}
-		else
-		{
-			sendLog(s.nagKillerEnabled ? F("Nag killer ON - saved") : F("Nag killer OFF - saved"));
-		}
-		sendStatus(s, now);
-		return;
-	}
 	if (executeAlcCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -415,12 +418,14 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
+	// Commands below require the 0x273 control frame to be present
 	if (!s.hasCtrl)
 	{
 		sendError(F("Waiting for 0x273 frame"));
 		return;
 	}
 
+	// Non-legacy variant vehicle controls (mirror, lock, light, wiper, seat, display, power)
 	if (s.variant != LEGACY &&
 		(executeMirrorCmd(cmd, s) || executeLockCmd(cmd, s) || executeLightCmd(cmd, s) || executeWiperCmd(cmd, s) ||
 		 executeSeatCmd(cmd, s) || executeDisplayCmd(cmd, s) || executePowerCmd(cmd, s)))
@@ -440,7 +445,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// TPMS query
+	// TPMS pressure and temperature query
 	if (executeTpmsCmd(cmd, s))
 	{
 		jsonLine()
@@ -458,7 +463,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Drive mode override commands: drivemode:off, drivemode:chill, drivemode:standard, drivemode:performance
+	// Drive mode override: drivemode:off, drivemode:chill, drivemode:standard, drivemode:performance
 	if (executeDriveModeCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -469,7 +474,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// ECE R79 bypass toggle: ecer79:on / ecer79:off
+	// ECE R79 steering torque bypass toggle
 	if (strcmp(cmd, "ecer79:on") == 0)
 	{
 		s.eceR79Bypass = true;
@@ -489,8 +494,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// LHD (Left-Hand Drive) mode: lhd:on / lhd:off
-	// Clears UI_drivingSide bit 41 on 0x3F8 (frame 1016) — source: ev-open-can-tools-plugins Beta/LHD.json
+	// LHD mode: clears UI_drivingSide bit 41 on 0x3F8 (frame 1016)
 	if (strcmp(cmd, "lhd:on") == 0)
 	{
 		s.lhdEnabled = true;
@@ -510,9 +514,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Assist nav-enable: assist-nav:on / assist-nav:off
-	// Sets bits 13+48+49 on 0x3F8 (UI_driveOnMapsEnable, UI_hasDriveOnNav, UI_followNavRouteEnable)
-	// Source: hypery11/flipper-tesla-fsd fsd_handler.c (assist_nav_enable)
+	// Assist nav-enable: sets bits 13+48+49 on 0x3F8 for nav-based FSD routing
 	if (strcmp(cmd, "assist-nav:on") == 0)
 	{
 		s.assistNavEnable = true;
@@ -532,9 +534,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Assist hands-off: assist-hof:on / assist-hof:off
-	// Sets bit 14 on 0x3F8 (UI_handsOnRequirementDisable)
-	// Source: hypery11/flipper-tesla-fsd fsd_handler.c (assist_hands_off)
+	// Assist hands-off: sets bit 14 on 0x3F8 (UI_handsOnRequirementDisable)
 	if (strcmp(cmd, "assist-hof:on") == 0)
 	{
 		s.assistHandsOff = true;
@@ -554,9 +554,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Assist dev-mode: assist-dev:on / assist-dev:off
-	// Sets bit 5 on 0x3F8 (UI_dasDeveloper)
-	// Source: hypery11/flipper-tesla-fsd fsd_handler.c (assist_dev_mode)
+	// Assist dev-mode: sets bit 5 on 0x3F8 (UI_dasDeveloper)
 	if (strcmp(cmd, "assist-dev:on") == 0)
 	{
 		s.assistDevMode = true;
@@ -576,9 +574,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Lane graph visualization: lane-graph:on / lane-graph:off
-	// Sets bit 45 on 0x3FD mux1 (lane visualization on non-FSD tier)
-	// Source: hypery11/flipper-tesla-fsd fsd_handler.c (assist_show_lane_graph)
+	// Lane graph visualization: sets bit 45 on 0x3FD mux1
 	if (strcmp(cmd, "lane-graph:on") == 0)
 	{
 		s.laneGraphEnable = true;
@@ -598,10 +594,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Assist telemetry-off: assist-tel:on / assist-tel:off
-	// Clears bit 43 on 0x3F8 (UI_enableTripTelemetry = 0 = trip data off)
-	// Source: hypery11/flipper-tesla-fsd fsd_handler.c (assist_telemetry_off)
-	// Note: "assist-tel:on" enables the toggle (telemetry disabled); "assist-tel:off" restores default
+	// Assist telemetry-off: clears bit 43 on 0x3F8 (UI_enableTripTelemetry = 0)
 	if (strcmp(cmd, "assist-tel:on") == 0)
 	{
 		s.assistTelemetryOff = true;
@@ -621,10 +614,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// AP-First mode: ap-first:on / ap-first:off
-	// Delays 0x3FD injection until DAS_autopilotState >= 2 (AP/TACC already running).
-	// Required for Tesla 2026.14.x which blocks AP engagement if injection is already active.
-	// Source: hypery11/flipper-tesla-fsd v2.14.0 — AP-First mode (confirmed ev-open-can-tools #43)
+	// AP-First mode: delays 0x3FD injection until DAS_autopilotState >= 2 (2026.14.x compat)
 	if (strcmp(cmd, "ap-first:on") == 0)
 	{
 		s.apFirstEnabled = true;
@@ -644,9 +634,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Enhanced Autopilot: eap:on / eap:off
-	// Sets bit46 on mux=1 to unlock EAP/Summon features
-	// Source: ev-open-can-tools + hypery11 enhanced_autopilot
+	// Enhanced Autopilot: sets bit46 on mux=1 to unlock EAP/Summon features
 	if (strcmp(cmd, "eap:on") == 0)
 	{
 		s.enhancedAutopilot = true;
@@ -666,8 +654,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Emergency Vehicle Detection: evd:on / evd:off (HW4 only, bit59 on mux=0)
-	// Source: hypery11/flipper-tesla-fsd fsd_handler.c
+	// Emergency Vehicle Detection: bit59 on mux=0 (HW4 only)
 	if (strcmp(cmd, "evd:on") == 0)
 	{
 		s.evdEnabled = true;
@@ -687,7 +674,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Log ring dump: show last N log entries
+	// Log ring dump: emit last N log entries as a JSON array
 	if (strcmp(cmd, "log") == 0)
 	{
 		uint16_t count = logRingCount();
@@ -719,7 +706,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Seatbelt emulation: seatbelt:on, seatbelt:off
+	// Seatbelt emulation toggle
 	if (executeSeatbeltCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -729,7 +716,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Air recirculation: airecirc:on, airecirc:off
+	// Air recirculation toggle
 	if (executeAirRecircCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -738,7 +725,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Wiper persistence: wiperpersist:on, wiperpersist:off
+	// Wiper persistence toggle (maintains wiper state across drive cycles)
 	if (executeWiperPersistCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -748,7 +735,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Mirror auto-fold: mirror:autofold:on, mirror:autofold:off
+	// Mirror auto-fold toggle
 	if (executeMirrorAutoFoldCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -758,7 +745,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Powertrain telemetry query
+	// Powertrain telemetry query (speed, gear, motor temps, wheel speeds)
 	if (executePowertrainCmd(cmd, s))
 	{
 		jsonLine()
@@ -796,7 +783,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Single-shot TX mode: singleshot:on, singleshot:off
+	// Single-shot TX mode (disables automatic retransmission on MCP2515)
 	if (executeSingleShotCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -807,7 +794,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Firmware version compatibility: fwcompat
+	// Firmware version compatibility query
 	if (executeFwCompatCmd(cmd, s))
 	{
 		jsonLine()
@@ -822,7 +809,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// MQTT bridge: mqtt:on/off, mqtt:broker:<host>, mqtt:port:<port>, mqtt:interval:<ms>
+	// MQTT bridge configuration: mqtt:on/off, mqtt:broker:<host>, mqtt:port:<port>, mqtt:interval:<ms>
 	if (executeMqttCmd(cmd, s))
 	{
 		sendAck(cmd);
@@ -832,7 +819,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Vehicle config query: vehicle
+	// Vehicle config query (model, year)
 	if (executeVehicleConfigCmd(cmd, s))
 	{
 		jsonLine()
@@ -844,7 +831,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Vehicle platform identity query: platform
+	// Vehicle platform identity query (hardware gen, software version, FSD protocol)
 	if (strcmp(cmd, "platform") == 0)
 	{
 		auto platformRoot = [&](JsonLineBuilder &out)
@@ -880,11 +867,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// ── CAN Recorder ─────────────────────────────────────────────────────────
-	//   recorder:on               start recording (clears ring buffer)
-	//   recorder:off              stop recording (preserves buffer)
-	//   recorder:clear            wipe buffer + counters
-	//   recorder:status           emit a {"t":"recorder",...} JSON line
+	// CAN Recorder: recorder:on, recorder:off, recorder:clear, recorder:status
 	if (strncmp(cmd, "recorder:", 9) == 0) {
 		const char *sub = cmd + 9;
 		if (strcmp(sub, "on") == 0) {
@@ -923,11 +906,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 
 
 #if BOARD_ENABLE_BLE
-	// ── BLE radio control ────────────────────────────────────────────────────
-	//   ble:on                    enable BLE radio (saved to NVS)
-	//   ble:off                   disable BLE radio (saved to NVS)
-	//   ble:name:<n>              set advertised device name (1..32 chars)
-	//   ble:status                emit a {"t":"ble",...} JSON line
+	// BLE radio control: ble:on, ble:off, ble:name:<n>, ble:status
 	if (strncmp(cmd, "ble:", 4) == 0 && strncmp(cmd, "ble:scan", 8) != 0) {
 		const char *sub = cmd + 4;
 		if (strcmp(sub, "on") == 0) {
@@ -965,7 +944,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 				return;
 			}
 			strncpy(bleNameCfg, name, sizeof(bleNameCfg) - 1);
-			bleNameCfg[sizeof(bleNameCfg) - 1] = '\0';
+			bleNameCfg[sizeof(bleNameCfg) - 1] = '\0'; // ensure null termination
 			if (!bleSetDeviceName(bleNameCfg)) {
 				sendError(F("Failed to apply BLE name"));
 				return;
@@ -979,16 +958,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Gamepad commands:
-	//   gamepad:scan | rescan         start a 6-second BLE HID scan
-	//   gamepad:pair:<AA:BB:..>       pair with a scanned address
-	//   gamepad:unpair                forget paired device
-	//   gamepad:on | off              enable / disable gamepad input
-	//   gamepad:status                JSON status (battery, rssi, axes, mode...)
-	//   gamepad:bind:<n>:<cmd>        tap binding for button n (0-15)
-	//   gamepad:hold:<n>:<cmd>        long-press (>=500 ms) binding for n
-	//   gamepad:axis:<n>:<dz|expo|inv>:<v>        per-axis tuning (n=0..5)
-	//   gamepad:cancel                send a one-shot DAS cancel burst
+	// Gamepad commands: scan, pair, unpair, on/off, status, bind, hold, axis, cancel
 	if (strncmp(cmd, "gamepad:", 8) == 0) {
 		const char *sub = cmd + 8;
 		if (strcmp(sub, "scan") == 0 || strcmp(sub, "rescan") == 0) {
@@ -1059,7 +1029,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 			sendAck(cmd);
 			return;
 		}
-		// gamepad:axis:<n>:<dz|expo|inv>:<v>
+		// Per-axis tuning: gamepad:axis:<n>:<dz|expo|inv>:<value>
 		if (strncmp(sub, "axis:", 5) == 0) {
 			const char *p = sub + 5;
 			char *end;
@@ -1084,6 +1054,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
+	// Tesla BLE protocol commands (delegated to Tesla:: namespace)
 	if (strncmp(cmd, "tesla:", 6) == 0) {
 		Tesla::executeTeslaCommand(cmd + 6);
 		return;

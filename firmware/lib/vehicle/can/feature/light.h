@@ -1,7 +1,19 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/light.h
+ * @brief Lighting control helpers and command execution for CAN frame 0x273
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "vehicle/can/fwd.h"
 
-// ── Lighting Bit Helpers (0x273 UI_vehicleControl) ───────────────────────────
+/**
+ * @brief Set the front fog light switch bit in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param enable True to activate, false to deactivate.
+ */
 inline void setFrontFogSwitch(Frame &f, bool enable)
 {
 	if (f.dlc < 1)
@@ -12,6 +24,11 @@ inline void setFrontFogSwitch(Frame &f, bool enable)
 		f.data[0] &= ~0x08;
 }
 
+/**
+ * @brief Set the rear fog light switch bit in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param enable True to activate, false to deactivate.
+ */
 inline void setRearFogSwitch(Frame &f, bool enable)
 {
 	if (f.dlc < 3)
@@ -22,6 +39,11 @@ inline void setRearFogSwitch(Frame &f, bool enable)
 		f.data[2] &= ~0x80;
 }
 
+/**
+ * @brief Set the automatic high beam switch bit in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param enable True to activate, false to deactivate.
+ */
 inline void setAutoHighBeam(Frame &f, bool enable)
 {
 	if (f.dlc < 6)
@@ -32,6 +54,11 @@ inline void setAutoHighBeam(Frame &f, bool enable)
 		f.data[5] &= ~0x02;
 }
 
+/**
+ * @brief Set the ambient lighting switch bit in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param enable True to activate, false to deactivate.
+ */
 inline void setAmbientLighting(Frame &f, bool enable)
 {
 	if (f.dlc < 6)
@@ -42,6 +69,11 @@ inline void setAmbientLighting(Frame &f, bool enable)
 		f.data[5] &= ~0x01;
 }
 
+/**
+ * @brief Set the "See You Home" lighting switch bit in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param enable True to activate, false to deactivate.
+ */
 inline void setSeeYouHomeLighting(Frame &f, bool enable)
 {
 	if (f.dlc < 4)
@@ -52,13 +84,21 @@ inline void setSeeYouHomeLighting(Frame &f, bool enable)
 		f.data[3] &= ~0x40;
 }
 
+/**
+ * @brief Dome light switch positions for the interior dome light control.
+ */
 enum DomeLightSwitch
 {
-	DOME_OFF = 0,
-	DOME_ON = 1,
-	DOME_AUTO = 2
+	DOME_OFF = 0,  // Dome light forced off
+	DOME_ON = 1,   // Dome light forced on
+	DOME_AUTO = 2  // Dome light controlled automatically by door state
 };
 
+/**
+ * @brief Set the dome light switch field in a UI_vehicleControl frame.
+ * @param f CAN frame (0x273) to modify.
+ * @param mode Desired dome light mode.
+ */
 inline void setDomeLightSwitch(Frame &f, DomeLightSwitch mode)
 {
 	if (f.dlc < 8)
@@ -66,8 +106,10 @@ inline void setDomeLightSwitch(Frame &f, DomeLightSwitch mode)
 	f.data[7] = (f.data[7] & ~0x18) | ((mode & 0x03) << 3); // bits 59-60
 }
 
-// ── Light Control (0x273) ────────────────────────────────────────────────────
-
+/**
+ * @brief Burst-send a front fog light activation command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlFrontFog(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -76,6 +118,10 @@ static void controlFrontFog(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
+/**
+ * @brief Burst-send a rear fog light activation command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlRearFog(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -84,6 +130,10 @@ static void controlRearFog(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
+/**
+ * @brief Burst-send an automatic high beam activation command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlAutoHighBeam(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -92,6 +142,10 @@ static void controlAutoHighBeam(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
+/**
+ * @brief Burst-send an ambient lighting activation command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlAmbientLight(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -100,6 +154,10 @@ static void controlAmbientLight(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
+/**
+ * @brief Burst-send a "See You Home" lighting activation command on BUS_VEHICLE.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlHomeLight(State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -108,6 +166,11 @@ static void controlHomeLight(State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
+/**
+ * @brief Burst-send a dome light mode command on BUS_VEHICLE.
+ * @param mode Desired dome light switch position.
+ * @param s Vehicle state providing the base control frame.
+ */
 static void controlDomeLight(DomeLightSwitch mode, State &s)
 {
 	Frame f = makeCtrlFrame(s);
@@ -116,8 +179,16 @@ static void controlDomeLight(DomeLightSwitch mode, State &s)
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
 }
 
-// ── Light Command Execution ──────────────────────────────────────────────────
-
+/**
+ * @brief Execute a lighting command string.
+ *
+ * Dispatches "light:*" commands to the appropriate control function.
+ * Requires the vehicle control frame to be available (hasCtrl).
+ *
+ * @param cmd Null-terminated command string.
+ * @param s Vehicle state to operate on.
+ * @return True if the command was recognized and executed.
+ */
 static bool executeLightCmd(const char *cmd, State &s)
 {
 	if (!s.hasCtrl)

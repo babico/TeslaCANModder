@@ -1,6 +1,8 @@
-// ── ESP32 WiFi REST API Tests ────────────────────────────────────────────────
-// Tests buildStateJson output and command validation logic.
-// No actual WiFi/WebServer — just tests the pure functions.
+/** @file firmware/test/test_native_wifi/test_wifi.cpp
+ *  @brief Unit tests for WiFi transport initialization
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -19,14 +21,11 @@
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── Stubs ───────────────────────────────────────────────────────────────────
 unsigned long millis()
 {
 	return 5000;
 }
 
-// ── buildStateJson replica (pure function, no WiFi dep) ─────────────────────
-// We test the JSON content generation logic directly.
 
 static std::string buildStateJson(State &s)
 {
@@ -34,7 +33,8 @@ static std::string buildStateJson(State &s)
 	std::string json = "{";
 	json += "\"variant\":\"" + std::string(variantName(s.variant)) + "\"";
 	json += ",\"fsd\":" + std::to_string(s.fsdEnabled ? 1 : 0);
-	json += ",\"nag\":" + std::to_string(s.nagSuppress ? 1 : 0);
+	json += ",\"nagMode\":\"" + std::string(nagModeName(s.nagMode)) + "\"";
+	json += ",\"nagOrgBypass\":" + std::to_string(s.nagOrganicDriverBypass ? 1 : 0);
 	json += ",\"profile\":" + std::to_string(s.speedProfile);
 	json += ",\"profilePin\":" + std::to_string(s.profileOverride ? 1 : 0);
 	json += ",\"offset\":" + std::to_string(s.speedOffset);
@@ -72,7 +72,6 @@ static std::string buildStateJson(State &s)
 	return json;
 }
 
-// ── Command validation logic (extracted from wifi/esp32.h) ──────────────────
 static bool isValidCommand(const char *cmd)
 {
 	if (!cmd || strlen(cmd) == 0 || strlen(cmd) > 31)
@@ -99,9 +98,6 @@ static State makeState(Variant v = HW4)
 void setUp() {}
 void tearDown() {}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// buildStateJson
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_wifi_json_contains_variant()
 {
@@ -149,7 +145,6 @@ void test_wifi_json_hw4_features()
 {
 	State s = makeState(HW4);
 	std::string json = buildStateJson(s);
-	// HW4: isaChime + summon enabled, offset uses speedOffset field
 	TEST_ASSERT_TRUE(json.find("\"isaChime\":1") != std::string::npos);
 	TEST_ASSERT_TRUE(json.find("\"summon\":1") != std::string::npos);
 	TEST_ASSERT_TRUE(json.find("\"offset\":1") != std::string::npos);
@@ -159,7 +154,6 @@ void test_wifi_json_hw3_features()
 {
 	State s = makeState(HW3);
 	std::string json = buildStateJson(s);
-	// HW3: offset + summon enabled, isaChime disabled (HW4-only)
 	TEST_ASSERT_TRUE(json.find("\"offset\":1") != std::string::npos);
 	TEST_ASSERT_TRUE(json.find("\"summon\":1") != std::string::npos);
 	TEST_ASSERT_TRUE(json.find("\"isaChime\":0") != std::string::npos);
@@ -169,7 +163,7 @@ void test_wifi_json_all_state_fields()
 {
 	State s = makeState();
 	s.fsdEnabled = true;
-	s.nagSuppress = true;
+	s.nagMode = NAG_MODE_ORGANIC;
 	s.speedProfile = 5;
 	s.profileOverride = true;
 	s.speedOffset = 10;
@@ -207,9 +201,6 @@ void test_wifi_json_includes_banshield_fields()
 	TEST_ASSERT_TRUE(json.find("\"banDetectCount\":9") != std::string::npos);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Command Validation
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_wifi_cmd_valid_simple()
 {
@@ -262,15 +253,11 @@ void test_wifi_cmd_accepts_numbers()
 	TEST_ASSERT_TRUE(isValidCommand("profile:123"));
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// AP Gate JSON fields
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_wifi_json_apgate_enabled_field()
 {
 	State s = makeState();
 	s.apInjectionGateEnabled = true;
-	// Rebuild replica to include apGate fields
 	std::string json = "{";
 	json += "\"apGateEnabled\":" + std::to_string(s.apInjectionGateEnabled ? 1 : 0);
 	json += ",\"apGateAp\":" + std::to_string(s.apGateApActive ? 1 : 0);
@@ -293,7 +280,6 @@ void test_wifi_json_apgate_disabled_field()
 
 void test_wifi_json_apgate_open_when_disabled()
 {
-	// Gate open predicate: always open when disabled
 	State s = makeState();
 	s.apInjectionGateEnabled = false;
 	s.apGateApActive = false;
@@ -304,7 +290,6 @@ void test_wifi_json_apgate_open_when_disabled()
 
 void test_wifi_json_apgate_closed_when_enabled_no_signal()
 {
-	// Gate closed when enabled but no qualifying signal
 	State s = makeState();
 	s.apInjectionGateEnabled = true;
 	s.apGateApActive = false;
@@ -342,7 +327,6 @@ int main()
 {
 	UNITY_BEGIN();
 
-	// JSON state
 	RUN_TEST(test_wifi_json_contains_variant);
 	RUN_TEST(test_wifi_json_contains_hw3_variant);
 	RUN_TEST(test_wifi_json_fsd_enabled);
@@ -353,7 +337,6 @@ int main()
 	RUN_TEST(test_wifi_json_all_state_fields);
 	RUN_TEST(test_wifi_json_includes_banshield_fields);
 
-	// Command validation
 	RUN_TEST(test_wifi_cmd_valid_simple);
 	RUN_TEST(test_wifi_cmd_rejects_empty);
 	RUN_TEST(test_wifi_cmd_rejects_too_long);
@@ -363,7 +346,6 @@ int main()
 	RUN_TEST(test_wifi_cmd_accepts_uppercase);
 	RUN_TEST(test_wifi_cmd_accepts_numbers);
 
-	// AP Gate JSON fields and command validation
 	RUN_TEST(test_wifi_json_apgate_enabled_field);
 	RUN_TEST(test_wifi_json_apgate_disabled_field);
 	RUN_TEST(test_wifi_json_apgate_open_when_disabled);
@@ -375,3 +357,4 @@ int main()
 
 	return UNITY_END();
 }
+

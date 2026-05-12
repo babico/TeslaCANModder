@@ -1,31 +1,34 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/fw_compat.h
+ * @brief Vehicle firmware version decoding and compatibility checking via CAN ID 0x392
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-// ── 1.7 Firmware Version Compatibility ──────────────────────────────────────
-// Decode the vehicle firmware version string from CAN 0x392 (GTW_versionInfo)
-// and check against known-incompatible combinations:
-//   - 2026.2.9+ (FSD v14) + HW4 → OK
-//   - 2026.8.x  (FSD v13) + HW4 → WARNING: legacy protocol
-//   - 2026.2.9.x & 2026.8.6     → INCOMPATIBLE
-//
-// CAN ID 0x392, mux field = byte 0 bits [2:0]:
-//   mux 0: firmware major.minor (bytes 1-4)
-//   mux 1: firmware build number (bytes 1-4)
-//
-// Command: fwcompat (query only — returns JSON with version & compat status)
-
 #define CAN_ID_GTW_VERSION 0x392
 
-// Firmware compatibility level
+/**
+ * @brief Firmware compatibility level indicating whether the detected vehicle
+ *        firmware is fully supported, partially supported, or incompatible.
+ */
 enum FwCompatLevel : uint8_t
 {
-	FW_COMPAT_UNKNOWN = 0,
-	FW_COMPAT_OK = 1,
-	FW_COMPAT_WARN = 2, // Legacy protocol, limited features
-	FW_COMPAT_FAIL = 3	// Known-incompatible combination
+	FW_COMPAT_UNKNOWN = 0, // Version not yet decoded
+	FW_COMPAT_OK = 1,      // Fully compatible
+	FW_COMPAT_WARN = 2,    // Legacy protocol, limited features
+	FW_COMPAT_FAIL = 3     // Known-incompatible combination
 };
 
+/**
+ * @brief Get a human-readable name for a firmware compatibility level.
+ * @param level Firmware compatibility level enum value.
+ * @return Null-terminated string ("OK", "WARN", "FAIL", or "UNKNOWN").
+ */
 inline const char *fwCompatName(FwCompatLevel level)
 {
 	switch (level)
@@ -41,29 +44,38 @@ inline const char *fwCompatName(FwCompatLevel level)
 	}
 }
 
-// Decode firmware version from 0x392 mux 0
-// Bytes 1-2: year (big-endian uint16), bytes 3: release, byte 4: minor
+/**
+ * @brief Decode firmware version from CAN ID 0x392 (GTW_versionInfo) and evaluate
+ *        compatibility against known firmware/hardware combinations.
+ *
+ * Frame layout (mux field = byte 0 bits [2:0]):
+ *   mux 0: bytes 1-2 = year (big-endian uint16), byte 3 = release, byte 4 = minor
+ *   mux 1: bytes 1-4 = build number (big-endian uint32)
+ *
+ * @param f CAN frame from ID 0x392.
+ * @param s Global state to populate with decoded version and compatibility level.
+ */
 inline void decodeFwVersion(const Frame &f, State &s)
 {
 	if (f.dlc < 5)
 		return;
-	uint8_t mux = f.data[0] & 0x07;
+	uint8_t mux = f.data[0] & 0x07; // bits 2:0 — mux selector
 	if (mux == 0)
 	{
-		s.fwYear = ((uint16_t)f.data[1] << 8) | f.data[2];
-		s.fwRelease = f.data[3];
-		s.fwMinor = f.data[4];
+		s.fwYear = ((uint16_t)f.data[1] << 8) | f.data[2];    // bytes 1-2: year (BE)
+		s.fwRelease = f.data[3];                                // byte 3: release number
+		s.fwMinor = f.data[4];                                  // byte 4: minor version
 		s.hasFwVersion = true;
 
-		// Evaluate compatibility
+		// Evaluate compatibility based on year/release/variant
 		if (s.fwYear == 2026 && s.fwRelease >= 8)
 		{
-			// FSD v13 legacy protocol — limited on HW4
+			// FSD v13 legacy protocol — limited feature set on HW4
 			s.fwCompat = (s.variant == HW4) ? FW_COMPAT_WARN : FW_COMPAT_OK;
 		}
 		else if (s.fwYear == 2026 && s.fwRelease == 2 && s.fwMinor >= 9)
 		{
-			// FSD v14 — OK for HW4
+			// FSD v14 — fully compatible with HW4
 			s.fwCompat = FW_COMPAT_OK;
 		}
 		else if (s.fwYear >= 2026)
@@ -77,11 +89,18 @@ inline void decodeFwVersion(const Frame &f, State &s)
 	}
 	else if (mux == 1)
 	{
-		s.fwBuild = ((uint32_t)f.data[1] << 24) | ((uint32_t)f.data[2] << 16) | ((uint32_t)f.data[3] << 8) | f.data[4];
+		// Mux 1: 32-bit build number (big-endian)
+		s.fwBuild = ((uint32_t)f.data[1] << 24) | ((uint32_t)f.data[2] << 16) |
+					((uint32_t)f.data[3] << 8) | f.data[4];
 	}
 }
 
-// Query command
+/**
+ * @brief Execute the "fwcompat" query command to report firmware version and status.
+ * @param cmd Full command string (must be exactly "fwcompat").
+ * @param s Global state containing decoded firmware version data.
+ * @return True if the command matched.
+ */
 static bool executeFwCompatCmd(const char *cmd, State &s)
 {
 	return strcmp(cmd, "fwcompat") == 0;

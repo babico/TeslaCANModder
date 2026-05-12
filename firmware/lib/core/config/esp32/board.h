@@ -1,42 +1,40 @@
 #pragma once
 
-// ── ESP32-S DevKit Pin Configuration ─────────────────────────────────────────
-// ESP32-S DevKit with up to 3 CAN buses via MCP2515 modules over SPI.
-// Pins are named by bus role (CHASSIS/VEHICLE/BODY), not by physical module
-// index. The BUS_* IDs in core/can/bus.h provide the array-index map.
-//
-// Tesla X179 Connector Mapping (hardcoded):
-//   BUS_CHASSIS : X179 pins 13-14 → Chassis bus (vehicle ECUs: rack, ESP, IBST).
-//                 *DAS injection always targets this bus* — that's where
-//                 steering/braking/ACC ECUs listen.
-//   BUS_VEHICLE : X179 pins 9-10  → Vehicle Control CAN (BMS, climate, body)
-//   BUS_BODY    : X179 pins 2-3   → Body Control CAN (windows, sentry, trunk)
-//
-// Bus activation is controlled by BUS_<NAME>_ACTIVE flags injected by the build.
+/**
+ * @file firmware/lib/core/config/esp32/board.h
+ * @brief ESP32-S DevKit pin assignments, bus mapping, and build-flag defaults
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
 
-#define PIN_LED 2 // ESP32 DevKit on-board LED
+// ── Pin Configuration ───────────────────────────────────────────────────────
 
-// ── BUS_CHASSIS — Chassis / Party CAN, X179 pins 13-14 ──────────────────────
+#define PIN_LED 2 // ESP32 DevKit on-board LED (active-high)
+
+// ── BUS_CHASSIS — Chassis / Party CAN, X179 pins 13-14 ─────────────────────
+// DAS injection targets this bus (steering/braking/ACC ECUs listen here)
 #define PIN_MCP2515_CHASSIS_CS 15
-#define PIN_MCP2515_CHASSIS_INT 34 // Input-only pin, good for interrupt
+#define PIN_MCP2515_CHASSIS_INT 34 // GPIO34 is input-only, suitable for interrupt
 
-// ── BUS_VEHICLE — Vehicle Control CAN, X179 pins 9-10 ───────────────────────
+// ── BUS_VEHICLE — Vehicle Control CAN, X179 pins 9-10 ──────────────────────
+// BMS, climate, and body controller traffic
 #define PIN_MCP2515_VEHICLE_CS 27
-#define PIN_MCP2515_VEHICLE_INT 35 // Input-only pin, good for interrupt
+#define PIN_MCP2515_VEHICLE_INT 35 // GPIO35 is input-only, suitable for interrupt
 
-// ── BUS_BODY — Body Control CAN, X179 pins 2-3 ──────────────────────────────
+// ── BUS_BODY — Body Control CAN, X179 pins 2-3 ─────────────────────────────
+// Windows, sentry, trunk controller traffic
 #define PIN_MCP2515_BODY_CS 26
 #define PIN_MCP2515_BODY_INT 33
 
-// ── SPI (shared between MCP2515 modules) ────────────────────────────────────
+// ── SPI (shared between all MCP2515 modules) ────────────────────────────────
 #define PIN_SPI_SCK 18
 #define PIN_SPI_MISO 19
 #define PIN_SPI_MOSI 23
 
-// ── BLE (Bluetooth Low Energy for iPhone) ────────────────────────────────────
+// ── BLE (Bluetooth Low Energy) ──────────────────────────────────────────────
 #define BLE_DEVICE_NAME "TeslaCANModder"
 
-// ── WiFi REST API ────────────────────────────────────────────────────────────
+// ── WiFi REST API defaults ──────────────────────────────────────────────────
 #ifndef WIFI_AP_SSID
 #define WIFI_AP_SSID "TeslaCANModder"
 #endif
@@ -53,7 +51,7 @@
 #define WIFI_REST_PORT 80
 #endif
 
-// ── Build Flags ──────────────────────────────────────────────────────────────
+// ── Build-flag defaults (overridable via platformio.ini build_flags) ─────────
 #ifndef BOARD_HW_NAME
 #define BOARD_HW_NAME "ESP32S_DevKit"
 #endif

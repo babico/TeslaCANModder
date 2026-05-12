@@ -1,9 +1,8 @@
-/*
- * TeslaCANModder - ESP32-S DevKit Firmware
- * Main entry point - setup() and loop()
- *
- * Supports up to 3 CAN buses (3x MCP2515 via SPI),
- * optional WiFi REST API, and optional BLE (Bluetooth Low Energy).
+/**
+ * @file firmware/src/esp32/main.cpp
+ * @brief ESP32 firmware entry point — setup() and loop() for Tesla CAN Mod
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
  */
 
 #include <Arduino.h>
@@ -26,18 +25,21 @@ static VehiclePlatform platform;
 static bool driverReady = false;
 static bool settingsLoaded = false;
 
+/**
+ * @brief Arduino setup — initializes peripherals, CAN buses, and optional transports
+ */
 void setup()
 {
 	pinMode(PIN_LED, OUTPUT);
 	digitalWrite(PIN_LED, HIGH);
 
-	// Load saved settings from NVS
+	// Restore persisted settings from ESP32 NVS flash
 	settingsLoaded = loadSettings(state);
 
-	// Initialize serial bridge (USB + optional BLE)
+	// Bring up USB serial and optional BLE serial bridge
 	serialInit(state);
 
-	// Initialize CAN driver(s)
+	// Attempt MCP2515 initialization on all configured SPI buses
 	driverReady = driverInit();
 	if (!driverReady)
 	{
@@ -47,7 +49,7 @@ void setup()
 	state.canClockReqMHz = driverGetClockReqMHz();
 	state.canClockMHz = driverGetClockMHz();
 
-	// Apply CAN filters for current variant
+	// Program MCP2515 acceptance filters for the active Tesla variant
 	if (driverReady)
 	{
 		applyFilters(state);
@@ -55,7 +57,7 @@ void setup()
 
 	sendLog(settingsLoaded ? F("Settings loaded from NVS") : F("NVS empty - using defaults"));
 
-	// Restore single-shot TX mode from saved settings
+	// Re-enable single-shot TX mode if it was saved in NVS
 	if (state.singleShotTx)
 	{
 		driverSetSingleShot(true);
@@ -89,7 +91,7 @@ void setup()
 			 BUS_BODY_ACTIVE);
 	sendLog(busMsg);
 
-	// Initialize WiFi REST API
+	// Start WiFi AP and HTTP server if compiled in
 #if BOARD_ENABLE_WIFI
 	wifiInit(state);
 #endif
@@ -98,7 +100,7 @@ void setup()
 	sendLog(F("BLE active"));
 #endif
 
-	// Resolve initial platform identity from loaded settings
+	// Determine Tesla model/generation/software from persisted state fields
 	platform.resolveFromState(state);
 	syncPlatformToState(platform, state);
 	if (platform.resolved)
@@ -111,12 +113,15 @@ void setup()
 	}
 }
 
+/**
+ * @brief Arduino loop — processes serial commands, WiFi, and CAN frame dispatch
+ */
 void loop()
 {
-	// Process incoming commands from USB/Bluetooth
+	// Drain incoming serial/BLE command queue
 	serialTick(state);
 
-	// Handle WiFi REST API requests
+	// Service pending WiFi HTTP requests
 #if BOARD_ENABLE_WIFI
 	wifiTick();
 #endif
@@ -130,7 +135,7 @@ void loop()
 	unsigned long now = millis();
 	state.apGateSummoning = state.summonRemaining > 0;
 
-	// ── CAN Timeout Detection ───────────────────────────────────────────────
+	// Detect CAN bus silence and transition to standby
 	if (state.chassisOnline && state.lastFrameMs > 0 && (now - state.lastFrameMs) >= CAN_TIMEOUT_MS)
 	{
 		state.chassisOnline = false;
@@ -145,7 +150,7 @@ void loop()
 		sendLog(F("CAN bus silent - entering standby"));
 	}
 
-	// ── Standby Mode ───────────────────────────────────────────────────────
+	// Standby: blink LED, periodically reinit MCP2515, wait for first frame
 	if (state.standby)
 	{
 		digitalWrite(PIN_LED, (now / (LED_STANDBY_INTERVAL / 2)) % 2 ? HIGH : LOW);
@@ -173,7 +178,7 @@ void loop()
 		return;
 	}
 
-	// ── Normal Operation ───────────────────────────────────────────────────
+	// Normal operation: run periodic feature ticks
 	summonTick(state);
 	preconditionTick(state);
 	burstTick(state);
@@ -181,9 +186,7 @@ void loop()
 	seatbeltEmulationTick(state);
 	canSimTick(state);
 
-	// ── CAN Diagnostic Counter Poll ────────────────────────────────────────
-	// Poll MCP2515 error registers and accumulate TX/bus-off counts to State.
-	// driverPollBusErrors() also auto-recovers from bus-off by resetting the chip.
+	// Poll MCP2515 error registers every 250 ms; auto-recover from bus-off
 	static unsigned long _lastErrPollMs = 0;
 	if (now - _lastErrPollMs >= 250)
 	{

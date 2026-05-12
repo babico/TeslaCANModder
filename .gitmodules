@@ -19,6 +19,7 @@
 [submodule "legacy/ev-open-can-tools-ev-open-can-tools"]
 	path = legacy/ev-open-can-tools-ev-open-can-tools
 	url = https://github.com/ev-open-can-tools/ev-open-can-tools
+	branch = main
 [submodule "legacy/hypery11-flipper-tesla-fsd"]
 	path = legacy/hypery11-flipper-tesla-fsd
 	url = https://github.com/hypery11/flipper-tesla-fsd
@@ -250,3 +251,9 @@
 [submodule "legacy/sunnypilot"]
 	path = legacy/sunnypilot
 	url = https://github.com/sunnypilot/sunnypilot
+[submodule "legacy/tesla-local-control-tesla-ble-mqtt-docker"]
+	path = legacy/tesla-local-control-tesla-ble-mqtt-docker
+	url = https://github.com/tesla-local-control/tesla_ble_mqtt_docker.git
+[submodule "legacy/zdenekbouresh-ev-open-can-tools"]
+	path = legacy/zdenekbouresh-ev-open-can-tools
+	url = https://github.com/zdenekbouresh/ev-open-can-tools.git

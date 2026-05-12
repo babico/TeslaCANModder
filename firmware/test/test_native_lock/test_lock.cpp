@@ -1,4 +1,9 @@
-// ── Lock/Unlock/Horn/Childlock Tests ─────────────────────────────────────────
+/** @file firmware/test/test_native_lock/test_lock.cpp
+ *  @brief Unit tests for lock and unlock commands
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -41,7 +46,6 @@ void test_lock()
 	TEST_ASSERT_TRUE(executeLockCmd("lock", s));
 	TEST_ASSERT_EQUAL_UINT32(CAN_ID_UI_VEHICLE_CTRL, s.burstFrame.id);
 	TEST_ASSERT_TRUE(s.burstRemaining > 0);
-	// Lock = bits 17-19 = 1 → byte 2 bits [3:1] = 0x02
 	TEST_ASSERT_EQUAL_UINT8(0x02, s.burstFrame.data[2] & 0x0E);
 }
 
@@ -49,7 +53,6 @@ void test_unlock()
 {
 	State s = makeState();
 	TEST_ASSERT_TRUE(executeLockCmd("unlock", s));
-	// Unlock = bits 17-19 = 2 → byte 2 bits [3:1] = 0x04
 	TEST_ASSERT_EQUAL_UINT8(0x04, s.burstFrame.data[2] & 0x0E);
 }
 
@@ -92,3 +95,4 @@ int main(int, char **)
 	RUN_TEST(test_lock_unknown_returns_false);
 	return UNITY_END();
 }
+

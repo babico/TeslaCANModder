@@ -1,3 +1,10 @@
+/**
+ * @file firmware/test/test_native_air_recirc/test_air_recirc.cpp
+ * @brief Unit tests for air recirculation command handling
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -22,19 +29,28 @@ static State makeState()
 	s.hasClimate = true;
 	return s;
 }
+
+/** @brief Reset test state before each test */
 void setUp() {}
+
+/** @brief Cleanup after each test */
 void tearDown() {}
 
+/** @brief Verify that "airecirc:on" command is accepted with valid state */
 void test_airecirc_on()
 {
 	State s = makeState();
 	TEST_ASSERT_TRUE(executeAirRecircCmd("airecirc:on", s));
 }
+
+/** @brief Verify that "airecirc:off" command is accepted with valid state */
 void test_airecirc_off()
 {
 	State s = makeState();
 	TEST_ASSERT_TRUE(executeAirRecircCmd("airecirc:off", s));
 }
+
+/** @brief Verify that unknown or unrelated commands are rejected */
 void test_airecirc_unknown()
 {
 	State s = makeState();

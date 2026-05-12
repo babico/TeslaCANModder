@@ -1,6 +1,8 @@
-// ── Variant Feature Gate Tests ────────────────────────────────────────────────
-// Tests getFeatures() per variant, verifies all features default OFF,
-// and checks manual variant selection + auto-detect toggling.
+/** @file firmware/test/test_native_variant/test_variant.cpp
+ *  @brief Unit tests for variant detection and switching
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -12,7 +14,6 @@
 #define BOARD_ENABLE_WIFI 0
 #define BOARD_ENABLE_BLE 0
 
-// Forward-declare millis() so inline functions in headers can reference it
 unsigned long millis();
 
 #include "core/types.h"
@@ -28,7 +29,6 @@ unsigned long millis();
 #include "feature/profile.h"
 #include "feature/can_clock.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 static int saveCount = 0;
 static int filterCount = 0;
 void saveSettings(const State &)
@@ -52,11 +52,7 @@ void setUp()
 }
 void tearDown() {}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// getFeatures() per variant
-// ═══════════════════════════════════════════════════════════════════════════════
 
-// ── HW4 ──────────────────────────────────────────────────────────────────────
 
 void test_hw4_fsd_enabled()
 {
@@ -87,7 +83,6 @@ void test_hw4_summon_enabled()
 	TEST_ASSERT_TRUE(getFeatures(HW4).summon);
 }
 
-// ── HW3 ──────────────────────────────────────────────────────────────────────
 
 void test_hw3_fsd_enabled()
 {
@@ -118,7 +113,6 @@ void test_hw3_summon_enabled()
 	TEST_ASSERT_TRUE(getFeatures(HW3).summon);
 }
 
-// ── Legacy ───────────────────────────────────────────────────────────────────
 
 void test_legacy_fsd_enabled()
 {
@@ -149,9 +143,6 @@ void test_legacy_summon_disabled()
 	TEST_ASSERT_FALSE(getFeatures(LEGACY).summon);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// All features default OFF
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_default_fsd_off()
 {
@@ -168,7 +159,8 @@ void test_default_fsdForce_off()
 void test_default_nag_off()
 {
 	State s = {};
-	TEST_ASSERT_FALSE(s.nagSuppress);
+	TEST_ASSERT_EQUAL(NAG_MODE_OFF, s.nagMode);
+	TEST_ASSERT_FALSE(s.nagOrganicDriverBypass);
 }
 
 void test_default_isaChime_off()
@@ -181,18 +173,6 @@ void test_default_summonInject_off()
 {
 	State s = {};
 	TEST_ASSERT_FALSE(s.summonInject);
-}
-
-void test_default_nagKiller_off()
-{
-	State s = {};
-	TEST_ASSERT_FALSE(s.nagKillerEnabled);
-}
-
-void test_default_nagKillerMode_legacy()
-{
-	State s = {};
-	TEST_ASSERT_EQUAL(NAG_KILLER_LEGACY, s.nagKillerMode);
 }
 
 void test_default_precondition_off()
@@ -249,9 +229,6 @@ void test_default_speedProfile_1()
 	TEST_ASSERT_EQUAL(1, s.speedProfile);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Variant selection: manual override disables auto-detect
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_variant_hw4_manual()
 {
@@ -292,7 +269,7 @@ void test_variant_auto_enables_autodetect()
 	s.variantAutoDetect = false;
 	TEST_ASSERT_TRUE(executeVariantCmd("variant:auto", s));
 	TEST_ASSERT_TRUE(s.variantAutoDetect);
-	TEST_ASSERT_EQUAL(HW3, s.variant); // variant unchanged
+	TEST_ASSERT_EQUAL(HW3, s.variant);
 }
 
 void test_variant_rejects_invalid()
@@ -309,25 +286,19 @@ void test_variant_manual_then_auto_roundtrip()
 	s.variant = HW4;
 	s.variantAutoDetect = true;
 
-	// Manual override
 	TEST_ASSERT_TRUE(executeVariantCmd("variant:hw3", s));
 	TEST_ASSERT_EQUAL(HW3, s.variant);
 	TEST_ASSERT_FALSE(s.variantAutoDetect);
 
-	// Re-enable auto
 	TEST_ASSERT_TRUE(executeVariantCmd("variant:auto", s));
 	TEST_ASSERT_TRUE(s.variantAutoDetect);
-	TEST_ASSERT_EQUAL(HW3, s.variant); // still HW3 until CAN detects
+	TEST_ASSERT_EQUAL(HW3, s.variant);
 
-	// Manual override again
 	TEST_ASSERT_TRUE(executeVariantCmd("variant:legacy", s));
 	TEST_ASSERT_EQUAL(LEGACY, s.variant);
 	TEST_ASSERT_FALSE(s.variantAutoDetect);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Command guards per variant: rejected when feature unavailable
-// ═══════════════════════════════════════════════════════════════════════════════
 
 void test_hw3_rejects_isa_chime()
 {
@@ -390,13 +361,11 @@ void test_hw3_rejects_offset_above_100()
 	TEST_ASSERT_FALSE(executeOffsetCmd("offset:101", s));
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 
 int main()
 {
 	UNITY_BEGIN();
 
-	// getFeatures() — HW4
 	RUN_TEST(test_hw4_fsd_enabled);
 	RUN_TEST(test_hw4_fsdForce_enabled);
 	RUN_TEST(test_hw4_offset_enabled);
@@ -405,7 +374,6 @@ int main()
 	RUN_TEST(test_hw4_isaChime_enabled);
 	RUN_TEST(test_hw4_summon_enabled);
 
-	// getFeatures() — HW3
 	RUN_TEST(test_hw3_fsd_enabled);
 	RUN_TEST(test_hw3_fsdForce_enabled);
 	RUN_TEST(test_hw3_offset_enabled);
@@ -414,7 +382,6 @@ int main()
 	RUN_TEST(test_hw3_isaChime_disabled);
 	RUN_TEST(test_hw3_summon_enabled);
 
-	// getFeatures() — Legacy
 	RUN_TEST(test_legacy_fsd_enabled);
 	RUN_TEST(test_legacy_fsdForce_enabled);
 	RUN_TEST(test_legacy_offset_disabled);
@@ -423,14 +390,11 @@ int main()
 	RUN_TEST(test_legacy_isaChime_disabled);
 	RUN_TEST(test_legacy_summon_disabled);
 
-	// Default state — all features OFF
 	RUN_TEST(test_default_fsd_off);
 	RUN_TEST(test_default_fsdForce_off);
 	RUN_TEST(test_default_nag_off);
 	RUN_TEST(test_default_isaChime_off);
 	RUN_TEST(test_default_summonInject_off);
-	RUN_TEST(test_default_nagKiller_off);
-	RUN_TEST(test_default_nagKillerMode_legacy);
 	RUN_TEST(test_default_precondition_off);
 	RUN_TEST(test_default_trackMode_off);
 	RUN_TEST(test_default_banShield_off);
@@ -441,7 +405,6 @@ int main()
 	RUN_TEST(test_default_speedOffset_zero);
 	RUN_TEST(test_default_speedProfile_1);
 
-	// Variant selection — manual override
 	RUN_TEST(test_variant_hw4_manual);
 	RUN_TEST(test_variant_hw3_manual);
 	RUN_TEST(test_variant_legacy_manual);
@@ -449,7 +412,6 @@ int main()
 	RUN_TEST(test_variant_rejects_invalid);
 	RUN_TEST(test_variant_manual_then_auto_roundtrip);
 
-	// Command guards per variant
 	RUN_TEST(test_hw3_rejects_isa_chime);
 	RUN_TEST(test_legacy_rejects_isa_chime);
 	RUN_TEST(test_legacy_rejects_summon);
@@ -461,3 +423,4 @@ int main()
 
 	return UNITY_END();
 }
+

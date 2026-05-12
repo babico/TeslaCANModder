@@ -1,23 +1,51 @@
 #pragma once
+
+/**
+ * @file firmware/lib/client/command/features.h
+ * @brief Aggregates all vehicle feature command includes for the command dispatcher
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include <Arduino.h>
 #include "core/config/esp32/board.h"
 #include "core/types.h"
 #include "core/can/bus.h"
 #include "io/log.h"
+
+/**
+ * @brief Reinitialize the CAN driver after configuration changes.
+ * @return True if reinitialization succeeded
+ */
 bool driverReinit();
+
+/**
+ * @brief Set the requested MCP2515 oscillator clock frequency.
+ * @param mhz Clock frequency in MHz (typically 8 or 16)
+ */
 void driverSetClockMHz(uint8_t mhz);
+
+/**
+ * @brief Get the currently requested clock frequency.
+ * @return Requested clock in MHz
+ */
 uint8_t driverGetClockReqMHz();
+
+/**
+ * @brief Get the active (measured) clock frequency.
+ * @return Active clock in MHz
+ */
 uint8_t driverGetClockMHz();
 
 #include "core/util/parse.h"
 #include "core/log/ring.h"
 
-// ── Bus-independent features ─────────────────────────────────────────────────
+// Bus-independent features (stream, raw CAN listen, clock profile)
 #include "vehicle/can/feature/stream.h"
 #include "vehicle/can/feature/can_raw.h"
 #include "vehicle/can/feature/can_clock.h"
 
-// ── CAN-bus features (always compiled; runtime no-op when target bus inactive)
+// CAN-bus features (always compiled; runtime no-op when target bus inactive)
 #include "vehicle/can/feature/das_drive.h"
 #include "vehicle/can/feature/fsd.h"
 #include "vehicle/can/feature/nag.h"

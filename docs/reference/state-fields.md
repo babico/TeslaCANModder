@@ -19,7 +19,7 @@ All fields in `firmware/lib/core/types.h` → `struct State`. Fields marked **NV
 | `variant`          | Variant | HW4     | NVS     | Active hardware variant (HW4/HW3/Legacy) |
 | `fsdEnabled`       | bool    | false   | NVS     | FSD CAN modification active              |
 | `fsdForceEnabled`  | bool    | false   | NVS     | Force FSD edits even without UI FSD bit  |
-| `nagSuppress`      | bool    | false   | NVS     | Nag suppression active                   |
+| `nagMode`          | NagMode | OFF     | NVS     | Nag suppression strategy                 |
 | `speedProfile`     | int     | 1       | NVS     | Speed profile (0–3)                      |
 | `profileOverride`  | bool    | false   | NVS     | User-pinned profile (vs. stalk tracking) |
 | `speedOffset`      | int     | 0       | NVS     | Speed offset (HW4: 0–63, HW3: 0–100)     |
@@ -94,24 +94,48 @@ All fields in `firmware/lib/core/types.h` → `struct State`. Fields marked **NV
 | `bmsKwhChargeTotal`      | float | 0x3D2  | Lifetime charged (kWh)          |
 | `bmsChargeTimeToFull`    | float | 0x132  | Hours to full charge            |
 
-## Steering & Nag Killer
+## Nag Alert Suppression
 
-| Field                  | Type   | Default | Persist | Description                                   |
-| ---------------------- | ------ | ------- | ------- | --------------------------------------------- |
-| `steeringMode`         | uint8  | 0       | RO      | EPAS mode (0=FAIL, 1=COMFORT, 2=STD, 3=SPORT) |
-| `nagKillerEnabled`     | bool   | false   | NVS     | EPAS torque spoofing active                   |
-| `nagKillerMode`        | enum   | LEGACY  | NVS     | Mode: legacy, safe, or natural                |
-| `dasHandsOnState`      | uint8  | 0       | RO      | DAS hands-on level (0x39B, 0–8)               |
-| `naturalNagLastMs`     | ulong  | 0       | —       | Last natural nag injection time               |
-| `naturalNagIntervalMs` | uint16 | 200     | —       | Current natural injection interval            |
+All nag-related state in one place. See `docs/reference/commands.md` for the
+unified command interface (`nag:mode:<name>`).
+
+### Persisted fields
+
+| Field                    | Type    | Default | Persist      | Description                                                              |
+| ------------------------ | ------- | ------- | ------------ | ------------------------------------------------------------------------ |
+| `nagMode`                | NagMode | OFF     | NVS nagMode  | Active suppression strategy (off/bit19/legacy/safe/natural/organic/full) |
+| `nagOrganicDriverBypass` | bool    | false   | NVS nagOrgDB | Organic: stop injection when real hands-on detected                      |
+
+### Organic mode state (runtime + one persisted flag)
+
+| Field                   | Type   | Default | Persist | Description                                         |
+| ----------------------- | ------ | ------- | ------- | --------------------------------------------------- |
+| `nagOrganicRealHandsOn` | uint8  | 0       | RO      | Last observed incoming EPAS handsOnLevel (0–3)      |
+| `nagOrganicPrevState`   | uint8  | 0xFF    | —       | Previous `dasHandsOnState` for transition detection |
+| `nagOrg1EnterMs`        | ulong  | 0       | —       | State 1 grace-hold entry timestamp                  |
+| `nagOrg2EnterMs`        | ulong  | 0       | —       | State 2 pause entry timestamp                       |
+| `nagOrg2WalkRaw`        | int16  | 2048    | —       | Persistent state-2 random-walk torque (raw)         |
+| `nagOrg2HoldUntilMs`    | ulong  | 0       | —       | State 2 level-2 hold expiry                         |
+| `nagOrgStrongEnterMs`   | ulong  | 0       | —       | State 3-5 group entry timestamp                     |
+| `nagOrgFramesUntilExc`  | uint16 | 175     | —       | Frames until next grip-excursion pulse              |
+| `nagOrgExcFrames`       | uint8  | 0       | —       | Frames remaining in current grip pulse              |
+| `nagOrgLastRaw`         | int16  | 2048    | —       | Last generated organic-mode torque (raw)            |
+| `nagOrgLastLevel`       | uint8  | 0       | —       | Last generated organic-mode HandsOnLevel            |
+
+### DAS signals used by all echo modes (read-only)
+
+| Field                  | Type   | CAN ID       | Description                                    |
+| ---------------------- | ------ | ------------ | ---------------------------------------------- |
+| `steeringMode`         | uint8  | 0x370 byte 0 | EPAS mode (0=FAIL, 1=COMFORT, 2=STD, 3=SPORT)  |
+| `dasHandsOnState`      | uint8  | 0x39B byte 5 | DAS hands-on demand (0–15)                     |
+| `dasApState`           | uint8  | 0x39B byte 1 | DAS autopilot state (0=UNAVAIL, 3–6=active)    |
+| `naturalNagLastMs`     | ulong  | —            | Last natural nag injection time                |
+| `naturalNagIntervalMs` | uint16 | —            | Current natural injection interval (150–350ms) |
 
 ## Auto Lane Change
 
-| Field                   | Type  | Default | Persist | Description                   |
-| ----------------------- | ----- | ------- | ------- | ----------------------------- |
-| `alcAutoConfirmEnabled` | bool  | false   | NVS     | Auto lane change confirmation |
-| `dasLaneChangeState`    | uint8 | 0       | RO      | DAS lane change state (0x39B) |
-| `alcLastConfirmMs`      | ulong | 0       | —       | Last ALC injection time       |
+| `dasLaneChangeState` | uint8 | 0 | RO | DAS lane change state (0x39B) |
+| `alcLastConfirmMs` | ulong | 0 | — | Last ALC injection time |
 
 ## Safety Cues (RO)
 

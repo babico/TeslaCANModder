@@ -1,8 +1,8 @@
-// ── io/log.h Test ───────────────────────────────────────────────────────────
-// log.h is a thin forward-declaration header (sendLog) that lets feature
-// handlers emit log messages without depending on the platform serial layer.
-// This test verifies the link-time contract: sendLog(const char*) and
-// sendLog(const __FlashStringHelper*) exist and dispatch to the implementation.
+/** @file firmware/test/test_native_log/test_log.cpp
+ *  @brief Unit tests for log ring buffer
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -11,12 +11,10 @@
 class __FlashStringHelper;
 #define F(s) (reinterpret_cast<const __FlashStringHelper *>(s))
 
-// Capture log output instead of writing to Serial
 static std::string capturedLog;
 
 #include "io/log.h"
 
-// Provide implementation for the forward-declared sendLog overloads
 void sendLog(const char *msg)
 {
 	capturedLog += msg;
@@ -46,7 +44,6 @@ void test_sendLog_flash_string_dispatches()
 }
 void test_sendLog_called_from_feature_pattern()
 {
-	// Emulate a feature handler emitting a log line
 	auto handlerLog = [](const char *event) { sendLog(event); };
 	handlerLog("fsd:on:applied");
 	TEST_ASSERT_EQUAL_STRING("fsd:on:applied|c\n", capturedLog.c_str());
@@ -60,3 +57,4 @@ int main(int, char **)
 	RUN_TEST(test_sendLog_called_from_feature_pattern);
 	return UNITY_END();
 }
+

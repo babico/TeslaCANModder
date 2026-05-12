@@ -1,19 +1,17 @@
 #pragma once
+
+/**
+ * @file firmware/lib/vehicle/can/feature/vehicle_config.h
+ * @brief Vehicle-specific configuration profiles decoded from CAN frame 0x398 (GTW_carConfig)
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
+ */
+
 #include "core/types.h"
 
-// ── 5.8 Vehicle-Specific Configuration ──────────────────────────────────────
-// Support per-vehicle config profiles stored in NVS. Each profile stores
-// the vehicle model, year, and feature compatibility flags.
-//
-// Vehicle models detected from CAN 0x398 GTW_carConfig:
-//   - Model 3 (Highland/pre-Highland)
-//   - Model Y
-//   - Model S (Refresh/pre-Refresh)
-//   - Model X
-//
-// NVS key: "vehModel" (uint8_t), "vehYear" (uint16_t)
-// Command: vehicle (query — returns JSON with detected model/year/config)
-
+/**
+ * @brief Enumeration of supported Tesla vehicle models
+ */
 enum VehicleModel : uint8_t
 {
 	VEHICLE_UNKNOWN = 0,
@@ -24,6 +22,11 @@ enum VehicleModel : uint8_t
 	VEHICLE_CYBERTRUCK = 5
 };
 
+/**
+ * @brief Return a human-readable name string for the given vehicle model
+ * @param m The vehicle model enum value.
+ * @return Pointer to a static string with the model name, or "Unknown" if unrecognized.
+ */
 inline const char *vehicleModelName(VehicleModel m)
 {
 	switch (m)
@@ -43,14 +46,17 @@ inline const char *vehicleModelName(VehicleModel m)
 	}
 }
 
-// Decode vehicle model from GTW_carConfig 0x398
-// Byte 1 bits [7:4] = platform ID:
-//   0x1 = Model S, 0x2 = Model X, 0x3 = Model 3, 0x4 = Model Y, 0x5 = Cybertruck
-// Byte 2 bits [7:0] = model year offset from 2016
+/**
+ * @brief Decode vehicle model and year from GTW_carConfig frame (CAN ID 0x398)
+ * @param f The received CAN frame (must have dlc >= 3).
+ * @param s Device state to populate with decoded vehicle config.
+ * @note Byte 1 bits [7:4] encode the platform ID; byte 2 is the model year offset from 2016.
+ */
 inline void decodeVehicleConfig(const Frame &f, State &s)
 {
 	if (f.dlc < 3)
 		return;
+	// Platform ID is in the upper nibble of byte 1
 	uint8_t platform = (f.data[1] >> 4) & 0x0F;
 	switch (platform)
 	{
@@ -73,20 +79,28 @@ inline void decodeVehicleConfig(const Frame &f, State &s)
 		s.vehicleModel = VEHICLE_UNKNOWN;
 		break;
 	}
+	// Year is stored as offset from base year 2016
 	s.vehicleYear = 2016 + (f.data[2] & 0xFF);
 	s.hasVehicleConfig = true;
 }
 
-// Feature compatibility per vehicle model
+/**
+ * @brief Feature compatibility flags for a given vehicle model
+ */
 struct VehicleCapabilities
 {
-	bool supportsFsd;
-	bool supportsTrackMode;
-	bool supportsSummon;
-	bool supportsMirrorAutoFold;
-	bool supportsDualMotor;
+	bool supportsFsd;             // Full Self-Driving hardware support
+	bool supportsTrackMode;       // Track Mode availability
+	bool supportsSummon;          // Smart Summon capability
+	bool supportsMirrorAutoFold;  // Auto-folding side mirrors
+	bool supportsDualMotor;       // Dual motor drivetrain
 };
 
+/**
+ * @brief Return the feature capability set for a given vehicle model
+ * @param model The vehicle model to query.
+ * @return A VehicleCapabilities struct with flags set per model.
+ */
 inline VehicleCapabilities getVehicleCapabilities(VehicleModel model)
 {
 	VehicleCapabilities cap = {true, false, true, true, false};
@@ -116,7 +130,12 @@ inline VehicleCapabilities getVehicleCapabilities(VehicleModel model)
 	return cap;
 }
 
-// Query command
+/**
+ * @brief Execute the "vehicle" query command to report detected config
+ * @param cmd The command string to match.
+ * @param s Device state (unused beyond match check).
+ * @return True if the command matched "vehicle", false otherwise.
+ */
 static bool executeVehicleConfigCmd(const char *cmd, State &s)
 {
 	return strcmp(cmd, "vehicle") == 0;

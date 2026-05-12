@@ -15,7 +15,7 @@ function Use-AsciiWorkspace([string]$path) {
     }
   }
 
-  foreach ($driveLetter in @("T", "U", "V", "W", "X", "Y", "Z")) {
+  foreach ($driveLetter in @("T", "U", "G", "H", "I", "J", "K", "S")) {
     $drive = "${driveLetter}:"
     $existing = Get-PSDrive -Name $driveLetter -ErrorAction SilentlyContinue
 

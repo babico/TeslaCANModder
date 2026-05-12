@@ -1,5 +1,8 @@
-// ── Legacy Handler Tests ─────────────────────────────────────────────────────
-// Tests handleLegacy() CAN frame processing: stalk profile, FSD, nag suppress.
+/** @file firmware/test/test_native_legacy/test_legacy.cpp
+ *  @brief Unit tests for legacy variant frame handler
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
 
 #include <unity.h>
 #include <cstring>
@@ -19,7 +22,6 @@ class __FlashStringHelper;
 #include "feature/profile.h"
 #include "feature/offsets.h"
 
-// ── Stubs ────────────────────────────────────────────────────────────────────
 #include "support/stubs.h"
 #include "handler/variant/legacy.h"
 #include "support/helpers.h"
@@ -30,7 +32,7 @@ static State makeState()
 	s.variant = LEGACY;
 	s.speedProfile = 1;
 	s.fsdEnabled = true;
-	s.nagSuppress = true;
+	s.nagMode = NAG_MODE_BIT19;
 	return s;
 }
 
@@ -41,13 +43,12 @@ void setUp()
 }
 void tearDown() {}
 
-// ── Stalk Position → Profile ─────────────────────────────────────────────────
 
 void test_legacy_stalk_pos0_sets_profile_2()
 {
 	State s = makeState();
 	Frame f = makeFrame(CAN_ID_LEGACY_STALK);
-	f.data[1] = 0x00; // pos = 0
+	f.data[1] = 0x00;
 	handleLegacy(f, s);
 	TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
 	TEST_ASSERT_EQUAL(0, stub_send_count);
@@ -57,7 +58,7 @@ void test_legacy_stalk_pos1_sets_profile_2()
 {
 	State s = makeState();
 	Frame f = makeFrame(CAN_ID_LEGACY_STALK);
-	f.data[1] = 0x21; // pos = 0x21 >> 5 = 1
+	f.data[1] = 0x21;
 	handleLegacy(f, s);
 	TEST_ASSERT_EQUAL_INT(2, s.speedProfile);
 }
@@ -66,7 +67,7 @@ void test_legacy_stalk_pos2_sets_profile_1()
 {
 	State s = makeState();
 	Frame f = makeFrame(CAN_ID_LEGACY_STALK);
-	f.data[1] = 0x42; // pos = 0x42 >> 5 = 2
+	f.data[1] = 0x42;
 	handleLegacy(f, s);
 	TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
 }
@@ -75,7 +76,7 @@ void test_legacy_stalk_pos3_sets_profile_0()
 {
 	State s = makeState();
 	Frame f = makeFrame(CAN_ID_LEGACY_STALK);
-	f.data[1] = 0x64; // pos = 0x64 >> 5 = 3
+	f.data[1] = 0x64;
 	handleLegacy(f, s);
 	TEST_ASSERT_EQUAL_INT(0, s.speedProfile);
 }
@@ -94,12 +95,11 @@ void test_legacy_stalk_pinned_unchanged()
 void test_legacy_stalk_short_frame_ignored()
 {
 	State s = makeState();
-	Frame f = makeFrame(CAN_ID_LEGACY_STALK, 1); // dlc < 2
+	Frame f = makeFrame(CAN_ID_LEGACY_STALK, 1);
 	handleLegacy(f, s);
-	TEST_ASSERT_EQUAL_INT(1, s.speedProfile); // unchanged
+	TEST_ASSERT_EQUAL_INT(1, s.speedProfile);
 }
 
-// ── FSD Mux 0 ────────────────────────────────────────────────────────────────
 
 void test_legacy_fsd_mux0_sends_with_bit46()
 {
@@ -172,7 +172,6 @@ void test_legacy_fsd_sets_speed_profile_in_frame()
 	TEST_ASSERT_EQUAL_HEX8(0x04, stub_sends[0].f.data[6] & 0x06);
 }
 
-// ── Nag Mux 1 ────────────────────────────────────────────────────────────────
 
 void test_legacy_nag_mux1_clears_bit19()
 {
@@ -188,14 +187,13 @@ void test_legacy_nag_mux1_clears_bit19()
 void test_legacy_nag_mux1_no_send_when_disabled()
 {
 	State s = makeState();
-	s.nagSuppress = false;
+	s.nagMode = NAG_MODE_OFF;
 	Frame f = makeFrame(CAN_ID_LEGACY_FSD_MUX);
 	f.data[0] = 0x01;
 	handleLegacy(f, s);
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-// ── Misc ─────────────────────────────────────────────────────────────────────
 
 void test_legacy_ignores_unrelated_id()
 {
@@ -241,3 +239,4 @@ int main()
 
 	return UNITY_END();
 }
+

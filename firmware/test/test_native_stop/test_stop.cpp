@@ -1,3 +1,9 @@
+/** @file firmware/test/test_native_stop/test_stop.cpp
+ *  @brief Unit tests for emergency stop command
+ *  @author Tesla CAN Mod Contributors
+ *  @license GPL-3.0
+ */
+
 #include <unity.h>
 #include <cstring>
 
@@ -69,3 +75,4 @@ int main(int, char **)
 	RUN_TEST(test_stop_unknown);
 	return UNITY_END();
 }
+
