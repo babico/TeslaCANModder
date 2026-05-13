@@ -389,28 +389,28 @@ This is **best-in-class** for an embedded + client project.
 
 ### Medium Priority
 
-4. **Restore Serial Contract Validation**
+1. **Restore Serial Contract Validation**
     - Re-create `firmware/lib/io/schemas/io.schema.json` or update the validation script.
 
-5. **Add Code Coverage Reporting**
+2. **Add Code Coverage Reporting**
     - Configure Istanbul/nyc for JS/TS, `gcov`/`lcov` for C++.
     - Add coverage gates to CI (e.g., 70% minimum).
 
-6. **Add C++ Static Analysis to CI**
+3. **Add C++ Static Analysis to CI**
     - Integrate `cppcheck` or `clang-tidy` into the firmware CI job.
 
-7. **Format All Files**
+4. **Format All Files**
     - Run `npm run format` and commit the result to establish a clean baseline.
 
 ### Low Priority
 
-8. **Split `commands.ts`**
+1. **Split `commands.ts`**
     - Group command builders by domain into separate files.
 
-9. **Add TypeDoc**
+2. **Add TypeDoc**
     - Generate API documentation from protocol types.
 
-10. **Add Secret Scanning to CI**
+3. **Add Secret Scanning to CI**
     - Integrate `truffleHog` or GitHub's native secret scanning.
 
 ---

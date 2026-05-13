@@ -11,5 +11,8 @@
 		"**/.pio-home/**",
 		"client/.expo/**",
 		".venv/**",
+		".opencode/**",
+		"CODE_QUALITY_REPORT.md",
+		"MCP_SERVERS.md",
 	],
 }

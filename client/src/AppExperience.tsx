@@ -7,6 +7,7 @@ import { describeDecodedFrame, initialBoardState, type BoardState } from "@tesla
 import { useBleConfig } from "./hooks/useBleConfig";
 import { useDecoderDatasets } from "./hooks/useDecoderDatasets";
 import { useDiagnostics } from "./hooks/useDiagnostics";
+import { type DiagnosticsCategory } from "./state/monitorDiagnostics";
 
 import { ALL_COMMANDS, type CommandName } from "./hardware/controller";
 import {

@@ -11,6 +11,7 @@ import {
 	savePersistedDiagnosticsState,
 	type PersistedDiagnosticsArchiveEntry,
 } from "../state/monitorDiagnosticsPersistence";
+import { type CommandLifecycleEntry } from "../state/commandBus";
 
 const BUS_FILTERS = ["all", "0", "1", "2"] as const;
 type BusFilter = (typeof BUS_FILTERS)[number];
@@ -27,14 +28,14 @@ export function useDiagnostics({
 	setHistory,
 	setFrameSnapshots,
 }: {
-	commandLifecycle: Record<string, unknown>;
+	commandLifecycle: CommandLifecycleEntry[];
 	history: Array<{ id: string; ts: number; command: string; ok: boolean; response: string }>;
 	boardMessages: Array<{ id: number; type: "info" | "error"; text: string; ts: string }>;
 	frameSnapshots: Array<{
 		id: string;
 		ts: number;
 		frameCount: number;
-		busFilter: string;
+		busFilter: BusFilter;
 		frameFilter: string;
 	}>;
 	setHistory: (
@@ -45,7 +46,7 @@ export function useDiagnostics({
 			id: string;
 			ts: number;
 			frameCount: number;
-			busFilter: string;
+			busFilter: BusFilter;
 			frameFilter: string;
 		}>,
 	) => void;
