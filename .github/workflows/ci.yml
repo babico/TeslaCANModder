@@ -6,6 +6,9 @@ on:
     pull_request:
         branches: [main]
 
+permissions:
+    contents: read
+
 concurrency:
     group: ci-${{ github.ref }}
     cancel-in-progress: true
@@ -25,7 +28,7 @@ jobs:
               working-directory: .
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: git config --global submodule.recurse false
             - uses: actions/cache@v5
               with:
@@ -49,7 +52,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: |
                   git config --global http.version HTTP/1.1
                   git config --global http.lowSpeedLimit 0
@@ -73,7 +76,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: |
                   git config --global http.version HTTP/1.1
                   git config --global http.lowSpeedLimit 0
@@ -99,7 +102,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: |
                   git config --global http.version HTTP/1.1
                   git config --global http.lowSpeedLimit 0
@@ -111,6 +114,7 @@ jobs:
                   cache: npm
             - run: npm ci --no-audit --no-fund
             - run: npm run build -w packages/protocol
+            - run: npm run typecheck -w @teslacanmodder/client
             - run: npm test -w @teslacanmodder/client
 
     tools:
@@ -123,7 +127,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: |
                   git config --global http.version HTTP/1.1
                   git config --global http.lowSpeedLimit 0
@@ -146,7 +150,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: git config --global submodule.recurse false
             - run: docker compose build --no-cache
 
@@ -160,7 +164,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: |
                   git config --global http.version HTTP/1.1
                   git config --global http.lowSpeedLimit 0
@@ -171,6 +175,7 @@ jobs:
                   node-version: 22
                   cache: npm
             - run: npm ci --no-audit --no-fund
+            - run: npm run validate:serial-contract
             - run: npm run lint:all
 
     workflow-lint:
@@ -183,7 +188,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - uses: rhysd/actionlint@v1.7.12
 
     markdown-lint:
@@ -196,7 +201,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - uses: DavidAnson/markdownlint-cli2-action@v23
               with:
                   globs: |
@@ -212,7 +217,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: |
                   git config --global http.version HTTP/1.1
                   git config --global http.lowSpeedLimit 0
@@ -240,7 +245,7 @@ jobs:
             - name: CI-only custom legacy folder exceptions
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
-                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
             - run: git config --global submodule.recurse false
             - run: docker compose up --build -d client-prod
             - run: |

@@ -9,23 +9,23 @@
 		"tools"
 	],
 	"scripts": {
-		"smoke:firmware:release-matrix": "node scripts/release-matrix-smoke.mjs",
+		"audit:ci": "node scripts/npm-audit-actionable.cjs --severity=moderate",
 		"build:protocol": "npm run build -w @teslacanmodder/protocol",
-		"regen:firmware:compiledb": "cd firmware && .\\pio.ps1 run -e esp32_wifi_ble -t compiledb",
-		"validate:serial-contract": "node scripts/validate-serial-contract.mjs",
-		"test:all": "npm run validate:serial-contract && npm run build:protocol && npm run test:protocol && npm run test:client && npm run test:tools && npm run test:firmware",
-		"test:protocol": "npm test -w @teslacanmodder/protocol",
-		"test:client": "npm run build:protocol && npm test -w @teslacanmodder/client",
-		"test:tools": "npm test -w @teslacanmodder/tools",
-		"test:firmware": "cd firmware && .\\pio.ps1 test -e native",
+		"format:check": "prettier --check .",
+		"format": "prettier --write .",
 		"lint:all": "npm run lint && npm run format:check",
 		"lint": "eslint .",
-		"audit:ci": "node scripts/npm-audit-actionable.cjs --severity=moderate",
-		"format": "prettier --write .",
-		"format:check": "prettier --check .",
-		"typecheck:protocol": "tsc -p packages/protocol/tsconfig.json --noEmit",
+		"prepare": "husky",
+		"regen:firmware:compiledb": "cd firmware && .\\pio.ps1 run -e esp32_wifi_ble -t compiledb",
+		"smoke:firmware:release-matrix": "node scripts/release-matrix-smoke.mjs",
+		"test:all": "npm run validate:serial-contract && npm run build:protocol && npm run test:protocol && npm run test:client && npm run test:tools && npm run test:firmware",
+		"test:client": "npm run build:protocol && npm test -w @teslacanmodder/client",
+		"test:firmware": "cd firmware && .\\pio.ps1 test -e native",
+		"test:protocol": "npm test -w @teslacanmodder/protocol",
+		"test:tools": "npm test -w @teslacanmodder/tools",
 		"typecheck:client": "tsc -p client/tsconfig.json --noEmit",
-		"prepare": "husky"
+		"typecheck:protocol": "tsc -p packages/protocol/tsconfig.json --noEmit",
+		"validate:serial-contract": "node scripts/validate-serial-contract.mjs"
 	},
 	"lint-staged": {
 		"*.{ts,tsx,js,cjs,mjs}": [
@@ -37,7 +37,7 @@
 		]
 	},
 	"engines": {
-		"node": ">=18"
+		"node": ">=22"
 	},
 	"overrides": {
 		"react": "19.1.0",
