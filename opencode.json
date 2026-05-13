@@ -1,0 +1,170 @@
+{
+	"$schema": "https://opencode.ai/config.json",
+	"shell": "pwsh",
+	"instructions": [
+		"AGENTS.md",
+		"CONTRIBUTING.md",
+		"docs/reference/commands.md",
+		"docs/reference/can-protocol.md"
+	],
+	"provider": {
+		"openrouter": {
+			"options": {
+				"websearch_cited": {
+					"model": "minimax/minimax-m2.5:free"
+				}
+			}
+		},
+		"opencode-go": {
+			"options": {
+				"baseURL": "https://opencode.ai/zen/go/v1",
+				"apiKey": "{env:OPENCODE_GO_API_KEY}",
+				"websearch_cited": {
+					"model": "deepseek-v4-flash"
+				}
+			}
+		}
+	},
+	"model": "opencode-go/kimi-k2.6",
+	"small_model": "opencode-go/qwen3.5-plus",
+	"lsp": {
+		"clangd": {
+			"command": ["clangd", "--compile-commands-dir=firmware"]
+		}
+	},
+	"plugin": [
+		"superpowers@git+https://github.com/obra/superpowers.git",
+		"opencode-mermaid-renderer@0.0.3",
+		"@slkiser/opencode-quota",
+		"opencode-wakatime",
+		"@franlol/opencode-md-table-formatter@latest",
+		"opencode-websearch-cited@1.2.0",
+		"@howaboua/opencode-planning-toolkit@latest"
+	],
+	"formatter": {
+		"prettier": {
+			"disabled": false,
+			"command": ["npx", "prettier", "--write", "$FILE"],
+			"extensions": [
+				".js",
+				".jsx",
+				".ts",
+				".tsx",
+				".mjs",
+				".cjs",
+				".json",
+				".md",
+				".yml",
+				".yaml"
+			]
+		},
+		"clang-format": {
+			"disabled": false,
+			"command": ["clang-format", "-i", "$FILE"],
+			"extensions": [".cpp", ".h", ".c", ".ino"]
+		}
+	},
+	"watcher": {
+		"ignore": [
+			"node_modules/**",
+			"**/node_modules/**",
+			".pio/**",
+			"firmware/.pio/**",
+			"legacy/**",
+			"dist/**",
+			"build/**",
+			".git/**",
+			"**/.git/**",
+			"*.bin",
+			"*.elf",
+			"*.hex"
+		]
+	},
+	"share": "manual",
+	"mcp": {
+		"github-mcp": {
+			"type": "remote",
+			"url": "https://api.githubcopilot.com/mcp/",
+			"headers": { "Authorization": "Bearer {env:GITHUB_TOKEN}" },
+			"enabled": true
+		},
+		"playwright": {
+			"type": "local",
+			"command": ["npx", "-y", "@playwright/mcp@latest"],
+			"enabled": true
+		},
+		"memory": {
+			"type": "local",
+			"command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+			"enabled": true
+		},
+		"sequentialthinking": {
+			"type": "local",
+			"command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+			"enabled": true
+		},
+		"time": {
+			"type": "local",
+			"command": ["uvx", "mcp-server-time"],
+			"enabled": true
+		},
+		"superpowers": {
+			"type": "local",
+			"command": ["npx", "-y", "superpowers-mcp"],
+			"enabled": true
+		}
+	},
+	"permission": {
+		"skill": {
+			"*": "allow"
+		}
+	},
+	"agent": {
+		"code": {
+			"description": "Primary development agent with full tool access",
+			"permission": {
+				"skill": {
+					"*": "allow"
+				}
+			}
+		},
+		"plan": {
+			"permission": {
+				"skill": {
+					"*": "allow"
+				}
+			}
+		},
+		"github-reviewer": {
+			"description": "Automated PR reviewer for TeslaCANModder with CAN safety focus",
+			"model": "opencode-go/kimi-k2.6",
+			"prompt": "You are a TeslaCANModder code reviewer. Focus on: CAN frame safety (DLC guards, checksums, bit isolation), variant behavior (HW3/HW4/Legacy), coding standards (.clang-format, eslint), test coverage, and documentation. Be thorough but constructive.",
+			"permission": {
+				"edit": "deny"
+			}
+		}
+	},
+	"command": {
+		"test": {
+			"template": "Run the full test suite with `npm run test:all` and show any failures. Focus on the failing tests and suggest fixes.",
+			"description": "Run all workspace tests"
+		},
+		"lint": {
+			"template": "Run lint and format checks with `npm run lint:all` and fix any issues found.",
+			"description": "Run lint and format checks"
+		},
+		"build-firmware": {
+			"template": "Build the firmware for environment esp32_wifi_ble_chassis_vehicle_body_8mhz using `cd firmware && .\\pio.ps1 run -e esp32_wifi_ble_chassis_vehicle_body_8mhz`. Report any compilation errors.",
+			"description": "Build full firmware"
+		},
+		"test-firmware": {
+			"template": "Run firmware native tests with `cd firmware && .\\pio.ps1 test -e native`. Report any failures.",
+			"description": "Run firmware tests"
+		}
+	},
+	"compaction": {
+		"auto": true,
+		"prune": true,
+		"reserved": 15000
+	}
+}

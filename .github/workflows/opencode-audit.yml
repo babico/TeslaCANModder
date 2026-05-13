@@ -1,0 +1,55 @@
+name: OpenCode Scheduled Audit
+
+on:
+    schedule:
+        - cron: "0 6 * * 1" # Every Monday at 6am UTC
+    workflow_dispatch:
+
+jobs:
+    audit:
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: write
+            pull-requests: write
+            issues: write
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  persist-credentials: false
+
+            - uses: anomalyco/opencode/github@latest
+              env:
+                  # OpenCode Go subscription (recommended for cost efficiency)
+                  OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+                  # Fallback: Anthropic
+                  # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+              with:
+                  model: opencode-go/kimi-k2.6
+                  prompt: |
+                      Run a weekly audit of the TeslaCANModder codebase:
+
+                      1. **Security Check**
+                         - Look for any hardcoded secrets, API keys, or credentials
+                         - Check for unsafe eval() or implied eval usage
+                         - Verify no sensitive data in logs or error messages
+
+                      2. **Code Health**
+                         - Find TODO/FIXME comments and create issues for important ones
+                         - Check for stale documentation (references to old paths like lib/infra/, lib/feature/, lib/handler/)
+                         - Verify AGENTS.md is up to date with current structure
+
+                      3. **CAN Safety Review**
+                         - Scan firmware/lib/vehicle/can/feature/ for missing DLC guards
+                         - Check for checksum recalculation in frame mutations
+                         - Verify variant-specific behavior is explicit
+
+                      4. **Test Coverage**
+                         - Check if new features from recent commits have tests
+                         - Identify untested critical paths
+
+                      5. **Dependency Audit**
+                         - Check for outdated or vulnerable dependencies
+                         - Verify license compatibility (GPL-3.0)
+
+                      Create issues for anything critical found. Summarize findings in a comment.

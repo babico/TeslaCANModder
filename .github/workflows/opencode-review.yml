@@ -1,0 +1,64 @@
+name: OpenCode PR Review
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+    review:
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
+            pull-requests: write
+            issues: read
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  persist-credentials: false
+
+            - uses: anomalyco/opencode/github@latest
+              env:
+                  # OpenCode Go subscription (recommended)
+                  OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+                  # Fallback: Anthropic
+                  # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  model: opencode-go/kimi-k2.6
+                  agent: github-reviewer
+                  use_github_token: true
+                  prompt: |
+                      Review this pull request for TeslaCANModder with these criteria:
+
+                      ## Safety Critical (for firmware/ changes)
+                      - Every `frame.data[...]` access has a DLC guard
+                      - Checksum logic is preserved or correctly recalculated
+                      - Bit writes don't leak into adjacent fields
+                      - Variant behavior (HW3/HW4/Legacy) is correctly handled
+                      - Bus routing (BUS_CHASSIS/VEHICLE/BODY) is correct
+
+                      ## Code Quality
+                      - C++ follows .clang-format (tabs, Allman braces, 120 col)
+                      - TypeScript follows .prettierrc and eslint.config.mjs
+                      - No `console.log` in client code (only warn/error)
+                      - Strict `===` / `!==` usage
+                      - Unused vars prefixed with `_`
+
+                      ## Testing
+                      - New behavior has corresponding tests
+                      - Firmware tests added to firmware/test/
+                      - Protocol tests added to packages/protocol/test/
+                      - Client tests added to client/tests/
+                      - Tools tests added to tools/test/
+
+                      ## Documentation
+                      - New commands/features documented in docs/reference/commands.md
+                      - CAN ID changes documented in docs/reference/can-ids.md
+                      - Checklist followed if applicable (can-review, release, testing)
+
+                      ## Checklist Verification
+                      If this PR touches firmware CAN code, verify can-review-checklist.md was followed.
+                      If this PR is for a release, verify release-checklist.md was followed.
+
+                      Provide actionable feedback. For issues found, suggest specific fixes.
