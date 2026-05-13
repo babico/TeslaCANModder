@@ -57,9 +57,27 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"fsd:force:on",
 	"fsd:force:off",
 
-	// Nag
+	// Nag (legacy on/off)
 	"nag:on",
 	"nag:off",
+
+	// Unified Nag
+	"nag:mode:off",
+	"nag:mode:bit19",
+	"nag:mode:legacy",
+	"nag:mode:safe",
+	"nag:mode:natural",
+	"nag:mode:organic",
+	"nag:mode:full",
+	"nag:bypass:on",
+	"nag:bypass:off",
+
+	// Nag Killer (legacy EPAS torque spoofing)
+	"nag:killer:on",
+	"nag:killer:off",
+	"nag:killer:mode:legacy",
+	"nag:killer:mode:safe",
+	"nag:killer:mode:natural",
 
 	// Ban Shield
 	"banshield:on",
@@ -83,13 +101,6 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	// ISA Chime
 	"isa-chime:on",
 	"isa-chime:off",
-
-	// Nag Killer
-	"nag:killer:on",
-	"nag:killer:off",
-	"nag:killer:mode:legacy",
-	"nag:killer:mode:safe",
-	"nag:killer:mode:natural",
 
 	// Summon
 	"summon-inject:on",
@@ -402,7 +413,8 @@ function extractProtocolCommands(): string[] {
 				key === "apGate" ||
 				key === "eap" ||
 				key === "drive" ||
-				key === "gamepad"
+				key === "gamepad" ||
+				key === "nagBypass"
 			) {
 				cmds.push((fn as (b: boolean) => string)(true));
 				cmds.push((fn as (b: boolean) => string)(false));
@@ -416,7 +428,14 @@ function extractProtocolCommands(): string[] {
 				cmds.push((fn as (v: string) => string)("auto"));
 				continue;
 			}
-			// Nag killer mode
+			// Nag mode (unified)
+			if (key === "nagMode") {
+				for (const m of ["off", "bit19", "legacy", "safe", "natural", "organic", "full"]) {
+					cmds.push((fn as (m: string) => string)(m));
+				}
+				continue;
+			}
+			// Nag killer mode (legacy)
 			if (key === "nagKillerMode") {
 				cmds.push((fn as (m: string) => string)("legacy"));
 				cmds.push((fn as (m: string) => string)("safe"));

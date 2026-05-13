@@ -1,0 +1,54 @@
+name: OpenCode
+
+on:
+    issue_comment:
+        types: [created]
+    pull_request_review_comment:
+        types: [created]
+
+jobs:
+    opencode:
+        if: |
+            contains(github.event.comment.body, '/oc') ||
+            contains(github.event.comment.body, '/opencode')
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: write
+            pull-requests: write
+            issues: write
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
+              with:
+                  fetch-depth: 1
+                  persist-credentials: false
+
+            - name: Run OpenCode
+              uses: anomalyco/opencode/github@latest
+              env:
+                  # Use OpenCode Go (recommended - your subscription)
+                  # Get key from: https://opencode.ai/auth
+                  OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+                  # OR use Anthropic directly
+                  # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+              with:
+                  # OpenCode Go models: opencode-go/kimi-k2.6, opencode-go/glm-5.1, opencode-go/deepseek-v4-pro, etc.
+                  # Full list: https://opencode.ai/docs/go/
+                  model: opencode-go/kimi-k2.6
+                  agent: code
+                  prompt: |
+                      You are working on TeslaCANModder, a Tesla CAN bus modifier project.
+                      This repo contains:
+                      - firmware/ - PlatformIO ESP32 firmware (C++)
+                      - client/ - Expo React Native app
+                      - packages/protocol/ - Shared TypeScript protocol package
+                      - tools/ - Debug CLI and serial-to-HTTP bridge
+                      - docs/ - Documentation
+
+                      Before making changes:
+                      1. Read AGENTS.md for project instructions
+                      2. Follow the relevant checklist in docs/checklists/ for your change type
+                      3. Run appropriate tests (npm run test:all for full suite)
+                      4. Run npm run lint:all before finishing
+                      5. For firmware CAN changes, walk docs/checklists/can-review-checklist.md

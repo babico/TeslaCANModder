@@ -25,6 +25,32 @@ describe("commands", () => {
 		it("nag off", () => expect(commands.nag(false)).toBe("nag:off"));
 	});
 
+	describe("Nag Killer", () => {
+		it("on", () => expect(commands.nagKiller(true)).toBe("nag:killer:on"));
+		it("off", () => expect(commands.nagKiller(false)).toBe("nag:killer:off"));
+		it("mode legacy", () =>
+			expect(commands.nagKillerMode("legacy")).toBe("nag:killer:mode:legacy"));
+		it("mode safe", () => expect(commands.nagKillerMode("safe")).toBe("nag:killer:mode:safe"));
+		it("rejects invalid mode", () => {
+			expect(() => commands.nagKillerMode("turbo")).toThrow(RangeError);
+		});
+	});
+
+	describe("Unified Nag", () => {
+		it("mode off", () => expect(commands.nagMode("off")).toBe("nag:mode:off"));
+		it("mode bit19", () => expect(commands.nagMode("bit19")).toBe("nag:mode:bit19"));
+		it("mode legacy", () => expect(commands.nagMode("legacy")).toBe("nag:mode:legacy"));
+		it("mode safe", () => expect(commands.nagMode("safe")).toBe("nag:mode:safe"));
+		it("mode natural", () => expect(commands.nagMode("natural")).toBe("nag:mode:natural"));
+		it("mode organic", () => expect(commands.nagMode("organic")).toBe("nag:mode:organic"));
+		it("mode full", () => expect(commands.nagMode("full")).toBe("nag:mode:full"));
+		it("rejects invalid mode", () => {
+			expect(() => commands.nagMode("turbo")).toThrow(RangeError);
+		});
+		it("bypass on", () => expect(commands.nagBypass(true)).toBe("nag:bypass:on"));
+		it("bypass off", () => expect(commands.nagBypass(false)).toBe("nag:bypass:off"));
+	});
+
 	describe("Ban Shield", () => {
 		it("enable", () => expect(commands.banShield(true)).toBe("banshield:on"));
 		it("disable", () => expect(commands.banShield(false)).toBe("banshield:off"));
@@ -72,17 +98,6 @@ describe("commands", () => {
 		it("canClock rejects invalid", () => {
 			expect(() => commands.canClock(10)).toThrow(RangeError);
 			expect(() => commands.canClock(0)).toThrow(RangeError);
-		});
-	});
-
-	describe("Nag Killer", () => {
-		it("on", () => expect(commands.nagKiller(true)).toBe("nag:killer:on"));
-		it("off", () => expect(commands.nagKiller(false)).toBe("nag:killer:off"));
-		it("mode legacy", () =>
-			expect(commands.nagKillerMode("legacy")).toBe("nag:killer:mode:legacy"));
-		it("mode safe", () => expect(commands.nagKillerMode("safe")).toBe("nag:killer:mode:safe"));
-		it("rejects invalid mode", () => {
-			expect(() => commands.nagKillerMode("turbo")).toThrow(RangeError);
 		});
 	});
 
