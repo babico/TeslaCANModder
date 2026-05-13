@@ -42,6 +42,7 @@ jobs:
 
             # Protocol tests
             - run: npm test -w packages/protocol
+            - run: npm run validate:serial-contract
 
             # Client quality gate
             - run: npm run build -w packages/protocol
