@@ -1,0 +1,2439 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://raw.githubusercontent.com/babico/TeslaCANModder/main/firmware/lib/io/schemas/io.schema.json",
+	"title": "TeslaCANModder IO Schema",
+	"description": "Unified IO schema for all firmware transports (serial, BLE, WiFi). All transports share the same RPC contract: requests are RpcRequest objects, responses are RpcResponse tagged messages. Serial and BLE frame each message as newline-delimited JSON. WiFi uses HTTP with the same JSON payloads.",
+	"schemaVersion": 1,
+	"transports": {
+		"serial": {
+			"description": "USB CDC UART — newline-delimited JSON RPC. Each request is an RpcRequest JSON object terminated with \\n. Each response is an RpcResponse tagged JSON object on its own line.",
+			"protocol": "newline-json-rpc",
+			"requestSchema": { "$ref": "#/$defs/RpcRequest" },
+			"responseSchema": { "$ref": "#/$defs/RpcResponse" }
+		},
+		"ble": {
+			"description": "Bluetooth Low Energy — Nordic UART Service (NUS). Same RPC contract as serial: newline-delimited RpcRequest / RpcResponse JSON.",
+			"protocol": "ble-nus-rpc",
+			"serviceUUID": "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+			"rxCharacteristicUUID": "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
+			"txCharacteristicUUID": "6e400003-b5a3-f393-e0a9-e50e24dcca9e",
+			"requestSchema": { "$ref": "#/$defs/RpcRequest" },
+			"responseSchema": { "$ref": "#/$defs/RpcResponse" },
+			"notes": "Device name is set by BLE_DEVICE_NAME build constant. Enabled by BOARD_ENABLE_BLE. Numeric booleans 0/1 same as serial."
+		},
+		"wifi": {
+			"description": "HTTP REST API served by the ESP32 in AP or STA mode. Uses the same RpcRequest / RpcResponse contract as serial and BLE. Booleans are native JSON true/false (not 0/1 integers).",
+			"protocol": "http-rest-rpc",
+			"auth": {
+				"scheme": "header",
+				"header": "X-API-Key",
+				"description": "Required only for write endpoints (POST /cmd). Read endpoints are unauthenticated."
+			},
+			"endpoints": [
+				{
+					"method": "GET",
+					"path": "/",
+					"description": "Dashboard HTML page",
+					"responseContentType": "text/html",
+					"auth": false
+				},
+				{
+					"method": "GET",
+					"path": "/status",
+					"description": "Full device state snapshot",
+					"responseContentType": "application/json",
+					"responseSchema": { "$ref": "#/$defs/DeviceState" },
+					"auth": false
+				},
+				{
+					"method": "POST",
+					"path": "/cmd",
+					"description": "Execute a firmware command. Same command vocabulary as serial/BLE. Returns updated state after the command executes.",
+					"requestContentType": "application/json",
+					"requestSchema": { "$ref": "#/$defs/RpcRequest" },
+					"responseContentType": "application/json",
+					"responseSchema": { "$ref": "#/$defs/RpcResponse" },
+					"auth": true,
+					"errors": [
+						{
+							"code": 400,
+							"reason": "Missing, empty, or invalid cmd field; invalid characters in cmd"
+						},
+						{ "code": 401, "reason": "Missing or invalid X-API-Key header" },
+						{ "code": 500, "reason": "State not initialized" }
+					]
+				},
+				{
+					"method": "GET",
+					"path": "/ping",
+					"description": "Health check — returns pong message",
+					"responseContentType": "application/json",
+					"responseSchema": { "$ref": "#/$defs/Pong" },
+					"auth": false
+				},
+				{
+					"method": "OPTIONS",
+					"path": "/*",
+					"description": "CORS preflight — always returns 204 with CORS headers (Access-Control-Allow-Origin: *)",
+					"auth": false
+				}
+			]
+		}
+	},
+
+	"commands": [
+		{
+			"cmd": "ping",
+			"description": "Health check. Returns a Pong message.",
+			"kind": "query",
+			"response": "Pong",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "status",
+			"description": "Full status snapshot. Returns a Status message.",
+			"kind": "query",
+			"response": "Status",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "status:meta",
+			"description": "Firmware/hardware metadata only.",
+			"kind": "query",
+			"response": "StatusMeta",
+			"feature": "vehicleConfig",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "status:state",
+			"description": "Runtime state flags only (FSD, nag, profile, offset, etc.).",
+			"kind": "query",
+			"response": "StatusState",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "status:features",
+			"description": "Enabled feature flags only.",
+			"kind": "query",
+			"response": "StatusFeatures",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "status:can",
+			"description": "CAN bus clock and health only.",
+			"kind": "query",
+			"response": "StatusCan",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "status:compact",
+			"description": "Compact status snapshot (reduced payload).",
+			"kind": "query",
+			"response": "StatusCompact",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "status:live",
+			"description": "Query current live-stream state (on/off, interval).",
+			"kind": "query",
+			"response": "StatusLive",
+			"feature": "stream",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "status:live:on",
+			"description": "Enable periodic live status stream.",
+			"kind": "command",
+			"feature": "stream",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "status:live:off",
+			"description": "Disable periodic live status stream.",
+			"kind": "command",
+			"feature": "stream",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "stream:on",
+			"description": "Enable raw CAN frame streaming.",
+			"kind": "command",
+			"feature": "stream",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "stream:off",
+			"description": "Disable raw CAN frame streaming.",
+			"kind": "command",
+			"feature": "stream",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "bms",
+			"description": "Request BMS telemetry snapshot.",
+			"kind": "query",
+			"response": "Bms",
+			"feature": "bmsTelemetry",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "tpms",
+			"description": "Request TPMS tire pressure snapshot.",
+			"kind": "query",
+			"response": "Tpms",
+			"feature": "tpmsTelemetry",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "powertrain",
+			"description": "Request powertrain telemetry snapshot.",
+			"kind": "query",
+			"response": "Powertrain",
+			"feature": "powertrainTelemetry",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "vehicle",
+			"description": "Request vehicle identification snapshot.",
+			"kind": "query",
+			"response": "Vehicle",
+			"feature": "vehicleConfig",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "platform",
+			"description": "Request platform/firmware version snapshot.",
+			"kind": "query",
+			"response": "Platform",
+			"feature": "vehicleConfig",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "fwcompat",
+			"description": "Request firmware compatibility report.",
+			"kind": "query",
+			"response": "FwCompat",
+			"feature": "fwCompat",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "fsd:on",
+			"description": "Enable FSD (Full Self-Drive) injection.",
+			"kind": "command",
+			"feature": "fsd",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "fsd:off",
+			"description": "Disable FSD injection.",
+			"kind": "command",
+			"feature": "fsd",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "fsd:force:on",
+			"description": "Enable forced FSD mode.",
+			"kind": "command",
+			"feature": "fsd",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "fsd:force:off",
+			"description": "Disable forced FSD mode.",
+			"kind": "command",
+			"feature": "fsd",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "nag:on",
+			"description": "Enable nag (hands-on) suppression.",
+			"kind": "command",
+			"feature": "nagControl",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "nag:off",
+			"description": "Disable nag suppression.",
+			"kind": "command",
+			"feature": "nagControl",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "nag:killer:on",
+			"description": "Enable nag-killer (active nag prevention) mode.",
+			"kind": "command",
+			"feature": "nagControl",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "nag:killer:off",
+			"description": "Disable nag-killer mode.",
+			"kind": "command",
+			"feature": "nagControl",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "nag:killer:mode:<mode>",
+			"description": "Set nag-killer operating mode string (e.g. aggressive, passive).",
+			"kind": "command",
+			"feature": "nagControl",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "profile:0",
+			"description": "Set speed profile to 0 (unlocked).",
+			"kind": "command",
+			"feature": "speedProfile",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "profile:1",
+			"description": "Set speed profile to 1.",
+			"kind": "command",
+			"feature": "speedProfile",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "profile:2",
+			"description": "Set speed profile to 2.",
+			"kind": "command",
+			"feature": "speedProfile",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "profile:3",
+			"description": "Set speed profile to 3.",
+			"kind": "command",
+			"feature": "speedProfile",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "profile:4",
+			"description": "Set speed profile to 4.",
+			"kind": "command",
+			"feature": "speedProfile",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "profile:auto",
+			"description": "Set speed profile to auto-detect.",
+			"kind": "command",
+			"feature": "speedProfile",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "profile:lock",
+			"description": "Pin (lock) current speed profile.",
+			"kind": "command",
+			"feature": "speedProfile",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "profile:unlock",
+			"description": "Unpin (unlock) speed profile.",
+			"kind": "command",
+			"feature": "speedProfile",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "offset:<n>",
+			"description": "Set speed offset to <n> km/h (integer). 0 disables.",
+			"kind": "command",
+			"feature": "speedOffset",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "offset:auto",
+			"description": "Set speed offset to auto-calculate mode.",
+			"kind": "command",
+			"feature": "speedOffset",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "offset:off",
+			"description": "Disable speed offset.",
+			"kind": "command",
+			"feature": "speedOffset",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "precondition:on",
+			"description": "Enable climate precondition.",
+			"kind": "command",
+			"feature": "precondition",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "precondition:off",
+			"description": "Disable climate precondition.",
+			"kind": "command",
+			"feature": "precondition",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "trackmode:on",
+			"description": "Enable track mode.",
+			"kind": "command",
+			"feature": "trackMode",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "trackmode:off",
+			"description": "Disable track mode.",
+			"kind": "command",
+			"feature": "trackMode",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "summon:inject:on",
+			"description": "Enable summon CAN injection.",
+			"kind": "command",
+			"feature": "summon",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "summon:inject:off",
+			"description": "Disable summon CAN injection.",
+			"kind": "command",
+			"feature": "summon",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "shield:on",
+			"description": "Enable ban-shield telemetry monitoring.",
+			"kind": "command",
+			"feature": "banShield",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "shield:off",
+			"description": "Disable ban-shield.",
+			"kind": "command",
+			"feature": "banShield",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "gtwshield:on",
+			"description": "Arm GTW shield (blocks 0x7FF changes).",
+			"kind": "command",
+			"feature": "banShield",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "gtwshield:off",
+			"description": "Disarm GTW shield.",
+			"kind": "command",
+			"feature": "banShield",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "tlssc:on",
+			"description": "Enable TLSSC restore (spoof SELF_DRIVING AP tier).",
+			"kind": "command",
+			"feature": "tlsscRestore",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "tlssc:off",
+			"description": "Disable TLSSC restore.",
+			"kind": "command",
+			"feature": "tlsscRestore",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "mqtt:on",
+			"description": "Enable MQTT bridge.",
+			"kind": "command",
+			"feature": "mqttBridge",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "mqtt:off",
+			"description": "Disable MQTT bridge.",
+			"kind": "command",
+			"feature": "mqttBridge",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "mqtt:broker:<host>",
+			"description": "Set MQTT broker hostname or IP.",
+			"kind": "command",
+			"feature": "mqttBridge",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "mqtt:port:<port>",
+			"description": "Set MQTT broker port (e.g. mqtt:port:1883).",
+			"kind": "command",
+			"feature": "mqttBridge",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "mqtt:interval:<ms>",
+			"description": "Set MQTT publish interval in ms (e.g. mqtt:interval:1000).",
+			"kind": "command",
+			"feature": "mqttBridge",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "raw:on",
+			"description": "Enable raw CAN frame listen mode.",
+			"kind": "command",
+			"feature": "rawCan",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "raw:off",
+			"description": "Disable raw CAN frame listen mode.",
+			"kind": "command",
+			"feature": "rawCan",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "apgate:on",
+			"description": "Enable AP injection gate (writes require AP/Park/Summon condition).",
+			"kind": "command",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "apgate:off",
+			"description": "Disable AP injection gate.",
+			"kind": "command",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "apgate:status",
+			"description": "Query AP gate state (enabled, ap, park, summon, open).",
+			"kind": "query",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "alc:on",
+			"description": "Enable ALC auto-confirm.",
+			"kind": "command",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "alc:off",
+			"description": "Disable ALC auto-confirm.",
+			"kind": "command",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "region:<code>",
+			"description": "Spoof region code to <code> (integer). Saved to NVS.",
+			"kind": "command",
+			"feature": "regionCodec",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "region:off",
+			"description": "Disable region spoofing.",
+			"kind": "command",
+			"feature": "regionCodec",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "canclock:<profile>",
+			"description": "Set CAN oscillator clock profile by name (e.g. canclock:8, canclock:16).",
+			"kind": "command",
+			"feature": "canClock",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "cansim:on",
+			"description": "Enable CAN simulation mode.",
+			"kind": "command",
+			"feature": "canSimulation",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "cansim:off",
+			"description": "Disable CAN simulation mode.",
+			"kind": "command",
+			"feature": "canSimulation",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "singleshot:on",
+			"description": "Enable single-shot TX mode on MCP2515.",
+			"kind": "command",
+			"feature": "singleShotTx",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "singleshot:off",
+			"description": "Disable single-shot TX mode.",
+			"kind": "command",
+			"feature": "singleShotTx",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"cmd": "variant:<name>",
+			"description": "Override vehicle variant detection (e.g. variant:HW3, variant:HW4, variant:LEGACY).",
+			"kind": "command",
+			"feature": "variant",
+			"transports": ["serial", "ble", "wifi"]
+		}
+	],
+
+	"messages": [
+		{
+			"tag": "boot",
+			"description": "Emitted once at startup after all hardware is initialised.",
+			"schema": "#/$defs/Boot",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "status",
+			"description": "Full state snapshot. Emitted on demand (status command) or after any command.",
+			"schema": "#/$defs/Status",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "statusLive",
+			"description": "Live-stream state query response.",
+			"schema": "#/$defs/StatusLive",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "status_meta",
+			"description": "Firmware / hardware metadata only.",
+			"schema": "#/$defs/StatusMeta",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "status_features",
+			"description": "Feature flags only.",
+			"schema": "#/$defs/StatusFeatures",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "status_can",
+			"description": "CAN bus clock and health only.",
+			"schema": "#/$defs/StatusCan",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "status_state",
+			"description": "Runtime state flags only.",
+			"schema": "#/$defs/StatusState",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "status_compact",
+			"description": "Compact status snapshot with reduced payload.",
+			"schema": "#/$defs/StatusCompact",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "platform",
+			"description": "Platform (Tesla SW version) identification.",
+			"schema": "#/$defs/Platform",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "vehicle",
+			"description": "Vehicle model and year.",
+			"schema": "#/$defs/Vehicle",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "fwcompat",
+			"description": "Firmware compatibility report.",
+			"schema": "#/$defs/FwCompat",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "powertrain",
+			"description": "Powertrain telemetry snapshot.",
+			"schema": "#/$defs/Powertrain",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "tpms",
+			"description": "Tire pressure monitor snapshot.",
+			"schema": "#/$defs/Tpms",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "bms",
+			"description": "Battery management system telemetry.",
+			"schema": "#/$defs/Bms",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "frame",
+			"description": "Raw CAN frame (stream mode only).",
+			"schema": "#/$defs/Frame",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "ack",
+			"description": "Command acknowledgement.",
+			"schema": "#/$defs/Ack",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "error",
+			"description": "Error response.",
+			"schema": "#/$defs/Error",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "log",
+			"description": "Log message (simple string or log dump).",
+			"schema": "#/$defs/LogSimple",
+			"alternativeSchema": "#/$defs/LogDump",
+			"transports": ["serial", "ble", "wifi"]
+		},
+		{
+			"tag": "pong",
+			"description": "Ping response.",
+			"schema": "#/$defs/Pong",
+			"transports": ["serial", "ble", "wifi"]
+		}
+	],
+
+	"features": [
+		{
+			"id": "airRecirc",
+			"title": "Air Recirculation",
+			"kind": "command"
+		},
+		{
+			"id": "banShield",
+			"title": "Ban Shield",
+			"kind": "command",
+			"commands": ["shield:on", "shield:off", "gtwshield:on", "gtwshield:off"],
+			"outputTags": ["boot", "status"],
+			"statePaths": ["safety.banShield", "safety.gtwShieldArmed"]
+		},
+		{
+			"id": "bmsTelemetry",
+			"title": "BMS Telemetry",
+			"kind": "query",
+			"commands": ["bms"],
+			"outputTags": ["bms", "boot", "status"],
+			"statePaths": ["battery"]
+		},
+		{
+			"id": "canClock",
+			"title": "CAN Clock Profile",
+			"kind": "command",
+			"commands": ["canclock:<profile>"],
+			"outputTags": ["boot", "status"],
+			"statePaths": ["can.clockReqMHz", "can.clockMHz"]
+		},
+		{
+			"id": "rawCan",
+			"title": "Raw CAN Listen",
+			"kind": "command",
+			"commands": ["raw:on", "raw:off"],
+			"outputTags": ["boot", "status", "status_compact", "frame"],
+			"statePaths": ["state.rawCan"]
+		},
+		{
+			"id": "canSimulation",
+			"title": "CAN Simulation",
+			"kind": "command",
+			"commands": ["cansim:on", "cansim:off"],
+			"outputTags": ["boot", "status"],
+			"statePaths": ["driverAssist.canSim"]
+		},
+		{
+			"id": "chargeControl",
+			"title": "Charge Control",
+			"kind": "command"
+		},
+		{
+			"id": "climate",
+			"title": "Climate",
+			"kind": "command"
+		},
+		{
+			"id": "displayBrightness",
+			"title": "Display Brightness",
+			"kind": "command"
+		},
+		{
+			"id": "driveContext",
+			"title": "Drive Context",
+			"kind": "internal"
+		},
+		{
+			"id": "driveMode",
+			"title": "Drive Mode Override",
+			"kind": "command"
+		},
+		{
+			"id": "fsd",
+			"title": "FSD",
+			"kind": "command",
+			"commands": ["fsd:on", "fsd:off", "fsd:force:on", "fsd:force:off"],
+			"outputTags": ["boot", "status", "status_state", "status_compact"],
+			"statePaths": ["state.fsd", "state.fsdForce"]
+		},
+		{
+			"id": "fwCompat",
+			"title": "Firmware Compatibility",
+			"kind": "query",
+			"commands": ["fwcompat"],
+			"outputTags": ["fwcompat"],
+			"statePaths": ["firmware"]
+		},
+		{
+			"id": "isaChime",
+			"title": "ISA Chime",
+			"kind": "command"
+		},
+		{
+			"id": "lights",
+			"title": "Lighting",
+			"kind": "command"
+		},
+		{
+			"id": "lockControl",
+			"title": "Lock and Horn",
+			"kind": "command"
+		},
+		{
+			"id": "mirrorControl",
+			"title": "Mirrors",
+			"kind": "command"
+		},
+		{
+			"id": "mqttBridge",
+			"title": "MQTT Bridge",
+			"kind": "command",
+			"commands": [
+				"mqtt:on",
+				"mqtt:off",
+				"mqtt:broker:<host>",
+				"mqtt:port:<port>",
+				"mqtt:interval:<ms>"
+			],
+			"outputTags": ["boot", "status"],
+			"statePaths": ["firmware.mqtt", "firmware.mqttConnected"]
+		},
+		{
+			"id": "nagControl",
+			"title": "Nag Control",
+			"kind": "command",
+			"commands": [
+				"nag:on",
+				"nag:off",
+				"nag:killer:on",
+				"nag:killer:off",
+				"nag:killer:mode:<mode>"
+			],
+			"outputTags": ["boot", "status", "status_state", "status_compact"],
+			"statePaths": ["state.nag", "state.nagKiller"]
+		},
+		{
+			"id": "speedOffset",
+			"title": "Speed Offset",
+			"kind": "command",
+			"commands": ["offset:<n>", "offset:auto", "offset:off"],
+			"outputTags": ["boot", "status", "status_state", "status_compact"],
+			"statePaths": ["state.offset"]
+		},
+		{
+			"id": "pedalMode",
+			"title": "Pedal Mode",
+			"kind": "command"
+		},
+		{
+			"id": "powerState",
+			"title": "Power State",
+			"kind": "command"
+		},
+		{
+			"id": "powertrainTelemetry",
+			"title": "Powertrain Telemetry",
+			"kind": "query",
+			"commands": ["powertrain"],
+			"outputTags": ["powertrain"],
+			"statePaths": ["vehicle"]
+		},
+		{
+			"id": "precondition",
+			"title": "Precondition",
+			"kind": "command",
+			"commands": ["precondition:on", "precondition:off"],
+			"outputTags": ["boot", "status", "status_state", "status_compact"],
+			"statePaths": ["state.precondition"]
+		},
+		{
+			"id": "speedProfile",
+			"title": "Speed Profile",
+			"kind": "command",
+			"commands": [
+				"profile:0",
+				"profile:1",
+				"profile:2",
+				"profile:3",
+				"profile:4",
+				"profile:auto",
+				"profile:lock",
+				"profile:unlock"
+			],
+			"outputTags": ["boot", "status", "status_state", "status_compact"],
+			"statePaths": ["state.profile"]
+		},
+		{
+			"id": "regenMode",
+			"title": "Regeneration Mode",
+			"kind": "command"
+		},
+		{
+			"id": "regionCodec",
+			"title": "Region Codec",
+			"kind": "command",
+			"commands": ["region:<code>", "region:off"],
+			"statePaths": ["vehicle.regionCode", "vehicle.hasRegion"]
+		},
+		{
+			"id": "seatHeating",
+			"title": "Seat Heating",
+			"kind": "command"
+		},
+		{
+			"id": "seatbeltEmulation",
+			"title": "Rear Seatbelt Emulation",
+			"kind": "command"
+		},
+		{
+			"id": "sentry",
+			"title": "Sentry Mode",
+			"kind": "command"
+		},
+		{
+			"id": "singleShotTx",
+			"title": "Single-shot TX",
+			"kind": "command",
+			"commands": ["singleshot:on", "singleshot:off"],
+			"statePaths": ["driverAssist.singleShot"]
+		},
+		{
+			"id": "stopMode",
+			"title": "Stop Mode",
+			"kind": "command"
+		},
+		{
+			"id": "stream",
+			"title": "Stream",
+			"kind": "command",
+			"commands": [
+				"stream:on",
+				"stream:off",
+				"status:live:on",
+				"status:live:off",
+				"status:live",
+				"status:compact"
+			],
+			"outputTags": ["status", "statusLive", "status_compact", "frame"],
+			"statePaths": ["state.stream"]
+		},
+		{
+			"id": "summon",
+			"title": "Summon",
+			"kind": "command",
+			"commands": ["summon:inject:on", "summon:inject:off"]
+		},
+		{
+			"id": "tlsscRestore",
+			"title": "TLSSC Restore",
+			"kind": "command",
+			"commands": ["tlssc:on", "tlssc:off"],
+			"statePaths": ["state.tlsscRestore"]
+		},
+		{
+			"id": "tpmsTelemetry",
+			"title": "TPMS",
+			"kind": "query",
+			"commands": ["tpms"],
+			"outputTags": ["tpms"],
+			"statePaths": ["vehicle"]
+		},
+		{
+			"id": "trackMode",
+			"title": "Track Mode",
+			"kind": "command",
+			"commands": ["trackmode:on", "trackmode:off"],
+			"outputTags": ["boot", "status", "status_state", "status_compact"],
+			"statePaths": ["state.trackMode"]
+		},
+		{
+			"id": "trunkFrunk",
+			"title": "Trunk and Frunk",
+			"kind": "command"
+		},
+		{
+			"id": "turnSignal",
+			"title": "Turn Signals",
+			"kind": "command"
+		},
+		{
+			"id": "variant",
+			"title": "Variant",
+			"kind": "command",
+			"commands": ["variant:<name>"],
+			"statePaths": ["meta.variant"]
+		},
+		{
+			"id": "vehicleConfig",
+			"title": "Vehicle Config",
+			"kind": "query",
+			"commands": ["vehicle", "platform", "status:meta"],
+			"outputTags": ["vehicle", "platform", "status_meta"],
+			"statePaths": ["vehicle", "platform", "meta"]
+		},
+		{
+			"id": "windowVent",
+			"title": "Window Vent",
+			"kind": "command"
+		},
+		{
+			"id": "wiper",
+			"title": "Wiper",
+			"kind": "command"
+		}
+	],
+
+	"oneOf": [{ "$ref": "#/$defs/RpcResponse" }],
+
+	"$defs": {
+		"Bool01": {
+			"type": "integer",
+			"enum": [0, 1],
+			"description": "Numeric boolean used in serial/BLE transport. 0 = false, 1 = true. HTTP transport uses native JSON true/false."
+		},
+		"TypeTag": {
+			"type": "object",
+			"properties": {
+				"t": { "type": "string" }
+			},
+			"required": ["t"]
+		},
+
+		"RpcMethod": {
+			"type": "string",
+			"description": "RPC method string — the command to execute. Colon-delimited, e.g. 'fsd:on', 'status:compact'. Same vocabulary used across all transports.",
+			"minLength": 1,
+			"maxLength": 31,
+			"pattern": "^[a-zA-Z0-9:_-]+$",
+			"examples": [
+				"ping",
+				"status",
+				"status:compact",
+				"fsd:on",
+				"fsd:off",
+				"nag:on",
+				"profile:2",
+				"offset:auto",
+				"bms",
+				"powertrain"
+			]
+		},
+		"RpcRequest": {
+			"type": "object",
+			"description": "Unified RPC request envelope. Shared across serial, BLE, and WiFi transports. The 'cmd' field carries the RpcMethod to execute.",
+			"properties": {
+				"cmd": { "$ref": "#/$defs/RpcMethod" }
+			},
+			"required": ["cmd"],
+			"additionalProperties": false
+		},
+		"RpcResponse": {
+			"description": "Unified RPC response — a discriminated JSON object. The 't' field identifies the message type. All transports (serial, BLE, WiFi) return this format in response to a command.",
+			"oneOf": [
+				{ "$ref": "#/$defs/Ack" },
+				{ "$ref": "#/$defs/Error" },
+				{ "$ref": "#/$defs/LogSimple" },
+				{ "$ref": "#/$defs/LogDump" },
+				{ "$ref": "#/$defs/Frame" },
+				{ "$ref": "#/$defs/Pong" },
+				{ "$ref": "#/$defs/StatusLive" },
+				{ "$ref": "#/$defs/Bms" },
+				{ "$ref": "#/$defs/Tpms" },
+				{ "$ref": "#/$defs/Powertrain" },
+				{ "$ref": "#/$defs/FwCompat" },
+				{ "$ref": "#/$defs/Vehicle" },
+				{ "$ref": "#/$defs/Platform" },
+				{ "$ref": "#/$defs/Boot" },
+				{ "$ref": "#/$defs/Status" },
+				{ "$ref": "#/$defs/StatusMeta" },
+				{ "$ref": "#/$defs/StatusFeatures" },
+				{ "$ref": "#/$defs/StatusCan" },
+				{ "$ref": "#/$defs/StatusState" },
+				{ "$ref": "#/$defs/StatusCompact" }
+			]
+		},
+
+		"TpmsData": {
+			"type": "object",
+			"description": "TPMS pressures (× 100 kPa) and temperatures (°C) for all four wheels. Used as a nested sub-object inside DeviceState.",
+			"properties": {
+				"fl": { "type": "integer", "description": "Front-left pressure × 100" },
+				"fr": { "type": "integer", "description": "Front-right pressure × 100" },
+				"rl": { "type": "integer", "description": "Rear-left pressure × 100" },
+				"rr": { "type": "integer", "description": "Rear-right pressure × 100" },
+				"tfl": { "type": "integer", "description": "Front-left temperature °C" },
+				"tfr": { "type": "integer", "description": "Front-right temperature °C" },
+				"trl": { "type": "integer", "description": "Rear-left temperature °C" },
+				"trr": { "type": "integer", "description": "Rear-right temperature °C" }
+			},
+			"required": ["fl", "fr", "rl", "rr", "tfl", "tfr", "trl", "trr"],
+			"additionalProperties": false
+		},
+		"PowertrainData": {
+			"type": "object",
+			"description": "Basic powertrain snapshot used as a nested sub-object inside DeviceState (included when hasPowertrain is true).",
+			"properties": {
+				"speed": { "type": "integer", "description": "Vehicle speed × 100 km/h" },
+				"gear": { "type": "integer", "description": "Gear: 0=invalid 1=P 2=R 3=N 4=D" },
+				"pedal": { "type": "integer", "description": "Accelerator pedal 0–100" },
+				"brake": { "type": "integer", "description": "Brake: 0=off 1=applied 2=hard" },
+				"steer": { "type": "integer", "description": "Steering angle × 10 degrees" },
+				"rpmR": { "type": "integer", "description": "Rear motor RPM" },
+				"rpmF": { "type": "integer", "description": "Front motor RPM (0 on single-motor)" }
+			},
+			"required": ["speed", "gear", "pedal", "brake", "steer", "rpmR", "rpmF"],
+			"additionalProperties": false
+		},
+		"WheelSpeeds": {
+			"type": "object",
+			"description": "Wheel speeds × 100 km/h, included when hasWheelSpeeds is true.",
+			"properties": {
+				"fl": { "type": "integer" },
+				"fr": { "type": "integer" },
+				"rl": { "type": "integer" },
+				"rr": { "type": "integer" }
+			},
+			"required": ["fl", "fr", "rl", "rr"],
+			"additionalProperties": false
+		},
+		"MotorTemps": {
+			"type": "object",
+			"description": "Motor temperatures °C, included when hasMotorTemps is true.",
+			"properties": {
+				"rInv": { "type": "integer", "description": "Rear inverter temperature °C" },
+				"rStat": { "type": "integer", "description": "Rear stator temperature °C" },
+				"rHs": { "type": "integer", "description": "Rear heatsink temperature °C" },
+				"fInv": { "type": "integer", "description": "Front inverter temperature °C" },
+				"fStat": { "type": "integer", "description": "Front stator temperature °C" },
+				"fHs": { "type": "integer", "description": "Front heatsink temperature °C" }
+			},
+			"required": ["rInv", "rStat", "rHs", "fInv", "fStat", "fHs"],
+			"additionalProperties": false
+		},
+		"Features": {
+			"type": "object",
+			"description": "Feature availability flags for the detected vehicle variant.",
+			"properties": {
+				"fsd": { "type": "boolean" },
+				"profile": { "type": "boolean" },
+				"nag": { "type": "boolean" },
+				"offset": { "type": "boolean" },
+				"isaChime": { "type": "boolean" },
+				"summon": { "type": "boolean" }
+			},
+			"required": ["fsd", "profile", "nag", "offset", "isaChime", "summon"],
+			"additionalProperties": false
+		},
+		"Hardware": {
+			"type": "object",
+			"description": "Board and bus hardware identifiers.",
+			"properties": {
+				"board": { "type": "string" },
+				"can": { "type": "string" },
+				"busChassis": { "type": "integer", "enum": [0, 1] },
+				"busVehicle": { "type": "integer", "enum": [0, 1] },
+				"busBody": { "type": "integer", "enum": [0, 1] },
+				"ble": { "type": "boolean" },
+				"wifi": { "type": "boolean" },
+				"ip": { "type": "string" }
+			},
+			"required": [
+				"board",
+				"can",
+				"busChassis",
+				"busVehicle",
+				"busBody",
+				"ble",
+				"wifi",
+				"ip"
+			],
+			"additionalProperties": false
+		},
+		"DeviceState": {
+			"type": "object",
+			"description": "Full device state snapshot. Returned by GET /status and POST /cmd. Uses native JSON booleans (unlike serial/BLE which use 0/1 integers).",
+			"properties": {
+				"variant": {
+					"type": "string",
+					"description": "Detected or configured vehicle variant name"
+				},
+				"fsd": { "type": "boolean" },
+				"nag": { "type": "boolean" },
+				"profile": { "type": "integer" },
+				"profilePin": {
+					"type": "boolean",
+					"description": "Speed profile is pinned (overridden)"
+				},
+				"offset": { "type": "integer", "description": "Speed offset km/h (0 = disabled)" },
+				"offsetPin": { "type": "boolean", "description": "Speed offset is pinned" },
+				"isaChime": { "type": "boolean" },
+				"stream": { "type": "boolean" },
+				"rawCan": { "type": "boolean" },
+				"chassisOnline": { "type": "boolean" },
+				"standby": { "type": "boolean" },
+				"uptime": { "type": "integer", "description": "Uptime in milliseconds (millis())" },
+				"driveMode": { "type": "integer" },
+				"currentDriveMode": { "type": "integer" },
+				"eceR79": { "type": "boolean" },
+				"regionCode": { "type": "integer" },
+				"hasRegion": { "type": "boolean" },
+				"cnLocked": { "type": "boolean", "description": "Chinese gateway locked" },
+				"hasTpms": { "type": "boolean" },
+				"seatbeltEmulation": { "type": "boolean" },
+				"wiperPersist": { "type": "boolean" },
+				"mirrorAutoFold": { "type": "boolean" },
+				"canSim": { "type": "boolean" },
+				"hasPowertrain": { "type": "boolean" },
+				"otaInProgress": { "type": "boolean" },
+				"txPaused": { "type": "boolean" },
+				"apGateEnabled": { "type": "boolean" },
+				"apGateAp": { "type": "boolean" },
+				"apGatePark": { "type": "boolean" },
+				"apGateSummon": { "type": "boolean" },
+				"apGateOpen": { "type": "boolean" },
+				"enhancedAutopilot": { "type": "boolean" },
+				"canRecorderEnabled": { "type": "boolean" },
+				"canRecorderCount": { "type": "integer", "minimum": 0 },
+				"turnSignalLeft": { "type": "boolean" },
+				"turnSignalRight": { "type": "boolean" },
+				"bsmLeftLevel": { "type": "integer" },
+				"bsmRightLevel": { "type": "integer" },
+				"doorFrontLeftOpen": { "type": "boolean" },
+				"doorFrontRightOpen": { "type": "boolean" },
+				"doorRearLeftOpen": { "type": "boolean" },
+				"doorRearRightOpen": { "type": "boolean" },
+				"driverDoorOpen": { "type": "boolean" },
+				"anyDoorOpen": { "type": "boolean" },
+				"frunkOpen": { "type": "boolean" },
+				"trunkOpen": { "type": "boolean" },
+				"cruiseSetSpeed": {
+					"type": "integer",
+					"description": "Cruise set speed × 10 km/h"
+				},
+				"accSpeedLimit": { "type": "integer", "description": "ACC speed limit × 10 km/h" },
+				"mapSpeedLimit": { "type": "integer", "description": "Map speed limit × 10 km/h" },
+				"maxSpeed": { "type": "integer", "description": "Max speed × 10 km/h" },
+				"tpms": { "$ref": "#/$defs/TpmsData" },
+				"powertrain": { "$ref": "#/$defs/PowertrainData" },
+				"wheelSpeeds": { "$ref": "#/$defs/WheelSpeeds" },
+				"motorTemps": { "$ref": "#/$defs/MotorTemps" },
+				"features": { "$ref": "#/$defs/Features" },
+				"hardware": { "$ref": "#/$defs/Hardware" }
+			},
+			"required": [
+				"variant",
+				"fsd",
+				"nag",
+				"profile",
+				"profilePin",
+				"offset",
+				"offsetPin",
+				"isaChime",
+				"stream",
+				"rawCan",
+				"chassisOnline",
+				"standby",
+				"uptime",
+				"driveMode",
+				"currentDriveMode",
+				"eceR79",
+				"regionCode",
+				"hasRegion",
+				"cnLocked",
+				"hasTpms",
+				"seatbeltEmulation",
+				"wiperPersist",
+				"mirrorAutoFold",
+				"canSim",
+				"hasPowertrain",
+				"otaInProgress",
+				"txPaused",
+				"apGateEnabled",
+				"apGateAp",
+				"apGatePark",
+				"apGateSummon",
+				"apGateOpen",
+				"enhancedAutopilot",
+				"canRecorderEnabled",
+				"canRecorderCount",
+				"turnSignalLeft",
+				"turnSignalRight",
+				"bsmLeftLevel",
+				"bsmRightLevel",
+				"doorFrontLeftOpen",
+				"doorFrontRightOpen",
+				"doorRearLeftOpen",
+				"doorRearRightOpen",
+				"driverDoorOpen",
+				"anyDoorOpen",
+				"frunkOpen",
+				"trunkOpen",
+				"cruiseSetSpeed",
+				"accSpeedLimit",
+				"mapSpeedLimit",
+				"maxSpeed",
+				"features",
+				"hardware"
+			],
+			"additionalProperties": false
+		},
+
+		"CanHealthEntry": {
+			"type": "object",
+			"properties": {
+				"on": { "$ref": "#/$defs/Bool01" },
+				"det": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": ["on", "det"],
+			"additionalProperties": false
+		},
+		"CanHealth": {
+			"type": "object",
+			"properties": {
+				"chassis": { "$ref": "#/$defs/CanHealthEntry" },
+				"vehicle": { "$ref": "#/$defs/CanHealthEntry" },
+				"body": { "$ref": "#/$defs/CanHealthEntry" }
+			},
+			"required": ["chassis", "vehicle", "body"],
+			"additionalProperties": false
+		},
+		"CanBusValues": {
+			"type": "object",
+			"description": "Integer value per CAN bus (chassis / vehicle / body).",
+			"properties": {
+				"chassis": { "type": "integer" },
+				"vehicle": { "type": "integer" },
+				"body": { "type": "integer" }
+			},
+			"required": ["chassis", "vehicle", "body"],
+			"additionalProperties": false
+		},
+		"CanStatus": {
+			"type": "object",
+			"properties": {
+				"clockReqMHz": { "type": "integer" },
+				"clockMHz": { "type": "integer" },
+				"health": { "$ref": "#/$defs/CanHealth" },
+				"nagEchoCount": { "type": "integer" },
+				"eapModCount": { "type": "integer" },
+				"txFailCount": { "type": "integer" },
+				"busOffCount": { "type": "integer" },
+				"frames": { "$ref": "#/$defs/CanBusValues" },
+				"hz": {
+					"description": "Frame rate × 10 per bus (e.g. 456 = 45.6 Hz)",
+					"$ref": "#/$defs/CanBusValues"
+				},
+				"hzMin": {
+					"description": "Min Hz × 10 per bus observed (0 until first window)",
+					"$ref": "#/$defs/CanBusValues"
+				},
+				"hzMax": {
+					"description": "Max Hz × 10 per bus observed",
+					"$ref": "#/$defs/CanBusValues"
+				}
+			},
+			"required": ["clockReqMHz", "clockMHz", "health"],
+			"additionalProperties": false
+		},
+		"CompactCanClock": {
+			"type": "object",
+			"properties": {
+				"reqMHz": { "type": "integer" },
+				"activeMHz": { "type": "integer" }
+			},
+			"required": ["reqMHz", "activeMHz"],
+			"additionalProperties": false
+		},
+		"CompactCanPayload": {
+			"type": "object",
+			"properties": {
+				"clock": { "$ref": "#/$defs/CompactCanClock" },
+				"health": { "$ref": "#/$defs/CanHealth" }
+			},
+			"required": ["clock", "health"],
+			"additionalProperties": false
+		},
+
+		"FeatureFlagsFull": {
+			"type": "object",
+			"properties": {
+				"fsd": { "$ref": "#/$defs/Bool01" },
+				"fsdForce": { "$ref": "#/$defs/Bool01" },
+				"profile": { "$ref": "#/$defs/Bool01" },
+				"nag": { "$ref": "#/$defs/Bool01" },
+				"offset": { "$ref": "#/$defs/Bool01" },
+				"isaSpeedChime": { "$ref": "#/$defs/Bool01" },
+				"summon": { "$ref": "#/$defs/Bool01" },
+				"eap": { "$ref": "#/$defs/Bool01" },
+				"evd": { "$ref": "#/$defs/Bool01" },
+				"tlssc": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": [
+				"fsd",
+				"fsdForce",
+				"profile",
+				"nag",
+				"offset",
+				"isaSpeedChime",
+				"summon",
+				"eap",
+				"evd",
+				"tlssc"
+			],
+			"additionalProperties": false
+		},
+		"FeatureFlagsCompact": {
+			"type": "object",
+			"properties": {
+				"fsd": { "$ref": "#/$defs/Bool01" },
+				"fsdForce": { "$ref": "#/$defs/Bool01" },
+				"profile": { "$ref": "#/$defs/Bool01" },
+				"nag": { "$ref": "#/$defs/Bool01" },
+				"offset": { "$ref": "#/$defs/Bool01" },
+				"isaSpeedChime": { "$ref": "#/$defs/Bool01" },
+				"summon": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": ["fsd", "fsdForce", "profile", "nag", "offset", "isaSpeedChime", "summon"],
+			"additionalProperties": false
+		},
+
+		"BootMeta": {
+			"type": "object",
+			"properties": {
+				"hw": { "type": "string", "minLength": 1 },
+				"can": { "type": "string", "minLength": 1 },
+				"drv": { "type": "string", "minLength": 1 },
+				"variant": { "type": "string", "minLength": 1 },
+				"cap": { "type": "string", "minLength": 1 },
+				"ready": { "const": "runtime-ready" }
+			},
+			"required": ["hw", "can", "drv", "variant", "cap", "ready"],
+			"additionalProperties": false
+		},
+		"StatusMetaSection": {
+			"type": "object",
+			"properties": {
+				"hw": { "type": "string", "minLength": 1 },
+				"can": { "type": "string", "minLength": 1 },
+				"drv": { "type": "string", "minLength": 1 },
+				"variant": { "type": "string", "minLength": 1 },
+				"cap": { "type": "string", "minLength": 1 },
+				"ready": { "const": "runtime-ready" },
+				"up": { "type": "integer", "minimum": 0 }
+			},
+			"required": ["hw", "can", "drv", "variant", "cap", "ready", "up"],
+			"additionalProperties": false
+		},
+		"CompactMeta": {
+			"type": "object",
+			"properties": {
+				"hw": { "type": "string", "minLength": 1 },
+				"variant": { "type": "string", "minLength": 1 },
+				"ready": { "const": "runtime-ready" },
+				"up": { "type": "integer", "minimum": 0 }
+			},
+			"required": ["hw", "variant", "ready", "up"],
+			"additionalProperties": false
+		},
+
+		"ConnectivityBus": {
+			"type": "object",
+			"properties": {
+				"chassis": { "$ref": "#/$defs/Bool01" },
+				"vehicle": { "$ref": "#/$defs/Bool01" },
+				"body": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": ["chassis", "vehicle", "body"],
+			"additionalProperties": false
+		},
+		"BootConnectivity": {
+			"type": "object",
+			"properties": {
+				"bleEnabled": { "$ref": "#/$defs/Bool01" },
+				"wifiEnabled": { "$ref": "#/$defs/Bool01" },
+				"bus": { "$ref": "#/$defs/ConnectivityBus" },
+				"vehicleOnline": { "$ref": "#/$defs/Bool01" },
+				"bodyOnline": { "$ref": "#/$defs/Bool01" },
+				"chassisOnline": { "$ref": "#/$defs/Bool01" },
+				"standby": { "$ref": "#/$defs/Bool01" },
+				"bleName": { "type": "string", "minLength": 1 },
+				"wifi": {
+					"type": "object",
+					"properties": {
+						"ssid": { "type": "string", "minLength": 1 },
+						"port": { "type": "integer", "minimum": 1 }
+					},
+					"required": ["ssid", "port"],
+					"additionalProperties": false
+				}
+			},
+			"required": [
+				"bleEnabled",
+				"wifiEnabled",
+				"bus",
+				"vehicleOnline",
+				"bodyOnline",
+				"chassisOnline",
+				"standby"
+			],
+			"additionalProperties": false
+		},
+		"StatusConnectivity": {
+			"type": "object",
+			"properties": {
+				"bleEnabled": { "$ref": "#/$defs/Bool01" },
+				"wifiEnabled": { "$ref": "#/$defs/Bool01" },
+				"bus": { "$ref": "#/$defs/ConnectivityBus" },
+				"vehicleOnline": { "$ref": "#/$defs/Bool01" },
+				"bodyOnline": { "$ref": "#/$defs/Bool01" },
+				"chassisOnline": { "$ref": "#/$defs/Bool01" },
+				"standby": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": [
+				"bleEnabled",
+				"wifiEnabled",
+				"bus",
+				"vehicleOnline",
+				"bodyOnline",
+				"chassisOnline",
+				"standby"
+			],
+			"additionalProperties": false
+		},
+		"CompactConnectivity": {
+			"type": "object",
+			"properties": {
+				"bt": { "$ref": "#/$defs/Bool01" },
+				"wifi": { "$ref": "#/$defs/Bool01" },
+				"chassisOnline": { "$ref": "#/$defs/Bool01" },
+				"vehicleOnline": { "$ref": "#/$defs/Bool01" },
+				"bodyOnline": { "$ref": "#/$defs/Bool01" },
+				"standby": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": ["bt", "wifi", "chassisOnline", "vehicleOnline", "bodyOnline", "standby"],
+			"additionalProperties": false
+		},
+
+		"StatusProfile": {
+			"type": "object",
+			"properties": {
+				"value": { "type": "integer" },
+				"pinned": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": ["value", "pinned"],
+			"additionalProperties": false
+		},
+		"StatusOffset": {
+			"type": "object",
+			"properties": {
+				"value": { "type": "integer" },
+				"pinned": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": ["value", "pinned"],
+			"additionalProperties": false
+		},
+		"StreamStatus": {
+			"type": "object",
+			"properties": {
+				"on": { "$ref": "#/$defs/Bool01" },
+				"emitted": { "type": "integer", "minimum": 0 }
+			},
+			"required": ["on", "emitted"],
+			"additionalProperties": false
+		},
+
+		"BootStatusState": {
+			"type": "object",
+			"properties": {
+				"fsd": { "$ref": "#/$defs/Bool01" },
+				"fsdForce": { "$ref": "#/$defs/Bool01" },
+				"nag": { "$ref": "#/$defs/Bool01" },
+				"isaChime": { "$ref": "#/$defs/Bool01" },
+				"summonInject": { "$ref": "#/$defs/Bool01" },
+				"nagKiller": { "$ref": "#/$defs/Bool01" },
+				"nagKillerMode": { "type": "string", "minLength": 1 },
+				"dasHandsOn": { "type": "integer" },
+				"profile": { "$ref": "#/$defs/StatusProfile" },
+				"offset": { "$ref": "#/$defs/StatusOffset" },
+				"precondition": { "$ref": "#/$defs/Bool01" },
+				"trackMode": { "$ref": "#/$defs/Bool01" },
+				"otaInProgress": { "$ref": "#/$defs/Bool01" },
+				"txPaused": { "$ref": "#/$defs/Bool01" },
+				"detectedHW": { "type": "integer" },
+				"variantAutoDetect": { "$ref": "#/$defs/Bool01" },
+				"gtwAutopilotTier": { "type": "integer" },
+				"rawCan": { "$ref": "#/$defs/Bool01" },
+				"stream": { "$ref": "#/$defs/StreamStatus" }
+			},
+			"required": [
+				"fsd",
+				"fsdForce",
+				"nag",
+				"isaChime",
+				"summonInject",
+				"nagKiller",
+				"nagKillerMode",
+				"dasHandsOn",
+				"profile",
+				"offset",
+				"precondition",
+				"trackMode",
+				"otaInProgress",
+				"txPaused",
+				"detectedHW",
+				"variantAutoDetect",
+				"gtwAutopilotTier",
+				"rawCan",
+				"stream"
+			],
+			"additionalProperties": false
+		},
+		"StatusStatePayload": {
+			"type": "object",
+			"properties": {
+				"fsd": { "$ref": "#/$defs/Bool01" },
+				"fsdForce": { "$ref": "#/$defs/Bool01" },
+				"nag": { "$ref": "#/$defs/Bool01" },
+				"nagKiller": { "$ref": "#/$defs/Bool01" },
+				"profile": { "$ref": "#/$defs/StatusProfile" },
+				"offset": { "$ref": "#/$defs/StatusOffset" },
+				"precondition": { "$ref": "#/$defs/Bool01" },
+				"trackMode": { "$ref": "#/$defs/Bool01" },
+				"otaInProgress": { "$ref": "#/$defs/Bool01" },
+				"txPaused": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": [
+				"fsd",
+				"fsdForce",
+				"nag",
+				"nagKiller",
+				"profile",
+				"offset",
+				"precondition",
+				"trackMode",
+				"otaInProgress",
+				"txPaused"
+			],
+			"additionalProperties": false
+		},
+		"CompactState": {
+			"type": "object",
+			"properties": {
+				"fsd": { "$ref": "#/$defs/Bool01" },
+				"fsdForce": { "$ref": "#/$defs/Bool01" },
+				"nag": { "$ref": "#/$defs/Bool01" },
+				"profile": { "type": "integer" },
+				"offset": { "type": "integer" },
+				"precondition": { "$ref": "#/$defs/Bool01" },
+				"trackMode": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": [
+				"fsd",
+				"fsdForce",
+				"nag",
+				"profile",
+				"offset",
+				"precondition",
+				"trackMode"
+			],
+			"additionalProperties": false
+		},
+
+		"DriverAssist": {
+			"type": "object",
+			"properties": {
+				"turnSignalLeft": { "$ref": "#/$defs/Bool01" },
+				"turnSignalRight": { "$ref": "#/$defs/Bool01" },
+				"bsmLeftLevel": { "type": "integer" },
+				"bsmRightLevel": { "type": "integer" },
+				"cruiseSetSpeed": { "type": "integer" },
+				"accSpeedLimit": { "type": "integer" },
+				"mapSpeedLimit": { "type": "integer" },
+				"maxSpeed": { "type": "integer" },
+				"driveMode": { "type": "integer" },
+				"currentDriveMode": { "type": "integer" },
+				"eceR79": { "$ref": "#/$defs/Bool01" },
+				"lhd": { "$ref": "#/$defs/Bool01" },
+				"seatbeltEmulation": { "$ref": "#/$defs/Bool01" },
+				"apFirst": { "$ref": "#/$defs/Bool01" },
+				"dasApState": { "type": "integer", "minimum": 0, "maximum": 15 },
+				"wiperPersist": { "$ref": "#/$defs/Bool01" },
+				"mirrorAutoFold": { "$ref": "#/$defs/Bool01" },
+				"canSim": { "$ref": "#/$defs/Bool01" },
+				"singleShot": { "$ref": "#/$defs/Bool01" },
+				"steeringMode": { "type": "integer" },
+				"hasSteeringMode": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": [
+				"turnSignalLeft",
+				"turnSignalRight",
+				"bsmLeftLevel",
+				"bsmRightLevel",
+				"cruiseSetSpeed",
+				"accSpeedLimit",
+				"mapSpeedLimit",
+				"maxSpeed",
+				"driveMode",
+				"currentDriveMode",
+				"eceR79",
+				"lhd",
+				"seatbeltEmulation",
+				"apFirst",
+				"dasApState",
+				"wiperPersist",
+				"mirrorAutoFold",
+				"canSim",
+				"singleShot",
+				"steeringMode",
+				"hasSteeringMode"
+			],
+			"additionalProperties": false
+		},
+		"VehicleState": {
+			"type": "object",
+			"properties": {
+				"doorFrontLeftOpen": { "$ref": "#/$defs/Bool01" },
+				"doorFrontRightOpen": { "$ref": "#/$defs/Bool01" },
+				"doorRearLeftOpen": { "$ref": "#/$defs/Bool01" },
+				"doorRearRightOpen": { "$ref": "#/$defs/Bool01" },
+				"driverDoorOpen": { "$ref": "#/$defs/Bool01" },
+				"anyDoorOpen": { "$ref": "#/$defs/Bool01" },
+				"frunkOpen": { "$ref": "#/$defs/Bool01" },
+				"trunkOpen": { "$ref": "#/$defs/Bool01" },
+				"regionCode": { "type": "integer" },
+				"hasRegion": { "$ref": "#/$defs/Bool01" },
+				"cnLocked": { "$ref": "#/$defs/Bool01" },
+				"hasTpms": { "$ref": "#/$defs/Bool01" },
+				"hasPowertrain": { "$ref": "#/$defs/Bool01" },
+				"vehicleModel": { "type": "integer" },
+				"vehicleYear": { "type": "integer" },
+				"hasVehicleConfig": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": [
+				"doorFrontLeftOpen",
+				"doorFrontRightOpen",
+				"doorRearLeftOpen",
+				"doorRearRightOpen",
+				"driverDoorOpen",
+				"anyDoorOpen",
+				"frunkOpen",
+				"trunkOpen",
+				"regionCode",
+				"hasRegion",
+				"cnLocked",
+				"hasTpms",
+				"hasPowertrain",
+				"vehicleModel",
+				"vehicleYear",
+				"hasVehicleConfig"
+			],
+			"additionalProperties": false
+		},
+		"PlatformIdentity": {
+			"type": "object",
+			"properties": {
+				"model": { "type": "integer" },
+				"hwGen": { "type": "integer" },
+				"swYear": { "type": "integer" },
+				"swWeek": { "type": "integer" },
+				"swRelease": { "type": "integer" },
+				"fsdProto": { "type": "integer" },
+				"swCompat": { "type": "integer" },
+				"resolved": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": [
+				"model",
+				"hwGen",
+				"swYear",
+				"swWeek",
+				"swRelease",
+				"fsdProto",
+				"swCompat",
+				"resolved"
+			],
+			"additionalProperties": false
+		},
+		"FirmwareIdentity": {
+			"type": "object",
+			"properties": {
+				"year": { "type": "integer" },
+				"release": { "type": "integer" },
+				"minor": { "type": "integer" },
+				"compat": { "type": "integer" },
+				"hasVersion": { "$ref": "#/$defs/Bool01" },
+				"mqtt": { "$ref": "#/$defs/Bool01" },
+				"mqttConnected": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": [
+				"year",
+				"release",
+				"minor",
+				"compat",
+				"hasVersion",
+				"mqtt",
+				"mqttConnected"
+			],
+			"additionalProperties": false
+		},
+		"BatteryStatus": {
+			"type": "object",
+			"properties": {
+				"nomFullPack": { "type": "integer" },
+				"nomRemain": { "type": "integer" },
+				"idealRemain": { "type": "integer" },
+				"cellVMax": { "type": "integer" },
+				"cellVMin": { "type": "integer" },
+				"maxRegen": { "type": "integer" },
+				"maxDischarge": { "type": "integer" },
+				"hasEnhanced": { "$ref": "#/$defs/Bool01" }
+			},
+			"required": [
+				"nomFullPack",
+				"nomRemain",
+				"idealRemain",
+				"cellVMax",
+				"cellVMin",
+				"maxRegen",
+				"maxDischarge",
+				"hasEnhanced"
+			],
+			"additionalProperties": false
+		},
+		"SafetyStatus": {
+			"type": "object",
+			"properties": {
+				"banShield": { "$ref": "#/$defs/Bool01" },
+				"banThreat": { "type": "integer" },
+				"banDetectCount": { "type": "integer" },
+				"gtwShieldArmed": { "$ref": "#/$defs/Bool01" },
+				"gtwShieldBlocks": { "type": "integer" }
+			},
+			"required": [
+				"banShield",
+				"banThreat",
+				"banDetectCount",
+				"gtwShieldArmed",
+				"gtwShieldBlocks"
+			],
+			"additionalProperties": false
+		},
+
+		"Ack": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "ack" },
+						"cmd": { "type": "string", "minLength": 1 }
+					},
+					"required": ["t", "cmd"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Error": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "error" },
+						"msg": { "type": "string", "minLength": 1 }
+					},
+					"required": ["t", "msg"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"LogSimple": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "log" },
+						"msg": { "type": "string", "minLength": 1 }
+					},
+					"required": ["t", "msg"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"LogDump": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "log" },
+						"count": { "type": "integer", "minimum": 0 },
+						"entries": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"ms": { "type": "integer", "minimum": 0 },
+									"m": { "type": "string" }
+								},
+								"required": ["ms", "m"],
+								"additionalProperties": false
+							}
+						}
+					},
+					"required": ["t", "count", "entries"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Frame": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "frame" },
+						"dir": { "type": "string", "minLength": 1 },
+						"bus": { "type": "integer", "minimum": 0 },
+						"id": { "type": "integer", "minimum": 0 },
+						"seq": { "type": "integer", "minimum": 0 },
+						"ms": { "type": "integer", "minimum": 0 },
+						"ext": { "$ref": "#/$defs/Bool01" },
+						"dlc": { "type": "integer", "minimum": 0, "maximum": 8 },
+						"d": { "type": "string", "pattern": "^[0-9A-Fa-f]{0,16}$" }
+					},
+					"required": ["t", "dir", "bus", "id", "seq", "ms", "ext", "dlc", "d"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Pong": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "pong" },
+						"v": { "type": "integer", "minimum": 1 }
+					},
+					"required": ["t", "v"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"StatusLive": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "statusLive" },
+						"on": { "$ref": "#/$defs/Bool01" },
+						"intervalMs": { "type": "integer", "minimum": 1 }
+					},
+					"required": ["t", "on", "intervalMs"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Bms": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "bms" },
+						"v": { "type": "integer" },
+						"a": { "type": "integer" },
+						"kw": { "type": "integer" },
+						"soc": { "type": "integer" },
+						"tMin": { "type": "integer" },
+						"tMax": { "type": "integer" },
+						"whkm": { "type": "integer" },
+						"nomFull": { "type": "integer" },
+						"nomRemain": { "type": "integer" },
+						"idealRemain": { "type": "integer" },
+						"cellVMax": { "type": "integer" },
+						"cellVMin": { "type": "integer" },
+						"maxRegen": { "type": "integer" },
+						"maxDischarge": { "type": "integer" },
+						"enhanced": { "$ref": "#/$defs/Bool01" },
+						"ok": { "$ref": "#/$defs/Bool01" },
+						"socUI": { "type": "integer" },
+						"socMax": { "type": "integer" },
+						"socAvg": { "type": "integer" },
+						"initFull": { "type": "integer" },
+						"expRange": { "type": "integer" },
+						"idealRange": { "type": "integer" },
+						"ratedCons": { "type": "integer" },
+						"actSoc": { "type": "integer" },
+						"useSoc": { "type": "integer" },
+						"pwrDiss": { "type": "integer" },
+						"flowReq": { "type": "integer" },
+						"coolTgt": { "type": "integer" },
+						"heatTgt": { "type": "integer" },
+						"packTMin": { "type": "integer" },
+						"packTMax": { "type": "integer" },
+						"heatPwr": { "type": "integer" },
+						"hvacBgt": { "type": "integer" },
+						"precondOk": { "$ref": "#/$defs/Bool01" },
+						"heatWorth": { "$ref": "#/$defs/Bool01" },
+						"contState": { "type": "integer" },
+						"hvState": { "type": "integer" },
+						"minBusV": { "type": "integer" },
+						"maxBusV": { "type": "integer" },
+						"maxChgA": { "type": "integer" },
+						"maxDchA": { "type": "integer" },
+						"expRemain": { "type": "integer" },
+						"eBuf": { "type": "integer" },
+						"eToChg": { "type": "integer" },
+						"charged": { "$ref": "#/$defs/Bool01" },
+						"kwhDch": { "type": "integer" },
+						"kwhChg": { "type": "integer" },
+						"acChg": { "type": "integer" },
+						"dcChg": { "type": "integer" },
+						"regen": { "type": "integer" },
+						"drvDch": { "type": "integer" },
+						"chgTime": { "type": "integer" }
+					},
+					"required": [
+						"t",
+						"v",
+						"a",
+						"kw",
+						"soc",
+						"tMin",
+						"tMax",
+						"whkm",
+						"nomFull",
+						"nomRemain",
+						"idealRemain",
+						"cellVMax",
+						"cellVMin",
+						"maxRegen",
+						"maxDischarge",
+						"enhanced",
+						"ok",
+						"socUI",
+						"socMax",
+						"socAvg",
+						"initFull",
+						"expRange",
+						"idealRange",
+						"ratedCons",
+						"actSoc",
+						"useSoc",
+						"pwrDiss",
+						"flowReq",
+						"coolTgt",
+						"heatTgt",
+						"packTMin",
+						"packTMax",
+						"heatPwr",
+						"hvacBgt",
+						"precondOk",
+						"heatWorth",
+						"contState",
+						"hvState",
+						"minBusV",
+						"maxBusV",
+						"maxChgA",
+						"maxDchA",
+						"expRemain",
+						"eBuf",
+						"eToChg",
+						"charged",
+						"kwhDch",
+						"kwhChg",
+						"acChg",
+						"dcChg",
+						"regen",
+						"drvDch",
+						"chgTime"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Tpms": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "tpms" },
+						"fl": { "type": "integer" },
+						"fr": { "type": "integer" },
+						"rl": { "type": "integer" },
+						"rr": { "type": "integer" },
+						"tfl": { "type": "integer" },
+						"tfr": { "type": "integer" },
+						"trl": { "type": "integer" },
+						"trr": { "type": "integer" },
+						"ok": { "$ref": "#/$defs/Bool01" }
+					},
+					"required": ["t", "fl", "fr", "rl", "rr", "tfl", "tfr", "trl", "trr", "ok"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Powertrain": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "powertrain" },
+						"speed": {
+							"type": "integer",
+							"description": "Vehicle speed × 100 (km/h, signed)"
+						},
+						"gear": {
+							"type": "integer",
+							"description": "Gear: 0=invalid 1=P 2=R 3=N 4=D"
+						},
+						"pedal": { "type": "integer", "description": "Accelerator pedal 0–100%" },
+						"brake": {
+							"type": "integer",
+							"description": "Brake: 0=off 1=applied 2=hard"
+						},
+						"steer": {
+							"type": "integer",
+							"description": "Steering angle × 10 degrees, + = right"
+						},
+						"rpmR": { "type": "integer", "description": "Rear motor RPM" },
+						"rpmF": {
+							"type": "integer",
+							"description": "Front motor RPM (0 on single-motor)"
+						},
+						"wsFL": {
+							"type": "integer",
+							"description": "Front-left wheel speed × 100 km/h"
+						},
+						"wsFR": {
+							"type": "integer",
+							"description": "Front-right wheel speed × 100 km/h"
+						},
+						"wsRL": {
+							"type": "integer",
+							"description": "Rear-left wheel speed × 100 km/h"
+						},
+						"wsRR": {
+							"type": "integer",
+							"description": "Rear-right wheel speed × 100 km/h"
+						},
+						"hasWs": {
+							"$ref": "#/$defs/Bool01",
+							"description": "Wheel speed data available"
+						},
+						"rInvT": {
+							"type": "integer",
+							"description": "Rear inverter temperature °C"
+						},
+						"rStatT": {
+							"type": "integer",
+							"description": "Rear stator temperature °C"
+						},
+						"rHsT": {
+							"type": "integer",
+							"description": "Rear heatsink temperature °C"
+						},
+						"fInvT": {
+							"type": "integer",
+							"description": "Front inverter temperature °C"
+						},
+						"fStatT": {
+							"type": "integer",
+							"description": "Front stator temperature °C"
+						},
+						"fHsT": {
+							"type": "integer",
+							"description": "Front heatsink temperature °C"
+						},
+						"hasMotorT": {
+							"$ref": "#/$defs/Bool01",
+							"description": "Motor temperature data available"
+						},
+						"ok": { "$ref": "#/$defs/Bool01" }
+					},
+					"required": [
+						"t",
+						"speed",
+						"gear",
+						"pedal",
+						"brake",
+						"steer",
+						"rpmR",
+						"rpmF",
+						"wsFL",
+						"wsFR",
+						"wsRL",
+						"wsRR",
+						"hasWs",
+						"rInvT",
+						"rStatT",
+						"rHsT",
+						"fInvT",
+						"fStatT",
+						"fHsT",
+						"hasMotorT",
+						"ok"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"FwCompat": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "fwcompat" },
+						"year": { "type": "integer" },
+						"release": { "type": "integer" },
+						"minor": { "type": "integer" },
+						"build": { "type": "integer" },
+						"compat": { "type": "integer" },
+						"ok": { "$ref": "#/$defs/Bool01" }
+					},
+					"required": ["t", "year", "release", "minor", "build", "compat", "ok"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Vehicle": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "vehicle" },
+						"model": { "type": "integer" },
+						"year": { "type": "integer" },
+						"ok": { "$ref": "#/$defs/Bool01" }
+					},
+					"required": ["t", "model", "year", "ok"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Platform": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "platform" },
+						"model": { "type": "integer" },
+						"hwGen": { "type": "integer" },
+						"swYear": { "type": "integer" },
+						"swWeek": { "type": "integer" },
+						"swRelease": { "type": "integer" },
+						"fsdProto": { "type": "integer" },
+						"swCompat": { "type": "integer" },
+						"resolved": { "$ref": "#/$defs/Bool01" },
+						"canHealth": { "$ref": "#/$defs/CanHealth" }
+					},
+					"required": [
+						"t",
+						"model",
+						"hwGen",
+						"swYear",
+						"swWeek",
+						"swRelease",
+						"fsdProto",
+						"swCompat",
+						"resolved",
+						"canHealth"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Boot": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "boot" },
+						"meta": { "$ref": "#/$defs/BootMeta" },
+						"connectivity": { "$ref": "#/$defs/BootConnectivity" },
+						"state": { "$ref": "#/$defs/BootStatusState" },
+						"driverAssist": { "$ref": "#/$defs/DriverAssist" },
+						"vehicle": { "$ref": "#/$defs/VehicleState" },
+						"platform": { "$ref": "#/$defs/PlatformIdentity" },
+						"firmware": { "$ref": "#/$defs/FirmwareIdentity" },
+						"battery": { "$ref": "#/$defs/BatteryStatus" },
+						"safety": { "$ref": "#/$defs/SafetyStatus" },
+						"can": { "$ref": "#/$defs/CanStatus" },
+						"features": { "$ref": "#/$defs/FeatureFlagsFull" }
+					},
+					"required": [
+						"t",
+						"meta",
+						"connectivity",
+						"state",
+						"driverAssist",
+						"vehicle",
+						"platform",
+						"firmware",
+						"battery",
+						"safety",
+						"can",
+						"features"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"Status": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "status" },
+						"meta": { "$ref": "#/$defs/StatusMetaSection" },
+						"connectivity": { "$ref": "#/$defs/StatusConnectivity" },
+						"state": { "$ref": "#/$defs/BootStatusState" },
+						"driverAssist": { "$ref": "#/$defs/DriverAssist" },
+						"vehicle": { "$ref": "#/$defs/VehicleState" },
+						"platform": { "$ref": "#/$defs/PlatformIdentity" },
+						"firmware": { "$ref": "#/$defs/FirmwareIdentity" },
+						"battery": { "$ref": "#/$defs/BatteryStatus" },
+						"safety": { "$ref": "#/$defs/SafetyStatus" },
+						"can": { "$ref": "#/$defs/CanStatus" },
+						"features": { "$ref": "#/$defs/FeatureFlagsFull" }
+					},
+					"required": [
+						"t",
+						"meta",
+						"connectivity",
+						"state",
+						"driverAssist",
+						"vehicle",
+						"platform",
+						"firmware",
+						"battery",
+						"safety",
+						"can",
+						"features"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"StatusMeta": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "status_meta" },
+						"hw": { "type": "string", "minLength": 1 },
+						"can": { "type": "string", "minLength": 1 },
+						"drv": { "type": "string", "minLength": 1 },
+						"variant": { "type": "string", "minLength": 1 },
+						"cap": { "type": "string", "minLength": 1 },
+						"ready": { "const": "runtime-ready" },
+						"up": { "type": "integer", "minimum": 0 }
+					},
+					"required": ["t", "hw", "can", "drv", "variant", "cap", "ready", "up"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"StatusFeatures": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "status_features" },
+						"features": { "$ref": "#/$defs/FeatureFlagsCompact" }
+					},
+					"required": ["t", "features"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"StatusCan": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "status_can" },
+						"clock": { "$ref": "#/$defs/CompactCanClock" },
+						"health": { "$ref": "#/$defs/CanHealth" }
+					},
+					"required": ["t", "clock", "health"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"StatusState": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "status_state" },
+						"state": { "$ref": "#/$defs/StatusStatePayload" }
+					},
+					"required": ["t", "state"],
+					"additionalProperties": false
+				}
+			]
+		},
+		"StatusCompact": {
+			"allOf": [
+				{ "$ref": "#/$defs/TypeTag" },
+				{
+					"type": "object",
+					"properties": {
+						"t": { "const": "status_compact" },
+						"meta": { "$ref": "#/$defs/CompactMeta" },
+						"connectivity": { "$ref": "#/$defs/CompactConnectivity" },
+						"state": { "$ref": "#/$defs/CompactState" },
+						"features": { "$ref": "#/$defs/FeatureFlagsCompact" },
+						"can": { "$ref": "#/$defs/CompactCanPayload" },
+						"stream": { "$ref": "#/$defs/StreamStatus" },
+						"rawCan": { "$ref": "#/$defs/Bool01" }
+					},
+					"required": [
+						"t",
+						"meta",
+						"connectivity",
+						"state",
+						"features",
+						"can",
+						"stream",
+						"rawCan"
+					],
+					"additionalProperties": false
+				}
+			]
+		}
+	}
+}
