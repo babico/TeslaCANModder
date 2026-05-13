@@ -101,6 +101,7 @@ describe("E2E Smoke: Command → Ack Round-Trip", () => {
 		{ name: "fsd on", cmd: commands.fsd(true), ackCmd: "fsd:on" },
 		{ name: "fsd off", cmd: commands.fsd(false), ackCmd: "fsd:off" },
 		{ name: "nag on", cmd: commands.nag(true), ackCmd: "nag:on" },
+		{ name: "nag mode bit19", cmd: commands.nagMode("bit19"), ackCmd: "nag:mode:bit19" },
 		{ name: "variant hw3", cmd: commands.variant("hw3"), ackCmd: "variant:hw3" },
 		{ name: "variant hw4", cmd: commands.variant("hw4"), ackCmd: "variant:hw4" },
 		{ name: "variant legacy", cmd: commands.variant("legacy"), ackCmd: "variant:legacy" },
