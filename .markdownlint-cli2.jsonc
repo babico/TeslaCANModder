@@ -5,6 +5,7 @@
 	},
 	"ignores": [
 		"legacy/**",
+		"docs/legacy/**",
 		"**/node_modules/**",
 		"**/dist/**",
 		"**/.pio/**",
