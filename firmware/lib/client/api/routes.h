@@ -46,6 +46,31 @@ static String buildStateJson(State &s)
 	doc["chassisOnline"] = s.chassisOnline;
 	doc["standby"] = s.standby;
 	doc["uptime"] = millis();
+
+	// BMS telemetry — serialized for dashboard telemetry cards
+	if (s.hasBms)
+	{
+		doc["bmsVoltage"] = s.bmsVoltage;
+		doc["bmsCurrent"] = s.bmsCurrent;
+		doc["bmsPower"] = s.bmsPower;
+		doc["bmsSoc"] = s.bmsSoc;
+		doc["bmsTempMin"] = s.bmsTempMin;
+		doc["bmsTempMax"] = s.bmsTempMax;
+		doc["hasBms"] = 1;
+	}
+	if (s.hasEnhancedBms)
+	{
+		doc["bmsCellVoltageMax"] = s.bmsCellVoltageMax;
+		doc["bmsCellVoltageMin"] = s.bmsCellVoltageMin;
+		doc["bmsMaxRegenPower"] = s.bmsMaxRegenPower;
+		doc["bmsMaxDischargePower"] = s.bmsMaxDischargePower;
+		doc["bmsNominalFullPack"] = s.bmsNominalFullPack;
+		doc["bmsNominalRemaining"] = s.bmsNominalRemaining;
+		doc["bmsPackTMin"] = s.bmsPackTMin;
+		doc["bmsPackTMax"] = s.bmsPackTMax;
+		doc["bmsMaxDischargeCurrent"] = s.bmsMaxDischargeCurrent;
+		doc["hasEnhancedBms"] = 1;
+	}
 	doc["driveMode"] = s.driveModeOverride;
 	doc["currentDriveMode"] = s.currentDriveMode;
 	doc["eceR79"] = s.eceR79Bypass;
@@ -81,9 +106,9 @@ static String buildStateJson(State &s)
 	doc["frunkOpen"] = s.frunkOpen;
 	doc["trunkOpen"] = s.trunkOpen;
 	doc["cruiseSetSpeed"] = (int)(s.cruiseSetSpeedKph * 10); // Fixed-point: kph * 10
-	doc["accSpeedLimit"] = (int)(s.accSpeedLimitKph * 10);   // Fixed-point: kph * 10
-	doc["mapSpeedLimit"] = (int)(s.mapSpeedLimitKph * 10);   // Fixed-point: kph * 10
-	doc["maxSpeed"] = (int)(s.maxSpeedKph * 10);             // Fixed-point: kph * 10
+	doc["accSpeedLimit"] = (int)(s.accSpeedLimitKph * 10);	 // Fixed-point: kph * 10
+	doc["mapSpeedLimit"] = (int)(s.mapSpeedLimitKph * 10);	 // Fixed-point: kph * 10
+	doc["maxSpeed"] = (int)(s.maxSpeedKph * 10);			 // Fixed-point: kph * 10
 	doc["dasDriveEnabled"] = dasDriveIsEnabled();
 	doc["dasSpeedLimitKph"] = (int)dasSpeedLimitKph;
 	doc["dasSpeedCapKph"] = (int)dasSpeedCapKph;

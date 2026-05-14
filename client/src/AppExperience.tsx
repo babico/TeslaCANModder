@@ -32,7 +32,9 @@ import {
 } from "./state/monitorCommandExecution";
 import { getCommandGate } from "./state/commandGating";
 import { useBoardConnection } from "./state/BoardConnectionContext";
-import { DashboardScreen, ControlsScreen, ConsoleScreen } from "./screens";
+import { DashboardScreen } from "./screens/DashboardScreen";
+import { ControlsScreen } from "./screens/ControlsScreen";
+import { ConsoleScreen } from "./screens/ConsoleScreen";
 const DocsScreen = lazy(() =>
 	import("./screens/DocsScreen").then((m) => ({ default: m.DocsScreen })),
 );
