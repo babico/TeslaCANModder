@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import type { BoardState } from "@teslacanmodder/protocol";
 
 import { DriveScreen } from "./DriveScreen";
 import { TelemetryPanel } from "../components/TelemetryPanel";
 import { IntegrationPanel } from "../components/IntegrationPanel";
 import { UtilityPanel } from "../components/UtilityPanel";
 import { useBreakpoint } from "../state/useBreakpoint";
+import { useBoardInstanceState } from "../state/BoardStateContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/shadcn/tabs";
 import { Sheet } from "../ui/shadcn/sheet";
 
@@ -14,11 +14,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "../ui/shadcn/card";
 
 type DashboardSection = "overview" | "drive";
 
-export interface DashboardScreenProps {
-	boardState: BoardState;
-}
-
-export function DashboardScreen({ boardState }: DashboardScreenProps) {
+export function DashboardScreen() {
+	const { boardState } = useBoardInstanceState();
 	const [section, setSection] = useState<DashboardSection>("overview");
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const bp = useBreakpoint();
@@ -197,5 +194,3 @@ export function DashboardScreen({ boardState }: DashboardScreenProps) {
 		</View>
 	);
 }
-
-export default DashboardScreen;

@@ -9,6 +9,8 @@ import {
 } from "../../../packages/protocol/src/featureSettings";
 import { getCommandGate } from "../state/commandGating";
 import { ALL_COMMANDS, type CommandName } from "../hardware/controller";
+import { useBoardInstanceState } from "../state/BoardStateContext";
+import { useCommandActions } from "../state/CommandContext";
 import {
 	BusStatusBar,
 	CommandGroupCard,
@@ -20,11 +22,6 @@ import { DasPanel } from "../components/controls/DasPanel";
 import { GamepadPanel } from "../components/controls/GamepadPanel";
 import { SpeedTuningPanel } from "../components/controls/SpeedTuningPanel";
 import { VehicleCommandsPanel } from "../components/controls/VehicleCommandsPanel";
-
-interface ControlsScreenProps {
-	boardState: BoardState;
-	onRunCommand: (name: CommandName, args?: string) => void;
-}
 
 interface CommandItem {
 	name: CommandName;
@@ -166,7 +163,9 @@ for (const group of GROUPS) {
 	}
 }
 
-export function ControlsScreen({ boardState, onRunCommand }: ControlsScreenProps) {
+export function ControlsScreen() {
+	const { boardState } = useBoardInstanceState();
+	const { runCommand: onRunCommand } = useCommandActions();
 	const [tooltip, setTooltip] = useState<string | null>(null);
 	const [pendingConfirm, setPendingConfirm] = useState<CommandName | null>(null);
 	const [paletteOpen, setPaletteOpen] = useState(false);

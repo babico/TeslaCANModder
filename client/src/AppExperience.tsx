@@ -1122,15 +1122,10 @@ export default function AppExperience() {
 			<ConnectionHeader />
 
 			{/* Dashboard tab */}
-			{activeTab === "dashboard" ? <DashboardScreen boardState={boardState} /> : null}
+			{activeTab === "dashboard" ? <DashboardScreen /> : null}
 
-			{/* Controls tab — grouped command surface */}
-			{activeTab === "controls" ? (
-				<ControlsScreen
-					boardState={boardState}
-					onRunCommand={(name) => void runCommand(name)}
-				/>
-			) : null}
+			{/* Controls tab */}
+			{activeTab === "controls" ? <ControlsScreen /> : null}
 
 			{/* Console tab */}
 			{activeTab === "console" ? (

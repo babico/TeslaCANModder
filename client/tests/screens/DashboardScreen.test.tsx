@@ -17,17 +17,28 @@ jest.mock("../../src/components/UtilityPanel", () => ({
 	UtilityPanel: () => null,
 }));
 
+jest.mock("../../src/state/BoardStateContext", () => {
+	const actual = jest.requireActual("../../src/state/BoardStateContext");
+	return {
+		...actual,
+		useBoardInstanceState: () => ({
+			boardState: {
+				chassisOnline: true,
+				vehicleOnline: false,
+				bodyOnline: false,
+				vehicleSpeed: 48,
+			},
+			statusText: "",
+			lastResult: "",
+		}),
+	};
+});
+
 import { DashboardScreen } from "../../src/screens/DashboardScreen";
 
 describe("DashboardScreen", () => {
 	it("renders overview feature description copy", () => {
-		const boardState = {
-			chassisOnline: true,
-			vehicleOnline: false,
-			bodyOnline: false,
-			vehicleSpeed: 48,
-		} as any;
-		const { getByText, getAllByText } = render(<DashboardScreen boardState={boardState} />);
+		const { getByText, getAllByText } = render(<DashboardScreen />);
 		expect(getByText(/Telemetry shows vehicle health/)).toBeTruthy();
 		expect(getAllByText(/Dashboard/).length).toBeGreaterThan(0);
 	});
