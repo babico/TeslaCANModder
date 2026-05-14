@@ -5,6 +5,7 @@
 jest.mock("@teslacanmodder/protocol", () => ({
 	initialBoardState: {},
 	BUS_NAMES: {},
+	commands: {},
 }));
 
 import React from "react";

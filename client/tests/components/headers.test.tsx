@@ -31,7 +31,7 @@ jest.mock("../../src/state/BoardConnectionContext", () => ({
 	useBoardConnection: () => mockBoardConnState,
 }));
 
-jest.mock("../../src/ui/Sheet", () => ({
+jest.mock("../../src/ui/shadcn/sheet", () => ({
 	Sheet: ({ children, visible }: any) => (visible ? children : null),
 }));
 

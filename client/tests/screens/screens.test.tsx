@@ -47,6 +47,32 @@ jest.mock("../../src/components/docs/MarkdownRenderer", () => ({
 	MarkdownRenderer: () => null,
 }));
 
+const mockBoardState = {
+	chassisOnline: true,
+	vehicleOnline: true,
+	bodyOnline: true,
+	otaInProgress: false,
+	hasBms: true,
+	vehicleSpeed: 0,
+	frameCount: 2,
+	canHealth: { 0: { on: true, det: true } },
+};
+
+jest.mock("../../src/state/BoardStateContext", () => ({
+	useBoardInstanceState: () => ({
+		boardState: mockBoardState,
+	}),
+}));
+
+jest.mock("../../src/state/CommandContext", () => ({
+	useCommandActions: () => ({
+		runCommand: jest.fn(async () => undefined),
+	}),
+	useCommandState: () => ({
+		paletteOpen: false,
+	}),
+}));
+
 jest.mock("../../src/state/BoardConnectionContext", () => ({
 	useBoardConnection: () => ({
 		statusText: "connected",
@@ -58,23 +84,10 @@ import { ControlsScreen } from "../../src/screens/ControlsScreen";
 import { FlasherScreen } from "../../src/screens/FlasherScreen";
 import { DocsScreen } from "../../src/screens/DocsScreen";
 
-const boardState: any = {
-	chassisOnline: true,
-	vehicleOnline: true,
-	bodyOnline: true,
-	otaInProgress: false,
-	hasBms: true,
-	vehicleSpeed: 0,
-	frameCount: 2,
-	canHealth: { 0: { on: true, det: true } },
-};
-
 describe("Screen UI coverage", () => {
 	it("renders ControlsScreen sections", () => {
-		const { getByText, getAllByText } = render(
-			React.createElement(ControlsScreen, { boardState, onRunCommand: jest.fn() }),
-		);
-		expect(getByText(/Speed Profile Controls/)).toBeTruthy();
+		const { getByText, getAllByText } = render(React.createElement(ControlsScreen));
+		expect(getByText(/Controls Cockpit/)).toBeTruthy();
 		expect(getAllByText(/Palette/).length).toBeGreaterThan(0);
 	});
 
@@ -91,9 +104,7 @@ describe("Screen UI coverage", () => {
 				onNavigateDoc,
 			}),
 		);
-		// DocsScreen should show some loading or doc content
 		expect(getByText(/Docs/)).toBeTruthy();
-		// Flush all pending async state updates to silence act() warnings
 		await act(async () => {});
 	});
 });

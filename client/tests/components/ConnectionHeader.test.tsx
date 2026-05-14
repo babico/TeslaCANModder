@@ -17,7 +17,7 @@ const mockBoardConnState = {
 	applyPreset: jest.fn(),
 };
 
-jest.mock("../../src/ui/Sheet", () => ({
+jest.mock("../../src/ui/shadcn/sheet", () => ({
 	Sheet: ({ children, visible }: any) => (visible ? children : null),
 }));
 

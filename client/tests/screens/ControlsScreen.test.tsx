@@ -1,5 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
+import { TestBoardStateContext } from "../../src/test/TestBoardStateContext";
 
 jest.mock("../../src/state/commandGating", () => ({
 	getCommandGate: () => ({ available: true, reason: null }),
@@ -22,9 +23,34 @@ jest.mock("../../src/hardware/controller", () => ({
 	],
 }));
 
+const mockRunCommand = jest.fn(async () => undefined);
+
+jest.mock("../../src/state/BoardStateContext", () => ({
+	useBoardInstanceState: () =>
+		React.useContext(
+			jest.requireActual("../../src/test/TestBoardStateContext").TestBoardStateContext,
+		),
+}));
+
+jest.mock("../../src/state/CommandContext", () => ({
+	useCommandActions: () => ({
+		runCommand: mockRunCommand,
+	}),
+	useCommandState: () => ({
+		paletteOpen: false,
+	}),
+}));
+
+jest.mock("../../src/state/BoardConnectionContext", () => ({
+	useBoardConnection: () => ({
+		statusText: "connected",
+		sendCommand: jest.fn(async () => "ok"),
+	}),
+}));
+
 import { ControlsScreen } from "../../src/screens/ControlsScreen";
 
-const boardState: any = {
+const defaultBoardState = {
 	chassisOnline: true,
 	vehicleOnline: true,
 	bodyOnline: true,
@@ -32,68 +58,65 @@ const boardState: any = {
 	hasBms: true,
 	vehicleSpeed: 0,
 	fsd: false,
+	dasDriveEnabled: false,
+	dasSpeedLimitKph: 25,
+	dasSpeedCapKph: 25,
+	dasSpeedCapMaxKph: 200,
+	gamepad: {
+		enabled: false,
+		connected: false,
+		scanning: false,
+		pairedAddr: "",
+		pairedName: "",
+		rssi: 0,
+		battery: 0xff,
+		devices: [] as Array<{ addr: string; name: string }>,
+	},
 };
+
+function renderWithState(boardStateOverrides: Record<string, unknown> = {}) {
+	const boardState = { ...defaultBoardState, ...boardStateOverrides };
+	return render(
+		<TestBoardStateContext.Provider value={{ boardState }}>
+			<ControlsScreen />
+		</TestBoardStateContext.Provider>,
+	);
+}
+
+beforeEach(() => {
+	mockRunCommand.mockClear();
+});
 
 describe("ControlsScreen", () => {
 	it("renders preset controls sections", () => {
-		const { getByText, getAllByText } = render(
-			React.createElement(ControlsScreen, { boardState, onRunCommand: jest.fn() }),
-		);
-		expect(getByText(/Speed Profile Controls/)).toBeTruthy();
-		// "Palette" button is in BusStatusBar
+		const { getByText, getAllByText } = renderWithState();
+		expect(getByText(/Controls Cockpit/)).toBeTruthy();
 		expect(getAllByText(/Palette/).length).toBeGreaterThan(0);
 	});
 
 	it("opens command palette on button press", () => {
-		const { getAllByText } = render(
-			React.createElement(ControlsScreen, { boardState, onRunCommand: jest.fn() }),
-		);
-		// Press the Palette button (text "Palette") to open modal
+		const { getAllByText } = renderWithState();
 		fireEvent.press(getAllByText(/Palette/)[0]);
-		// Just verify it doesn't crash
 	});
 
 	describe("DAS Drive panel", () => {
-		const dasState: any = {
-			...boardState,
-			dasDriveEnabled: false,
-			dasSpeedLimitKph: 25,
-			dasSpeedCapKph: 25,
-			dasSpeedCapMaxKph: 200,
-		};
-
 		it("renders the panel title and reflects ARMED state from boardState", () => {
-			const { getByText } = render(
-				React.createElement(ControlsScreen, {
-					boardState: { ...dasState, dasDriveEnabled: true },
-					onRunCommand: jest.fn(),
-				}),
-			);
+			const { getByText } = renderWithState({ dasDriveEnabled: true });
 			expect(getByText(/DAS Drive/)).toBeTruthy();
 			expect(getByText(/ARMED/)).toBeTruthy();
 		});
 
 		it("shows OFF status when dasDriveEnabled is false", () => {
-			const { getAllByText } = render(
-				React.createElement(ControlsScreen, {
-					boardState: dasState,
-					onRunCommand: jest.fn(),
-				}),
-			);
-			// "OFF" label appears in the DAS panel header status badge.
+			const { getAllByText } = renderWithState({ dasDriveEnabled: false });
 			expect(getAllByText(/OFF/).length).toBeGreaterThan(0);
 		});
 
 		it("sends Set Cap command bounded by dasSpeedCapMaxKph", () => {
-			const onRunCommand = jest.fn();
-			const { getByText } = render(
-				React.createElement(ControlsScreen, {
-					boardState: { ...dasState, dasSpeedCapMaxKph: 80 },
-					onRunCommand,
-				}),
-			);
+			const { getByText } = renderWithState({ dasSpeedCapMaxKph: 80 });
 			fireEvent.press(getByText("Set Cap"));
-			const call = onRunCommand.mock.calls.find((c: any[]) => c[0] === "driveCap");
+			const call = mockRunCommand.mock.calls.find((c: unknown[]) => c[0] === "driveCap") as
+				| [string, unknown]
+				| undefined;
 			expect(call).toBeDefined();
 			const sentVal = Number(call![1]);
 			expect(sentVal).toBeGreaterThanOrEqual(1);
@@ -102,86 +125,90 @@ describe("ControlsScreen", () => {
 	});
 
 	describe("Gamepad panel", () => {
-		const baseGp: any = {
-			...boardState,
-			gamepad: {
-				enabled: false,
-				connected: false,
-				scanning: false,
-				pairedAddr: "",
-				pairedName: "",
-				rssi: 0,
-				battery: 0xff,
-				devices: [],
-			},
-		};
-
 		it("renders OFF when gamepad is disabled", () => {
-			const { getByText, getAllByText } = render(
-				React.createElement(ControlsScreen, {
-					boardState: baseGp,
-					onRunCommand: jest.fn(),
-				}),
-			);
+			const { getByText, getAllByText } = renderWithState({
+				gamepad: {
+					enabled: false,
+					connected: false,
+					scanning: false,
+					pairedAddr: "",
+					pairedName: "",
+					rssi: 0,
+					battery: 0xff,
+					devices: [],
+				},
+			});
 			expect(getByText("Gamepad (BLE HID)")).toBeTruthy();
-			// "OFF" appears in both DAS panel and Gamepad panel
 			expect(getAllByText(/^OFF$/).length).toBeGreaterThanOrEqual(1);
 		});
 
 		it("shows CONNECTED + paired info when connected", () => {
-			const state = {
-				...baseGp,
+			const { getByText, getAllByText } = renderWithState({
 				gamepad: {
-					...baseGp.gamepad,
 					enabled: true,
 					connected: true,
 					pairedAddr: "aa:bb:cc:dd:ee:ff",
 					pairedName: "Xbox Wireless",
 					rssi: -55,
 					battery: 80,
+					devices: [],
 				},
-			};
-			const { getByText } = render(
-				React.createElement(ControlsScreen, { boardState: state, onRunCommand: jest.fn() }),
-			);
+			});
 			expect(getByText(/CONNECTED/)).toBeTruthy();
 			expect(getByText("Xbox Wireless")).toBeTruthy();
-			expect(getByText("80%")).toBeTruthy();
+			expect(getAllByText("80%").length).toBeGreaterThan(0);
 			expect(getByText("-55 dBm")).toBeTruthy();
 		});
 
 		it("emits gamepadScan on Scan press", () => {
-			const onRunCommand = jest.fn();
-			const { getByText } = render(
-				React.createElement(ControlsScreen, { boardState: baseGp, onRunCommand }),
-			);
+			const { getByText } = renderWithState({
+				gamepad: {
+					enabled: false,
+					connected: false,
+					scanning: false,
+					pairedAddr: "",
+					pairedName: "",
+					rssi: 0,
+					battery: 0xff,
+					devices: [],
+				},
+			});
 			fireEvent.press(getByText("Scan"));
-			expect(onRunCommand).toHaveBeenCalledWith("gamepadScan", undefined);
+			expect(mockRunCommand).toHaveBeenCalledWith("gamepadScan", undefined);
 		});
 
 		it("renders discovered devices and emits gamepadPair with address", () => {
-			const onRunCommand = jest.fn();
-			const state = {
-				...baseGp,
+			const { getAllByText } = renderWithState({
 				gamepad: {
-					...baseGp.gamepad,
+					enabled: false,
+					connected: false,
+					scanning: false,
+					pairedAddr: "",
+					pairedName: "",
+					rssi: 0,
+					battery: 0xff,
 					devices: [{ addr: "11:22:33:44:55:66", name: "Pad-A" }],
 				},
-			};
-			const { getAllByText } = render(
-				React.createElement(ControlsScreen, { boardState: state, onRunCommand }),
-			);
+			});
 			fireEvent.press(getAllByText("Pair")[0]);
-			expect(onRunCommand).toHaveBeenCalledWith("gamepadPair", "11:22:33:44:55:66");
+			expect(mockRunCommand).toHaveBeenCalledWith("gamepadPair", "11:22:33:44:55:66");
 		});
 
 		it("emits gamepadCancel on Cancel Burst", () => {
-			const onRunCommand = jest.fn();
-			const { getByText } = render(
-				React.createElement(ControlsScreen, { boardState: baseGp, onRunCommand }),
-			);
+			const { getByText } = renderWithState({
+				gamepad: {
+					enabled: false,
+					connected: false,
+					scanning: false,
+					pairedAddr: "",
+					pairedName: "",
+					rssi: 0,
+					battery: 0xff,
+					devices: [],
+				},
+			});
 			fireEvent.press(getByText("Cancel Burst"));
-			expect(onRunCommand).toHaveBeenCalledWith("gamepadCancel", undefined);
+			expect(mockRunCommand).toHaveBeenCalledWith("gamepadCancel", undefined);
 		});
 	});
 });
