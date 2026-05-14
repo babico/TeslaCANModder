@@ -16,11 +16,13 @@
 		"test:types": "npm run typecheck"
 	},
 	"dependencies": {
+		"@react-native-reusables/cli": "^0.7.1",
 		"@teslacanmodder/protocol": "*",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"esptool-js": "^0.6.0",
 		"expo": "~54.0.33",
+		"lucide-react-native": "^1.14.0",
 		"markdown-it": "^14.1.1",
 		"markdown-it-abbr": "^2.0.0",
 		"markdown-it-deflist": "^3.0.0",
@@ -31,6 +33,7 @@
 		"markdown-it-sub": "^2.0.0",
 		"markdown-it-sup": "^2.0.0",
 		"markdown-it-task-lists": "^2.1.1",
+		"nativewind": "^4.2.3",
 		"react": "19.2.6",
 		"react-dom": "19.2.6",
 		"react-native": "0.85.3",
@@ -38,7 +41,9 @@
 		"react-native-safe-area-context": "~5.7.0",
 		"react-native-svg": "15.15.5",
 		"react-native-web": "0.21.2",
-		"tailwind-merge": "^3.6.0"
+		"tailwind-merge": "^3.6.0",
+		"tailwindcss-animate": "^1.0.7",
+		"tailwindcss-react-native": "^1.7.10"
 	},
 	"devDependencies": {
 		"@react-native/babel-plugin-codegen": "~0.85.3",
