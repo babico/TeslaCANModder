@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { ScrollView, View, useWindowDimensions } from "react-native";
 
 import {
 	MonitorBottomBar,
@@ -9,7 +9,6 @@ import {
 import { ConnectionSection } from "../components/monitor/sections/ConnectionSection";
 import { DiagnosticsSection } from "../components/monitor/sections/DiagnosticsSection";
 import { MonitorSection } from "../components/monitor/sections/MonitorSection";
-import { colors } from "../design/tokens";
 import type { MonitorScreenProps } from "../components/monitor/sections/types";
 
 export function ConsoleScreen(props: MonitorScreenProps) {
@@ -18,14 +17,14 @@ export function ConsoleScreen(props: MonitorScreenProps) {
 	const [activeSection, setActiveSection] = useState<MonitorSectionTab>("console");
 
 	const navItems = [
-		{ tab: "console" as const, label: "CAN Monitor", icon: "◉" },
-		{ tab: "connection" as const, label: "Connection", icon: "◌" },
-		{ tab: "diagnostics" as const, label: "Events", icon: "◈" },
+		{ tab: "console" as const, label: "CAN Monitor", icon: "\u25C9" },
+		{ tab: "connection" as const, label: "Connection", icon: "\u25CC" },
+		{ tab: "diagnostics" as const, label: "Events", icon: "\u25C8" },
 	];
 
 	if (isWide) {
 		return (
-			<View style={styles.containerSplit}>
+			<View className="flex-1 flex-row bg-background">
 				<MonitorSidebarNavigation
 					items={navItems}
 					activeSection={activeSection}
@@ -34,7 +33,10 @@ export function ConsoleScreen(props: MonitorScreenProps) {
 					canConnected={Object.keys(props.boardState.canHealth ?? {}).length > 0}
 				/>
 
-				<ScrollView style={styles.mainPane} contentContainerStyle={styles.mainPaneInner}>
+				<ScrollView
+					className="flex-1 bg-background"
+					contentContainerStyle={{ padding: 20, paddingBottom: 48, gap: 16 }}
+				>
 					{activeSection === "console" && <MonitorSection {...props} />}
 					{activeSection === "connection" && <ConnectionSection {...props} />}
 					{activeSection === "diagnostics" && <DiagnosticsSection {...props} />}
@@ -44,8 +46,11 @@ export function ConsoleScreen(props: MonitorScreenProps) {
 	}
 
 	return (
-		<View style={styles.containerMobile}>
-			<ScrollView style={styles.mainPane} contentContainerStyle={styles.mainPaneInner}>
+		<View className="flex-1 flex-col bg-background">
+			<ScrollView
+				className="flex-1 bg-background"
+				contentContainerStyle={{ padding: 20, paddingBottom: 48, gap: 16 }}
+			>
 				{activeSection === "console" && <MonitorSection {...props} />}
 				{activeSection === "connection" && <ConnectionSection {...props} />}
 				{activeSection === "diagnostics" && <DiagnosticsSection {...props} />}
@@ -58,27 +63,5 @@ export function ConsoleScreen(props: MonitorScreenProps) {
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	containerSplit: {
-		flex: 1,
-		flexDirection: "row",
-		backgroundColor: colors.dashBackground,
-	},
-	mainPane: {
-		flex: 1,
-		backgroundColor: colors.dashBackground,
-	},
-	mainPaneInner: {
-		padding: 20,
-		paddingBottom: 48,
-		gap: 16,
-	},
-	containerMobile: {
-		flex: 1,
-		flexDirection: "column",
-		backgroundColor: colors.dashBackground,
-	},
-});
 
 export default ConsoleScreen;

@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, Text, View } from "react-native";
 
-import { colors, font, radius, spacing } from "../design/tokens";
 import { flashMergedEspReleaseImage, supportsBrowserEspFlash } from "../hardware/webEspFlasher";
 import { useBoardConnection } from "../state/BoardConnectionContext";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/shadcn/card";
+import { Button } from "../ui/shadcn/button";
 
 type StatusType = "idle" | "building" | "connecting" | "flashing" | "done" | "error";
 
@@ -21,7 +22,7 @@ const CONNECTION_ESP32: ConnectionOption[] = [
 ];
 
 const BUS_OPTIONS = [
-	{ key: "chassis", label: "Chassis", desc: "X179 pins 13-14 · DAS injection" },
+	{ key: "chassis", label: "Chassis", desc: "X179 pins 13-14 \u00B7 DAS injection" },
 	{ key: "vehicle", label: "Vehicle", desc: "X179 pins 9-10" },
 	{ key: "body", label: "Body", desc: "X179 pins 2-3" },
 ] as const;
@@ -135,14 +136,6 @@ export function FlasherScreen() {
 		const enabledLabels = BUS_OPTIONS.filter((bus) => buses[bus.key]).map((bus) => bus.label);
 		return enabledLabels.length > 0 ? enabledLabels.join(" + ") : "No CAN lanes enabled";
 	}, [buses]);
-	const _buildFlags = useMemo(() => {
-		const flags: string[] = [];
-		if (buses.chassis) flags.push("-DBUS_CHASSIS_ACTIVE=1");
-		if (buses.vehicle) flags.push("-DBUS_VEHICLE_ACTIVE=1");
-		if (buses.body) flags.push("-DBUS_BODY_ACTIVE=1");
-		flags.push(`-DBOARD_CAN_CLOCK_MHZ=${clock}`);
-		return flags.join(" ");
-	}, [buses, clock]);
 
 	const toggleConnection = (key: string) => {
 		if (key === "serial") {
@@ -244,430 +237,248 @@ export function FlasherScreen() {
 	};
 
 	return (
-		<ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-			<View style={styles.hero}>
-				<Text style={styles.kicker}>FIRMWARE TOOLCHAIN</Text>
-				<Text style={styles.title}>Flasher Workspace</Text>
-				<Text style={styles.subtitle}>
-					Select connectivity and CAN bus profile, then download the matching GitHub
-					release image or flash it directly over Web Serial.
-				</Text>
-			</View>
+		<ScrollView
+			className="flex-1 bg-background"
+			contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 28 }}
+		>
+			<Card>
+				<CardHeader>
+					<Text className="text-xs font-bold uppercase text-primary tracking-wide">
+						FIRMWARE TOOLCHAIN
+					</Text>
+					<CardTitle>Flasher Workspace</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<Text className="text-sm text-muted-foreground leading-5">
+						Select connectivity and CAN bus profile, then download the matching GitHub
+						release image or flash it directly over Web Serial.
+					</Text>
+				</CardContent>
+			</Card>
 
-			<View style={styles.panel}>
-				<Text style={styles.panelTitle}>Target Board</Text>
-				<View style={styles.segmentRow}>
-					<View style={[styles.segment, styles.segmentActive]}>
-						<Text style={[styles.segmentTitle, styles.segmentTitleActive]}>
-							ESP32-S DevKit
-						</Text>
-						<Text style={styles.segmentDetail}>MCP2515 x1-4 / WiFi / BLE / NVS</Text>
+			<Card>
+				<CardHeader>
+					<CardTitle>Target Board</CardTitle>
+				</CardHeader>
+				<CardContent className="gap-3">
+					<View className="flex-row flex-wrap gap-2">
+						<View className="min-w-[220px] flex-1 border border-primary bg-muted rounded-lg p-3 gap-0.5">
+							<Text className="text-sm font-bold text-primary">ESP32-S DevKit</Text>
+							<Text className="text-xs text-muted-foreground">
+								MCP2515 x1-4 / WiFi / BLE / NVS
+							</Text>
+						</View>
 					</View>
-				</View>
-				<Text style={styles.resolvedLine}>Latest release asset: {assetName}</Text>
-			</View>
-
-			<View style={styles.panel}>
-				<Text style={styles.panelTitle}>Connectivity</Text>
-				<View style={styles.chipGrid}>
-					{CONNECTION_ESP32.map((option) => {
-						const active = Boolean(connection[option.key]);
-						return (
-							<Pressable
-								key={option.key}
-								onPress={() => toggleConnection(option.key)}
-								style={[
-									styles.chip,
-									active ? styles.chipActive : undefined,
-									option.locked ? styles.chipLocked : undefined,
-								]}
-							>
-								<Text
-									style={[
-										styles.chipLabel,
-										active ? styles.chipLabelActive : undefined,
-									]}
-								>
-									{option.label}
-								</Text>
-								<Text style={styles.chipDetail}>{option.desc}</Text>
-								<Text
-									style={[
-										styles.chipStatus,
-										active ? styles.chipStatusActive : undefined,
-									]}
-								>
-									{active ? "ON" : "OFF"}
-								</Text>
-							</Pressable>
-						);
-					})}
-				</View>
-				<Text style={styles.resolvedLine}>
-					Resolved firmware environment: {environment}
-				</Text>
-			</View>
-
-			<View style={styles.panel}>
-				<Text style={styles.panelTitle}>CAN Buses</Text>
-				<View style={styles.chipGrid}>
-					{BUS_OPTIONS.map((bus) => {
-						const active = Boolean(buses[bus.key]);
-						return (
-							<Pressable
-								key={bus.key}
-								onPress={() => toggleBus(bus.key)}
-								style={[styles.chip, active ? styles.chipActive : undefined]}
-							>
-								<Text
-									style={[
-										styles.chipLabel,
-										active ? styles.chipLabelActive : undefined,
-									]}
-								>
-									{bus.label}
-								</Text>
-								<Text style={styles.chipDetail}>{bus.desc}</Text>
-								<Text
-									style={[
-										styles.chipStatus,
-										active ? styles.chipStatusActive : undefined,
-									]}
-								>
-									{active ? "ON" : "OFF"}
-								</Text>
-							</Pressable>
-						);
-					})}
-				</View>
-				{!buses.chassis ? (
-					<Text style={styles.resolvedLine}>
-						⚠ Chassis bus off — passive sniffer mode, DAS injection disabled
+					<Text className="text-xs text-muted-foreground">
+						Latest release asset: {assetName}
 					</Text>
-				) : null}
-			</View>
+				</CardContent>
+			</Card>
 
-			<View style={styles.panel}>
-				<Text style={styles.panelTitle}>MCP2515 Crystal Clock</Text>
-				<View style={styles.segmentRow}>
-					{([8, 16] as const).map((mhz) => (
-						<Pressable
-							key={mhz}
-							onPress={() => setClock(mhz)}
-							style={[
-								styles.segment,
-								clock === mhz ? styles.segmentActive : undefined,
-							]}
+			<Card>
+				<CardHeader>
+					<CardTitle>Connectivity</CardTitle>
+				</CardHeader>
+				<CardContent className="gap-3">
+					<View className="flex-row flex-wrap gap-2">
+						{CONNECTION_ESP32.map((option) => {
+							const active = Boolean(connection[option.key]);
+							return (
+								<Pressable
+									key={option.key}
+									onPress={() => toggleConnection(option.key)}
+									className={`min-w-[150px] flex-1 border rounded-lg p-3 gap-0.5 ${
+										active
+											? "border-primary bg-muted"
+											: "border-border bg-background"
+									} ${option.locked ? "opacity-90" : ""}`}
+								>
+									<Text
+										className={`text-xs font-bold ${active ? "text-primary" : "text-foreground"}`}
+									>
+										{option.label}
+									</Text>
+									<Text className="text-xs text-muted-foreground">
+										{option.desc}
+									</Text>
+									<Text
+										className={`text-xs font-bold ${active ? "text-primary" : "text-muted"}`}
+									>
+										{active ? "ON" : "OFF"}
+									</Text>
+								</Pressable>
+							);
+						})}
+					</View>
+					<Text className="text-xs text-muted-foreground">
+						Resolved firmware environment: {environment}
+					</Text>
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>CAN Buses</CardTitle>
+				</CardHeader>
+				<CardContent className="gap-3">
+					<View className="flex-row flex-wrap gap-2">
+						{BUS_OPTIONS.map((bus) => {
+							const active = Boolean(buses[bus.key]);
+							return (
+								<Pressable
+									key={bus.key}
+									onPress={() => toggleBus(bus.key)}
+									className={`min-w-[150px] flex-1 border rounded-lg p-3 gap-0.5 ${
+										active
+											? "border-primary bg-muted"
+											: "border-border bg-background"
+									}`}
+								>
+									<Text
+										className={`text-xs font-bold ${active ? "text-primary" : "text-foreground"}`}
+									>
+										{bus.label}
+									</Text>
+									<Text className="text-xs text-muted-foreground">
+										{bus.desc}
+									</Text>
+									<Text
+										className={`text-xs font-bold ${active ? "text-primary" : "text-muted"}`}
+									>
+										{active ? "ON" : "OFF"}
+									</Text>
+								</Pressable>
+							);
+						})}
+					</View>
+					{!buses.chassis ? (
+						<Text className="text-xs text-warning">
+							{"\u26A0"} Chassis bus off {"\u2014"} passive sniffer mode, DAS
+							injection disabled
+						</Text>
+					) : null}
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>MCP2515 Crystal Clock</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<View className="flex-row flex-wrap gap-2">
+						{([8, 16] as const).map((mhz) => (
+							<Pressable
+								key={mhz}
+								onPress={() => setClock(mhz)}
+								className={`min-w-[220px] flex-1 border rounded-lg p-3 gap-0.5 ${
+									clock === mhz
+										? "border-primary bg-muted"
+										: "border-border bg-background"
+								}`}
+							>
+								<Text
+									className={`text-sm font-bold ${clock === mhz ? "text-primary" : "text-foreground"}`}
+								>
+									{mhz} MHz
+								</Text>
+								<Text className="text-xs text-muted-foreground">
+									{mhz === 8 ? "Most modules" : "Some modules"}
+								</Text>
+							</Pressable>
+						))}
+					</View>
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>Build and Flash</CardTitle>
+				</CardHeader>
+				<CardContent className="gap-3">
+					<Text className="text-sm text-muted-foreground">{busSummary}</Text>
+					<Text className="text-xs text-muted-foreground">
+						GitHub Release asset: {assetName}
+					</Text>
+					<View className="flex-row flex-wrap gap-2">
+						<Button
+							label={
+								status === "building" ? "Resolving..." : "Download Release Binary"
+							}
+							onPress={() => void handleBuild()}
+							disabled={status === "building"}
+						/>
+						<Button
+							label={
+								status === "connecting"
+									? "Connecting..."
+									: status === "flashing"
+										? "Flashing..."
+										: "Flash via Web Serial"
+							}
+							variant="outline"
+							onPress={() => void handleFlash()}
+							disabled={
+								status === "building" ||
+								status === "connecting" ||
+								status === "flashing"
+							}
+						/>
+					</View>
+					{message ? (
+						<Text
+							className={`text-xs ${
+								status === "error"
+									? "text-destructive"
+									: status === "done"
+										? "text-green-500"
+										: "text-muted-foreground"
+							}`}
 						>
-							<Text
-								style={[
-									styles.segmentTitle,
-									clock === mhz ? styles.segmentTitleActive : undefined,
-								]}
-							>
-								{mhz} MHz
-							</Text>
-							<Text style={styles.segmentDetail}>
-								{mhz === 8 ? "Most modules" : "Some modules"}
-							</Text>
-						</Pressable>
-					))}
-				</View>
-			</View>
-
-			<View style={styles.panel}>
-				<Text style={styles.panelTitle}>Build and Flash</Text>
-				<Text style={styles.summaryLine}>{busSummary}</Text>
-				<Text style={styles.resolvedLine}>GitHub Release asset: {assetName}</Text>
-				<View style={styles.actionsRow}>
-					<Pressable
-						onPress={() => void handleBuild()}
-						disabled={status === "building"}
-						style={[
-							styles.action,
-							styles.primaryAction,
-							status === "building" ? styles.actionDisabled : undefined,
-						]}
-					>
-						<Text style={styles.actionText}>
-							{status === "building" ? "Resolving..." : "Download Release Binary"}
+							{message}
 						</Text>
-					</Pressable>
-					<Pressable
-						onPress={() => void handleFlash()}
-						disabled={
-							status === "building" ||
-							status === "connecting" ||
-							status === "flashing"
-						}
-						style={[
-							styles.action,
-							styles.secondaryAction,
-							status === "building" ||
-							status === "connecting" ||
-							status === "flashing"
-								? styles.actionDisabled
-								: undefined,
-						]}
-					>
-						<Text style={styles.secondaryActionText}>
-							{status === "connecting"
-								? "Connecting..."
-								: status === "flashing"
-									? "Flashing..."
-									: "Flash via Web Serial"}
-						</Text>
-					</Pressable>
-				</View>
-				{message ? (
-					<Text
-						style={[
-							styles.message,
-							status === "error"
-								? styles.messageError
-								: status === "done"
-									? styles.messageDone
-									: undefined,
-						]}
-					>
-						{message}
-					</Text>
-				) : null}
-			</View>
+					) : null}
+				</CardContent>
+			</Card>
 
 			{flashLog.length > 0 ? (
-				<View style={styles.panel}>
-					<Text style={styles.panelTitle}>Flash Progress</Text>
-					<ScrollView
-						style={styles.flashConsole}
-						contentContainerStyle={styles.flashConsoleContent}
-						showsVerticalScrollIndicator
-						nestedScrollEnabled
-					>
-						{flashLog.map((line, index) => (
-							<Text key={index} style={styles.flashConsoleText}>
-								{line}
-							</Text>
-						))}
-					</ScrollView>
-				</View>
+				<Card>
+					<CardHeader>
+						<CardTitle>Flash Progress</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<ScrollView
+							className="rounded-lg border border-border bg-background max-h-[300px]"
+							contentContainerStyle={{ padding: 10, gap: 4 }}
+							showsVerticalScrollIndicator
+							nestedScrollEnabled
+						>
+							{flashLog.map((line, index) => (
+								<Text key={index} className="text-xs text-foreground leading-4">
+									{line}
+								</Text>
+							))}
+						</ScrollView>
+					</CardContent>
+				</Card>
 			) : null}
 
-			<View style={styles.panel}>
-				<Text style={styles.panelTitle}>CLI Reference</Text>
-				<View style={styles.codeBlock}>
-					<Text style={styles.codeText}>cd firmware</Text>
-					<Text style={styles.codeText}>.\pio.ps1 run -e {environment}</Text>
-					<Text style={styles.codeText}>
-						node ../tools/debug.js flash --port COM5 --hex build/firmware/{environment}
-						.bin
-					</Text>
-				</View>
-			</View>
+			<Card>
+				<CardHeader>
+					<CardTitle>CLI Reference</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<View className="rounded-lg border border-border bg-background p-3 gap-1">
+						<Text className="text-xs text-foreground">cd firmware</Text>
+						<Text className="text-xs text-foreground">
+							.\pio.ps1 run -e {environment}
+						</Text>
+						<Text className="text-xs text-foreground">
+							node ../tools/debug.js flash --port COM5 --hex build/firmware/
+							{environment}.bin
+						</Text>
+					</View>
+				</CardContent>
+			</Card>
 		</ScrollView>
 	);
 }
-
-const styles = StyleSheet.create({
-	screen: {
-		flex: 1,
-		backgroundColor: colors.dashBackground,
-	},
-	content: {
-		padding: spacing.lg,
-		gap: spacing.md3,
-		paddingBottom: spacing.xl2,
-	},
-	hero: {
-		borderRadius: radius.xl,
-		padding: spacing.lg,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		backgroundColor: colors.dashCard,
-		gap: spacing.sm2,
-	},
-	kicker: {
-		color: colors.dashPrimary,
-		letterSpacing: 1,
-		fontSize: font.size.sm2,
-		fontWeight: font.weight.bold,
-	},
-	title: {
-		color: colors.dashValue,
-		fontSize: font.size.xl3,
-		fontWeight: font.weight.extrabold,
-	},
-	subtitle: {
-		color: colors.dashLabel,
-		fontSize: font.size.md,
-		lineHeight: 20,
-	},
-	panel: {
-		borderRadius: radius.lg2,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		backgroundColor: colors.backgroundDarkSubtle,
-		padding: spacing.md,
-		gap: spacing.md2,
-	},
-	panelTitle: {
-		color: colors.dashValue,
-		fontSize: font.size.lg,
-		fontWeight: font.weight.bold,
-	},
-	segmentRow: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: 8,
-	},
-	segment: {
-		minWidth: 220,
-		flexGrow: 1,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		borderRadius: radius.md2,
-		padding: spacing.md2,
-		backgroundColor: colors.dashBackground,
-		gap: 3,
-	},
-	segmentActive: {
-		borderColor: colors.dashPrimary,
-		backgroundColor: colors.backgroundDarkSubtle,
-	},
-	segmentTitle: {
-		color: colors.dashValue,
-		fontWeight: font.weight.bold,
-		fontSize: font.size.md2,
-	},
-	segmentTitleActive: {
-		color: colors.dashPrimary,
-	},
-	segmentDetail: {
-		color: colors.dashLabel,
-		fontSize: font.size.sm,
-	},
-	chipGrid: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: 8,
-	},
-	chip: {
-		minWidth: 150,
-		flexGrow: 1,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		borderRadius: radius.md2,
-		padding: spacing.md2,
-		backgroundColor: colors.dashBackground,
-		gap: 3,
-	},
-	chipActive: {
-		borderColor: colors.dashPrimary,
-		backgroundColor: colors.backgroundDarkSubtle,
-	},
-	chipLocked: {
-		opacity: 0.9,
-	},
-	chipLabel: {
-		color: colors.dashValue,
-		fontWeight: font.weight.bold,
-		fontSize: font.size.sm,
-	},
-	chipLabelActive: {
-		color: colors.dashPrimary,
-	},
-	chipDetail: {
-		color: colors.dashLabel,
-		fontSize: font.size.sm2,
-	},
-	chipStatus: {
-		color: colors.dashMuted,
-		fontSize: font.size.sm2,
-		fontWeight: font.weight.bold,
-	},
-	chipStatusActive: {
-		color: colors.dashPrimary,
-	},
-	resolvedLine: {
-		color: colors.dashLabel,
-		fontSize: font.size.sm,
-	},
-	summaryLine: {
-		color: colors.dashLabel,
-		fontSize: font.size.md2,
-	},
-	actionsRow: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: 8,
-	},
-	action: {
-		minWidth: 180,
-		flexGrow: 1,
-		borderRadius: radius.md,
-		paddingVertical: spacing.md2,
-		paddingHorizontal: spacing.md,
-		alignItems: "center",
-	},
-	primaryAction: {
-		backgroundColor: colors.dashPrimary,
-	},
-	secondaryAction: {
-		backgroundColor: colors.dashBackground,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-	},
-	actionDisabled: {
-		opacity: 0.65,
-	},
-	actionText: {
-		color: colors.backgroundDark,
-		fontWeight: font.weight.extrabold,
-		fontSize: font.size.md2,
-	},
-	secondaryActionText: {
-		color: colors.dashValue,
-		fontWeight: font.weight.bold,
-		fontSize: font.size.md2,
-	},
-	message: {
-		fontSize: font.size.sm,
-		color: colors.dashLabel,
-	},
-	messageDone: {
-		color: colors.statusConnected,
-	},
-	messageError: {
-		color: colors.destructive,
-	},
-	flashConsole: {
-		borderRadius: radius.md2,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		backgroundColor: colors.dashBackground,
-		maxHeight: 300,
-	},
-	flashConsoleContent: {
-		padding: spacing.md2,
-		gap: 4,
-	},
-	flashConsoleText: {
-		color: colors.dashValue,
-		fontFamily: "Courier",
-		fontSize: font.size.sm2,
-		lineHeight: 16,
-	},
-	codeBlock: {
-		borderRadius: radius.md2,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		backgroundColor: colors.dashBackground,
-		padding: spacing.md2,
-		gap: 5,
-	},
-	codeText: {
-		color: colors.dashValue,
-		fontFamily: "Courier",
-		fontSize: font.size.sm,
-	},
-});

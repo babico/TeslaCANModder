@@ -6,7 +6,15 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Animated, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+	Animated,
+	Platform,
+	Pressable,
+	StyleSheet,
+	Text,
+	View,
+	useWindowDimensions,
+} from "react-native";
 import type { BoardState } from "@teslacanmodder/protocol";
 import { formatAutopilotTier, formatDriveMode, formatGear } from "@teslacanmodder/protocol";
 import { colors, font, radius, spacing, motion } from "../design/tokens";
@@ -17,9 +25,7 @@ import { usePowerCapture } from "../state/usePowerCapture";
 import { useTheme } from "../state/useTheme";
 import { useGaugeMode } from "../state/useGaugeMode";
 import type { GaugeMode } from "../state/useGaugeMode";
-import { Badge, StatChip } from "../ui";
-
-// ── Palette ───────────────────────────────────────────────────────────────────
+import { Badge } from "../ui/shadcn/badge";
 
 const C = {
 	bg: colors.dashBackground,
@@ -37,8 +43,6 @@ const C = {
 	red: colors.alarmCritical,
 	barBg: colors.backgroundDarkCard,
 } as const;
-
-// ── Glow helper ───────────────────────────────────────────────────────────────
 
 function hexAlpha(color: string, alpha: number): string {
 	const n = color.trim();
@@ -69,8 +73,6 @@ function buildGlow(color: string, opacity: number, blur: number) {
 	};
 }
 
-// ── AP state ──────────────────────────────────────────────────────────────────
-
 export type ApClusterState = "unavailable" | "inactive" | "active" | "hands_warning";
 
 export function resolveApState(
@@ -83,10 +85,9 @@ export function resolveApState(
 	return "inactive";
 }
 
-function apBadgeVariant(s: ApClusterState): "success" | "warning" | "destructive" | "muted" {
-	if (s === "active") return "success";
-	if (s === "hands_warning") return "warning";
-	return "muted";
+function apBadgeVariant(s: ApClusterState): "default" | "destructive" | "outline" {
+	if (s === "hands_warning") return "destructive";
+	return "outline";
 }
 
 function apStateLabel(s: ApClusterState, tier: number): string {
@@ -94,8 +95,6 @@ function apStateLabel(s: ApClusterState, tier: number): string {
 	if (s === "hands_warning") return "Hands On";
 	return formatAutopilotTier(tier);
 }
-
-// ── Gear row ──────────────────────────────────────────────────────────────────
 
 const GEAR_DEFS: [number, string][] = [
 	[1, "P"],
@@ -136,7 +135,7 @@ function GearLetter({ id, active }: { id: number; active: boolean }) {
 					: C.val;
 
 	return (
-		<Animated.Text style={[grS.letter, { color, transform: [{ scale }], opacity }]}>
+		<Animated.Text style={[{ color, transform: [{ scale }], opacity }, grS.letter]}>
 			{label}
 		</Animated.Text>
 	);
@@ -144,7 +143,7 @@ function GearLetter({ id, active }: { id: number; active: boolean }) {
 
 function GearRow({ gear }: { gear: number }) {
 	return (
-		<View style={grS.row}>
+		<View className="flex-row items-center" style={{ gap: spacing.lg }}>
 			{GEAR_DEFS.map(([id]) => (
 				<GearLetter key={id} id={id} active={id === gear} />
 			))}
@@ -153,11 +152,8 @@ function GearRow({ gear }: { gear: number }) {
 }
 
 const grS = StyleSheet.create({
-	row: { flexDirection: "row", gap: spacing.lg, alignItems: "center" },
 	letter: { fontSize: font.size.xl2, fontWeight: font.weight.extrabold, letterSpacing: 2 },
 });
-
-// ── Signal helpers ────────────────────────────────────────────────────────────
 
 type SignalTone = "idle" | "warn" | "alert" | "ok";
 
@@ -181,8 +177,6 @@ function sideLabel(bsm: number, turn: boolean): string {
 	return "";
 }
 
-// ── Gauge line ────────────────────────────────────────────────────────────────
-
 function GaugeLine({
 	label,
 	value,
@@ -198,12 +192,12 @@ function GaugeLine({
 }) {
 	const w = `${Math.floor(Math.max(0, Math.min(1, pct)) * 100)}%` as `${number}%`;
 	return (
-		<View style={glS.wrap}>
-			<View style={glS.header}>
-				<Text style={glS.label}>{label}</Text>
+		<View className="gap-0.5">
+			<View className="flex-row justify-between">
+				<Text style={[glS.label]}>{label}</Text>
 				<Text style={[glS.value, muted ? glS.muted : undefined]}>{value}</Text>
 			</View>
-			<View style={glS.track}>
+			<View style={[glS.track]}>
 				<View
 					style={[
 						glS.fill,
@@ -216,22 +210,18 @@ function GaugeLine({
 }
 
 const glS = StyleSheet.create({
-	wrap: { gap: 2 },
-	header: { flexDirection: "row", justifyContent: "space-between" },
 	label: {
 		color: C.lbl,
 		fontSize: font.size.xs,
-		fontWeight: font.weight.bold,
+		fontWeight: "700",
 		textTransform: "uppercase",
 		letterSpacing: 0.5,
 	},
-	value: { color: C.sub, fontSize: font.size.xs, fontWeight: font.weight.semibold },
+	value: { color: C.sub, fontSize: font.size.xs, fontWeight: "600" },
 	muted: { color: C.bord },
 	track: { height: 4, borderRadius: radius.full, backgroundColor: C.barBg, overflow: "hidden" },
 	fill: { height: "100%", borderRadius: radius.full },
 });
-
-// ── Power bar ─────────────────────────────────────────────────────────────────
 
 function PowerBar({
 	power,
@@ -255,8 +245,8 @@ function PowerBar({
 		maxRegen !== null && maxRegen !== undefined ? Math.min(maxRegen / maxKw, 1) * 100 : null;
 
 	return (
-		<View style={pbS.wrap}>
-			<View style={pbS.track}>
+		<View className="gap-0.5">
+			<View style={[pbS.track]}>
 				<View
 					style={[
 						pbS.fill,
@@ -289,15 +279,24 @@ function PowerBar({
 					/>
 				) : null}
 			</View>
-			<View style={pbS.row}>
-				<Text style={[pbS.label, { color: isReg ? C.cyan : C.grn }]}>
+			<View className="flex-row justify-between items-center">
+				<Text style={[{ color: isReg ? C.cyan : C.grn }, pbS.labelStyle]}>
 					{isReg
-						? `▼ ${Math.abs(power).toFixed(0)} kW  regen`
-						: `▲ ${power.toFixed(0)} kW`}
+						? `${"\u25BC"} ${Math.abs(power).toFixed(0)} kW  regen`
+						: `${"\u25B2"} ${power.toFixed(0)} kW`}
 				</Text>
 				{onReset ? (
 					<Pressable onPress={onReset} hitSlop={8}>
-						<Text style={pbS.reset}>RST</Text>
+						<Text
+							style={{
+								color: C.lbl,
+								fontSize: font.size.xs,
+								fontWeight: "700",
+								opacity: 0.5,
+							}}
+						>
+							RST
+						</Text>
 					</Pressable>
 				) : null}
 			</View>
@@ -306,7 +305,6 @@ function PowerBar({
 }
 
 const pbS = StyleSheet.create({
-	wrap: { gap: 3 },
 	track: {
 		height: 6,
 		borderRadius: radius.full,
@@ -316,12 +314,8 @@ const pbS = StyleSheet.create({
 	},
 	fill: { height: "100%", borderRadius: radius.full },
 	mark: { position: "absolute", top: 0, width: 2, height: "100%", opacity: 0.8 },
-	row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-	label: { fontSize: font.size.xs, fontWeight: font.weight.semibold },
-	reset: { color: C.lbl, fontSize: font.size.xs, fontWeight: font.weight.bold, opacity: 0.5 },
+	labelStyle: { fontSize: font.size.xs, fontWeight: "600" },
 });
-
-// ── Speed dial ────────────────────────────────────────────────────────────────
 
 function SpeedDial({
 	state,
@@ -337,7 +331,7 @@ function SpeedDial({
 	const { cycleUnit, convert, label: unitLabel } = useSpeedUnit();
 	const speed = Number.isFinite(state.vehicleSpeed)
 		? convert(state.vehicleSpeed).toFixed(0)
-		: "—";
+		: "\u2014";
 	const speedFs = size < 200 ? 52 : 68;
 	const pedal = Math.max(0, Math.min(100, state.accelPedal));
 	const pwr = state.bmsPower;
@@ -353,6 +347,7 @@ function SpeedDial({
 
 	return (
 		<View
+			className="items-center justify-center border-3 bg-card"
 			style={[
 				sdS.ring,
 				{
@@ -375,21 +370,22 @@ function SpeedDial({
 			<GearRow gear={state.gearState} />
 
 			{gaugeMode === "power" ? (
-				<View style={sdS.sub}>
+				<View className="items-center gap-0.5 w-[68%]">
 					<Text style={[sdS.powerNum, { color: pwr < 0 ? C.cyan : C.grn }]}>
-						{Number.isFinite(pwr) ? `${pwr > 0 ? "+" : ""}${pwr.toFixed(1)}` : "—"}
+						{Number.isFinite(pwr) ? `${pwr > 0 ? "+" : ""}${pwr.toFixed(1)}` : "\u2014"}
 					</Text>
 					<Text style={sdS.subLbl}>kW</Text>
 				</View>
 			) : gaugeMode === "perf" ? (
-				<View style={sdS.sub}>
-					<View style={sdS.miniTrack}>
-						<View style={sdS.miniCenter} />
+				<View className="items-center gap-0.5 w-[68%]">
+					<View className="w-full h-[5px] rounded-full bg-[#1e293b] overflow-hidden relative">
+						<View className="absolute left-1/2 w-px h-full bg-muted" />
 						<View
-							style={[
-								sdS.miniDot,
-								{ left: `${50 + steerNorm * 44}%` as `${number}%` },
-							]}
+							className="absolute w-2 h-full rounded-full bg-cyan"
+							style={{
+								left: `${50 + steerNorm * 44}%` as `${number}%`,
+								marginLeft: -4,
+							}}
 						/>
 					</View>
 					<Text style={sdS.subLbl}>
@@ -397,9 +393,12 @@ function SpeedDial({
 					</Text>
 				</View>
 			) : (
-				<View style={sdS.sub}>
-					<View style={sdS.miniTrack}>
-						<View style={[sdS.miniFill, { width: `${pedal}%` as `${number}%` }]} />
+				<View className="items-center gap-0.5 w-[68%]">
+					<View className="w-full h-[5px] rounded-full bg-[#1e293b] overflow-hidden">
+						<View
+							className="h-full rounded-full bg-cyan"
+							style={{ width: `${pedal}%` as `${number}%` }}
+						/>
 					</View>
 					<Text style={sdS.subLbl}>PEDAL {pedal.toFixed(0)}%</Text>
 				</View>
@@ -409,58 +408,24 @@ function SpeedDial({
 }
 
 const sdS = StyleSheet.create({
-	ring: {
-		alignItems: "center",
-		justifyContent: "center",
-		gap: 4,
-		borderWidth: 3,
-		backgroundColor: C.card,
-		elevation: 16,
-	},
+	ring: { gap: 4, elevation: 16 },
 	unit: {
 		color: C.dim,
 		fontSize: font.size.xs,
-		fontWeight: font.weight.bold,
+		fontWeight: "700",
 		letterSpacing: 2,
 		textTransform: "uppercase",
 	},
-	speed: { color: C.val, fontWeight: font.weight.black, letterSpacing: -3 },
-	sub: { alignItems: "center", gap: 3, width: "68%" },
-	miniTrack: {
-		width: "100%",
-		height: 5,
-		borderRadius: radius.full,
-		backgroundColor: C.barBg,
-		overflow: "hidden",
-		position: "relative",
-	},
-	miniFill: { height: "100%", backgroundColor: C.cyan, borderRadius: radius.full },
-	miniCenter: {
-		position: "absolute",
-		left: "50%",
-		width: 1,
-		height: "100%",
-		backgroundColor: C.lbl,
-	},
-	miniDot: {
-		position: "absolute",
-		width: 8,
-		height: "100%",
-		marginLeft: -4,
-		backgroundColor: C.cyan,
-		borderRadius: radius.full,
-	},
+	speed: { color: C.val, fontWeight: "900", letterSpacing: -3 },
 	subLbl: {
 		color: C.dim,
 		fontSize: font.size.xs,
-		fontWeight: font.weight.bold,
+		fontWeight: "700",
 		letterSpacing: 0.5,
 		textTransform: "uppercase",
 	},
-	powerNum: { fontSize: font.size.xl3, fontWeight: font.weight.extrabold, letterSpacing: -1 },
+	powerNum: { fontSize: font.size.xl3, fontWeight: "800", letterSpacing: -1 },
 });
-
-// ── Left panel — battery + motors ─────────────────────────────────────────────
 
 function LeftPanel({ state }: { state: BoardState }) {
 	const { primaryValue, modeLabel, cycleMode, socAlarm } = useSocDisplay(state);
@@ -477,26 +442,26 @@ function LeftPanel({ state }: { state: BoardState }) {
 		Number.isFinite(pwr) && pwr < 0 ? C.cyan : Number.isFinite(pwr) && pwr > 5 ? C.grn : C.sub;
 
 	return (
-		<View style={lpS.panel}>
-			<Pressable onPress={cycleMode} style={lpS.socHeader} hitSlop={8}>
+		<View className="flex-1 px-2 py-2 justify-center" style={{ gap: spacing.xs2 + 2 }}>
+			<Pressable onPress={cycleMode} className="flex-row items-baseline gap-1" hitSlop={8}>
 				<Text style={[lpS.socNum, { color: socColor }]}>{primaryValue}</Text>
 				<Text style={lpS.socMode}>{modeLabel}</Text>
 			</Pressable>
-			<View style={lpS.socTrack}>
+			<View className="h-2 rounded-full bg-[#1e293b] overflow-hidden">
 				<View
-					style={[
-						lpS.socFill,
-						{ width: `${soc}%` as `${number}%`, backgroundColor: socColor },
-					]}
+					className="h-full rounded-full"
+					style={{ width: `${soc}%` as `${number}%`, backgroundColor: socColor }}
 				/>
 			</View>
-			{range !== null ? <Text style={lpS.range}>{range.toFixed(0)} km est</Text> : null}
+			{range !== null ? (
+				<Text className="text-sm font-semibold text-muted">{range.toFixed(0)} km est</Text>
+			) : null}
 			{Number.isFinite(pwr) ? (
-				<Text style={[lpS.pwr, { color: pwrColor }]}>
-					{pwr < 0 ? "▼" : "▲"} {Math.abs(pwr).toFixed(1)} kW
+				<Text className="text-sm font-bold" style={{ color: pwrColor }}>
+					{pwr < 0 ? "\u25BC" : "\u25B2"} {Math.abs(pwr).toFixed(1)} kW
 				</Text>
 			) : null}
-			<View style={lpS.divider} />
+			<View className="h-px bg-border my-0.5" />
 			{state.hasPowertrain ? (
 				<>
 					<GaugeLine
@@ -521,7 +486,7 @@ function LeftPanel({ state }: { state: BoardState }) {
 			{state.hasBms ? (
 				<GaugeLine
 					label="PACK"
-					value={`${state.bmsTempMin.toFixed(0)}–${state.bmsTempMax.toFixed(0)} °C`}
+					value={`${state.bmsTempMin.toFixed(0)}\u2013${state.bmsTempMax.toFixed(0)} \u00B0C`}
 					pct={Math.min(Math.max(0, state.bmsTempMax - state.bmsTempMin) / 60, 1)}
 					color={C.amb}
 				/>
@@ -531,35 +496,15 @@ function LeftPanel({ state }: { state: BoardState }) {
 }
 
 const lpS = StyleSheet.create({
-	panel: {
-		flex: 1,
-		paddingHorizontal: spacing.sm,
-		paddingVertical: spacing.sm,
-		gap: spacing.xs2 + 2,
-		justifyContent: "center",
-	},
-	socHeader: { flexDirection: "row", alignItems: "baseline", gap: spacing.xs },
-	socNum: { fontSize: font.size.xl3, fontWeight: font.weight.black, letterSpacing: -1 },
+	socNum: { fontSize: font.size.xl3, fontWeight: "900", letterSpacing: -1 },
 	socMode: {
 		color: C.lbl,
 		fontSize: font.size.xs,
-		fontWeight: font.weight.bold,
+		fontWeight: "700",
 		letterSpacing: 1,
 		textTransform: "uppercase",
 	},
-	socTrack: {
-		height: 8,
-		borderRadius: radius.full,
-		backgroundColor: C.barBg,
-		overflow: "hidden",
-	},
-	socFill: { height: "100%", borderRadius: radius.full },
-	range: { color: C.sub, fontSize: font.size.sm, fontWeight: font.weight.semibold },
-	pwr: { fontSize: font.size.md, fontWeight: font.weight.bold },
-	divider: { height: 1, backgroundColor: C.bord, marginVertical: spacing.xs2 },
 });
-
-// ── Turn chip ─────────────────────────────────────────────────────────────────
 
 function TurnChip({
 	side,
@@ -576,147 +521,81 @@ function TurnChip({
 	const active = turnOn || bsmLevel > 0;
 
 	return (
-		<View style={[tcS.chip, { borderColor: color, opacity: active ? 1 : 0.28 }]}>
-			<Text style={[tcS.arrow, { color }]}>{side === "L" ? "◄" : "►"}</Text>
-			<Text style={tcS.side}>{side === "L" ? "LEFT" : "RIGHT"}</Text>
-			{label ? <Text style={[tcS.label, { color }]}>{label}</Text> : null}
-			{bsmLevel > 0 ? <Text style={[tcS.bsm, { color }]}>BSM {bsmLevel}</Text> : null}
+		<View
+			className="flex-row items-center gap-1 px-2 py-1 border rounded-md bg-card"
+			style={{ borderColor: color, opacity: active ? 1 : 0.28 }}
+		>
+			<Text className="text-lg font-black" style={{ color }}>
+				{side === "L" ? "\u25C4" : "\u25BA"}
+			</Text>
+			<Text className="text-xs font-bold uppercase tracking-wider text-muted">
+				{side === "L" ? "LEFT" : "RIGHT"}
+			</Text>
+			{label ? (
+				<Text className="text-xs font-extrabold uppercase ml-auto" style={{ color }}>
+					{label}
+				</Text>
+			) : null}
+			{bsmLevel > 0 ? (
+				<Text className="text-xs font-bold opacity-80" style={{ color }}>
+					BSM {bsmLevel}
+				</Text>
+			) : null}
 		</View>
 	);
 }
 
-const tcS = StyleSheet.create({
-	chip: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: spacing.xs,
-		paddingHorizontal: spacing.sm,
-		paddingVertical: spacing.xs2 + 2,
-		borderWidth: 1,
-		borderRadius: radius.md,
-		backgroundColor: C.card,
-	},
-	arrow: { fontSize: font.size.lg, fontWeight: font.weight.black },
-	side: {
-		color: C.lbl,
-		fontSize: font.size.xs,
-		fontWeight: font.weight.bold,
-		letterSpacing: 1,
-		textTransform: "uppercase",
-	},
-	label: {
-		fontSize: font.size.xs,
-		fontWeight: font.weight.extrabold,
-		letterSpacing: 0.5,
-		textTransform: "uppercase",
-		marginLeft: "auto",
-	},
-	bsm: { fontSize: font.size.xs, fontWeight: font.weight.bold, opacity: 0.8 },
-});
-
-// ── Door state car ────────────────────────────────────────────────────────────
-
 function DoorStateCar({ state }: { state: BoardState }) {
-	const partStyle = (open: boolean) => [dcS.part, open ? dcS.partOpen : dcS.partClosed];
+	const partStyle = (open: boolean) => ({
+		backgroundColor: open ? C.cyan : C.card,
+		borderColor: open ? C.grn : C.bord,
+	});
 	return (
-		<View style={dcS.wrap}>
-			<View style={dcS.shadow} />
-			<View style={dcS.body}>
-				<View style={[dcS.frunk, ...partStyle(state.frunkOpen)]} />
-				<View style={[dcS.trunk, ...partStyle(state.trunkOpen)]} />
-				<View style={dcS.roof} />
-				<View style={[dcS.doorFL, ...partStyle(state.driverDoorOpen)]} />
-				<View style={[dcS.doorFR, ...partStyle(state.doorFrontRightOpen)]} />
-				<View style={[dcS.doorRL, ...partStyle(state.doorRearLeftOpen)]} />
-				<View style={[dcS.doorRR, ...partStyle(state.doorRearRightOpen)]} />
-				<View style={dcS.hlL} />
-				<View style={dcS.hlR} />
-				<View style={dcS.tlL} />
-				<View style={dcS.tlR} />
+		<View className="w-[54px] h-[82px] items-center justify-center">
+			<View
+				className="absolute bottom-1 w-9 h-1 rounded-full opacity-50"
+				style={{ backgroundColor: C.bord }}
+			/>
+			<View
+				className="w-10 h-[74px] rounded-xl border overflow-hidden relative"
+				style={{ borderColor: C.sub, backgroundColor: C.card }}
+			>
+				<View
+					className="absolute left-[9px] top-5 w-[22px] h-[34px] border rounded-sm"
+					style={{ borderColor: C.bord }}
+				/>
+				<View
+					className="absolute left-2 top-[3px] w-6 h-2 border rounded-sm"
+					style={partStyle(state.frunkOpen)}
+				/>
+				<View
+					className="absolute left-2 bottom-[3px] w-6 h-[9px] border rounded-sm"
+					style={partStyle(state.trunkOpen)}
+				/>
+				<View
+					className="absolute left-0 top-5 w-[5px] h-[14px] border rounded-sm"
+					style={partStyle(state.driverDoorOpen)}
+				/>
+				<View
+					className="absolute right-0 top-5 w-[5px] h-[14px] border rounded-sm"
+					style={partStyle(state.doorFrontRightOpen)}
+				/>
+				<View
+					className="absolute left-0 top-[38px] w-[5px] h-[14px] border rounded-sm"
+					style={partStyle(state.doorRearLeftOpen)}
+				/>
+				<View
+					className="absolute right-0 top-[38px] w-[5px] h-[14px] border rounded-sm"
+					style={partStyle(state.doorRearRightOpen)}
+				/>
+				<View className="absolute left-[7px] top-[1px] w-[6px] h-[2px] rounded-full bg-amber" />
+				<View className="absolute right-[7px] top-[1px] w-[6px] h-[2px] rounded-full bg-amber" />
+				<View className="absolute left-[7px] bottom-[1px] w-[6px] h-[2px] rounded-full bg-red" />
+				<View className="absolute right-[7px] bottom-[1px] w-[6px] h-[2px] rounded-full bg-red" />
 			</View>
 		</View>
 	);
 }
-
-const dcS = StyleSheet.create({
-	wrap: { width: 54, height: 82, alignItems: "center", justifyContent: "center" },
-	shadow: {
-		position: "absolute",
-		bottom: 4,
-		width: 36,
-		height: 4,
-		borderRadius: radius.full,
-		backgroundColor: C.bord,
-		opacity: 0.5,
-	},
-	body: {
-		width: 40,
-		height: 74,
-		borderRadius: radius.lg,
-		borderWidth: 1,
-		borderColor: C.sub,
-		backgroundColor: C.card,
-		position: "relative",
-		overflow: "hidden",
-	},
-	roof: {
-		position: "absolute",
-		left: 9,
-		top: 20,
-		width: 22,
-		height: 34,
-		borderWidth: 1,
-		borderColor: C.bord,
-		borderRadius: radius.sm,
-	},
-	part: { position: "absolute", borderWidth: 1, borderRadius: 2 },
-	partOpen: { backgroundColor: C.cyan, borderColor: C.grn },
-	partClosed: { backgroundColor: C.card, borderColor: C.bord },
-	frunk: { left: 8, top: 3, width: 24, height: 8 },
-	trunk: { left: 8, bottom: 3, width: 24, height: 9 },
-	doorFL: { left: 0, top: 20, width: 5, height: 14 },
-	doorFR: { right: 0, top: 20, width: 5, height: 14 },
-	doorRL: { left: 0, top: 38, width: 5, height: 14 },
-	doorRR: { right: 0, top: 38, width: 5, height: 14 },
-	hlL: {
-		position: "absolute",
-		left: 7,
-		top: 1,
-		width: 6,
-		height: 2,
-		borderRadius: radius.full,
-		backgroundColor: C.amb,
-	},
-	hlR: {
-		position: "absolute",
-		right: 7,
-		top: 1,
-		width: 6,
-		height: 2,
-		borderRadius: radius.full,
-		backgroundColor: C.amb,
-	},
-	tlL: {
-		position: "absolute",
-		left: 7,
-		bottom: 1,
-		width: 6,
-		height: 2,
-		borderRadius: radius.full,
-		backgroundColor: C.red,
-	},
-	tlR: {
-		position: "absolute",
-		right: 7,
-		bottom: 1,
-		width: 6,
-		height: 2,
-		borderRadius: radius.full,
-		backgroundColor: C.red,
-	},
-});
-
-// ── Right panel — safety ──────────────────────────────────────────────────────
 
 function RightPanel({ state }: { state: BoardState }) {
 	const openDoors: string[] = [];
@@ -727,81 +606,55 @@ function RightPanel({ state }: { state: BoardState }) {
 	if (state.frunkOpen) openDoors.push("Frunk");
 	if (state.trunkOpen) openDoors.push("Trunk");
 	const hasOpen = openDoors.length > 0;
-	const fmtKph = (v: number) => (v > 0 ? `${v.toFixed(0)} kph` : "—");
+	const fmtKph = (v: number) => (v > 0 ? `${v.toFixed(0)} kph` : "\u2014");
 	const cruiseActive = state.cruiseSetSpeedKph > 0 || state.maxSpeedKph > 0;
 
 	return (
-		<View style={rpS.panel}>
+		<View className="flex-1 px-2 py-2 justify-center gap-1">
 			<TurnChip side="L" bsmLevel={state.bsmLeftLevel} turnOn={state.turnSignalLeft} />
-			<View style={rpS.divider} />
-
-			<View style={rpS.doorsRow}>
+			<View className="h-px bg-border" />
+			<View className="flex-row items-center gap-2">
 				<DoorStateCar state={state} />
-				<View style={rpS.doorsText}>
-					<Text style={rpS.secTitle}>DOORS</Text>
-					<Text style={[rpS.doorsState, { color: hasOpen ? C.amb : C.grn }]}>
+				<View className="flex-1 gap-0.5">
+					<Text className="text-xs font-bold uppercase tracking-wider text-muted">
+						DOORS
+					</Text>
+					<Text
+						className="text-sm font-extrabold uppercase"
+						style={{ color: hasOpen ? C.amb : C.grn }}
+					>
 						{hasOpen ? `${openDoors.length} OPEN` : "CLOSED"}
 					</Text>
 					{hasOpen ? (
-						<Text style={rpS.doorsList} numberOfLines={2}>
-							{openDoors.join(" · ")}
+						<Text className="text-xs text-muted" numberOfLines={2}>
+							{openDoors.join(" \u00B7 ")}
 						</Text>
 					) : null}
 				</View>
 			</View>
-			<View style={rpS.divider} />
-
-			<View style={rpS.cruise}>
-				<Text style={rpS.secTitle}>CRUISE</Text>
-				<Text style={[rpS.cruiseState, { color: cruiseActive ? C.amb : C.lbl }]}>
+			<View className="h-px bg-border" />
+			<View className="gap-0.5">
+				<Text className="text-xs font-bold uppercase tracking-wider text-muted">
+					CRUISE
+				</Text>
+				<Text
+					className="text-sm font-extrabold uppercase"
+					style={{ color: cruiseActive ? C.amb : C.lbl }}
+				>
 					{cruiseActive ? "SET" : "IDLE"}
 				</Text>
-				<Text style={rpS.cruiseVal}>CC {fmtKph(state.cruiseSetSpeedKph)}</Text>
-				<Text style={rpS.cruiseVal}>Max {fmtKph(state.maxSpeedKph)}</Text>
+				<Text className="text-xs font-semibold text-muted">
+					CC {fmtKph(state.cruiseSetSpeedKph)}
+				</Text>
+				<Text className="text-xs font-semibold text-muted">
+					Max {fmtKph(state.maxSpeedKph)}
+				</Text>
 			</View>
-			<View style={rpS.divider} />
-
+			<View className="h-px bg-border" />
 			<TurnChip side="R" bsmLevel={state.bsmRightLevel} turnOn={state.turnSignalRight} />
 		</View>
 	);
 }
-
-const rpS = StyleSheet.create({
-	panel: {
-		flex: 1,
-		paddingHorizontal: spacing.sm,
-		paddingVertical: spacing.sm,
-		gap: spacing.xs,
-		justifyContent: "center",
-	},
-	divider: { height: 1, backgroundColor: C.bord },
-	doorsRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-	doorsText: { flex: 1, gap: 2 },
-	secTitle: {
-		color: C.lbl,
-		fontSize: font.size.xs,
-		fontWeight: font.weight.bold,
-		letterSpacing: 1,
-		textTransform: "uppercase",
-	},
-	doorsState: {
-		fontSize: font.size.md,
-		fontWeight: font.weight.extrabold,
-		textTransform: "uppercase",
-		letterSpacing: 0.3,
-	},
-	doorsList: { color: C.sub, fontSize: font.size.xs },
-	cruise: { gap: 2 },
-	cruiseState: {
-		fontSize: font.size.md,
-		fontWeight: font.weight.extrabold,
-		textTransform: "uppercase",
-		letterSpacing: 0.3,
-	},
-	cruiseVal: { color: C.sub, fontSize: font.size.sm, fontWeight: font.weight.semibold },
-});
-
-// ── Top bar ───────────────────────────────────────────────────────────────────
 
 function TopBar({
 	state,
@@ -816,36 +669,49 @@ function TopBar({
 	const apState = resolveApState(state.gtwAutopilotTier, state.dasHandsOn, state.chassisOnline);
 
 	return (
-		<View style={tbS.bar}>
-			<View style={tbS.left}>
-				<View style={[tbS.dot, state.chassisOnline ? tbS.dotOn : tbS.dotOff]} />
-				<Text style={tbS.conn}>
+		<View className="flex-row items-center justify-between px-3 py-2 bg-card border-b border-border min-h-[40px]">
+			<View className="flex-row items-center gap-1 flex-1 overflow-hidden">
+				<View
+					className={`w-1.5 h-1.5 rounded-full ${state.chassisOnline ? "bg-green-500" : "bg-red-500"}`}
+				/>
+				<Text className="text-xs font-semibold text-muted">
 					{state.chassisOnline ? "ONLINE" : "OFFLINE"}
-					{state.vehicleOnline ? " · V" : ""}
-					{state.bodyOnline ? " · B" : ""}
+					{state.vehicleOnline ? " \u00B7 V" : ""}
+					{state.bodyOnline ? " \u00B7 B" : ""}
 				</Text>
-				<Text style={tbS.sep}>·</Text>
-				<Text style={tbS.gear}>{formatGear(state.gearState)}</Text>
-				<Text style={tbS.sep}>·</Text>
-				<Text style={tbS.mode}>
+				<Text className="text-xs text-muted">\u00B7</Text>
+				<Text className="text-xs font-bold text-foreground">
+					{formatGear(state.gearState)}
+				</Text>
+				<Text className="text-xs text-muted">\u00B7</Text>
+				<Text className="text-xs font-semibold uppercase text-muted flex-shrink">
 					{formatDriveMode(state.currentDriveMode ?? state.driveMode)}
 				</Text>
 			</View>
-			<View style={tbS.right}>
-				{state.fsd ? <Badge variant="dark">FSD</Badge> : null}
-				{state.nag ? <Badge variant="warning">NAG</Badge> : null}
-				{state.dasHandsOn >= 1 ? <Badge variant="destructive">⚠ HANDS</Badge> : null}
-				<Badge variant={apBadgeVariant(apState)}>
-					{apStateLabel(apState, state.gtwAutopilotTier)}
-				</Badge>
+			<View className="flex-row items-center gap-1">
+				{state.fsd ? <Badge label="FSD" variant="default" /> : null}
+				{state.nag ? <Badge label="NAG" variant="destructive" /> : null}
+				{state.dasHandsOn >= 1 ? (
+					<Badge label="\u26A0 HANDS" variant="destructive" />
+				) : null}
+				{apState !== "unavailable" ? (
+					<Badge
+						label={apStateLabel(apState, state.gtwAutopilotTier)}
+						variant={apBadgeVariant(apState)}
+					/>
+				) : null}
 				{onToggleHud ? (
 					<Pressable
 						onPress={onToggleHud}
-						style={[tbS.hudBtn, showHud ? tbS.hudBtnOn : tbS.hudBtnOff]}
+						className={`px-1 py-0.5 rounded-sm border ${
+							showHud ? "border-cyan bg-muted" : "border-border bg-transparent"
+						}`}
 						hitSlop={8}
 					>
-						<Text style={[tbS.hudTxt, showHud ? tbS.hudTxtOn : tbS.hudTxtOff]}>
-							{showHud ? "▲" : "▼"}
+						<Text
+							className={`text-xs font-bold ${showHud ? "text-cyan" : "text-muted"}`}
+						>
+							{showHud ? "\u25B2" : "\u25BC"}
 						</Text>
 					</Pressable>
 				) : null}
@@ -853,65 +719,15 @@ function TopBar({
 					<Pressable
 						onPress={() => setOverride(isDark ? "light" : "dark")}
 						hitSlop={8}
-						style={tbS.themeBtn}
+						className="p-1"
 					>
-						<Text style={tbS.themeIcon}>{isDark ? "☀" : "☾"}</Text>
+						<Text className="text-lg text-muted">{isDark ? "\u2600" : "\u263E"}</Text>
 					</Pressable>
 				) : null}
 			</View>
 		</View>
 	);
 }
-
-const tbS = StyleSheet.create({
-	bar: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		paddingHorizontal: spacing.md,
-		paddingVertical: spacing.sm,
-		backgroundColor: C.card,
-		borderBottomWidth: 1,
-		borderBottomColor: C.bord,
-		minHeight: 40,
-	},
-	left: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: spacing.xs,
-		flex: 1,
-		overflow: "hidden",
-	},
-	right: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-	dot: { width: 6, height: 6, borderRadius: 99 },
-	dotOn: { backgroundColor: C.grn },
-	dotOff: { backgroundColor: C.red },
-	conn: { color: C.sub, fontSize: font.size.xs, fontWeight: font.weight.semibold },
-	sep: { color: C.lbl, fontSize: font.size.xs },
-	gear: { color: C.val, fontSize: font.size.xs, fontWeight: font.weight.bold },
-	mode: {
-		color: C.sub,
-		fontSize: font.size.xs,
-		fontWeight: font.weight.semibold,
-		textTransform: "uppercase",
-		flexShrink: 1,
-	},
-	hudBtn: {
-		paddingHorizontal: spacing.xs,
-		paddingVertical: 2,
-		borderRadius: radius.sm,
-		borderWidth: 1,
-	},
-	hudBtnOn: { borderColor: C.cyan, backgroundColor: C.barBg },
-	hudBtnOff: { borderColor: C.bord, backgroundColor: "transparent" },
-	hudTxt: { fontSize: font.size.xs, fontWeight: font.weight.bold },
-	hudTxtOn: { color: C.cyan },
-	hudTxtOff: { color: C.lbl },
-	themeBtn: { padding: spacing.xs },
-	themeIcon: { fontSize: font.size.lg, color: C.sub },
-});
-
-// ── HUD info row (portrait collapsible) ───────────────────────────────────────
 
 function formatUptime(ms: number): string {
 	if (!ms) return "--";
@@ -925,7 +741,7 @@ function formatUptime(ms: number): string {
 
 function HudInfo({ state }: { state: BoardState }) {
 	return (
-		<View style={hiS.row}>
+		<View className="flex-row flex-wrap gap-2 px-3 py-1.5 bg-card border-b border-border">
 			{(
 				[
 					["Board", state.hardware ?? "--"],
@@ -935,32 +751,14 @@ function HudInfo({ state }: { state: BoardState }) {
 					["Rate", state.rate > 0 ? `${state.rate} Hz` : "--"],
 				] as [string, string][]
 			).map(([lbl, val]) => (
-				<View key={lbl} style={hiS.cell}>
-					<Text style={hiS.lbl}>{lbl}</Text>
-					<Text style={hiS.val}>{val}</Text>
+				<View key={lbl} className="min-w-[72px] gap-0.5">
+					<Text className="text-xs uppercase tracking-wider text-muted">{lbl}</Text>
+					<Text className="text-xs font-semibold text-muted">{val}</Text>
 				</View>
 			))}
 		</View>
 	);
 }
-
-const hiS = StyleSheet.create({
-	row: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: spacing.sm,
-		paddingHorizontal: spacing.md,
-		paddingVertical: spacing.sm2,
-		backgroundColor: C.card,
-		borderBottomWidth: 1,
-		borderBottomColor: C.bord,
-	},
-	cell: { minWidth: 72, gap: 1 },
-	lbl: { color: C.lbl, fontSize: font.size.xs, textTransform: "uppercase", letterSpacing: 0.5 },
-	val: { color: C.sub, fontSize: font.size.sm, fontWeight: font.weight.semibold },
-});
-
-// ── Bottom strip ──────────────────────────────────────────────────────────────
 
 function BottomStrip({
 	state,
@@ -984,39 +782,27 @@ function BottomStrip({
 		: [];
 
 	return (
-		<View style={bsS.strip}>
+		<View className="px-3 py-2 gap-2 bg-muted border-t border-border">
 			<PowerBar
 				power={state.bmsPower}
 				maxDrive={maxDrive}
 				maxRegen={maxRegen}
 				onReset={onReset}
 			/>
-			<View style={bsS.chips}>
-				<StatChip
-					label="Mode"
-					value={driveMode}
-					variant="dark"
-					accent={driveMode !== "OFF"}
-				/>
-				<StatChip
-					label="FSD"
-					value={state.fsd ? "ON" : "OFF"}
-					variant="dark"
-					accent={state.fsd}
-				/>
+			<View className="flex-row flex-wrap gap-1">
+				<StatChip label="Mode" value={driveMode} accent={driveMode !== "OFF"} />
+				<StatChip label="FSD" value={state.fsd ? "ON" : "OFF"} accent={state.fsd} />
 				{state.hasBms ? (
 					<>
 						<StatChip
 							label="Regen"
 							value={state.bmsMaxRegenPower.toFixed(0)}
 							unit="kW"
-							variant="dark"
 						/>
 						<StatChip
 							label="Temp"
-							value={`${state.bmsTempMin.toFixed(0)}–${state.bmsTempMax.toFixed(0)}`}
-							unit="°C"
-							variant="dark"
+							value={`${state.bmsTempMin.toFixed(0)}\u2013${state.bmsTempMax.toFixed(0)}`}
+							unit="\u00B0C"
 						/>
 					</>
 				) : null}
@@ -1029,7 +815,6 @@ function BottomStrip({
 							label={lbl}
 							value={missing ? "--" : p.toFixed(1)}
 							unit={missing ? "" : "b"}
-							variant="dark"
 							accent={low}
 						/>
 					);
@@ -1039,44 +824,58 @@ function BottomStrip({
 	);
 }
 
-const bsS = StyleSheet.create({
-	strip: {
-		paddingHorizontal: spacing.md,
-		paddingVertical: spacing.sm,
-		gap: spacing.sm,
-		backgroundColor: C.strip,
-		borderTopWidth: 1,
-		borderTopColor: C.bord,
-	},
-	chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
-});
-
-// ── DriveScreen ───────────────────────────────────────────────────────────────
+function StatChip({
+	label,
+	value,
+	unit,
+	accent,
+}: {
+	label: string;
+	value: string;
+	unit?: string;
+	accent?: boolean;
+}) {
+	return (
+		<View className="min-w-[112px] flex-1 rounded-lg border border-border bg-card px-2 py-2 gap-0.5">
+			<Text className="text-xs font-semibold uppercase tracking-wide text-muted">
+				{label}
+			</Text>
+			<View className="flex-row items-end gap-0.5">
+				<Text
+					className={`text-sm font-bold ${accent ? "text-primary" : "text-foreground"}`}
+				>
+					{value}
+				</Text>
+				{unit ? <Text className="text-xs font-medium text-muted">{unit}</Text> : null}
+			</View>
+		</View>
+	);
+}
 
 export interface DriveScreenProps {
 	boardState: BoardState;
 }
 
 export function DriveScreen({ boardState: s }: DriveScreenProps) {
+	const { width, height } = useWindowDimensions();
 	const bp = useBreakpoint();
-	const isLand = bp.bp === "phoneLandscape" || (bp.isPhone && bp.width > bp.height);
+	const isLand = bp.bp === "phoneLandscape" || (bp.isPhone && width > height);
 	const { mode: gaugeMode, cycleMode } = useGaugeMode();
 	const [showHud, setShowHud] = useState(false);
 	const { maxDrive, maxRegen, reset } = usePowerCapture(s.bmsPower);
 
-	// ── Landscape ──────────────────────────────────────────────────────────────
 	if (isLand) {
 		return (
-			<View style={ds.root}>
+			<View className="flex-1 flex-col bg-background">
 				<TopBar state={s} />
-				<View style={ds.lsBody}>
-					<View style={ds.lsLeft}>
+				<View className="flex-1 flex-row items-stretch">
+					<View className="w-[178px] border-r border-border">
 						<LeftPanel state={s} />
 					</View>
-					<View style={ds.lsCenter}>
+					<View className="flex-1 items-center justify-center py-2">
 						<SpeedDial state={s} gaugeMode={gaugeMode} onCycle={cycleMode} size={220} />
 					</View>
-					<View style={ds.lsRight}>
+					<View className="w-[178px] border-l border-border">
 						<RightPanel state={s} />
 					</View>
 				</View>
@@ -1085,19 +884,18 @@ export function DriveScreen({ boardState: s }: DriveScreenProps) {
 		);
 	}
 
-	// ── Portrait ───────────────────────────────────────────────────────────────
 	return (
-		<View style={ds.root}>
+		<View className="flex-1 flex-col bg-background">
 			<TopBar state={s} showHud={showHud} onToggleHud={() => setShowHud((v) => !v)} />
 			{showHud ? <HudInfo state={s} /> : null}
-			<View style={ds.ptCenter}>
+			<View className="items-center justify-center py-3 border-b border-border">
 				<SpeedDial state={s} gaugeMode={gaugeMode} onCycle={cycleMode} size={220} />
 			</View>
-			<View style={ds.ptRow}>
-				<View style={ds.ptLeft}>
+			<View className="flex-1 flex-row border-b border-border">
+				<View className="flex-1 border-r border-border">
 					<LeftPanel state={s} />
 				</View>
-				<View style={ds.ptRight}>
+				<View className="flex-1">
 					<RightPanel state={s} />
 				</View>
 			</View>
@@ -1105,32 +903,3 @@ export function DriveScreen({ boardState: s }: DriveScreenProps) {
 		</View>
 	);
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const ds = StyleSheet.create({
-	root: { flex: 1, flexDirection: "column", backgroundColor: C.bg },
-
-	// landscape
-	lsBody: { flex: 1, flexDirection: "row", alignItems: "stretch" },
-	lsLeft: { width: 178, borderRightWidth: 1, borderRightColor: C.bord },
-	lsCenter: {
-		flex: 1,
-		alignItems: "center",
-		justifyContent: "center",
-		paddingVertical: spacing.sm,
-	},
-	lsRight: { width: 178, borderLeftWidth: 1, borderLeftColor: C.bord },
-
-	// portrait
-	ptCenter: {
-		alignItems: "center",
-		justifyContent: "center",
-		paddingVertical: spacing.md,
-		borderBottomWidth: 1,
-		borderBottomColor: C.bord,
-	},
-	ptRow: { flex: 1, flexDirection: "row", borderBottomWidth: 1, borderBottomColor: C.bord },
-	ptLeft: { flex: 1, borderRightWidth: 1, borderRightColor: C.bord },
-	ptRight: { flex: 1 },
-});
