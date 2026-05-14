@@ -60,6 +60,3 @@ __pycache__/
 node_modules/
 .venv
 .kiro
-
-# lock file
-package-lock.json
