@@ -19,15 +19,15 @@ unsigned long millis();
 #include "core/types.h"
 
 #include "core/util/parse.h"
-#include "feature/fsd.h"
-#include "feature/nag.h"
-#include "feature/offsets.h"
-#include "feature/isa_chime.h"
-#include "feature/summon.h"
-#include "feature/variant.h"
-#include "feature/ban_shield.h"
-#include "feature/profile.h"
-#include "feature/can_clock.h"
+#include "feature/fsd/fsd.h"
+#include "feature/fsd/nag.h"
+#include "feature/fsd/offsets.h"
+#include "feature/fsd/isa_chime.h"
+#include "feature/body/summon.h"
+#include "feature/misc/variant.h"
+#include "feature/safety/ban_shield.h"
+#include "feature/fsd/profile.h"
+#include "feature/misc/can_clock.h"
 
 static int saveCount = 0;
 static int filterCount = 0;

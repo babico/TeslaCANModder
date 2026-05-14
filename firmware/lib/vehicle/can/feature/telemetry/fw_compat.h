@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/fw_compat.h
+ * @file firmware/lib/vehicle/can/feature/telemetry/fw_compat.h
  * @brief Vehicle firmware version decoding and compatibility checking via CAN ID 0x392
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

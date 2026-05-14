@@ -45,8 +45,8 @@ void driverSend(const Frame &f, uint8_t bus)
 	}
 }
 
-#include "feature/drive_mode.h"
-#include "feature/seatbelt.h"
+#include "feature/drive/drive_mode.h"
+#include "feature/comfort/seatbelt.h"
 #include "vehicle/can/burst.h"
 
 /** @brief Reset fake millis and stub send buffer before each test */

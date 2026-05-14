@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/climate.h
+ * @file firmware/lib/vehicle/can/feature/comfort/climate.h
  * @brief Climate keeper mode control via CAN 0x2F3 — toggle climate keep on/off.
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

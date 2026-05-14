@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/can_clock.h
+ * @file firmware/lib/vehicle/can/feature/misc/can_clock.h
  * @brief MCP2515 oscillator clock profile selection command
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

@@ -50,7 +50,7 @@ void driverSend(const Frame &f, uint8_t bus)
 	}
 }
 
-#include "feature/drive_mode.h"
+#include "feature/drive/drive_mode.h"
 
 /** @brief Creates a default HW4 State for drive mode tests */
 static State makeState()

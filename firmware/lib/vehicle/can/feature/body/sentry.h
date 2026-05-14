@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/sentry.h
+ * @file firmware/lib/vehicle/can/feature/body/sentry.h
  * @brief Sentry mode activation and deactivation via CAN burst on the body bus
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

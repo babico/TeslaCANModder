@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/can_raw.h
+ * @file firmware/lib/vehicle/can/feature/misc/can_raw.h
  * @brief Command handler for enabling/disabling raw (unfiltered) CAN frame listening
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

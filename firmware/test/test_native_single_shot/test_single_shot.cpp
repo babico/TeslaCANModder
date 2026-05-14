@@ -23,7 +23,7 @@ void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
 
-#include "feature/single_shot.h"
+#include "feature/safety/single_shot.h"
 
 void setUp() {}
 void tearDown() {}

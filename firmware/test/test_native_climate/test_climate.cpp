@@ -19,7 +19,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/climate.h"
+#include "feature/comfort/climate.h"
 
 static State makeState()
 {

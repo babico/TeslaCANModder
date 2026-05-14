@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/sentry.h"
+#include "feature/body/sentry.h"
 
 static State makeState()
 {

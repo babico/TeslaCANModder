@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/charge.h
+ * @file firmware/lib/vehicle/can/feature/body/charge.h
  * @brief Charge control feature — start/stop charging and open charge port via CAN 0x333.
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

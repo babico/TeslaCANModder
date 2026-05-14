@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/variant.h
+ * @file firmware/lib/vehicle/can/feature/misc/variant.h
  * @brief Variant selection command for manual or auto-detect mode
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/turn_signal.h
+ * @file firmware/lib/vehicle/can/feature/body/turn_signal.h
  * @brief Turn signal 3-blink lane change and blind spot decode helpers
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

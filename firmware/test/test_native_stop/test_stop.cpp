@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/stop.h"
+#include "feature/drive/stop.h"
 
 static State makeState()
 {

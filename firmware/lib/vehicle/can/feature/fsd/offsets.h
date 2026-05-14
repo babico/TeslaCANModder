@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/offsets.h
+ * @file firmware/lib/vehicle/can/feature/fsd/offsets.h
  * @brief HW3/HW4 speed offset reading, writing, and command handling
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

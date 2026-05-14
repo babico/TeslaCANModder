@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/stream.h
+ * @file firmware/lib/vehicle/can/feature/misc/stream.h
  * @brief CAN frame streaming control command handler
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

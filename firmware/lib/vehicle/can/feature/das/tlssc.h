@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/tlssc.h
+ * @file firmware/lib/vehicle/can/feature/das/tlssc.h
  * @brief TLSSC (Tesla Licensed Self-Steering Capability) restore feature
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

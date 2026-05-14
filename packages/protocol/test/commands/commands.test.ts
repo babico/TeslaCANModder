@@ -21,22 +21,6 @@ describe("commands", () => {
 	});
 
 	describe("Nag", () => {
-		it("nag on", () => expect(commands.nag(true)).toBe("nag:on"));
-		it("nag off", () => expect(commands.nag(false)).toBe("nag:off"));
-	});
-
-	describe("Nag Killer", () => {
-		it("on", () => expect(commands.nagKiller(true)).toBe("nag:killer:on"));
-		it("off", () => expect(commands.nagKiller(false)).toBe("nag:killer:off"));
-		it("mode legacy", () =>
-			expect(commands.nagKillerMode("legacy")).toBe("nag:killer:mode:legacy"));
-		it("mode safe", () => expect(commands.nagKillerMode("safe")).toBe("nag:killer:mode:safe"));
-		it("rejects invalid mode", () => {
-			expect(() => commands.nagKillerMode("turbo")).toThrow(RangeError);
-		});
-	});
-
-	describe("Unified Nag", () => {
 		it("mode off", () => expect(commands.nagMode("off")).toBe("nag:mode:off"));
 		it("mode bit19", () => expect(commands.nagMode("bit19")).toBe("nag:mode:bit19"));
 		it("mode legacy", () => expect(commands.nagMode("legacy")).toBe("nag:mode:legacy"));

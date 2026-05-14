@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/seat.h
+ * @file firmware/lib/vehicle/can/feature/comfort/seat.h
  * @brief Seat heating control via CAN UI_vehicleControl frame (0x273)
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/stream.h"
+#include "feature/misc/stream.h"
 
 static State makeState()
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/precondition.h
+ * @file firmware/lib/vehicle/can/feature/comfort/precondition.h
  * @brief Battery preconditioning control via CAN frame 0x082 (UI_tripPlanning)
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

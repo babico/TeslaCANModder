@@ -19,7 +19,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/display.h"
+#include "feature/comfort/display.h"
 
 /** @brief Creates a ready State with HW4 variant and ctrl frame available */
 static State makeState()

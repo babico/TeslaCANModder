@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/powertrain.h
+ * @file firmware/lib/vehicle/can/feature/telemetry/powertrain.h
  * @brief Powertrain telemetry decoders for speed, gear, pedal, steering, and motor RPM
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

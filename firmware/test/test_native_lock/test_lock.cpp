@@ -24,7 +24,7 @@ void saveSettings(const State &)
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
-#include "feature/lock.h"
+#include "feature/body/lock.h"
 
 static State makeState()
 {

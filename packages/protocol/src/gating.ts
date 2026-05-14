@@ -48,20 +48,8 @@ const COMMAND_GATES: Record<string, Gate[]> = {
 		},
 	],
 
-	// Nag killer (requires chassis bus)
+	// Nag (requires chassis bus)
 	nag: [
-		{
-			check: (s) => s.chassisOnline,
-			message: "Chassis CAN bus not available",
-		},
-	],
-	nagKiller: [
-		{
-			check: (s) => s.chassisOnline,
-			message: "Chassis CAN bus not available",
-		},
-	],
-	nagKillerMode: [
 		{
 			check: (s) => s.chassisOnline,
 			message: "Chassis CAN bus not available",

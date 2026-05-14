@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/can_sim.h
+ * @file firmware/lib/vehicle/can/feature/misc/can_sim.h
  * @brief CAN simulation mode for testing without a real vehicle
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

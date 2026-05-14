@@ -9,9 +9,9 @@
 
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
-#include "feature/profile.h"
-#include "feature/offsets.h"
-#include "feature/region.h"
+#include "feature/fsd/profile.h"
+#include "feature/fsd/offsets.h"
+#include "feature/fsd/region.h"
 
 static bool hw3LoggedFSD = false;
 static bool hw3LoggedNag = false;

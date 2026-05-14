@@ -15,7 +15,7 @@
 #include <string.h>
 #include "core/forward.h"
 #include "core/types.h"
-#include "vehicle/can/feature/das_drive.h"
+#include "vehicle/can/feature/das/das_drive.h"
 
 /**
  * @brief Execute a named command string against the firmware state.

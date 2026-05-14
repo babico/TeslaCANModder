@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/profile.h
+ * @file firmware/lib/vehicle/can/feature/fsd/profile.h
  * @brief Speed profile encoding and command execution for FSD mux frames
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

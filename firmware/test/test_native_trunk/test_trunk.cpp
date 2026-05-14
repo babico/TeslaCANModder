@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/trunk.h"
+#include "feature/body/trunk.h"
 
 static State makeState()
 {

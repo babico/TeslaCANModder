@@ -31,7 +31,7 @@ void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
 #include "core/util/parse.h"
-#include "feature/nag.h"
+#include "feature/fsd/nag.h"
 #include "support/helpers.h"
 
 

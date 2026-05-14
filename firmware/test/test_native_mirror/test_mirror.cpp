@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/mirror.h"
+#include "feature/body/mirror.h"
 
 static State makeState()
 {

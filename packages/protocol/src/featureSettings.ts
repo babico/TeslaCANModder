@@ -549,36 +549,25 @@ const FEATURE_SETTINGS_BY_ID_INTERNAL = {
 		kind: "command",
 		settings: [
 			{
-				id: "nagSuppress",
-				label: "Suppress Nag",
-				control: "toggle",
-				commandNames: ["nag"],
-			},
-			{
-				id: "nagKillerEnabled",
-				label: "Enable Nag Killer",
-				control: "toggle",
-				commandNames: ["nagKiller"],
-			},
-			{
-				id: "nagKillerMode",
-				label: "Nag Killer Mode",
+				id: "nagMode",
+				label: "Nag Mode",
 				control: "enum",
-				commandNames: ["nagKillerMode"],
+				commandNames: ["nagMode"],
 				options: [
-					{
-						value: "legacy",
-						label: "Legacy",
-					},
-					{
-						value: "safe",
-						label: "Safe",
-					},
-					{
-						value: "natural",
-						label: "Natural (Random Jitter)",
-					},
+					{ value: "off", label: "Off" },
+					{ value: "bit19", label: "Bit 19 (ECE R79)" },
+					{ value: "legacy", label: "Legacy (Zero Torque Echo)" },
+					{ value: "safe", label: "Safe (DAS-Requested)" },
+					{ value: "natural", label: "Natural (Jitter)" },
+					{ value: "organic", label: "Organic (Full State Machine)" },
+					{ value: "full", label: "Full (Bit19 + Echo)" },
 				],
+			},
+			{
+				id: "nagBypass",
+				label: "Bypass on Real Hands-On",
+				control: "toggle",
+				commandNames: ["nagBypass"],
 			},
 		],
 	},

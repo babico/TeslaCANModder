@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/display.h
+ * @file firmware/lib/vehicle/can/feature/comfort/display.h
  * @brief Display brightness control via CAN 0x273 (UI_vehicleControl).
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

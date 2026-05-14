@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/window.h"
+#include "feature/body/window.h"
 
 static State makeState()
 {

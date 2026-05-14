@@ -9,7 +9,7 @@
 
 #include "core/types.h"
 #include "vehicle/can/ids.h"
-#include "feature/powertrain.h"
+#include "feature/telemetry/powertrain.h"
 
 void setUp() {}
 void tearDown() {}

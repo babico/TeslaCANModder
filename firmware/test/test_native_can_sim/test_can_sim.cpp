@@ -21,7 +21,7 @@ void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 void handleMessage(Frame &, uint8_t, State &) {}
-#include "feature/can_sim.h"
+#include "feature/misc/can_sim.h"
 
 static State makeState()
 {

@@ -23,15 +23,15 @@ void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
-#include "feature/regen.h"
-#include "feature/precondition.h"
-#include "feature/track_mode.h"
-#include "feature/window.h"
-#include "feature/stop.h"
-#include "feature/charge.h"
-#include "feature/sentry.h"
-#include "feature/trunk.h"
-#include "feature/climate.h"
+#include "feature/drive/regen.h"
+#include "feature/comfort/precondition.h"
+#include "feature/body/track_mode.h"
+#include "feature/body/window.h"
+#include "feature/drive/stop.h"
+#include "feature/body/charge.h"
+#include "feature/body/sentry.h"
+#include "feature/body/trunk.h"
+#include "feature/comfort/climate.h"
 
 void setUp() {}
 void tearDown() {}

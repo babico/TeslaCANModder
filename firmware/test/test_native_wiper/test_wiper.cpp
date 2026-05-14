@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/wiper.h"
+#include "feature/comfort/wiper.h"
 
 static State makeState()
 {

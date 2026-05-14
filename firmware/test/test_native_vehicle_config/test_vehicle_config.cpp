@@ -24,7 +24,7 @@ void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
 
-#include "feature/vehicle_config.h"
+#include "feature/telemetry/vehicle_config.h"
 
 void setUp() {}
 void tearDown() {}

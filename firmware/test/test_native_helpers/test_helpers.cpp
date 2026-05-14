@@ -20,7 +20,7 @@ void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 void driverSend(const Frame &, uint8_t) {}
 
-#include "feature/profile.h"
+#include "feature/fsd/profile.h"
 #include "handler/frame_readers.h"
 
 /** @brief Set up test fixtures before each test */

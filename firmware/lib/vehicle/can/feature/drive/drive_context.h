@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/drive_context.h
+ * @file firmware/lib/vehicle/can/feature/drive/drive_context.h
  * @brief Drive context decode helpers for door/closure state and speed-limit signals
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

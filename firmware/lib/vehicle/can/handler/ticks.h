@@ -12,8 +12,8 @@
 #include "core/log/ring.h"
 #include "core/driver/esp32/board.h"
 #include "vehicle/can/ids.h"
-#include "vehicle/can/feature/summon.h"
-#include "vehicle/can/feature/drive_mode.h"
+#include "vehicle/can/feature/body/summon.h"
+#include "vehicle/can/feature/drive/drive_mode.h"
 
 /**
  * @brief Transmit summon control frames at 20 ms intervals until the burst completes

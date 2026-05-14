@@ -29,7 +29,7 @@ void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
 #include "core/util/parse.h"
-#include "feature/tlssc.h"
+#include "feature/das/tlssc.h"
 #include "support/helpers.h"
 
 static State makeState()

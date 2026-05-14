@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/pedal.h"
+#include "feature/drive/pedal.h"
 
 static State makeState()
 {

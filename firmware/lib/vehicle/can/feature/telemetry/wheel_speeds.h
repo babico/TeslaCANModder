@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/wheel_speeds.h
+ * @file firmware/lib/vehicle/can/feature/telemetry/wheel_speeds.h
  * @brief Wheel speed decoder for CAN ID 0x175 (ChassisBus, 8 bytes)
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

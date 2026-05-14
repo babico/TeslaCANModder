@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/region.h
+ * @file firmware/lib/vehicle/can/feature/fsd/region.h
  * @brief Region detection, spoofing, and ECE R79 bypass for Tesla CAN
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

@@ -9,9 +9,9 @@
 
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
-#include "feature/profile.h"
-#include "feature/isa_chime.h"
-#include "feature/region.h"
+#include "feature/fsd/profile.h"
+#include "feature/fsd/isa_chime.h"
+#include "feature/fsd/region.h"
 
 static bool hw4LoggedFSD = false;
 static bool hw4LoggedNag = false;

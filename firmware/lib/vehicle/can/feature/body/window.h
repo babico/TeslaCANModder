@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/window.h
+ * @file firmware/lib/vehicle/can/feature/body/window.h
  * @brief Window vent control via CAN ID 0x119 with burst-send support
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

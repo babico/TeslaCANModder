@@ -3,8 +3,6 @@
 /** Valid firmware variants. */
 export const VALID_VARIANTS = ["hw3", "hw4", "legacy", "auto"] as const;
 export type Variant = (typeof VALID_VARIANTS)[number];
-export const VALID_NAG_KILLER_MODES = ["legacy", "safe", "natural"] as const;
-export type NagKillerMode = (typeof VALID_NAG_KILLER_MODES)[number];
 export const VALID_NAG_MODES = [
 	"off",
 	"bit19",
@@ -74,10 +72,6 @@ function assertVariant(v: string): asserts v is Variant {
 	assertInList("variant", v, VALID_VARIANTS);
 }
 
-function assertNagKillerMode(m: string): asserts m is NagKillerMode {
-	assertInList("nag killer mode", m, VALID_NAG_KILLER_MODES);
-}
-
 function assertNagMode(m: string): asserts m is NagMode {
 	assertInList("nag mode", m, VALID_NAG_MODES);
 }
@@ -118,22 +112,12 @@ export const commands = {
 	fsd: (on: boolean) => (on ? "fsd:on" : "fsd:off"),
 	fsdForce: (on: boolean) => (on ? "fsd:force:on" : "fsd:force:off"),
 
-	// Nag (legacy on/off — maps to bit19 mode)
-	nag: (on: boolean) => (on ? "nag:on" : "nag:off"),
-
-	// Unified Nag
+	// Nag
 	nagMode: (mode: string) => {
 		assertNagMode(mode);
 		return `nag:mode:${mode}`;
 	},
 	nagBypass: (on: boolean) => (on ? "nag:bypass:on" : "nag:bypass:off"),
-
-	// Nag Killer (legacy EPAS torque spoofing)
-	nagKiller: (on: boolean) => (on ? "nag:killer:on" : "nag:killer:off"),
-	nagKillerMode: (mode: string) => {
-		assertNagKillerMode(mode);
-		return `nag:killer:mode:${mode}`;
-	},
 
 	// Speed Profile
 	profile: (p: number) => {

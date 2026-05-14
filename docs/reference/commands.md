@@ -230,18 +230,6 @@ command interface.
 | `nag:bypass:on`    | Organic mode only: stop injection when real driver hands-on detected   |
 | `nag:bypass:off`   | Organic mode only: keep injecting regardless of driver input           |
 
-### Legacy commands (backward compatibility)
-
-| Command                   | Description                                       |
-| ------------------------- | ------------------------------------------------- |
-| `nag:on`                  | Enable nag suppression (maps to `nag:mode:bit19`) |
-| `nag:off`                 | Disable nag suppression (maps to `nag:mode:off`)  |
-| `nag:killer:on`           | Enable EPAS torque spoofing                       |
-| `nag:killer:off`          | Disable EPAS torque spoofing                      |
-| `nag:killer:mode:legacy`  | Set killer mode to legacy zero-torque echo        |
-| `nag:killer:mode:safe`    | Set killer mode to safe (DAS-requested only)      |
-| `nag:killer:mode:natural` | Set killer mode to natural jitter                 |
-
 ### Strategy summary
 
 - `bit19` — clears a single bit on a CAN-UI frame. No torque spoofing.
@@ -692,20 +680,20 @@ Example response:
 
 ```json
 {
-	"t": "platform",
-	"model": 1,
-	"hwGen": 3,
-	"swYear": 2026,
-	"swWeek": 14,
-	"swRelease": 1,
-	"fsdProto": 3,
-	"swCompat": 0,
-	"resolved": 1,
-	"canHealth": {
-		"chassis": { "on": 1, "det": 1 },
-		"vehicle": { "on": 1, "det": 1 },
-		"body": { "on": 1, "det": 1 }
-	}
+    "t": "platform",
+    "model": 1,
+    "hwGen": 3,
+    "swYear": 2026,
+    "swWeek": 14,
+    "swRelease": 1,
+    "fsdProto": 3,
+    "swCompat": 0,
+    "resolved": 1,
+    "canHealth": {
+        "chassis": { "on": 1, "det": 1 },
+        "vehicle": { "on": 1, "det": 1 },
+        "body": { "on": 1, "det": 1 }
+    }
 }
 ```
 

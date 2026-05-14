@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/power.h
+ * @file firmware/lib/vehicle/can/feature/body/power.h
  * @brief Power state control via CAN frame 0x273 (UI_vehicleControl)
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

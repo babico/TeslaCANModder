@@ -30,7 +30,7 @@ void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
 #include "core/util/parse.h"
-#include "feature/ban_shield.h"
+#include "feature/safety/ban_shield.h"
 #include "support/helpers.h"
 
 /** @brief Creates a default empty State for gateway shield tests */

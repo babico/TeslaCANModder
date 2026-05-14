@@ -19,7 +19,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/can_raw.h"
+#include "feature/misc/can_raw.h"
 
 static State makeState()
 {

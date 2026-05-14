@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/drive_mode.h
+ * @file firmware/lib/vehicle/can/feature/drive/drive_mode.h
  * @brief Drive mode override ("Ghost Mode") via CAN ID 0x334 injection
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

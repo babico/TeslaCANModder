@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/fsd.h
+ * @file firmware/lib/vehicle/can/feature/fsd/fsd.h
  * @brief FSD (Full Self-Driving) enable/disable and force-enable command handlers
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

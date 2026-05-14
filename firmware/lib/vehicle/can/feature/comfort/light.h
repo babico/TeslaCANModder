@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/light.h
+ * @file firmware/lib/vehicle/can/feature/comfort/light.h
  * @brief Lighting control helpers and command execution for CAN frame 0x273
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

@@ -48,7 +48,7 @@ void driverSend(const Frame &f, uint8_t bus)
 	}
 }
 
-#include "feature/seatbelt.h"
+#include "feature/comfort/seatbelt.h"
 
 void setUp()
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/pedal.h
+ * @file firmware/lib/vehicle/can/feature/drive/pedal.h
  * @brief Pedal mode control via CAN frame 0x334 (drive config)
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

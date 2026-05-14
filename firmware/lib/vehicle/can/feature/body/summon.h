@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/summon.h
+ * @file firmware/lib/vehicle/can/feature/body/summon.h
  * @brief Autopark Summon System (ASS) frame mutation and command handlers
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

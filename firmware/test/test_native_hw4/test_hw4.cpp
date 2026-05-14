@@ -19,8 +19,8 @@ class __FlashStringHelper;
 
 #include "core/types.h"
 #include "vehicle/can/ids.h"
-#include "feature/profile.h"
-#include "feature/isa_chime.h"
+#include "feature/fsd/profile.h"
+#include "feature/fsd/isa_chime.h"
 
 #include "support/stubs.h"
 

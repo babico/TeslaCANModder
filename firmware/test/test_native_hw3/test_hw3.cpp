@@ -19,8 +19,8 @@ class __FlashStringHelper;
 
 #include "core/types.h"
 #include "vehicle/can/ids.h"
-#include "feature/profile.h"
-#include "feature/offsets.h"
+#include "feature/fsd/profile.h"
+#include "feature/fsd/offsets.h"
 
 #include "support/stubs.h"
 

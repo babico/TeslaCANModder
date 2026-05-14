@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/power.h"
+#include "feature/body/power.h"
 
 static State makeState()
 {

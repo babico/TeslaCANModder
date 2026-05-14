@@ -24,10 +24,10 @@ void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
-#include "feature/regen.h"
-#include "feature/window.h"
-#include "feature/sentry.h"
-#include "feature/lock.h"
+#include "feature/drive/regen.h"
+#include "feature/body/window.h"
+#include "feature/body/sentry.h"
+#include "feature/body/lock.h"
 
 /** @brief Test fixture setup — no per-test state required */
 void setUp() {}

@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/bms.h
+ * @file firmware/lib/vehicle/can/feature/telemetry/bms.h
  * @brief Decodes BMS CAN frames into human-readable battery telemetry
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

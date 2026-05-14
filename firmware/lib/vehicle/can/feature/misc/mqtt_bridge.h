@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/mqtt_bridge.h
+ * @file firmware/lib/vehicle/can/feature/misc/mqtt_bridge.h
  * @brief MQTT telemetry bridge for publishing decoded CAN data to an MQTT broker
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

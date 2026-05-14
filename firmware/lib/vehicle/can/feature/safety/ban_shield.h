@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/ban_shield.h
+ * @file firmware/lib/vehicle/can/feature/safety/ban_shield.h
  * @brief Ban shield and GTW snapshot-based frame defense commands
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

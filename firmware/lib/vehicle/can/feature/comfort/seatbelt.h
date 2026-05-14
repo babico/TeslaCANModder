@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/seatbelt.h
+ * @file firmware/lib/vehicle/can/feature/comfort/seatbelt.h
  * @brief Rear seatbelt buckle emulation via periodic CAN frame injection
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

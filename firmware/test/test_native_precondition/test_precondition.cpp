@@ -22,7 +22,7 @@ unsigned long millis()
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/precondition.h"
+#include "feature/comfort/precondition.h"
 
 static State makeState()
 {

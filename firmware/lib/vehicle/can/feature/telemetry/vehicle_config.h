@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/vehicle_config.h
+ * @file firmware/lib/vehicle/can/feature/telemetry/vehicle_config.h
  * @brief Vehicle-specific configuration profiles decoded from CAN frame 0x398 (GTW_carConfig)
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

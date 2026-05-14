@@ -9,7 +9,7 @@
 
 #include "core/types.h"
 #include "vehicle/can/ids.h"
-#include "feature/tpms.h"
+#include "feature/telemetry/tpms.h"
 
 void setUp() {}
 void tearDown() {}

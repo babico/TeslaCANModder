@@ -69,9 +69,7 @@ const FEATURE_BUS_HINTS: Partial<
 const BOOLEAN_TOGGLE_STATE_KEYS: Partial<Record<CommandName, keyof BoardState>> = {
 	fsd: "fsd",
 	fsdForce: "fsdForce",
-	nag: "nag",
 	isaChime: "isaChime",
-	nagKiller: "nagKiller",
 	banShield: "banShield",
 	tlssc: "tlsscRestore",
 	eap: "enhancedAutopilot",
@@ -90,7 +88,6 @@ const BOOLEAN_TOGGLE_STATE_KEYS: Partial<Record<CommandName, keyof BoardState>> 
 
 const ADVANCED_CONFIRMATION: Partial<Record<CommandName, string>> = {
 	fsdForce: "FSD Force overrides normal UI gating.",
-	nagKiller: "Nag Killer affects steering-input safety behavior.",
 	powerAccOff: "ACC Off can disable accessory systems.",
 	powerOff: "Power Off can interrupt active vehicle systems.",
 };
@@ -286,20 +283,6 @@ export function ControlsScreen({ boardState, onRunCommand }: ControlsScreenProps
 			secondary: { label: "Disable", action: () => runDirectCommand("fsd", "false") },
 		},
 		{
-			title: "Nag Suppress",
-			active: boardState.nag,
-			activeLabel: boardState.nag ? "ON" : "OFF",
-			primary: { label: "Enable", action: () => runDirectCommand("nag", "true") },
-			secondary: { label: "Disable", action: () => runDirectCommand("nag", "false") },
-		},
-		{
-			title: "Nag Killer",
-			active: boardState.nagKiller,
-			activeLabel: boardState.nagKiller ? "ON" : "OFF",
-			primary: { label: "Enable", action: () => runDirectCommand("nagKiller", "true") },
-			secondary: { label: "Disable", action: () => runDirectCommand("nagKiller", "false") },
-		},
-		{
 			title: "Track Mode",
 			active: boardState.trackMode,
 			activeLabel: boardState.trackMode ? "ON" : "OFF",
@@ -419,17 +402,6 @@ export function ControlsScreen({ boardState, onRunCommand }: ControlsScreenProps
 								]}
 							>
 								{boardState.fsd ? "ON" : "OFF"}
-							</Text>
-						</View>
-						<View style={styles.settingsItem}>
-							<Text style={styles.settingsKey}>Nag</Text>
-							<Text
-								style={[
-									styles.settingsValue,
-									boardState.nag ? styles.valueOn : styles.valueOff,
-								]}
-							>
-								{boardState.nag ? "ON" : "OFF"}
 							</Text>
 						</View>
 						<View style={styles.settingsItem}>

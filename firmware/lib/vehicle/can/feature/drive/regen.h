@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/regen.h
+ * @file firmware/lib/vehicle/can/feature/drive/regen.h
  * @brief Regenerative braking level control via CAN drive config frame
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

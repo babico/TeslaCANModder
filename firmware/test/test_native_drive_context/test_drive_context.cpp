@@ -17,7 +17,7 @@
 
 #include "core/types.h"
 #include "vehicle/can/ids.h"
-#include "feature/drive_context.h"
+#include "feature/drive/drive_context.h"
 
 /** @brief Test fixture setup — no per-test state required */
 void setUp() {}

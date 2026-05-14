@@ -9,8 +9,8 @@
 
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
-#include "feature/profile.h"
-#include "feature/offsets.h"
+#include "feature/fsd/profile.h"
+#include "feature/fsd/offsets.h"
 
 static bool legacyLoggedFSD = false;
 static bool legacyLoggedNag = false;

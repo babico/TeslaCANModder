@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/stop.h
+ * @file firmware/lib/vehicle/can/feature/drive/stop.h
  * @brief Stop mode control (creep, roll, hold) via drive config CAN frame mutation
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

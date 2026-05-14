@@ -23,13 +23,13 @@ void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
-#include "feature/precondition.h"
-#include "feature/track_mode.h"
-#include "feature/sentry.h"
-#include "feature/wiper.h"
-#include "feature/mirror.h"
-#include "feature/can_raw.h"
-#include "feature/stream.h"
+#include "feature/comfort/precondition.h"
+#include "feature/body/track_mode.h"
+#include "feature/body/sentry.h"
+#include "feature/comfort/wiper.h"
+#include "feature/body/mirror.h"
+#include "feature/misc/can_raw.h"
+#include "feature/misc/stream.h"
 
 void setUp() {}
 void tearDown() {}

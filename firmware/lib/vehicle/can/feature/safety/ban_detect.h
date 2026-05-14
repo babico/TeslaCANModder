@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/ban_detect.h
+ * @file firmware/lib/vehicle/can/feature/safety/ban_detect.h
  * @brief VIN-level ban detection via GTW autopilot tier monitoring
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

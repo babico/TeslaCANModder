@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/track_mode.h"
+#include "feature/body/track_mode.h"
 
 static State makeState()
 {

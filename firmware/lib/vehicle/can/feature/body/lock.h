@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/lock.h
+ * @file firmware/lib/vehicle/can/feature/body/lock.h
  * @brief Door lock, child lock, and horn control via CAN frame 0x273
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

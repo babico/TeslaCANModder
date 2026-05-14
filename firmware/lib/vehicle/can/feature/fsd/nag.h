@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/nag.h
+ * @file firmware/lib/vehicle/can/feature/fsd/nag.h
  * @brief Nag alert suppression strategies for steering wheel hands-on detection
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0
@@ -10,64 +10,9 @@
 #include <cmath>
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
+#include "vehicle/can/checksum.h"
 #include "core/util/parse.h"
-
-/**
- * @brief Compute the 0x370 EPAS frame checksum.
- * @param data Pointer to the 8-byte frame payload (bytes 0-6 are summed).
- * @return Checksum byte: low byte of (sum of bytes 0-6 + CAN ID bytes).
- */
-inline uint8_t nagChecksum(const uint8_t *data)
-{
-	uint16_t sum = 0;
-	for (uint8_t i = 0; i < 7; i++)
-		sum += data[i];
-	sum += (CAN_ID_EPAS_TORQUE & 0xFF);       // Low byte of 0x370 = 0x70
-	sum += ((CAN_ID_EPAS_TORQUE >> 8) & 0xFF); // High byte of 0x370 = 0x03
-	return (uint8_t)(sum & 0xFF);
-}
-
-/**
- * @brief Deterministic xorshift32 PRNG state shared across all nag strategies.
- */
-static uint32_t _nagPrngState = 2463534242UL;
-
-/**
- * @brief Advance the xorshift32 PRNG and return the next pseudo-random value.
- * @return 32-bit pseudo-random number.
- */
-inline uint32_t _nagXorshift()
-{
-	_nagPrngState ^= _nagPrngState << 13;
-	_nagPrngState ^= _nagPrngState >> 17;
-	_nagPrngState ^= _nagPrngState << 5;
-	return _nagPrngState;
-}
-
-/**
- * @brief Generate a uniform random float in [0, 1) from the xorshift PRNG.
- * @return Float in the range [0.0, 1.0).
- */
-inline float _nagRandFloat()
-{
-	// Use 24 bits for mantissa precision
-	return (_nagXorshift() & 0xFFFFFF) / 16777216.0f;
-}
-
-/**
- * @brief Generate a Gaussian-distributed random value using Box-Muller transform.
- * @param sigma Standard deviation of the distribution.
- * @return Random sample from N(0, sigma).
- */
-inline float _nagGaussian(float sigma)
-{
-	float u1 = _nagRandFloat();
-	float u2 = _nagRandFloat();
-	if (u1 < 1e-7f)
-		u1 = 1e-7f; // Avoid log(0)
-	float z = std::sqrt(-2.0f * std::log(u1)) * std::cos(6.2831853f * u2);
-	return z * sigma;
-}
+#include "vehicle/can/feature/fsd/nag/math.h"
 
 /**
  * @brief Read DAS_autopilotHandsOnState from 0x370 byte 5 bits[5:2].
@@ -223,8 +168,8 @@ inline bool nagFixedOrNaturalShouldEcho(const State &s)
 #define NAG_ORG_RAW_MILD_MAX_POS 2248 // +2.0 Nm
 #define NAG_ORG_RAW_MILD_MIN_NEG 1848 // -2.0 Nm
 #define NAG_ORG_RAW_MILD_MAX_NEG 1998 // -0.5 Nm
-#define NAG_ORG_RAW_STRONG_PEAK 210   // 2.1 Nm magnitude in raw units
-#define NAG_ORG_RAW_EXC_BASE 2350     // ~3.02 Nm base for grip excursion
+#define NAG_ORG_RAW_STRONG_PEAK 210	  // 2.1 Nm magnitude in raw units
+#define NAG_ORG_RAW_EXC_BASE 2350	  // ~3.02 Nm base for grip excursion
 #define NAG_ORG_LEVEL2_THRESHOLD 200  // |raw - 2048| >= 200 -> level 2 (2.0 Nm)
 #define NAG_ORG_LEVEL1_THRESHOLD 100  // |raw - 2048| >= 100 -> level 1 (1.0 Nm)
 
@@ -388,8 +333,7 @@ inline int16_t nagOrgApplyGripExcursion(State &s, int16_t baseRaw)
 	{
 		s.nagOrgExcFrames--;
 		// Excursion magnitude: ~3.0-3.4 Nm pulse
-		int16_t magnitude = (int16_t)(NAG_ORG_RAW_EXC_BASE + (int16_t)(_nagXorshift() % 41) - 20 -
-									  NAG_ORG_RAW_CENTER);
+		int16_t magnitude = (int16_t)(NAG_ORG_RAW_EXC_BASE + (int16_t)(_nagXorshift() % 41) - 20 - NAG_ORG_RAW_CENTER);
 		int16_t sign = baseRaw >= NAG_ORG_RAW_CENTER ? 1 : -1;
 		return (int16_t)(NAG_ORG_RAW_CENTER + sign * magnitude);
 	}
@@ -402,8 +346,7 @@ inline int16_t nagOrgApplyGripExcursion(State &s, int16_t baseRaw)
 	uint32_t r = _nagXorshift();
 	s.nagOrgExcFrames = (uint8_t)(3 + (r % 3));
 	s.nagOrgFramesUntilExc = (uint16_t)(125 + (r % 101));
-	int16_t magnitude = (int16_t)(NAG_ORG_RAW_EXC_BASE + (int16_t)((r >> 8) % 41) - 20 -
-								  NAG_ORG_RAW_CENTER);
+	int16_t magnitude = (int16_t)(NAG_ORG_RAW_EXC_BASE + (int16_t)((r >> 8) % 41) - 20 - NAG_ORG_RAW_CENTER);
 	int16_t sign = baseRaw >= NAG_ORG_RAW_CENTER ? 1 : -1;
 	s.nagOrgExcFrames--;
 	return (int16_t)(NAG_ORG_RAW_CENTER + sign * magnitude);

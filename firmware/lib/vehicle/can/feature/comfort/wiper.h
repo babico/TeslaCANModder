@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/wiper.h
+ * @file firmware/lib/vehicle/can/feature/comfort/wiper.h
  * @brief Wiper speed control and persistence via CAN ID 0x273 (UI_vehicleControl)
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

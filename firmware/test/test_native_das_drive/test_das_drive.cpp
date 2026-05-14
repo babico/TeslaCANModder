@@ -51,7 +51,7 @@ void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
 
-#include "feature/das_drive.h"
+#include "feature/das/das_drive.h"
 
 /** @brief Creates a default HW4 State for DAS drive tests */
 static State makeState()

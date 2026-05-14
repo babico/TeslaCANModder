@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/motor_temps.h
+ * @file firmware/lib/vehicle/can/feature/telemetry/motor_temps.h
  * @brief Decodes motor and inverter temperature signals from Tesla CAN frames
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

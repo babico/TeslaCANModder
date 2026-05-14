@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/single_shot.h
+ * @file firmware/lib/vehicle/can/feature/safety/single_shot.h
  * @brief Single-shot TX mode toggle for MCP2515 CAN controllers
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/tpms.h
+ * @file firmware/lib/vehicle/can/feature/telemetry/tpms.h
  * @brief TPMS (Tire Pressure Monitoring System) decoder and command handler
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

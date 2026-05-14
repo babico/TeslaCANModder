@@ -34,7 +34,7 @@ export type {
 
 // Commands
 export { commands, PROFILE_LABELS, COMMAND_RANGES, VALID_VARIANTS } from "./commands.js";
-export type { Variant, NagKillerMode, NagMode } from "./commands.js";
+export type { Variant, NagMode } from "./commands.js";
 
 // Feature settings specs
 export {

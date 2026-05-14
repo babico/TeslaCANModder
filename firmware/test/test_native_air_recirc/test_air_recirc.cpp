@@ -20,7 +20,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/air_recirc.h"
+#include "feature/comfort/air_recirc.h"
 
 static State makeState()
 {

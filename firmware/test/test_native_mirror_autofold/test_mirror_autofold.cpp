@@ -24,7 +24,7 @@ void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
 
-#include "feature/mirror.h"
+#include "feature/body/mirror.h"
 
 void setUp() {}
 void tearDown() {}

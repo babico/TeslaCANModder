@@ -19,7 +19,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/charge.h"
+#include "feature/body/charge.h"
 
 static State makeState()
 {

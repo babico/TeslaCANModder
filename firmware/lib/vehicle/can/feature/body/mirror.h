@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/mirror.h
+ * @file firmware/lib/vehicle/can/feature/body/mirror.h
  * @brief Mirror fold, heat, auto-fold, and dip control via CAN frame 0x273
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

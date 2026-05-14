@@ -57,11 +57,7 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"fsd:force:on",
 	"fsd:force:off",
 
-	// Nag (legacy on/off)
-	"nag:on",
-	"nag:off",
-
-	// Unified Nag
+	// Nag
 	"nag:mode:off",
 	"nag:mode:bit19",
 	"nag:mode:legacy",
@@ -71,13 +67,6 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"nag:mode:full",
 	"nag:bypass:on",
 	"nag:bypass:off",
-
-	// Nag Killer (legacy EPAS torque spoofing)
-	"nag:killer:on",
-	"nag:killer:off",
-	"nag:killer:mode:legacy",
-	"nag:killer:mode:safe",
-	"nag:killer:mode:natural",
 
 	// Ban Shield
 	"banshield:on",
@@ -384,9 +373,7 @@ function extractProtocolCommands(): string[] {
 				key === "fsd" ||
 				key === "fsdForce" ||
 				key === "statusLive" ||
-				key === "nag" ||
 				key === "isaChime" ||
-				key === "nagKiller" ||
 				key === "banShield" ||
 				key === "precondition" ||
 				key === "trackMode" ||
@@ -433,13 +420,6 @@ function extractProtocolCommands(): string[] {
 				for (const m of ["off", "bit19", "legacy", "safe", "natural", "organic", "full"]) {
 					cmds.push((fn as (m: string) => string)(m));
 				}
-				continue;
-			}
-			// Nag killer mode (legacy)
-			if (key === "nagKillerMode") {
-				cmds.push((fn as (m: string) => string)("legacy"));
-				cmds.push((fn as (m: string) => string)("safe"));
-				cmds.push((fn as (m: string) => string)("natural"));
 				continue;
 			}
 			// Region spoof

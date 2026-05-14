@@ -25,7 +25,7 @@ void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
 
-#include "feature/fw_compat.h"
+#include "feature/telemetry/fw_compat.h"
 
 /** @brief Test fixture setup — no per-test state required */
 void setUp() {}

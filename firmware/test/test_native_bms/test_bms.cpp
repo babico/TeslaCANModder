@@ -19,7 +19,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/bms.h"
+#include "feature/telemetry/bms.h"
 
 static State makeState()
 {

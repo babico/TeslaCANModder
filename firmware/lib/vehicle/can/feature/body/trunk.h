@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/trunk.h
+ * @file firmware/lib/vehicle/can/feature/body/trunk.h
  * @brief Unified trunk, frunk, and glovebox control via CAN injection
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

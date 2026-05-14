@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/track_mode.h
+ * @file firmware/lib/vehicle/can/feature/body/track_mode.h
  * @brief Track Mode enable/disable via CAN 0x313 injection
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/regen.h"
+#include "feature/drive/regen.h"
 
 static State makeState()
 {

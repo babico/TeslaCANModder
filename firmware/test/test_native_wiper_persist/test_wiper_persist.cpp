@@ -42,7 +42,7 @@ void driverSend(const Frame &f, uint8_t bus)
 	}
 }
 
-#include "feature/wiper.h"
+#include "feature/comfort/wiper.h"
 
 void setUp()
 {

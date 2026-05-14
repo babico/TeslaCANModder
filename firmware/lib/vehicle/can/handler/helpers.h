@@ -11,7 +11,7 @@
 #include "core/can/bus.h"
 #include "core/platform.h"
 #include "vehicle/can/ids.h"
-#include "vehicle/can/feature/das_drive.h"
+#include "vehicle/can/feature/das/das_drive.h"
 #include "handler/frame_readers.h"
 #include "handler/variant/hw4.h"
 #include "handler/variant/hw3.h"

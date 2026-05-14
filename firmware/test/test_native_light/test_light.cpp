@@ -18,7 +18,7 @@
 void saveSettings(const State &) {}
 void resetHandlerLogFlags() {}
 void applyFilters(State &) {}
-#include "feature/light.h"
+#include "feature/comfort/light.h"
 
 static State makeState()
 {

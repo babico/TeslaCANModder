@@ -23,7 +23,7 @@ void saveSettings(const State &) {}
 void sendLog(const char *) {}
 void sendLog(const __FlashStringHelper *) {}
 
-#include "feature/mqtt_bridge.h"
+#include "feature/misc/mqtt_bridge.h"
 
 void setUp() {}
 void tearDown() {}

@@ -108,7 +108,7 @@ describe("Variant feature availability", () => {
 
 		it("nag available", () => {
 			expect(features.nag).toBe(true);
-			expect(commands.nag(true)).toBe("nag:on");
+			expect(commands.nagMode("bit19")).toBe("nag:mode:bit19");
 		});
 
 		it("profile available", () => {

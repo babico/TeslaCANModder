@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/auto_lane_change.h
+ * @file firmware/lib/vehicle/can/feature/fsd/auto_lane_change.h
  * @brief Automatic lane change (ALC) confirmation via stalk or button injection
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0

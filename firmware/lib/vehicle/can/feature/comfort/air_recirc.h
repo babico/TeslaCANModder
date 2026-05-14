@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file firmware/lib/vehicle/can/feature/air_recirc.h
+ * @file firmware/lib/vehicle/can/feature/comfort/air_recirc.h
  * @brief Automatic cabin air recirculation control via CAN
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0
