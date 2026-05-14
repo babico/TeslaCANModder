@@ -26,10 +26,11 @@ jest.mock("../../src/hardware/controller", () => ({
 const mockRunCommand = jest.fn(async () => undefined);
 
 jest.mock("../../src/state/BoardStateContext", () => ({
-	useBoardInstanceState: () =>
-		React.useContext(
-			jest.requireActual("../../src/test/TestBoardStateContext").TestBoardStateContext,
-		),
+	useBoardInstanceState: () => {
+		const React = jest.requireActual("react");
+		const actual = jest.requireActual("../../src/test/TestBoardStateContext");
+		return React.useContext(actual.TestBoardStateContext);
+	},
 }));
 
 jest.mock("../../src/state/CommandContext", () => ({
