@@ -1,18 +1,18 @@
 {
-	"config": {
-		"MD007": false,
-		"MD010": { "code_blocks": false }
-	},
-	"ignores": [
-		"legacy/**",
-		"docs/legacy/**",
-		"**/node_modules/**",
-		"**/dist/**",
-		"**/.pio/**",
-		"**/.pio-home/**",
-		"client/.expo/**",
-		".venv/**",
-		".opencode/**",
-		"MCP_SERVERS.md"
-	]
+  "config": {
+    "MD007": false,
+    "MD010": { "code_blocks": false },
+  },
+  "ignores": [
+    "legacy/**",
+    "docs/legacy/**",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.pio/**",
+    "**/.pio-home/**",
+    "client/.expo/**",
+    ".venv/**",
+    ".opencode/**",
+    "MCP_SERVERS.md",
+  ],
 }

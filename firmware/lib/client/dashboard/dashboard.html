@@ -1,184 +1,1230 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TeslaCANModder</title>
-<style>
-:root{--bg:#f8fafc;--surface:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--accent:#d73c1f;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08);color-scheme:light dark;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
-@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--surface:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--border:#334155;--shadow:0 4px 24px rgba(0,0,0,.3)}}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);min-height:100vh;padding:12px}
-.container{max-width:1200px;margin:0 auto;display:grid;gap:10px}
-.hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.hero h1{font-size:18px;font-weight:800;color:var(--accent);letter-spacing:-.3px}
-.hero .info{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
-.dot{width:8px;height:8px;border-radius:999px;background:var(--ok);animation:pulse 2s infinite;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;border:1px solid var(--border)}
-.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.tags{display:flex;flex-wrap:wrap;gap:5px;margin:0}
-.tags .chip{background:var(--surface);color:var(--muted)}
-.tags .chip.live{color:var(--ok);border-color:var(--ok)}
-.tags .chip.warn{color:var(--warn);border-color:var(--warn)}
-.tags .chip.bad{color:var(--err);border-color:var(--err)}
-.grid{display:grid;grid-template-columns:1fr;gap:10px}
-@media(min-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
-@media(min-width:1024px){.grid{grid-template-columns:repeat(3,1fr)}}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;min-width:0}
-.card h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px}
-.card h2 span{float:right;font-weight:400;text-transform:none;font-size:10px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
-.tgl{position:relative;width:40px;height:22px;flex-shrink:0}
-.tgl input{display:none}
-.tgl .sl{position:absolute;inset:0;background:#d1d5db;border-radius:999px;cursor:pointer;transition:.2s}
-.tgl .sl::before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.2s}
-.tgl input:checked+.sl{background:#fecaca}.tgl input:checked+.sl::before{transform:translateX(18px);background:var(--accent)}
-.sel{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:11px;color:var(--text);width:100%}
-.inp{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:11px;color:var(--text);width:70px}
-.btn{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s}.btn:hover{border-color:var(--accent);color:var(--accent)}
-.btn.on{background:#ffe8e9;border-color:#f8b4b6;color:var(--accent)}
-.btns{display:flex;flex-wrap:wrap;gap:4px}
-.val{font-size:22px;font-weight:800;line-height:1.1}
-.val small{font-size:11px;font-weight:400;color:var(--muted)}
-.gauge{height:6px;background:var(--border);border-radius:999px;margin-top:4px;overflow:hidden}
-.gauge div{height:100%;background:var(--accent);border-radius:999px;transition:width .4s}
-.tpms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
-.tpms-grid div{font-size:10px}
-.tpms-grid .p{font-size:14px;font-weight:700}
-.kv{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:1.8}
-.log{background:#111827;color:#d1d5db;border-radius:10px;border:1px solid #374151;max-height:160px;overflow:auto;padding:8px;font-size:11px;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace}
-.log-full{grid-column:1/-1}
-.warn-box{background:var(--bg);border:1px solid var(--warn);border-radius:8px;padding:6px 8px;font-size:10px;font-weight:600;color:var(--warn);margin-bottom:6px}
-.muted{color:var(--muted);font-size:10px;margin-top:2px}
-.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(40px);opacity:0;transition:.2s;background:var(--accent);color:#fff;padding:6px 14px;border-radius:10px;font-size:12px;font-weight:700;z-index:20}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-</style>
-</head>
-<body>
-<div class="container">
-<header class="hero"><h1>TeslaCANModder</h1><div class="info"><span class="dot"></span><span id="heroIp">—</span><span class="chip" id="heroVar">—</span><span id="heroUp">up 0s</span></div></header>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>TeslaCANModder</title>
+		<style>
+			:root {
+				--bg: #f8fafc;
+				--surface: #fff;
+				--text: #0f172a;
+				--muted: #64748b;
+				--border: #e2e8f0;
+				--accent: #d73c1f;
+				--ok: #22c55e;
+				--warn: #f59e0b;
+				--err: #ef4444;
+				--radius: 12px;
+				--shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+				color-scheme: light dark;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--bg: #0f172a;
+					--surface: #1e293b;
+					--text: #f1f5f9;
+					--muted: #94a3b8;
+					--border: #334155;
+					--shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+				}
+			}
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				min-height: 100vh;
+				padding: 12px;
+			}
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+				display: grid;
+				gap: 10px;
+			}
+			.hero {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+				padding: 12px 16px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				flex-wrap: wrap;
+				gap: 8px;
+			}
+			.hero h1 {
+				font-size: 18px;
+				font-weight: 800;
+				color: var(--accent);
+				letter-spacing: -0.3px;
+			}
+			.hero .info {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				flex-wrap: wrap;
+				font-size: 11px;
+				color: var(--muted);
+			}
+			.dot {
+				width: 8px;
+				height: 8px;
+				border-radius: 999px;
+				background: var(--ok);
+				animation: pulse 2s infinite;
+				flex-shrink: 0;
+			}
+			@keyframes pulse {
+				0%,
+				100% {
+					opacity: 1;
+				}
+				50% {
+					opacity: 0.3;
+				}
+			}
+			.chip {
+				display: inline-block;
+				padding: 2px 8px;
+				border-radius: 999px;
+				font-size: 10px;
+				font-weight: 700;
+				border: 1px solid var(--border);
+			}
+			.chip.on {
+				background: var(--accent);
+				color: #fff;
+				border-color: var(--accent);
+			}
+			.tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 5px;
+				margin: 0;
+			}
+			.tags .chip {
+				background: var(--surface);
+				color: var(--muted);
+			}
+			.tags .chip.live {
+				color: var(--ok);
+				border-color: var(--ok);
+			}
+			.tags .chip.warn {
+				color: var(--warn);
+				border-color: var(--warn);
+			}
+			.tags .chip.bad {
+				color: var(--err);
+				border-color: var(--err);
+			}
+			.grid {
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 10px;
+			}
+			@media (min-width: 640px) {
+				.grid {
+					grid-template-columns: repeat(2, 1fr);
+				}
+			}
+			@media (min-width: 1024px) {
+				.grid {
+					grid-template-columns: repeat(3, 1fr);
+				}
+			}
+			.card {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+				padding: 12px;
+				min-width: 0;
+			}
+			.card h2 {
+				font-size: 12px;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+				color: var(--muted);
+				margin-bottom: 10px;
+			}
+			.card h2 span {
+				float: right;
+				font-weight: 400;
+				text-transform: none;
+				font-size: 10px;
+			}
+			.row {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				gap: 8px;
+				margin-bottom: 6px;
+				font-size: 12px;
+			}
+			.tgl {
+				position: relative;
+				width: 40px;
+				height: 22px;
+				flex-shrink: 0;
+			}
+			.tgl input {
+				display: none;
+			}
+			.tgl .sl {
+				position: absolute;
+				inset: 0;
+				background: #d1d5db;
+				border-radius: 999px;
+				cursor: pointer;
+				transition: 0.2s;
+			}
+			.tgl .sl::before {
+				content: "";
+				position: absolute;
+				width: 16px;
+				height: 16px;
+				left: 3px;
+				top: 3px;
+				border-radius: 999px;
+				background: #fff;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+				transition: 0.2s;
+			}
+			.tgl input:checked + .sl {
+				background: #fecaca;
+			}
+			.tgl input:checked + .sl::before {
+				transform: translateX(18px);
+				background: var(--accent);
+			}
+			.sel {
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 5px 8px;
+				font-size: 11px;
+				color: var(--text);
+				width: 100%;
+			}
+			.inp {
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 5px 8px;
+				font-size: 11px;
+				color: var(--text);
+				width: 70px;
+			}
+			.btn {
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 5px 10px;
+				font-size: 11px;
+				font-weight: 600;
+				color: var(--muted);
+				cursor: pointer;
+				transition: 0.15s;
+			}
+			.btn:hover {
+				border-color: var(--accent);
+				color: var(--accent);
+			}
+			.btn.on {
+				background: #ffe8e9;
+				border-color: #f8b4b6;
+				color: var(--accent);
+			}
+			.btns {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 4px;
+			}
+			.val {
+				font-size: 22px;
+				font-weight: 800;
+				line-height: 1.1;
+			}
+			.val small {
+				font-size: 11px;
+				font-weight: 400;
+				color: var(--muted);
+			}
+			.gauge {
+				height: 6px;
+				background: var(--border);
+				border-radius: 999px;
+				margin-top: 4px;
+				overflow: hidden;
+			}
+			.gauge div {
+				height: 100%;
+				background: var(--accent);
+				border-radius: 999px;
+				transition: width 0.4s;
+			}
+			.tpms-grid {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 6px;
+				text-align: center;
+			}
+			.tpms-grid div {
+				font-size: 10px;
+			}
+			.tpms-grid .p {
+				font-size: 14px;
+				font-weight: 700;
+			}
+			.kv {
+				font-family: ui-monospace, Menlo, Consolas, monospace;
+				font-size: 11px;
+				line-height: 1.8;
+			}
+			.log {
+				background: #111827;
+				color: #d1d5db;
+				border-radius: 10px;
+				border: 1px solid #374151;
+				max-height: 160px;
+				overflow: auto;
+				padding: 8px;
+				font-size: 11px;
+				line-height: 1.7;
+				font-family: ui-monospace, Menlo, Consolas, monospace;
+			}
+			.log-full {
+				grid-column: 1/-1;
+			}
+			.warn-box {
+				background: var(--bg);
+				border: 1px solid var(--warn);
+				border-radius: 8px;
+				padding: 6px 8px;
+				font-size: 10px;
+				font-weight: 600;
+				color: var(--warn);
+				margin-bottom: 6px;
+			}
+			.muted {
+				color: var(--muted);
+				font-size: 10px;
+				margin-top: 2px;
+			}
+			.toast {
+				position: fixed;
+				bottom: 16px;
+				left: 50%;
+				transform: translateX(-50%) translateY(40px);
+				opacity: 0;
+				transition: 0.2s;
+				background: var(--accent);
+				color: #fff;
+				padding: 6px 14px;
+				border-radius: 10px;
+				font-size: 12px;
+				font-weight: 700;
+				z-index: 20;
+			}
+			.toast.show {
+				transform: translateX(-50%) translateY(0);
+				opacity: 1;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<header class="hero">
+				<h1>TeslaCANModder</h1>
+				<div class="info">
+					<span class="dot"></span><span id="heroIp">—</span
+					><span class="chip" id="heroVar">—</span><span id="heroUp">up 0s</span>
+				</div>
+			</header>
 
-<div class="tags" id="badges"></div>
+			<div class="tags" id="badges"></div>
 
-<section class="grid">
-<div class="card"><h2>HV Battery <span id="bmsUpd">—</span></h2><div class="val" id="bmsV">—<small>V</small></div><div class="row"><span>Current</span><span id="bmsA">— A</span></div><div class="row"><span>Power</span><span id="bmsKW">— kW</span></div></div>
+			<section class="grid">
+				<div class="card">
+					<h2>HV Battery <span id="bmsUpd">—</span></h2>
+					<div class="val" id="bmsV">—<small>V</small></div>
+					<div class="row"><span>Current</span><span id="bmsA">— A</span></div>
+					<div class="row"><span>Power</span><span id="bmsKW">— kW</span></div>
+				</div>
 
-<div class="card"><h2>State of Charge</h2><div class="val" id="bmsSoc">—<small>%</small></div><div class="gauge"><div id="bmsSocBar" style="width:0%"></div></div><div class="row"><span>Cell V</span><span id="bmsCellV">— / —</span></div><div class="row"><span>Nominal</span><span id="bmsNom">— / — kWh</span></div></div>
+				<div class="card">
+					<h2>State of Charge</h2>
+					<div class="val" id="bmsSoc">—<small>%</small></div>
+					<div class="gauge"><div id="bmsSocBar" style="width: 0%"></div></div>
+					<div class="row"><span>Cell V</span><span id="bmsCellV">— / —</span></div>
+					<div class="row"><span>Nominal</span><span id="bmsNom">— / — kWh</span></div>
+				</div>
 
-<div class="card"><h2>Temperatures</h2><div class="row"><span>Pack Min</span><span id="bmsTmin">— °C</span></div><div class="row"><span>Pack Max</span><span id="bmsTmax">— °C</span></div><div class="muted" id="bmsThermal"></div></div>
+				<div class="card">
+					<h2>Temperatures</h2>
+					<div class="row"><span>Pack Min</span><span id="bmsTmin">— °C</span></div>
+					<div class="row"><span>Pack Max</span><span id="bmsTmax">— °C</span></div>
+					<div class="muted" id="bmsThermal"></div>
+				</div>
 
-<div class="card"><h2>TPMS</h2><div class="tpms-grid" id="tpmsGrid"><div><div class="p">—</div>FL</div><div><div class="p">—</div>FR</div><div><div class="p">—</div>RL</div><div><div class="p">—</div>RR</div></div><div class="muted">Pressures in bar</div></div>
+				<div class="card">
+					<h2>TPMS</h2>
+					<div class="tpms-grid" id="tpmsGrid">
+						<div>
+							<div class="p">—</div>
+							FL
+						</div>
+						<div>
+							<div class="p">—</div>
+							FR
+						</div>
+						<div>
+							<div class="p">—</div>
+							RL
+						</div>
+						<div>
+							<div class="p">—</div>
+							RR
+						</div>
+					</div>
+					<div class="muted">Pressures in bar</div>
+				</div>
 
-<div class="card"><h2>Power Limits</h2><div class="row"><span>Max Regen</span><span id="pwRegen">— kW</span></div><div class="row"><span>Max Discharge</span><span id="pwDch">— kW</span></div><div class="row"><span>Charge Limit</span><span id="pwChg">— A</span></div></div>
+				<div class="card">
+					<h2>Power Limits</h2>
+					<div class="row"><span>Max Regen</span><span id="pwRegen">— kW</span></div>
+					<div class="row"><span>Max Discharge</span><span id="pwDch">— kW</span></div>
+					<div class="row"><span>Charge Limit</span><span id="pwChg">— A</span></div>
+				</div>
 
-<div class="card"><h2>CAN Bus Health</h2><div id="canHealth"></div></div>
+				<div class="card">
+					<h2>CAN Bus Health</h2>
+					<div id="canHealth"></div>
+				</div>
 
-<div class="card"><h2>Powertrain</h2><div class="val" id="ptSpeed">—<small>km/h</small></div><div class="row"><span>Gear</span><span id="ptGear">—</span></div><div class="row"><span>Pedal</span><span id="ptPedal">— %</span></div><div class="row"><span>Steer</span><span id="ptSteer">— °</span></div></div>
+				<div class="card">
+					<h2>Powertrain</h2>
+					<div class="val" id="ptSpeed">—<small>km/h</small></div>
+					<div class="row"><span>Gear</span><span id="ptGear">—</span></div>
+					<div class="row"><span>Pedal</span><span id="ptPedal">— %</span></div>
+					<div class="row"><span>Steer</span><span id="ptSteer">— °</span></div>
+				</div>
 
-<div class="card"><h2>FSD &amp; Nag</h2><div class="row"><span>FSD</span><label class="tgl"><input type="checkbox" id="fsdTg" onchange="toggleFsd()"><span class="sl"></span></label></div><select class="sel" id="nagModeSel" onchange="setNagMode(this.value)"><option value="off">off</option><option value="bit19">bit19</option><option value="legacy">legacy</option><option value="safe">safe</option><option value="natural">natural</option><option value="organic">organic</option><option value="full">full</option></select><div class="row"><span>Nag Bypass</span><label class="tgl"><input type="checkbox" id="nagBypassTg" onchange="toggleNagBypass()"><span class="sl"></span></label></div><div class="row"><span>ISA Chime</span><label class="tgl"><input type="checkbox" id="isaTg" onchange="toggleIsa()"><span class="sl"></span></label></div><div class="row"><span>Mirror Auto-Fold</span><label class="tgl"><input type="checkbox" id="mirrorAutoTg" onchange="toggleMirrorAutoFold()"><span class="sl"></span></label></div><h2 style="margin-top:8px">Speed Profile</h2><div class="btns" id="spBtns"><button class="btn" onclick="setProfile(0)">Chill</button><button class="btn" onclick="setProfile(1)">Normal</button><button class="btn" onclick="setProfile(2)">Hurry</button><button class="btn" onclick="setProfile(3)">Max</button><button class="btn" onclick="cmd('profile:auto')">Auto</button></div></div>
+				<div class="card">
+					<h2>FSD &amp; Nag</h2>
+					<div class="row">
+						<span>FSD</span
+						><label class="tgl"
+							><input type="checkbox" id="fsdTg" onchange="toggleFsd()" /><span
+								class="sl"
+							></span
+						></label>
+					</div>
+					<select class="sel" id="nagModeSel" onchange="setNagMode(this.value)">
+						<option value="off">off</option>
+						<option value="bit19">bit19</option>
+						<option value="legacy">legacy</option>
+						<option value="safe">safe</option>
+						<option value="natural">natural</option>
+						<option value="organic">organic</option>
+						<option value="full">full</option>
+					</select>
+					<div class="row">
+						<span>Nag Bypass</span
+						><label class="tgl"
+							><input
+								type="checkbox"
+								id="nagBypassTg"
+								onchange="toggleNagBypass()" /><span class="sl"></span
+						></label>
+					</div>
+					<div class="row">
+						<span>ISA Chime</span
+						><label class="tgl"
+							><input type="checkbox" id="isaTg" onchange="toggleIsa()" /><span
+								class="sl"
+							></span
+						></label>
+					</div>
+					<div class="row">
+						<span>Mirror Auto-Fold</span
+						><label class="tgl"
+							><input
+								type="checkbox"
+								id="mirrorAutoTg"
+								onchange="toggleMirrorAutoFold()" /><span class="sl"></span
+						></label>
+					</div>
+					<h2 style="margin-top: 8px">Speed Profile</h2>
+					<div class="btns" id="spBtns">
+						<button class="btn" onclick="setProfile(0)">Chill</button
+						><button class="btn" onclick="setProfile(1)">Normal</button
+						><button class="btn" onclick="setProfile(2)">Hurry</button
+						><button class="btn" onclick="setProfile(3)">Max</button
+						><button class="btn" onclick="cmd('profile:auto')">Auto</button>
+					</div>
+				</div>
 
-<div class="card"><h2>DAS Drive</h2><div class="warn-box">Parking-lot safe ≤25 km/h. Closed-track use only above.</div><div class="row"><span>Drive Enabled</span><label class="tgl"><input type="checkbox" id="dasDriveTg" onchange="toggleDasDrive()"><span class="sl"></span></label></div><div class="row"><span>Limit km/h</span><input type="number" class="inp" id="dasSpeedLimitIn" min="1" onchange="sendDasSpeedLimit()"></div><div class="row"><span>Hard Cap km/h</span><input type="number" class="inp" id="dasSpeedCapIn" min="1" onchange="sendDasSpeedCap()"><span class="muted" id="dasSpeedCapMaxLbl"></span></div></div>
+				<div class="card">
+					<h2>DAS Drive</h2>
+					<div class="warn-box">
+						Parking-lot safe ≤25 km/h. Closed-track use only above.
+					</div>
+					<div class="row">
+						<span>Drive Enabled</span
+						><label class="tgl"
+							><input
+								type="checkbox"
+								id="dasDriveTg"
+								onchange="toggleDasDrive()" /><span class="sl"></span
+						></label>
+					</div>
+					<div class="row">
+						<span>Limit km/h</span
+						><input
+							type="number"
+							class="inp"
+							id="dasSpeedLimitIn"
+							min="1"
+							onchange="sendDasSpeedLimit()"
+						/>
+					</div>
+					<div class="row">
+						<span>Hard Cap km/h</span
+						><input
+							type="number"
+							class="inp"
+							id="dasSpeedCapIn"
+							min="1"
+							onchange="sendDasSpeedCap()"
+						/><span class="muted" id="dasSpeedCapMaxLbl"></span>
+					</div>
+				</div>
 
-<div class="card"><h2>AP Gate</h2><div class="row"><span>Gate Enabled</span><label class="tgl"><input type="checkbox" id="apGateTg" onchange="toggleApGate()"><span class="sl"></span></label></div><div class="kv" id="apGateSt">—</div></div>
+				<div class="card">
+					<h2>AP Gate</h2>
+					<div class="row">
+						<span>Gate Enabled</span
+						><label class="tgl"
+							><input type="checkbox" id="apGateTg" onchange="toggleApGate()" /><span
+								class="sl"
+							></span
+						></label>
+					</div>
+					<div class="kv" id="apGateSt">—</div>
+				</div>
 
-<div class="card"><h2>Variant</h2><div class="btns"><button class="btn" onclick="setVariant('hw4')">HW4</button><button class="btn" onclick="setVariant('hw3')">HW3</button><button class="btn" onclick="setVariant('legacy')">Legacy</button></div><div class="muted">Active firmware mapping mode</div><h2 style="margin-top:8px">Vehicle Actions</h2><div class="warn-box">Live vehicle commands — confirm each action.</div><div class="btns"><button class="btn" onclick="cmd('lock')">Lock</button><button class="btn" onclick="cmd('unlock')">Unlock</button><button class="btn" onclick="cmd('horn')">Horn</button><button class="btn" onclick="cmd('frunk')">Frunk</button><button class="btn" onclick="cmd('trunk:open')">Trunk</button><button class="btn" onclick="cmd('sentry:on')">Sentry</button><button class="btn" onclick="cmd('mirror:fold')">Fold</button><button class="btn" onclick="cmd('mirror:unfold')">Unfold</button><button class="btn" onclick="cmd('climate:keep')">Climate</button><button class="btn" onclick="cmd('summon:fwd')">Summon</button></div><h2 style="margin-top:8px">Window Vent</h2><input type="range" min="0" max="100" value="0" id="ventRange" oninput="$('ventVal').textContent=this.value" style="width:100%"><div class="row"><span id="ventVal">0</span><button class="btn" onclick="sendVent()">Send</button></div></div>
+				<div class="card">
+					<h2>Variant</h2>
+					<div class="btns">
+						<button class="btn" onclick="setVariant('hw4')">HW4</button
+						><button class="btn" onclick="setVariant('hw3')">HW3</button
+						><button class="btn" onclick="setVariant('legacy')">Legacy</button>
+					</div>
+					<div class="muted">Active firmware mapping mode</div>
+					<h2 style="margin-top: 8px">Vehicle Actions</h2>
+					<div class="warn-box">Live vehicle commands — confirm each action.</div>
+					<div class="btns">
+						<button class="btn" onclick="cmd('lock')">Lock</button
+						><button class="btn" onclick="cmd('unlock')">Unlock</button
+						><button class="btn" onclick="cmd('horn')">Horn</button
+						><button class="btn" onclick="cmd('frunk')">Frunk</button
+						><button class="btn" onclick="cmd('trunk:open')">Trunk</button
+						><button class="btn" onclick="cmd('sentry:on')">Sentry</button
+						><button class="btn" onclick="cmd('mirror:fold')">Fold</button
+						><button class="btn" onclick="cmd('mirror:unfold')">Unfold</button
+						><button class="btn" onclick="cmd('climate:keep')">Climate</button
+						><button class="btn" onclick="cmd('summon:fwd')">Summon</button>
+					</div>
+					<h2 style="margin-top: 8px">Window Vent</h2>
+					<input
+						type="range"
+						min="0"
+						max="100"
+						value="0"
+						id="ventRange"
+						oninput="$('ventVal').textContent = this.value"
+						style="width: 100%"
+					/>
+					<div class="row">
+						<span id="ventVal">0</span
+						><button class="btn" onclick="sendVent()">Send</button>
+					</div>
+				</div>
 
-<div class="card" id="wifiCard"><h2>WiFi</h2><div class="kv" id="wifiSt">—</div><div class="btns" style="margin-top:6px" id="wifiModeBtns"><button class="btn" onclick="setWifiMode('ap')">AP</button><button class="btn" onclick="setWifiMode('sta')">STA</button></div><div id="staFields" style="display:none"><input type="text" class="sel" id="staSSID" placeholder="SSID" maxlength="32" style="margin-top:4px"><input type="password" class="sel" id="staPW" placeholder="Password" maxlength="63" style="margin-top:4px"><button class="btn" onclick="connectSTA()" style="margin-top:4px">Connect</button></div><div id="apFields"><input type="text" class="sel" id="apSSID" placeholder="AP SSID" maxlength="32" style="margin-top:4px"><input type="password" class="sel" id="apPW" placeholder="AP Password" maxlength="63" style="margin-top:4px"><button class="btn" onclick="saveAP()" style="margin-top:4px">Save</button></div></div>
+				<div class="card" id="wifiCard">
+					<h2>WiFi</h2>
+					<div class="kv" id="wifiSt">—</div>
+					<div class="btns" style="margin-top: 6px" id="wifiModeBtns">
+						<button class="btn" onclick="setWifiMode('ap')">AP</button
+						><button class="btn" onclick="setWifiMode('sta')">STA</button>
+					</div>
+					<div id="staFields" style="display: none">
+						<input
+							type="text"
+							class="sel"
+							id="staSSID"
+							placeholder="SSID"
+							maxlength="32"
+							style="margin-top: 4px"
+						/><input
+							type="password"
+							class="sel"
+							id="staPW"
+							placeholder="Password"
+							maxlength="63"
+							style="margin-top: 4px"
+						/><button class="btn" onclick="connectSTA()" style="margin-top: 4px">
+							Connect
+						</button>
+					</div>
+					<div id="apFields">
+						<input
+							type="text"
+							class="sel"
+							id="apSSID"
+							placeholder="AP SSID"
+							maxlength="32"
+							style="margin-top: 4px"
+						/><input
+							type="password"
+							class="sel"
+							id="apPW"
+							placeholder="AP Password"
+							maxlength="63"
+							style="margin-top: 4px"
+						/><button class="btn" onclick="saveAP()" style="margin-top: 4px">
+							Save
+						</button>
+					</div>
+				</div>
 
-<div class="card" id="bleCard"><h2>BLE</h2><div class="kv" id="bleSt">—</div><div class="row" style="margin-top:6px"><span>Enabled</span><label class="tgl"><input type="checkbox" id="bleTg" onchange="toggleBle()"><span class="sl"></span></label></div></div>
+				<div class="card" id="bleCard">
+					<h2>BLE</h2>
+					<div class="kv" id="bleSt">—</div>
+					<div class="row" style="margin-top: 6px">
+						<span>Enabled</span
+						><label class="tgl"
+							><input type="checkbox" id="bleTg" onchange="toggleBle()" /><span
+								class="sl"
+							></span
+						></label>
+					</div>
+				</div>
 
-<div class="card" id="gamepadCard"><h2>Gamepad</h2><div class="kv" id="gpSt">—</div><div class="btns" style="margin-top:6px"><button class="btn" onclick="gpScan()">Scan</button><button class="btn" onclick="gpUnpair()">Unpair</button></div><div id="gpScanResults" style="display:none;margin-top:6px"><div class="muted" style="margin-bottom:3px">Found devices:</div><div id="gpDeviceList"></div></div><div style="margin-top:8px"><div class="muted" style="margin-bottom:3px">Button Bindings</div><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr><th style="text-align:left;padding:2px 4px;color:var(--muted)">Btn</th><th style="text-align:left;padding:2px 4px;color:var(--muted)">Cmd</th><th></th></tr></thead><tbody id="gpBindBody"></tbody></table></div></div>
+				<div class="card" id="gamepadCard">
+					<h2>Gamepad</h2>
+					<div class="kv" id="gpSt">—</div>
+					<div class="btns" style="margin-top: 6px">
+						<button class="btn" onclick="gpScan()">Scan</button
+						><button class="btn" onclick="gpUnpair()">Unpair</button>
+					</div>
+					<div id="gpScanResults" style="display: none; margin-top: 6px">
+						<div class="muted" style="margin-bottom: 3px">Found devices:</div>
+						<div id="gpDeviceList"></div>
+					</div>
+					<div style="margin-top: 8px">
+						<div class="muted" style="margin-bottom: 3px">Button Bindings</div>
+						<table style="width: 100%; border-collapse: collapse; font-size: 11px">
+							<thead>
+								<tr>
+									<th
+										style="
+											text-align: left;
+											padding: 2px 4px;
+											color: var(--muted);
+										"
+									>
+										Btn
+									</th>
+									<th
+										style="
+											text-align: left;
+											padding: 2px 4px;
+											color: var(--muted);
+										"
+									>
+										Cmd
+									</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody id="gpBindBody"></tbody>
+						</table>
+					</div>
+				</div>
 
-<div class="card"><h2>CAN Recorder</h2><div class="btns"><button class="btn" onclick="startRecorder()">Start</button><button class="btn" onclick="stopRecorder()">Stop</button><button class="btn" onclick="downloadRecorder()">Download</button></div><div class="kv" id="recSt" style="margin-top:6px">—</div></div>
+				<div class="card">
+					<h2>CAN Recorder</h2>
+					<div class="btns">
+						<button class="btn" onclick="startRecorder()">Start</button
+						><button class="btn" onclick="stopRecorder()">Stop</button
+						><button class="btn" onclick="downloadRecorder()">Download</button>
+					</div>
+					<div class="kv" id="recSt" style="margin-top: 6px">—</div>
+				</div>
 
-<div class="card"><h2>Write Probe</h2><select class="sel" id="probeCmd"><option value="apgate:on">apgate:on</option><option value="apgate:off">apgate:off</option><option value="nag:mode:off">nag:mode:off</option><option value="nag:mode:organic">nag:mode:organic</option><option value="mirror:autofold:on">mirror:autofold:on</option><option value="mirror:autofold:off">mirror:autofold:off</option></select><button class="btn" onclick="runWriteProbe()" style="margin-top:6px">Run</button><div class="kv" id="probeSt" style="margin-top:6px">idle</div></div>
+				<div class="card">
+					<h2>Write Probe</h2>
+					<select class="sel" id="probeCmd">
+						<option value="apgate:on">apgate:on</option>
+						<option value="apgate:off">apgate:off</option>
+						<option value="nag:mode:off">nag:mode:off</option>
+						<option value="nag:mode:organic">nag:mode:organic</option>
+						<option value="mirror:autofold:on">mirror:autofold:on</option>
+						<option value="mirror:autofold:off">mirror:autofold:off</option></select
+					><button class="btn" onclick="runWriteProbe()" style="margin-top: 6px">
+						Run
+					</button>
+					<div class="kv" id="probeSt" style="margin-top: 6px">idle</div>
+				</div>
 
-<div class="card" id="hiddenApCard" style="display:none"><h2>Hidden AP</h2><div class="warn-box">Experimental — EAP/Summon side effects.</div><div class="row"><span>Enhanced AP</span><label class="tgl"><input type="checkbox" id="hiddenApTg" onchange="toggleHiddenAp()"><span class="sl"></span></label></div><div class="kv" id="hiddenApSt">—</div></div>
-</section>
+				<div class="card" id="hiddenApCard" style="display: none">
+					<h2>Hidden AP</h2>
+					<div class="warn-box">Experimental — EAP/Summon side effects.</div>
+					<div class="row">
+						<span>Enhanced AP</span
+						><label class="tgl"
+							><input
+								type="checkbox"
+								id="hiddenApTg"
+								onchange="toggleHiddenAp()" /><span class="sl"></span
+						></label>
+					</div>
+					<div class="kv" id="hiddenApSt">—</div>
+				</div>
+			</section>
 
-<div class="card log-full"><h2>CAN Frame Log</h2><div class="log" id="logBox"></div></div>
-</div>
-<div class="toast" id="toast"></div>
-<script>
-let S={},W={},B={},R={},G={},hiddenAp=false;
-const HIGH_RISK=new Set(["lock","unlock","horn","frunk","trunk:open","sentry:on","mirror:fold","mirror:unfold","climate:keep","climate:off","summon:fwd","summon:stop","apgate:off"]);
-const PROBE={ "apgate:on":{k:"apGateEnabled",e:true},"apgate:off":{k:"apGateEnabled",e:false},"nag:mode:off":{k:"nagMode",e:"off"},"nag:mode:organic":{k:"nagMode",e:"organic"},"mirror:autofold:on":{k:"mirrorAutoFold",e:true},"mirror:autofold:off":{k:"mirrorAutoFold",e:false} };
-function $(id){return document.getElementById(id)}
-function esc(s){if(s==null)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
-function log(t){const b=$("logBox"),s=new Date().toLocaleTimeString();b.innerHTML=`[${esc(s)}] ${esc(t)}<br>`+b.innerHTML}
-function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1500)}
-function isHighRisk(c){return HIGH_RISK.has(c)||c.startsWith("window:vent:")||c.startsWith("summon:")}
-function cmd(c,o){if(!(o&&o.skipConfirm)&&isHighRisk(c)){if(!confirm(`Confirm: ${c}`)){log(`Canceled ${c}`);toast("Canceled");return Promise.resolve(null)}}
-return fetch("/api/command",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cmd:c})}).then(r=>{if(!r.ok)throw new Error(r.status);return fetch("/api/status")}).then(r=>r.json()).then(d=>{S=d;render();log(`CMD ${c}`);toast(c);return d}).catch(()=>{toast("Error");return null})}
-async function runWriteProbe(){const p=$("probeCmd").value,c=PROBE[p];if(!c){$("probeSt").innerHTML="FAILED: unknown";return}
-const st=Date.now();$("probeSt").innerHTML="running...";log(`PROBE TX ${p}`);const a=await cmd(p,{skipConfirm:true});if(!a){$("probeSt").innerHTML="FAILED: no ack";log(`PROBE FAIL ${p}`);return}
-let ok=a[c.k]===c.e,v=a;for(let i=0;!ok&&i<4;i++){await new Promise(r=>setTimeout(r,250));try{v=await fetch("/api/status").then(r=>r.json());ok=v[c.k]===c.e}catch(e){ok=false}}
-const el=Date.now()-st,sum=`${c.k}=${String(v[c.k])}, exp=${String(c.e)}, ${el}ms`;
-$("probeSt").innerHTML=(ok?"PASS":"FAILED")+": "+esc(sum);log(`PROBE ${ok?"PASS":"FAIL"} ${p} (${el}ms)`)}
-function toggleFsd(){cmd(S.fsd?"fsd:off":"fsd:on")}
-function setNagMode(m){cmd("nag:mode:"+m)}
-function toggleNagBypass(){cmd(S.nagOrgBypass?"nag:bypass:off":"nag:bypass:on")}
-function toggleIsa(){cmd(S.isaChime?"isa-chime:off":"isa-chime:on")}
-function toggleMirrorAutoFold(){cmd(S.mirrorAutoFold?"mirror:autofold:off":"mirror:autofold:on")}
-function toggleApGate(){cmd(S.apGateEnabled?"apgate:off":"apgate:on")}
-function toggleHiddenAp(){cmd(S.enhancedAutopilot?"eap:off":"eap:on")}
-function setVariant(v){cmd("variant:"+v)}
-function setProfile(p){cmd("profile:"+p)}
-function toggleDasDrive(){cmd(S.dasDriveEnabled?"drive:off":"drive:on")}
-function sendDasSpeedLimit(){const v=parseInt($("dasSpeedLimitIn").value||"0",10);if(v>=1)cmd("drive:speed:"+v)}
-function sendDasSpeedCap(){const v=parseInt($("dasSpeedCapIn").value||"0",10);if(v<1)return;const m=S.dasSpeedCapMaxKph||200;if(v>m){alert("Cap cannot exceed "+m);return}if(v>25&&!confirm("Above 25 km/h for closed-track only. Continue?"))return;cmd("drive:cap:"+v)}
-function sendVent(){cmd(`window:vent:${$("ventRange").value}`)}
-function setWifiMode(m){$("staFields").style.display=m==="sta"?"block":"none";$("apFields").style.display=m==="ap"?"block":"none";document.querySelectorAll("#wifiModeBtns button").forEach(b=>b.classList.toggle("on",b.textContent.toLowerCase()===m))}
-function connectSTA(){const s=$("staSSID").value.trim();if(!s){toast("Enter SSID");return}fetch("/api/wifi/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"sta",ssid:s,password:$("staPW").value})}).then(r=>r.json()).then(d=>{W=d;renderWifi();log(`WIFI STA ${s}`);toast("Connecting to "+s+"...")}).catch(()=>toast("Error"))}
-function saveAP(){const s=$("apSSID").value.trim(),p=$("apPW").value;if(!s){toast("Enter AP SSID");return}if(p.length>0&&p.length<8){toast("AP password 8+ chars");return}fetch("/api/wifi/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"ap",ssid:s,password:p})}).then(r=>r.json()).then(d=>{W=d;renderWifi();log(`WIFI AP ${s}`);toast("AP config saved")}).catch(()=>toast("Error"))}
-function toggleBle(){const en=$("bleTg").checked;cmd(en?"ble:on":"ble:off").then(d=>{if(d&&d.ble){B=d.ble;renderBle()}})}
-function renderGpScan(d){let h="";(d||[]).forEach(x=>{h+=`<div style="display:flex;align-items:center;gap:6px;margin:2px 0"><span style="font-family:monospace;font-size:10px">${esc(x.addr)}</span> ${esc(x.name)} <button class="btn" style="padding:2px 6px;font-size:10px" onclick="gpPair('${esc(x.addr)}')">Pair</button></div>`});$("gpDeviceList").innerHTML=h||'<span class="muted">No devices yet</span>';$("gpScanResults").style.display="block"}
-function renderGpBindings(b){let r="";(b||[]).forEach(x=>{r+=`<tr><td style="padding:2px 4px;white-space:nowrap">${esc(x.button)}</td><td style="padding:2px 4px"><input id="gpBind${x.index}" value="${esc(x.command)}" placeholder="cmd" style="width:100%;padding:3px 5px;font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)"></td><td style="padding:2px 4px"><button class="btn" style="padding:2px 6px;font-size:10px" onclick="gpSaveBind(${x.index})">Save</button></td></tr>`});$("gpBindBody").innerHTML=r}
-function gpScan(){cmd("gamepad:scan").then(()=>{$("gpScanResults").style.display="block";$("gpDeviceList").innerHTML='<span class="muted">Scanning...</span>';setTimeout(()=>{fetch("/api/status").then(r=>r.json()).then(d=>{S=d;if(d.gamepad)renderGpScan(d.gamepad.devices)}).catch(()=>{})},7000)})}
-function gpPair(a){cmd("gamepad:pair:"+a).then(()=>{$("gpBindBody").dataset.loaded=""})}
-function gpUnpair(){if(!confirm("Unpair gamepad?"))return;cmd("gamepad:unpair")}
-function gpSaveBind(i){const e=$("gpBind"+i);if(!e)return;cmd("gamepad:bind:"+i+":"+e.value.trim())}
-function startRecorder(){cmd("recorder:on").then(d=>{if(d&&d.recorder){R=d.recorder;renderRecorder()}})}
-function stopRecorder(){cmd("recorder:off").then(d=>{if(d&&d.recorder){R=d.recorder;renderRecorder()}})}
-function downloadRecorder(){fetch("/api/recorder/download").then(r=>{if(!r.ok)throw new Error("fail");return r.text()}).then(csv=>{const b=new Blob([csv],{type:"text/csv;charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=`can-${Date.now()}.csv`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);log("Recorder download");toast("CSV downloaded")}).catch(()=>toast("Error"))}
-function renderWifi(){let h=`Mode: ${esc((W.mode||"?").toUpperCase())} &bull; IP: ${esc(W.ip||"N/A")}`;if(W.mode==="sta")h+=`<br>SSID: ${esc(W.ssid||"N/A")} RSSI: ${esc(W.rssi||"?")} dBm<br>${W.connected?"Connected":"Disconnected"}`;else h+=`<br>SSID: ${esc(W.ssid||"N/A")} Clients: ${esc(W.clients||0)} Ch: ${esc(W.channel||"?")}`;$("wifiSt").innerHTML=h;document.querySelectorAll("#wifiModeBtns button").forEach(b=>b.classList.toggle("on",b.textContent.toLowerCase()===W.mode));if(W.mode==="sta"){$("staFields").style.display="block";$("apFields").style.display="none";if(W.ssid)$("staSSID").placeholder=W.ssid}else{$("staFields").style.display="none";$("apFields").style.display="block";if(W.ssid)$("apSSID").placeholder=W.ssid}}
-function renderBle(){let h=`${B.enabled?"Enabled":"Disabled"} &bull; ${B.connected?"Connected":"Disconnected"}`;if(B.deviceName)h+=`<br>Device: ${esc(B.deviceName)}`;$("bleSt").innerHTML=h;$("bleTg").checked=!!B.enabled}
-function renderGamepad(){const en=!!G.enabled,co=!!G.connected,sc=!!G.scanning,ad=G.pairedAddr||"";let h="";if(!en)h='<span class="muted">Disabled</span>';else if(co){h='<span style="color:var(--ok)">Connected</span>';h+=` btns:0x${(G.buttons||0).toString(16).padStart(4,"0")}`;if(G.axes&&G.axes.length>=6)h+=`<br>LX:${G.axes[0]} LY:${G.axes[1]} RX:${G.axes[2]} RY:${G.axes[3]} LT:${G.axes[4]} RT:${G.axes[5]}`}else if(ad)h='<span style="color:var(--warn)">Disconnected</span> reconnect...';else h='<span class="muted">No device</span>';if(ad)h+=`<br>Paired: ${esc(ad)}`;if(sc)h+=' <span style="color:var(--warn)">Scanning...</span>';$("gpSt").innerHTML=h;$("gpScanResults").style.display=(G.scanCount>0||sc)?"block":"none";if(!$("gpBindBody").dataset.loaded&&G.bindings){renderGpBindings(G.bindings);$("gpBindBody").dataset.loaded="1"}}
-function renderRecorder(){let h=`${R.enabled?"Running":"Stopped"} &bull; ${esc(R.count||0)}/${esc(R.capacity||0)} frames`;h+=`<br>Captured: ${esc(R.captured||0)} Dropped: ${esc(R.dropped||0)}`;h+=`<br>Last: ${esc(R.lastCaptureMs||0)} ms`;$("recSt").innerHTML=h}
-function val(v,u){return v!=null&&!isNaN(v)?((typeof v==="number"?v.toFixed(1):v)+" "+u):"&mdash; "+u}
-function renderBms(){const p=S.powertrain||{},tp=S.tpms||{},hw=S.hardware||{};
-$("bmsV").innerHTML=val(S.bmsVoltage,"<small>V</small>");$("bmsA").textContent=val(S.bmsCurrent,"A");$("bmsKW").textContent=val(S.bmsPower,"kW");
-const soc=S.bmsSoc||0;$("bmsSoc").innerHTML=val(soc,"<small>%</small>");$("bmsSocBar").style.width=Math.min(100,Math.max(0,soc||0))+"%";
-$("bmsCellV").textContent=`${val(S.bmsCellVoltageMax,"")} / ${val(S.bmsCellVoltageMin,"V")}`
-$("bmsNom").textContent=`${val(S.bmsNominalRemaining,"")} / ${val(S.bmsNominalFullPack,"kWh")}`
-$("bmsTmin").textContent=val(S.bmsTempMin,"°C");$("bmsTmax").textContent=val(S.bmsTempMax,"°C");
-if(S.bmsPackTMin!=null)$("bmsThermal").textContent=`Therm: ${S.bmsPackTMin||"—"} – ${S.bmsPackTMax||"—"} °C`;
-$("pwRegen").textContent=val(S.bmsMaxRegenPower,"kW");$("pwDch").textContent=val(S.bmsMaxDischargePower,"kW");$("pwChg").textContent=val(S.bmsMaxDischargeCurrent,"A");
-$("bmsUpd").textContent=S.hasBms?"live":"—";
-let tpmsH="";["FL","FR","RL","RR"].forEach((t,i)=>{const pr=S.hasTpms?((tp[t.toLowerCase()]||0)/100).toFixed(2):"—";tpmsH+=`<div><div class="p">${pr}</div>${t}</div>`});$("tpmsGrid").innerHTML=tpmsH;
-let ch="";["chassis","vehicle","body"].forEach(b=>{const st=hw["bus"+b.charAt(0).toUpperCase()+b.slice(1)]||hw[b];const on=S[b+"Online"];const c=st&&on?"#22c55e":st?"#f59e0b":"#64748b";ch+=`<div class="row"><span>${b.charAt(0).toUpperCase()+b.slice(1)}</span><span style="color:${c}">${st?(on?"ON":"detected"):"off"}</span></div>`});$("canHealth").innerHTML=ch||"No bus data";
-const pt=p;$("ptSpeed").innerHTML=val(pt.speed?pt.speed/100:null,"<small>km/h</small>");$("ptGear").textContent=["?","P","R","N","D"][pt.gear]||"?";$("ptPedal").textContent=val(pt.pedal,"%");$("ptSteer").textContent=val(pt.steer?pt.steer/10:null,"°")}
-function render(){const hw=S.hardware||{};
-$("heroIp").textContent=hw.ip||"—";$("heroVar").textContent=S.variant||"—";$("heroUp").textContent="up "+Math.floor((S.uptime||0)/1000)+"s";
-let bg='<span class="chip live">CAN:'+(S.chassisOnline?"Online":"Offline")+"</span>";
-bg+=`<span class="chip">FSD:${S.fsd?"ON":"OFF"}</span>`;bg+=`<span class="chip">Nag:${esc(S.nagMode||"off")}</span>`;
-const pn=["Chill","Normal","Hurry","Max","Sloth"][S.profile]||"?";bg+=`<span class="chip">Prof:${pn}${S.profilePin?"*":""}</span>`;
-bg+=`<span class="chip">Offset:${S.offset||0}</span>`;
-if(S.banShield)bg+='<span class="chip warn">BanShield</span>';if(S.gtwShieldArmed)bg+='<span class="chip warn">GTW</span>';
-bg+=`<span class="chip">AP:${S.apGateOpen?"OPEN":"CLOSED"}</span>`;$("badges").innerHTML=bg;
-$("fsdTg").checked=!!S.fsd;if($("nagModeSel"))$("nagModeSel").value=S.nagMode||"off";if($("nagBypassTg"))$("nagBypassTg").checked=!!S.nagOrgBypass;
-$("isaTg").checked=!!S.isaChime;$("mirrorAutoTg").checked=!!S.mirrorAutoFold;$("apGateTg").checked=!!S.apGateEnabled;
-$("apGateSt").innerHTML=`Gate: ${S.apGateOpen?'<span style="color:var(--ok)">OPEN</span>':'<span style="color:var(--accent)">CLOSED</span>'} AP:${S.apGateAp?"ON":"off"} Park:${S.apGatePark?"ON":"off"} Summon:${S.apGateSummon?"ON":"off"}`;
-if($("dasDriveTg")){$("dasDriveTg").checked=!!S.dasDriveEnabled;const l=$("dasSpeedLimitIn"),c=$("dasSpeedCapIn"),lb=$("dasSpeedCapMaxLbl");if(l&&document.activeElement!==l)l.value=S.dasSpeedLimitKph??"";if(c){if(document.activeElement!==c)c.value=S.dasSpeedCapKph??"";c.max=S.dasSpeedCapMaxKph??200}if(l)l.max=S.dasSpeedCapKph??25;if(lb)lb.textContent="max "+(S.dasSpeedCapMaxKph??200)}
-if(hiddenAp){$("hiddenApTg").checked=!!S.enhancedAutopilot;$("hiddenApSt").innerHTML=S.enhancedAutopilot?'<span style="color:var(--warn)">Enabled</span>':'<span style="color:var(--ok)">Disabled</span>'}
-document.querySelectorAll("#spBtns button").forEach((b,i)=>{if(i<4)b.classList.toggle("on",S.profilePin&&S.profile===i);if(i===4)b.classList.toggle("on",!S.profilePin)});
-renderBms()}
-function poll(){fetch("/api/status").then(r=>r.json()).then(d=>{S=d;render();if(d.ble){B=d.ble;renderBle()}if(d.recorder){R=d.recorder;renderRecorder()}if(d.gamepad){G=d.gamepad;if(G.bindings&&!$("gpBindBody").dataset.loaded){renderGpBindings(G.bindings);$("gpBindBody").dataset.loaded="1"}renderGamepad()}}).catch(()=>{});
-fetch("/api/wifi/status").then(r=>r.json()).then(d=>{W=d;renderWifi()}).catch(()=>{})}
-setInterval(poll,2000);
-document.addEventListener("keydown",e=>{if(e.ctrlKey&&e.shiftKey&&(e.key==="A"||e.key==="a")){hiddenAp=!hiddenAp;$("hiddenApCard").style.display=hiddenAp?"block":"none";if(hiddenAp){log("Hidden AP revealed");toast("Advanced AP revealed")}}});
-log("Dashboard booted");poll();
-</script>
-</body>
+			<div class="card log-full">
+				<h2>CAN Frame Log</h2>
+				<div class="log" id="logBox"></div>
+			</div>
+		</div>
+		<div class="toast" id="toast"></div>
+		<script>
+			let S = {},
+				W = {},
+				B = {},
+				R = {},
+				G = {},
+				hiddenAp = false;
+			const HIGH_RISK = new Set([
+				"lock",
+				"unlock",
+				"horn",
+				"frunk",
+				"trunk:open",
+				"sentry:on",
+				"mirror:fold",
+				"mirror:unfold",
+				"climate:keep",
+				"climate:off",
+				"summon:fwd",
+				"summon:stop",
+				"apgate:off",
+			]);
+			const PROBE = {
+				"apgate:on": { k: "apGateEnabled", e: true },
+				"apgate:off": { k: "apGateEnabled", e: false },
+				"nag:mode:off": { k: "nagMode", e: "off" },
+				"nag:mode:organic": { k: "nagMode", e: "organic" },
+				"mirror:autofold:on": { k: "mirrorAutoFold", e: true },
+				"mirror:autofold:off": { k: "mirrorAutoFold", e: false },
+			};
+			function $(id) {
+				return document.getElementById(id);
+			}
+			function esc(s) {
+				if (s == null) return "";
+				return String(s)
+					.replace(/&/g, "&amp;")
+					.replace(/</g, "&lt;")
+					.replace(/>/g, "&gt;")
+					.replace(/"/g, "&quot;")
+					.replace(/'/g, "&#39;");
+			}
+			function log(t) {
+				const b = $("logBox"),
+					s = new Date().toLocaleTimeString();
+				b.innerHTML = `[${esc(s)}] ${esc(t)}<br>` + b.innerHTML;
+			}
+			function toast(m) {
+				const t = $("toast");
+				t.textContent = m;
+				t.classList.add("show");
+				setTimeout(() => t.classList.remove("show"), 1500);
+			}
+			function isHighRisk(c) {
+				return HIGH_RISK.has(c) || c.startsWith("window:vent:") || c.startsWith("summon:");
+			}
+			function cmd(c, o) {
+				if (!(o && o.skipConfirm) && isHighRisk(c)) {
+					if (!confirm(`Confirm: ${c}`)) {
+						log(`Canceled ${c}`);
+						toast("Canceled");
+						return Promise.resolve(null);
+					}
+				}
+				return fetch("/api/command", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ cmd: c }),
+				})
+					.then((r) => {
+						if (!r.ok) throw new Error(r.status);
+						return fetch("/api/status");
+					})
+					.then((r) => r.json())
+					.then((d) => {
+						S = d;
+						render();
+						log(`CMD ${c}`);
+						toast(c);
+						return d;
+					})
+					.catch(() => {
+						toast("Error");
+						return null;
+					});
+			}
+			async function runWriteProbe() {
+				const p = $("probeCmd").value,
+					c = PROBE[p];
+				if (!c) {
+					$("probeSt").innerHTML = "FAILED: unknown";
+					return;
+				}
+				const st = Date.now();
+				$("probeSt").innerHTML = "running...";
+				log(`PROBE TX ${p}`);
+				const a = await cmd(p, { skipConfirm: true });
+				if (!a) {
+					$("probeSt").innerHTML = "FAILED: no ack";
+					log(`PROBE FAIL ${p}`);
+					return;
+				}
+				let ok = a[c.k] === c.e,
+					v = a;
+				for (let i = 0; !ok && i < 4; i++) {
+					await new Promise((r) => setTimeout(r, 250));
+					try {
+						v = await fetch("/api/status").then((r) => r.json());
+						ok = v[c.k] === c.e;
+					} catch (e) {
+						ok = false;
+					}
+				}
+				const el = Date.now() - st,
+					sum = `${c.k}=${String(v[c.k])}, exp=${String(c.e)}, ${el}ms`;
+				$("probeSt").innerHTML = (ok ? "PASS" : "FAILED") + ": " + esc(sum);
+				log(`PROBE ${ok ? "PASS" : "FAIL"} ${p} (${el}ms)`);
+			}
+			function toggleFsd() {
+				cmd(S.fsd ? "fsd:off" : "fsd:on");
+			}
+			function setNagMode(m) {
+				cmd("nag:mode:" + m);
+			}
+			function toggleNagBypass() {
+				cmd(S.nagOrgBypass ? "nag:bypass:off" : "nag:bypass:on");
+			}
+			function toggleIsa() {
+				cmd(S.isaChime ? "isa-chime:off" : "isa-chime:on");
+			}
+			function toggleMirrorAutoFold() {
+				cmd(S.mirrorAutoFold ? "mirror:autofold:off" : "mirror:autofold:on");
+			}
+			function toggleApGate() {
+				cmd(S.apGateEnabled ? "apgate:off" : "apgate:on");
+			}
+			function toggleHiddenAp() {
+				cmd(S.enhancedAutopilot ? "eap:off" : "eap:on");
+			}
+			function setVariant(v) {
+				cmd("variant:" + v);
+			}
+			function setProfile(p) {
+				cmd("profile:" + p);
+			}
+			function toggleDasDrive() {
+				cmd(S.dasDriveEnabled ? "drive:off" : "drive:on");
+			}
+			function sendDasSpeedLimit() {
+				const v = parseInt($("dasSpeedLimitIn").value || "0", 10);
+				if (v >= 1) cmd("drive:speed:" + v);
+			}
+			function sendDasSpeedCap() {
+				const v = parseInt($("dasSpeedCapIn").value || "0", 10);
+				if (v < 1) return;
+				const m = S.dasSpeedCapMaxKph || 200;
+				if (v > m) {
+					alert("Cap cannot exceed " + m);
+					return;
+				}
+				if (v > 25 && !confirm("Above 25 km/h for closed-track only. Continue?")) return;
+				cmd("drive:cap:" + v);
+			}
+			function sendVent() {
+				cmd(`window:vent:${$("ventRange").value}`);
+			}
+			function setWifiMode(m) {
+				$("staFields").style.display = m === "sta" ? "block" : "none";
+				$("apFields").style.display = m === "ap" ? "block" : "none";
+				document
+					.querySelectorAll("#wifiModeBtns button")
+					.forEach((b) => b.classList.toggle("on", b.textContent.toLowerCase() === m));
+			}
+			function connectSTA() {
+				const s = $("staSSID").value.trim();
+				if (!s) {
+					toast("Enter SSID");
+					return;
+				}
+				fetch("/api/wifi/config", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ mode: "sta", ssid: s, password: $("staPW").value }),
+				})
+					.then((r) => r.json())
+					.then((d) => {
+						W = d;
+						renderWifi();
+						log(`WIFI STA ${s}`);
+						toast("Connecting to " + s + "...");
+					})
+					.catch(() => toast("Error"));
+			}
+			function saveAP() {
+				const s = $("apSSID").value.trim(),
+					p = $("apPW").value;
+				if (!s) {
+					toast("Enter AP SSID");
+					return;
+				}
+				if (p.length > 0 && p.length < 8) {
+					toast("AP password 8+ chars");
+					return;
+				}
+				fetch("/api/wifi/config", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ mode: "ap", ssid: s, password: p }),
+				})
+					.then((r) => r.json())
+					.then((d) => {
+						W = d;
+						renderWifi();
+						log(`WIFI AP ${s}`);
+						toast("AP config saved");
+					})
+					.catch(() => toast("Error"));
+			}
+			function toggleBle() {
+				const en = $("bleTg").checked;
+				cmd(en ? "ble:on" : "ble:off").then((d) => {
+					if (d && d.ble) {
+						B = d.ble;
+						renderBle();
+					}
+				});
+			}
+			function renderGpScan(d) {
+				let h = "";
+				(d || []).forEach((x) => {
+					h += `<div style="display:flex;align-items:center;gap:6px;margin:2px 0"><span style="font-family:monospace;font-size:10px">${esc(x.addr)}</span> ${esc(x.name)} <button class="btn" style="padding:2px 6px;font-size:10px" onclick="gpPair('${esc(x.addr)}')">Pair</button></div>`;
+				});
+				$("gpDeviceList").innerHTML = h || '<span class="muted">No devices yet</span>';
+				$("gpScanResults").style.display = "block";
+			}
+			function renderGpBindings(b) {
+				let r = "";
+				(b || []).forEach((x) => {
+					r += `<tr><td style="padding:2px 4px;white-space:nowrap">${esc(x.button)}</td><td style="padding:2px 4px"><input id="gpBind${x.index}" value="${esc(x.command)}" placeholder="cmd" style="width:100%;padding:3px 5px;font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)"></td><td style="padding:2px 4px"><button class="btn" style="padding:2px 6px;font-size:10px" onclick="gpSaveBind(${x.index})">Save</button></td></tr>`;
+				});
+				$("gpBindBody").innerHTML = r;
+			}
+			function gpScan() {
+				cmd("gamepad:scan").then(() => {
+					$("gpScanResults").style.display = "block";
+					$("gpDeviceList").innerHTML = '<span class="muted">Scanning...</span>';
+					setTimeout(() => {
+						fetch("/api/status")
+							.then((r) => r.json())
+							.then((d) => {
+								S = d;
+								if (d.gamepad) renderGpScan(d.gamepad.devices);
+							})
+							.catch(() => {});
+					}, 7000);
+				});
+			}
+			function gpPair(a) {
+				cmd("gamepad:pair:" + a).then(() => {
+					$("gpBindBody").dataset.loaded = "";
+				});
+			}
+			function gpUnpair() {
+				if (!confirm("Unpair gamepad?")) return;
+				cmd("gamepad:unpair");
+			}
+			function gpSaveBind(i) {
+				const e = $("gpBind" + i);
+				if (!e) return;
+				cmd("gamepad:bind:" + i + ":" + e.value.trim());
+			}
+			function startRecorder() {
+				cmd("recorder:on").then((d) => {
+					if (d && d.recorder) {
+						R = d.recorder;
+						renderRecorder();
+					}
+				});
+			}
+			function stopRecorder() {
+				cmd("recorder:off").then((d) => {
+					if (d && d.recorder) {
+						R = d.recorder;
+						renderRecorder();
+					}
+				});
+			}
+			function downloadRecorder() {
+				fetch("/api/recorder/download")
+					.then((r) => {
+						if (!r.ok) throw new Error("fail");
+						return r.text();
+					})
+					.then((csv) => {
+						const b = new Blob([csv], { type: "text/csv;charset=utf-8" }),
+							u = URL.createObjectURL(b),
+							a = document.createElement("a");
+						a.href = u;
+						a.download = `can-${Date.now()}.csv`;
+						document.body.appendChild(a);
+						a.click();
+						document.body.removeChild(a);
+						URL.revokeObjectURL(u);
+						log("Recorder download");
+						toast("CSV downloaded");
+					})
+					.catch(() => toast("Error"));
+			}
+			function renderWifi() {
+				let h = `Mode: ${esc((W.mode || "?").toUpperCase())} &bull; IP: ${esc(W.ip || "N/A")}`;
+				if (W.mode === "sta")
+					h += `<br>SSID: ${esc(W.ssid || "N/A")} RSSI: ${esc(W.rssi || "?")} dBm<br>${W.connected ? "Connected" : "Disconnected"}`;
+				else
+					h += `<br>SSID: ${esc(W.ssid || "N/A")} Clients: ${esc(W.clients || 0)} Ch: ${esc(W.channel || "?")}`;
+				$("wifiSt").innerHTML = h;
+				document
+					.querySelectorAll("#wifiModeBtns button")
+					.forEach((b) =>
+						b.classList.toggle("on", b.textContent.toLowerCase() === W.mode),
+					);
+				if (W.mode === "sta") {
+					$("staFields").style.display = "block";
+					$("apFields").style.display = "none";
+					if (W.ssid) $("staSSID").placeholder = W.ssid;
+				} else {
+					$("staFields").style.display = "none";
+					$("apFields").style.display = "block";
+					if (W.ssid) $("apSSID").placeholder = W.ssid;
+				}
+			}
+			function renderBle() {
+				let h = `${B.enabled ? "Enabled" : "Disabled"} &bull; ${B.connected ? "Connected" : "Disconnected"}`;
+				if (B.deviceName) h += `<br>Device: ${esc(B.deviceName)}`;
+				$("bleSt").innerHTML = h;
+				$("bleTg").checked = !!B.enabled;
+			}
+			function renderGamepad() {
+				const en = !!G.enabled,
+					co = !!G.connected,
+					sc = !!G.scanning,
+					ad = G.pairedAddr || "";
+				let h = "";
+				if (!en) h = '<span class="muted">Disabled</span>';
+				else if (co) {
+					h = '<span style="color:var(--ok)">Connected</span>';
+					h += ` btns:0x${(G.buttons || 0).toString(16).padStart(4, "0")}`;
+					if (G.axes && G.axes.length >= 6)
+						h += `<br>LX:${G.axes[0]} LY:${G.axes[1]} RX:${G.axes[2]} RY:${G.axes[3]} LT:${G.axes[4]} RT:${G.axes[5]}`;
+				} else if (ad)
+					h = '<span style="color:var(--warn)">Disconnected</span> reconnect...';
+				else h = '<span class="muted">No device</span>';
+				if (ad) h += `<br>Paired: ${esc(ad)}`;
+				if (sc) h += ' <span style="color:var(--warn)">Scanning...</span>';
+				$("gpSt").innerHTML = h;
+				$("gpScanResults").style.display = G.scanCount > 0 || sc ? "block" : "none";
+				if (!$("gpBindBody").dataset.loaded && G.bindings) {
+					renderGpBindings(G.bindings);
+					$("gpBindBody").dataset.loaded = "1";
+				}
+			}
+			function renderRecorder() {
+				let h = `${R.enabled ? "Running" : "Stopped"} &bull; ${esc(R.count || 0)}/${esc(R.capacity || 0)} frames`;
+				h += `<br>Captured: ${esc(R.captured || 0)} Dropped: ${esc(R.dropped || 0)}`;
+				h += `<br>Last: ${esc(R.lastCaptureMs || 0)} ms`;
+				$("recSt").innerHTML = h;
+			}
+			function val(v, u) {
+				return v != null && !isNaN(v)
+					? (typeof v === "number" ? v.toFixed(1) : v) + " " + u
+					: "&mdash; " + u;
+			}
+			function renderBms() {
+				const p = S.powertrain || {},
+					tp = S.tpms || {},
+					hw = S.hardware || {};
+				$("bmsV").innerHTML = val(S.bmsVoltage, "<small>V</small>");
+				$("bmsA").textContent = val(S.bmsCurrent, "A");
+				$("bmsKW").textContent = val(S.bmsPower, "kW");
+				const soc = S.bmsSoc || 0;
+				$("bmsSoc").innerHTML = val(soc, "<small>%</small>");
+				$("bmsSocBar").style.width = Math.min(100, Math.max(0, soc || 0)) + "%";
+				$("bmsCellV").textContent =
+					`${val(S.bmsCellVoltageMax, "")} / ${val(S.bmsCellVoltageMin, "V")}`;
+				$("bmsNom").textContent =
+					`${val(S.bmsNominalRemaining, "")} / ${val(S.bmsNominalFullPack, "kWh")}`;
+				$("bmsTmin").textContent = val(S.bmsTempMin, "°C");
+				$("bmsTmax").textContent = val(S.bmsTempMax, "°C");
+				if (S.bmsPackTMin != null)
+					$("bmsThermal").textContent =
+						`Therm: ${S.bmsPackTMin || "—"} – ${S.bmsPackTMax || "—"} °C`;
+				$("pwRegen").textContent = val(S.bmsMaxRegenPower, "kW");
+				$("pwDch").textContent = val(S.bmsMaxDischargePower, "kW");
+				$("pwChg").textContent = val(S.bmsMaxDischargeCurrent, "A");
+				$("bmsUpd").textContent = S.hasBms ? "live" : "—";
+				let tpmsH = "";
+				["FL", "FR", "RL", "RR"].forEach((t, i) => {
+					const pr = S.hasTpms ? ((tp[t.toLowerCase()] || 0) / 100).toFixed(2) : "—";
+					tpmsH += `<div><div class="p">${pr}</div>${t}</div>`;
+				});
+				$("tpmsGrid").innerHTML = tpmsH;
+				let ch = "";
+				["chassis", "vehicle", "body"].forEach((b) => {
+					const st = hw["bus" + b.charAt(0).toUpperCase() + b.slice(1)] || hw[b];
+					const on = S[b + "Online"];
+					const c = st && on ? "#22c55e" : st ? "#f59e0b" : "#64748b";
+					ch += `<div class="row"><span>${b.charAt(0).toUpperCase() + b.slice(1)}</span><span style="color:${c}">${st ? (on ? "ON" : "detected") : "off"}</span></div>`;
+				});
+				$("canHealth").innerHTML = ch || "No bus data";
+				const pt = p;
+				$("ptSpeed").innerHTML = val(
+					pt.speed ? pt.speed / 100 : null,
+					"<small>km/h</small>",
+				);
+				$("ptGear").textContent = ["?", "P", "R", "N", "D"][pt.gear] || "?";
+				$("ptPedal").textContent = val(pt.pedal, "%");
+				$("ptSteer").textContent = val(pt.steer ? pt.steer / 10 : null, "°");
+			}
+			function render() {
+				const hw = S.hardware || {};
+				$("heroIp").textContent = hw.ip || "—";
+				$("heroVar").textContent = S.variant || "—";
+				$("heroUp").textContent = "up " + Math.floor((S.uptime || 0) / 1000) + "s";
+				let bg =
+					'<span class="chip live">CAN:' +
+					(S.chassisOnline ? "Online" : "Offline") +
+					"</span>";
+				bg += `<span class="chip">FSD:${S.fsd ? "ON" : "OFF"}</span>`;
+				bg += `<span class="chip">Nag:${esc(S.nagMode || "off")}</span>`;
+				const pn = ["Chill", "Normal", "Hurry", "Max", "Sloth"][S.profile] || "?";
+				bg += `<span class="chip">Prof:${pn}${S.profilePin ? "*" : ""}</span>`;
+				bg += `<span class="chip">Offset:${S.offset || 0}</span>`;
+				if (S.banShield) bg += '<span class="chip warn">BanShield</span>';
+				if (S.gtwShieldArmed) bg += '<span class="chip warn">GTW</span>';
+				bg += `<span class="chip">AP:${S.apGateOpen ? "OPEN" : "CLOSED"}</span>`;
+				$("badges").innerHTML = bg;
+				$("fsdTg").checked = !!S.fsd;
+				if ($("nagModeSel")) $("nagModeSel").value = S.nagMode || "off";
+				if ($("nagBypassTg")) $("nagBypassTg").checked = !!S.nagOrgBypass;
+				$("isaTg").checked = !!S.isaChime;
+				$("mirrorAutoTg").checked = !!S.mirrorAutoFold;
+				$("apGateTg").checked = !!S.apGateEnabled;
+				$("apGateSt").innerHTML =
+					`Gate: ${S.apGateOpen ? '<span style="color:var(--ok)">OPEN</span>' : '<span style="color:var(--accent)">CLOSED</span>'} AP:${S.apGateAp ? "ON" : "off"} Park:${S.apGatePark ? "ON" : "off"} Summon:${S.apGateSummon ? "ON" : "off"}`;
+				if ($("dasDriveTg")) {
+					$("dasDriveTg").checked = !!S.dasDriveEnabled;
+					const l = $("dasSpeedLimitIn"),
+						c = $("dasSpeedCapIn"),
+						lb = $("dasSpeedCapMaxLbl");
+					if (l && document.activeElement !== l) l.value = S.dasSpeedLimitKph ?? "";
+					if (c) {
+						if (document.activeElement !== c) c.value = S.dasSpeedCapKph ?? "";
+						c.max = S.dasSpeedCapMaxKph ?? 200;
+					}
+					if (l) l.max = S.dasSpeedCapKph ?? 25;
+					if (lb) lb.textContent = "max " + (S.dasSpeedCapMaxKph ?? 200);
+				}
+				if (hiddenAp) {
+					$("hiddenApTg").checked = !!S.enhancedAutopilot;
+					$("hiddenApSt").innerHTML = S.enhancedAutopilot
+						? '<span style="color:var(--warn)">Enabled</span>'
+						: '<span style="color:var(--ok)">Disabled</span>';
+				}
+				document.querySelectorAll("#spBtns button").forEach((b, i) => {
+					if (i < 4) b.classList.toggle("on", S.profilePin && S.profile === i);
+					if (i === 4) b.classList.toggle("on", !S.profilePin);
+				});
+				renderBms();
+			}
+			function poll() {
+				fetch("/api/status")
+					.then((r) => r.json())
+					.then((d) => {
+						S = d;
+						render();
+						if (d.ble) {
+							B = d.ble;
+							renderBle();
+						}
+						if (d.recorder) {
+							R = d.recorder;
+							renderRecorder();
+						}
+						if (d.gamepad) {
+							G = d.gamepad;
+							if (G.bindings && !$("gpBindBody").dataset.loaded) {
+								renderGpBindings(G.bindings);
+								$("gpBindBody").dataset.loaded = "1";
+							}
+							renderGamepad();
+						}
+					})
+					.catch(() => {});
+				fetch("/api/wifi/status")
+					.then((r) => r.json())
+					.then((d) => {
+						W = d;
+						renderWifi();
+					})
+					.catch(() => {});
+			}
+			setInterval(poll, 2000);
+			document.addEventListener("keydown", (e) => {
+				if (e.ctrlKey && e.shiftKey && (e.key === "A" || e.key === "a")) {
+					hiddenAp = !hiddenAp;
+					$("hiddenApCard").style.display = hiddenAp ? "block" : "none";
+					if (hiddenAp) {
+						log("Hidden AP revealed");
+						toast("Advanced AP revealed");
+					}
+				}
+			});
+			log("Dashboard booted");
+			poll();
+		</script>
+	</body>
 </html>

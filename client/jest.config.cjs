@@ -1,5 +1,5 @@
 module.exports = {
-  preset: "@react-native/jest-preset",
+  preset: "jest-expo",
   setupFiles: ["<rootDir>/src/test/setup.ts"],
   roots: ["<rootDir>/tests"],
   testMatch: ["**/*.test.ts", "**/*.test.tsx"],
@@ -9,6 +9,10 @@ module.exports = {
     "^react$": "<rootDir>/../node_modules/react",
     "^react/jsx-runtime$": "<rootDir>/../node_modules/react/jsx-runtime",
     "^react/jsx-dev-runtime$": "<rootDir>/../node_modules/react/jsx-dev-runtime",
+    "^react-native-css-interop/jsx-runtime$":
+      "<rootDir>/node_modules/react-native-css-interop/dist/runtime/jsx-runtime",
+    "^react-native-css-interop/jsx-dev-runtime$":
+      "<rootDir>/node_modules/react-native-css-interop/dist/runtime/jsx-dev-runtime",
     "^react-native-svg$": "<rootDir>/src/test/mocks/reactNativeSvgMock.tsx",
     "^react-native-vector-icons$": "@expo/vector-icons",
     "^react-native-vector-icons/(.*)": "@expo/vector-icons/$1",

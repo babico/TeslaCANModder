@@ -419,7 +419,7 @@ Use CSS to make diagrams responsive:
 
 ```html
 <div style="max-width: 100%; overflow: auto;">
-	<pre class="mermaid">
+    <pre class="mermaid">
         flowchart LR
             A --> B --> C
     </pre>
@@ -521,23 +521,23 @@ flowchart LR
 ```html
 <!DOCTYPE html>
 <html>
-	<head>
-		<script type="module">
-			import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-			mermaid.initialize({
-				startOnLoad: true,
-				theme: "dark",
-				look: "handDrawn",
-			});
-		</script>
-	</head>
-	<body>
-		<pre class="mermaid">
+    <head>
+        <script type="module">
+            import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: "dark",
+                look: "handDrawn",
+            });
+        </script>
+    </head>
+    <body>
+        <pre class="mermaid">
         flowchart LR
             A --> B
     </pre
-		>
-	</body>
+        >
+    </body>
 </html>
 ```
 

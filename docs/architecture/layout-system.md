@@ -222,13 +222,13 @@ Switching is controlled by `useTheme()` which reads system preference + user ove
 
 ```ts
 interface LayoutConfig {
-	gaugeSize: number; // speedometer diameter
-	showSidebar: boolean;
-	showLeftPanel: boolean;
-	showStatChips: boolean;
-	densityTier: keyof typeof density;
-	topRailHeight: number;
-	lowerBandHeight: number;
+    gaugeSize: number; // speedometer diameter
+    showSidebar: boolean;
+    showLeftPanel: boolean;
+    showStatChips: boolean;
+    densityTier: keyof typeof density;
+    topRailHeight: number;
+    lowerBandHeight: number;
 }
 ```
 

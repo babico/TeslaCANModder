@@ -21,11 +21,11 @@ All MCP servers are **disabled by default** to save context. Enable them in `ope
 
 ```json
 {
-	"mcp": {
-		"github": {
-			"enabled": true
-		}
-	}
+    "mcp": {
+        "github": {
+            "enabled": true
+        }
+    }
 }
 ```
 
@@ -33,16 +33,16 @@ All MCP servers are **disabled by default** to save context. Enable them in `ope
 
 ```json
 {
-	"tools": {
-		"github*": false
-	},
-	"agent": {
-		"my-agent": {
-			"tools": {
-				"github*": true
-			}
-		}
-	}
+    "tools": {
+        "github*": false
+    },
+    "agent": {
+        "my-agent": {
+            "tools": {
+                "github*": true
+            }
+        }
+    }
 }
 ```
 
@@ -170,22 +170,22 @@ Disable globally, enable only for specific agents:
 
 ```json
 {
-	"tools": {
-		"github*": false,
-		"playwright*": false
-	},
-	"agent": {
-		"web-tester": {
-			"tools": {
-				"playwright*": true
-			}
-		},
-		"issue-manager": {
-			"tools": {
-				"github*": true
-			}
-		}
-	}
+    "tools": {
+        "github*": false,
+        "playwright*": false
+    },
+    "agent": {
+        "web-tester": {
+            "tools": {
+                "playwright*": true
+            }
+        },
+        "issue-manager": {
+            "tools": {
+                "github*": true
+            }
+        }
+    }
 }
 ```
 

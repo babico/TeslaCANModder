@@ -108,13 +108,13 @@ OpenCode reads these files for project context:
 
 ```json
 {
-	"provider": {
-		"opencode-go": {
-			"options": {
-				"apiKey": "{env:OPENCODE_GO_API_KEY}"
-			}
-		}
-	}
+    "provider": {
+        "opencode-go": {
+            "options": {
+                "apiKey": "{env:OPENCODE_GO_API_KEY}"
+            }
+        }
+    }
 }
 ```
 
@@ -151,11 +151,11 @@ All servers are **disabled by default** to save context tokens.
 
 ```json
 {
-	"mcp": {
-		"github": {
-			"enabled": true
-		}
-	}
+    "mcp": {
+        "github": {
+            "enabled": true
+        }
+    }
 }
 ```
 
@@ -163,16 +163,16 @@ All servers are **disabled by default** to save context tokens.
 
 ```json
 {
-	"tools": {
-		"github*": false
-	},
-	"agent": {
-		"my-agent": {
-			"tools": {
-				"github*": true
-			}
-		}
-	}
+    "tools": {
+        "github*": false
+    },
+    "agent": {
+        "my-agent": {
+            "tools": {
+                "github*": true
+            }
+        }
+    }
 }
 ```
 
@@ -268,17 +268,17 @@ All skills are allowed globally. You can restrict per-agent in `opencode.json`:
 
 ```json
 {
-	"agent": {
-		"github-reviewer": {
-			"permission": {
-				"skill": {
-					"can-protocol-safety": "allow",
-					"firmware-development": "allow",
-					"release-qa": "deny"
-				}
-			}
-		}
-	}
+    "agent": {
+        "github-reviewer": {
+            "permission": {
+                "skill": {
+                    "can-protocol-safety": "allow",
+                    "firmware-development": "allow",
+                    "release-qa": "deny"
+                }
+            }
+        }
+    }
 }
 ```
 
@@ -309,12 +309,12 @@ Or create your own:
 
 ```json
 {
-	"command": {
-		"flash": {
-			"template": "Flash the firmware to COM4 using `cd firmware && .\\pio.ps1 run -e esp32_chassis_8mhz -t upload`. Report success or errors.",
-			"description": "Flash firmware to device"
-		}
-	}
+    "command": {
+        "flash": {
+            "template": "Flash the firmware to COM4 using `cd firmware && .\\pio.ps1 run -e esp32_chassis_8mhz -t upload`. Report success or errors.",
+            "description": "Flash firmware to device"
+        }
+    }
 }
 ```
 
@@ -385,17 +385,17 @@ Read-only PR reviewer focused on CAN safety:
 
 ```json
 {
-	"agent": {
-		"github-reviewer": {
-			"description": "Automated PR reviewer for TeslaCANModder",
-			"model": "opencode-go/kimi-k2.6",
-			"prompt": "You are a TeslaCANModder code reviewer. Focus on: CAN frame safety...",
-			"tools": {
-				"write": false,
-				"edit": false
-			}
-		}
-	}
+    "agent": {
+        "github-reviewer": {
+            "description": "Automated PR reviewer for TeslaCANModder",
+            "model": "opencode-go/kimi-k2.6",
+            "prompt": "You are a TeslaCANModder code reviewer. Focus on: CAN frame safety...",
+            "tools": {
+                "write": false,
+                "edit": false
+            }
+        }
+    }
 }
 ```
 
@@ -427,14 +427,14 @@ Control tool access per-agent:
 
 ```json
 {
-	"agent": {
-		"safe-mode": {
-			"tools": {
-				"bash": false,
-				"write": false
-			}
-		}
-	}
+    "agent": {
+        "safe-mode": {
+            "tools": {
+                "bash": false,
+                "write": false
+            }
+        }
+    }
 }
 ```
 

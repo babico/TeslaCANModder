@@ -46,22 +46,22 @@ Compact, human-friendly JSON — strips redundant nesting and the verbose `possi
 
 ```json
 {
-	"source": { "vehicle": "Model 3", "firmware": "2026.2", "mcu": "MCU2", "soc": "Intel" },
-	"counts": { "frames": 577, "signals": 40484 },
-	"frames": [
-		{
-			"id": 280,
-			"hex": "0x118",
-			"name": "DI_systemStatus",
-			"bus": "ETH",
-			"signals": [
-				{
-					"name": "DI_gear",
-					"values": { "0": "INVALID", "1": "P", "2": "R", "3": "N", "4": "D", "7": "SNA" }
-				}
-			]
-		}
-	]
+    "source": { "vehicle": "Model 3", "firmware": "2026.2", "mcu": "MCU2", "soc": "Intel" },
+    "counts": { "frames": 577, "signals": 40484 },
+    "frames": [
+        {
+            "id": 280,
+            "hex": "0x118",
+            "name": "DI_systemStatus",
+            "bus": "ETH",
+            "signals": [
+                {
+                    "name": "DI_gear",
+                    "values": { "0": "INVALID", "1": "P", "2": "R", "3": "N", "4": "D", "7": "SNA" }
+                }
+            ]
+        }
+    ]
 }
 ```
 
