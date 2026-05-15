@@ -11,6 +11,7 @@ Open-source Tesla CAN bus firmware, cross-platform client, shared protocol libra
 - **Cross-platform client** — Expo app for Web, iOS, and Android with Web Serial flashing, live CAN monitor, and in-app docs
 - **DAS Drive** — openpilot-style gamepad CAN injection with safety envelope, rate limiting, and NVS persistence
 - **BLE Gamepad** — NimBLE central scanner/pairing, 16-button bindings, 6 analog axes with deadzone/expo tuning
+- **Tesla BLE Key** — P-256 ECDSA key pair generation, role-based access (owner/charging_manager), NFC card pairing, authenticated commands (wake, charge, climate)
 - **WiFi REST API + Dashboard** — on-device HTTP API and HTML dashboard served over soft-AP
 - **Browser flasher** — flash firmware directly from Chrome/Edge using Web Serial (no toolchain needed)
 - **CAN frame decoder** — 577 Tesla frames decoded from the mikegapinski dataset
@@ -107,7 +108,7 @@ $env:PLATFORMIO_BUILD_FLAGS = "-DBUS_CHASSIS_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DB
 
 ### Vehicle Features (48 modules)
 
-Air Recirculation, Auto Lane Change, Ban Detect/Shield, BMS, Charge, Climate, DAS Drive, Display, Drive Context, Drive Mode, FSD, ISA Chime, Lights, Lock, Mirror, Motor Temps, MQTT Bridge, Nag, Pedal, Power, Powertrain, Precondition, Profile, Regen, Region, Seat, Seatbelt, Sentry, Stop Mode, Stream, Summon, TLSSC, TPMS, Track Mode, Trunk, Turn Signal, Variant, Vehicle Config, Wheel Speeds, Window, Wiper, and more.
+Air Recirculation, Auto Lane Change, Ban Detect/Shield, BMS, Charge, Climate, DAS Drive, Display, Drive Context, Drive Mode, FSD, ISA Chime, Lights, Lock, Mirror, Motor Temps, MQTT Bridge, Nag, Pedal, Power, Powertrain, Precondition, Profile, Regen, Region, Seat, Seatbelt, Sentry, Stop Mode, Stream, Summon, TLSSC, TPMS, Track Mode, Trunk, Turn Signal, Variant, Vehicle Config, Wheel Speeds, Window, Wiper, Tesla BLE Key, and more.
 
 ## Client App
 
@@ -155,6 +156,16 @@ stop:creep, stop:roll, stop:hold
 das:arm, das:disarm, das:status
 gamepad:scan, gamepad:pair, gamepad:unpair
 gamepad:bind:<n>:<cmd>, gamepad:axis:<n>:<dz|expo|inv>:<v>
+```
+
+### Tesla BLE Key & Vehicle Control
+
+```text
+tesla:key:gen, tesla:key:show, tesla:key:role:<owner|charging_manager>
+tesla:key:send, tesla:vin:<VIN>
+tesla:wake
+tesla:charge:start, tesla:charge:stop, tesla:charge:amps:<1-32>, tesla:charge:limit:<50-100>
+tesla:climate:on, tesla:climate:off
 ```
 
 See `docs/reference/commands.md` for the full command reference.
