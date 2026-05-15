@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] — 2026-05-15
+
+### Added
+
+- **ESP32 hardware test suites** — 6 PlatformIO test environments for physical
+  ESP32 DevKit validation: `test_esp32_can_driver` (MCP2515 SPI),
+  `test_esp32_can_loopback` (CAN TX/RX), `test_esp32_can_recorder` (frame
+  capture), `test_esp32_nvs_persist` (NVS persistence), `test_esp32_wifi_api`
+  (WiFi AP/STA + HTTP), `test_esp32_led_gpio` (GPIO I/O + PWM)
+- **13 new native test suites** — `test_native_id_filter`,
+  `test_native_ring_buffer`, `test_native_checksum`, `test_native_burst`,
+  `test_native_recorder`, `test_native_parse`, `test_native_types`,
+  `test_native_ids`, `test_native_motor_temps`, `test_native_wheel_speeds`,
+  `test_native_frame_readers`, `test_native_nag_math`, `test_native_ban_detect`
+- **Firmware library reorganization** — new `lib/interface/` and
+  `lib/transport/` directories, `lib/core/config/esp32.h`,
+  `lib/core/persist/{native.h,nvs.h}`, BLE feature headers
+  `lib/vehicle/ble/feature/{carserver.h,vcsec.h}`
+- **Legacy reference submodules** — 7 external repos added under `legacy/` for
+  research: vehicle-command, tesla-local-control, teslamotors-vehicle-command
+- **Legacy analysis docs** — new reference docs under `docs/legacy/` for
+  vehicle-command, tesla-local-control, and related projects
+
 ## [1.2.0] — 2026-05-05
 
 ### Added

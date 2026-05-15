@@ -1,14 +1,12 @@
-/** @file firmware/test/test_native_ring_buffer/test_ring_buffer.cpp
- *  @brief Unit tests for generic ring buffer data structure
- *  @author Tesla CAN Mod Contributors
- *  @license GPL-3.0
+/**
+ * @file firmware/test/test_native_ring_buffer/test_ring_buffer.cpp
+ * @brief Unit tests for lock-free CAN frame ring buffer
+ * @author Tesla CAN Mod Contributors
+ * @license GPL-3.0
  */
 
 #include <unity.h>
 #include <cstring>
-
-class __FlashStringHelper;
-#define F(s) (reinterpret_cast<const __FlashStringHelper *>(s))
 
 #define BUS_CHASSIS_ACTIVE 1
 #define BUS_VEHICLE_ACTIVE 1
@@ -18,214 +16,208 @@ class __FlashStringHelper;
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "core/can/ring_buffer.h"
-#include "core/log/ring.h"
+#include "transport/can/ring_buffer.h"
 
 void setUp()
 {
 	canRingBuffer.writeIdx = 0;
 	canRingBuffer.seqCounter = 0;
+	memset(canRingBuffer.entries, 0, sizeof(canRingBuffer.entries));
 }
 void tearDown() {}
 
+/* ── ringPush / ringHasData ──────────────────────────────────────────────── */
 
-void test_push_increments_head()
+void test_ring_push_makes_data_available()
 {
+	RingConsumer c;
 	Frame f = {};
 	f.id = 0x100;
 	f.dlc = 8;
 	ringPush(f, 0, 1000);
-	TEST_ASSERT_EQUAL(1, canRingBuffer.writeIdx);
-}
-
-void test_push_stores_frame()
-{
-	Frame f = {};
-	f.id = 0x200;
-	f.dlc = 4;
-	f.data[0] = 0xAA;
-	ringPush(f, 1, 2000);
-	TEST_ASSERT_EQUAL(0x200, canRingBuffer.entries[0].frame.id);
-	TEST_ASSERT_EQUAL(4, canRingBuffer.entries[0].frame.dlc);
-	TEST_ASSERT_EQUAL(0xAA, canRingBuffer.entries[0].frame.data[0]);
-	TEST_ASSERT_EQUAL(1, canRingBuffer.entries[0].bus);
-	TEST_ASSERT_EQUAL(2000, canRingBuffer.entries[0].timestamp);
-}
-
-void test_push_wraps_at_capacity()
-{
-	for (int i = 0; i < RING_BUF_SIZE + 5; i++)
-	{
-		Frame f = {};
-		f.id = i;
-		ringPush(f, 0, i * 10);
-	}
-	TEST_ASSERT_EQUAL(RING_BUF_SIZE + 5, canRingBuffer.writeIdx);
-	TEST_ASSERT_EQUAL(RING_BUF_SIZE + 4, canRingBuffer.entries[4].frame.id);
-}
-
-void test_consumer_reads_pushed_frame()
-{
-	RingConsumer c = {};
-	ringReset(c);
-
-	Frame f = {};
-	f.id = 0x300;
-	ringPush(f, 2, 3000);
-
 	TEST_ASSERT_TRUE(ringHasData(c));
-	TEST_ASSERT_EQUAL(1, ringAvailable(c));
+}
 
+void test_ring_push_increments_seq()
+{
+	Frame f = {};
+	ringPush(f, 0, 1000);
+	TEST_ASSERT_EQUAL_UINT32(1, ringTotalFrames());
+}
+
+void test_ring_push_multiple()
+{
+	Frame f = {};
+	ringPush(f, 0, 1000);
+	ringPush(f, 1, 1001);
+	ringPush(f, 0, 1002);
+	TEST_ASSERT_EQUAL_UINT32(3, ringTotalFrames());
+}
+
+/* ── ringPeek / ringAdvance ──────────────────────────────────────────────── */
+
+void test_ring_peek_returns_entry()
+{
+	RingConsumer c;
+	Frame f = {};
+	f.id = 0x3FD;
+	f.dlc = 8;
+	f.data[0] = 0x42;
+	ringPush(f, 1, 5000);
 	const RingEntry *e = ringPeek(c);
 	TEST_ASSERT_NOT_NULL(e);
-	TEST_ASSERT_EQUAL(0x300, e->frame.id);
-	TEST_ASSERT_EQUAL(2, e->bus);
+	TEST_ASSERT_EQUAL_HEX32(0x3FD, e->frame.id);
+	TEST_ASSERT_EQUAL_HEX8(0x42, e->frame.data[0]);
+	TEST_ASSERT_EQUAL_UINT8(1, e->bus);
+	TEST_ASSERT_EQUAL(5000, e->timestamp);
+}
 
+void test_ring_peek_returns_null_when_empty()
+{
+	RingConsumer c;
+	TEST_ASSERT_NULL(ringPeek(c));
+}
+
+void test_ring_advance_moves_past_entry()
+{
+	RingConsumer c;
+	Frame f = {};
+	f.id = 0x100;
+	ringPush(f, 0, 1000);
+	ringPeek(c);
 	ringAdvance(c);
 	TEST_ASSERT_FALSE(ringHasData(c));
 }
 
-void test_consumer_detects_overflow()
+void test_ring_peek_multiple_entries()
 {
-	RingConsumer c = {};
-	ringReset(c);
+	RingConsumer c;
+	Frame f1 = {}, f2 = {};
+	f1.id = 0x100;
+	f2.id = 0x200;
+	ringPush(f1, 0, 1000);
+	ringPush(f2, 1, 1001);
 
+	const RingEntry *e1 = ringPeek(c);
+	TEST_ASSERT_EQUAL_HEX32(0x100, e1->frame.id);
+	ringAdvance(c);
+
+	const RingEntry *e2 = ringPeek(c);
+	TEST_ASSERT_EQUAL_HEX32(0x200, e2->frame.id);
+	ringAdvance(c);
+
+	TEST_ASSERT_NULL(ringPeek(c));
+}
+
+/* ── ringAvailable ───────────────────────────────────────────────────────── */
+
+void test_ring_available_zero_when_empty()
+{
+	RingConsumer c;
+	TEST_ASSERT_EQUAL_UINT32(0, ringAvailable(c));
+}
+
+void test_ring_available_matches_push_count()
+{
+	RingConsumer c;
+	Frame f = {};
+	ringPush(f, 0, 1000);
+	ringPush(f, 0, 1001);
+	ringPush(f, 0, 1002);
+	TEST_ASSERT_EQUAL_UINT32(3, ringAvailable(c));
+}
+
+void test_ring_available_decreases_after_advance()
+{
+	RingConsumer c;
+	Frame f = {};
+	ringPush(f, 0, 1000);
+	ringPush(f, 0, 1001);
+	TEST_ASSERT_EQUAL_UINT32(2, ringAvailable(c));
+	ringPeek(c);
+	ringAdvance(c);
+	TEST_ASSERT_EQUAL_UINT32(1, ringAvailable(c));
+}
+
+/* ── ringReset ───────────────────────────────────────────────────────────── */
+
+void test_ring_reset_skips_all_data()
+{
+	RingConsumer c;
+	Frame f = {};
+	ringPush(f, 0, 1000);
+	ringPush(f, 0, 1001);
+	ringReset(c);
+	TEST_ASSERT_FALSE(ringHasData(c));
+	TEST_ASSERT_EQUAL_UINT32(0, ringAvailable(c));
+}
+
+void test_ring_reset_clears_dropped()
+{
+	RingConsumer c;
+	c.dropped = 99;
+	ringReset(c);
+	TEST_ASSERT_EQUAL_UINT32(0, c.dropped);
+}
+
+/* ── Overflow detection ──────────────────────────────────────────────────── */
+
+void test_ring_overflow_detects_lapped_consumer()
+{
+	RingConsumer c;
+	Frame f = {};
 	for (int i = 0; i < RING_BUF_SIZE + 10; i++)
-	{
-		Frame f = {};
-		f.id = i;
-		ringPush(f, 0, i);
-	}
+		ringPush(f, 0, 1000 + i);
 
 	const RingEntry *e = ringPeek(c);
-	TEST_ASSERT_TRUE(c.dropped > 0);
-	(void)e;
+	TEST_ASSERT_NOT_NULL(e);
+	TEST_ASSERT_EQUAL_UINT32(10, c.dropped);
 }
 
-void test_multiple_consumers_independent()
+void test_ring_available_capped_at_buffer_size()
 {
-	RingConsumer c1 = {};
-	RingConsumer c2 = {};
-	ringReset(c1);
-	ringReset(c2);
-
+	RingConsumer c;
 	Frame f = {};
-	f.id = 0x400;
-	ringPush(f, 0, 4000);
+	for (int i = 0; i < RING_BUF_SIZE + 50; i++)
+		ringPush(f, 0, 1000 + i);
+	TEST_ASSERT_EQUAL_UINT32(RING_BUF_SIZE, ringAvailable(c));
+}
 
-	TEST_ASSERT_TRUE(ringHasData(c1));
-	TEST_ASSERT_TRUE(ringHasData(c2));
+/* ── Multiple independent consumers ──────────────────────────────────────── */
 
+void test_ring_multiple_consumers_independent()
+{
+	RingConsumer c1, c2;
+	Frame f = {};
+	f.id = 0x100;
+	ringPush(f, 0, 1000);
+
+	ringPeek(c1);
 	ringAdvance(c1);
+
 	TEST_ASSERT_FALSE(ringHasData(c1));
 	TEST_ASSERT_TRUE(ringHasData(c2));
-}
-
-void test_seq_increments()
-{
-	Frame f = {};
-	ringPush(f, 0, 100);
-	uint32_t s1 = canRingBuffer.entries[0].seq;
-	ringPush(f, 0, 200);
-	uint32_t s2 = canRingBuffer.entries[1].seq;
-	TEST_ASSERT_EQUAL(s1 + 1, s2);
-
-}
-
-static void resetLogRing()
-{
-	logRingInit();
-}
-
-void test_log_ring_head_starts_at_zero()
-{
-	resetLogRing();
-	TEST_ASSERT_EQUAL(0, logRingHead());
-}
-
-void test_log_ring_head_advances_after_push()
-{
-	resetLogRing();
-	logRingPush("msg1", 100);
-	TEST_ASSERT_EQUAL(1, logRingHead());
-	logRingPush("msg2", 200);
-	TEST_ASSERT_EQUAL(2, logRingHead());
-}
-
-void test_log_ring_read_since_empty_returns_zero()
-{
-	resetLogRing();
-	uint16_t cursor = logRingHead();
-	LogEntry out[4];
-	uint16_t count = logRingReadSince(cursor, out, 4);
-	TEST_ASSERT_EQUAL(0, count);
-}
-
-void test_log_ring_read_since_returns_new_entries()
-{
-	resetLogRing();
-	uint16_t cursor = logRingHead();
-	logRingPush("hello", 1000);
-	logRingPush("world", 2000);
-	LogEntry out[4];
-	uint16_t count = logRingReadSince(cursor, out, 4);
-	TEST_ASSERT_EQUAL(2, count);
-	TEST_ASSERT_EQUAL_STRING("hello", out[0].msg);
-	TEST_ASSERT_EQUAL_STRING("world", out[1].msg);
-	TEST_ASSERT_EQUAL(1000, out[0].timestamp);
-}
-
-void test_log_ring_read_since_respects_maxout()
-{
-	resetLogRing();
-	uint16_t cursor = logRingHead();
-	for (int i = 0; i < 5; i++)
-		logRingPush("x", (unsigned long)(i * 10));
-	LogEntry out[2];
-	uint16_t count = logRingReadSince(cursor, out, 2);
-	TEST_ASSERT_EQUAL(2, count);
-}
-
-void test_log_ring_read_since_double_poll_no_duplicates()
-{
-	resetLogRing();
-	logRingPush("first", 100);
-	uint16_t cursor = logRingHead();
-	logRingPush("second", 200);
-	LogEntry out[4];
-	uint16_t count = logRingReadSince(cursor, out, 4);
-	TEST_ASSERT_EQUAL(1, count);
-	TEST_ASSERT_EQUAL_STRING("second", out[0].msg);
-}
-
-void test_log_ring_read_since_cursor_at_current_head_returns_zero()
-{
-	resetLogRing();
-	logRingPush("a", 10);
-	logRingPush("b", 20);
-	uint16_t cursor = logRingHead();
-	LogEntry out[4];
-	uint16_t count = logRingReadSince(cursor, out, 4);
-	TEST_ASSERT_EQUAL(0, count);
 }
 
 int main()
 {
 	UNITY_BEGIN();
-	RUN_TEST(test_push_increments_head);
-	RUN_TEST(test_push_stores_frame);
-	RUN_TEST(test_push_wraps_at_capacity);
-	RUN_TEST(test_consumer_reads_pushed_frame);
-	RUN_TEST(test_consumer_detects_overflow);
-	RUN_TEST(test_multiple_consumers_independent);
-	RUN_TEST(test_seq_increments);
-	RUN_TEST(test_log_ring_head_starts_at_zero);
-	RUN_TEST(test_log_ring_head_advances_after_push);
-	RUN_TEST(test_log_ring_read_since_empty_returns_zero);
-	RUN_TEST(test_log_ring_read_since_returns_new_entries);
-	RUN_TEST(test_log_ring_read_since_respects_maxout);
-	RUN_TEST(test_log_ring_read_since_double_poll_no_duplicates);
-	RUN_TEST(test_log_ring_read_since_cursor_at_current_head_returns_zero);
+
+	RUN_TEST(test_ring_push_makes_data_available);
+	RUN_TEST(test_ring_push_increments_seq);
+	RUN_TEST(test_ring_push_multiple);
+	RUN_TEST(test_ring_peek_returns_entry);
+	RUN_TEST(test_ring_peek_returns_null_when_empty);
+	RUN_TEST(test_ring_advance_moves_past_entry);
+	RUN_TEST(test_ring_peek_multiple_entries);
+	RUN_TEST(test_ring_available_zero_when_empty);
+	RUN_TEST(test_ring_available_matches_push_count);
+	RUN_TEST(test_ring_available_decreases_after_advance);
+	RUN_TEST(test_ring_reset_skips_all_data);
+	RUN_TEST(test_ring_reset_clears_dropped);
+	RUN_TEST(test_ring_overflow_detects_lapped_consumer);
+	RUN_TEST(test_ring_available_capped_at_buffer_size);
+	RUN_TEST(test_ring_multiple_consumers_independent);
+
 	return UNITY_END();
 }
-

@@ -1,392 +1,45 @@
-Processing esp32_wifi_ble (platform: espressif32; board: esp32dev; framework: arduino)
+Collected 1 tests (*)
+
+Processing * in native environment
 --------------------------------------------------------------------------------
-Verbose mode can be enabled via `-v, --verbose` option
-CONFIGURATION: https://docs.platformio.org/page/boards/espressif32/esp32dev.html
-PLATFORM: Espressif 32 (6.13.0) > Espressif ESP32 Dev Module
-HARDWARE: ESP32 240MHz, 320KB RAM, 4MB Flash
-DEBUG: Current (cmsis-dap) External (cmsis-dap, esp-bridge, esp-prog, iot-bus-jtag, jlink, minimodule, olimex-arm-usb-ocd, olimex-arm-usb-ocd-h, olimex-arm-usb-tiny-h, olimex-jtag-tiny, tumpa)
-PACKAGES: 
- - framework-arduinoespressif32 @ 3.20017.241212+sha.dcc1105b 
- - tool-esptoolpy @ 2.41100.0 (4.11.0) 
- - toolchain-xtensa-esp32 @ 8.4.0+2021r2-patch5
+Building...
 LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
-LDF Modes: Finder ~ deep+, Compatibility ~ off
-Found 41 compatible libraries
+LDF Modes: Finder ~ off, Compatibility ~ off
+Found 8 compatible libraries
 Scanning dependencies...
 Dependency Graph
-|-- autowp-mcp2515 @ 1.3.1+sha.49e0d7d
-|-- ArduinoJson @ 7.0.0
-|-- Preferences @ 2.0.0
-|-- WiFi @ 2.0.0
-|-- WebServer @ 2.0.0
-|-- NimBLE-Arduino @ 1.4.0
-Building in release mode
-Compiling .pio\build\esp32_wifi_ble\src\esp32\main.cpp.o
-Archiving .pio\build\esp32_wifi_ble\lib0bc\libWiFi.a
-Indexing .pio\build\esp32_wifi_ble\lib0bc\libWiFi.a
-Archiving .pio\build\esp32_wifi_ble\libf8c\libFS.a
-Indexing .pio\build\esp32_wifi_ble\libf8c\libFS.a
-Archiving .pio\build\esp32_wifi_ble\libe98\libWebServer.a
-Indexing .pio\build\esp32_wifi_ble\libe98\libWebServer.a
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\NimBLEServer.cpp.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\NimBLEService.cpp.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\NimBLEUUID.cpp.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\NimBLEUtils.cpp.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\esp_port\esp-hci\src\esp_nimble_hci.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\esp_port\port\src\esp_nimble_mem.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\aes_decrypt.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\aes_encrypt.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\cbc_mode.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\ccm_mode.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\cmac_mode.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\ctr_mode.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\ctr_prng.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\ecc.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\ecc_dh.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\ecc_dsa.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\ecc_platform_specific.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\hmac.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\hmac_prng.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\sha256.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\ext\tinycrypt\src\utils.c.o
-In file included from lib/vehicle/can/handler/dispatch.h:2,
-                 from src/esp32/main.cpp:15:
-lib/vehicle/can/ids.h:67:16: error: redefinition of 'uint8_t driveChecksum(const uint8_t*, uint8_t)'
- inline uint8_t driveChecksum(const uint8_t *data, uint8_t len)
-                ^~~~~~~~~~~~~
-In file included from lib/core/driver/esp32/board.h:6,
-                 from src/esp32/main.cpp:14:
-lib/infra/can/bus.h:104:16: note: 'uint8_t driveChecksum(const uint8_t*, uint8_t)' previously defined here
- inline uint8_t driveChecksum(const uint8_t *data, uint8_t len)
-                ^~~~~~~~~~~~~
-In file included from lib/vehicle/can/handler/dispatch.h:2,
-                 from src/esp32/main.cpp:15:
-lib/vehicle/can/ids.h:76:16: error: redefinition of 'uint8_t readMuxID(const Frame&)'
- inline uint8_t readMuxID(const Frame &f)
-                ^~~~~~~~~
-In file included from lib/core/driver/esp32/board.h:6,
-                 from src/esp32/main.cpp:14:
-lib/infra/can/bus.h:113:16: note: 'uint8_t readMuxID(const Frame&)' previously defined here
- inline uint8_t readMuxID(const Frame &f)
-                ^~~~~~~~~
-In file included from lib/vehicle/can/handler/dispatch.h:2,
-                 from src/esp32/main.cpp:15:
-lib/vehicle/can/ids.h:81:13: error: redefinition of 'bool isFSDSelectedInUI(const Frame&)'
- inline bool isFSDSelectedInUI(const Frame &f)
-             ^~~~~~~~~~~~~~~~~
-In file included from lib/core/driver/esp32/board.h:6,
-                 from src/esp32/main.cpp:14:
-lib/infra/can/bus.h:118:13: note: 'bool isFSDSelectedInUI(const Frame&)' previously defined here
- inline bool isFSDSelectedInUI(const Frame &f)
-             ^~~~~~~~~~~~~~~~~
-In file included from lib/vehicle/can/handler/dispatch.h:2,
-                 from src/esp32/main.cpp:15:
-lib/vehicle/can/ids.h:86:16: error: redefinition of 'uint8_t readFollowDistance(const Frame&)'
- inline uint8_t readFollowDistance(const Frame &f)
-                ^~~~~~~~~~~~~~~~~~
-In file included from lib/core/driver/esp32/board.h:6,
-                 from src/esp32/main.cpp:14:
-lib/infra/can/bus.h:123:16: note: 'uint8_t readFollowDistance(const Frame&)' previously defined here
- inline uint8_t readFollowDistance(const Frame &f)
-                ^~~~~~~~~~~~~~~~~~
-In file included from lib/vehicle/can/handler/dispatch.h:2,
-                 from src/esp32/main.cpp:15:
-lib/vehicle/can/ids.h:91:16: error: redefinition of 'uint8_t readDASAutopilotStatus(const Frame&)'
- inline uint8_t readDASAutopilotStatus(const Frame &f)
-                ^~~~~~~~~~~~~~~~~~~~~~
-In file included from lib/core/driver/esp32/board.h:6,
-                 from src/esp32/main.cpp:14:
-lib/infra/can/bus.h:128:16: note: 'uint8_t readDASAutopilotStatus(const Frame&)' previously defined here
- inline uint8_t readDASAutopilotStatus(const Frame &f)
-                ^~~~~~~~~~~~~~~~~~~~~~
-In file included from lib/vehicle/can/handler/dispatch.h:2,
-                 from src/esp32/main.cpp:15:
-lib/vehicle/can/ids.h:99:16: error: redefinition of 'uint8_t readDASAutopilotState(const Frame&)'
- inline uint8_t readDASAutopilotState(const Frame &f)
-                ^~~~~~~~~~~~~~~~~~~~~
-In file included from lib/core/driver/esp32/board.h:6,
-                 from src/esp32/main.cpp:14:
-lib/infra/can/bus.h:136:16: note: 'uint8_t readDASAutopilotState(const Frame&)' previously defined here
- inline uint8_t readDASAutopilotState(const Frame &f)
-                ^~~~~~~~~~~~~~~~~~~~~
-In file included from lib/vehicle/can/handler/dispatch.h:2,
-                 from src/esp32/main.cpp:15:
-lib/vehicle/can/ids.h:104:13: error: redefinition of 'bool isDASAutopilotActive(uint8_t)'
- inline bool isDASAutopilotActive(uint8_t status)
-             ^~~~~~~~~~~~~~~~~~~~
-In file included from lib/core/driver/esp32/board.h:6,
-                 from src/esp32/main.cpp:14:
-lib/infra/can/bus.h:141:13: note: 'bool isDASAutopilotActive(uint8_t)' previously defined here
- inline bool isDASAutopilotActive(uint8_t status)
-             ^~~~~~~~~~~~~~~~~~~~
-In file included from lib/vehicle/can/handler/dispatch.h:2,
-                 from src/esp32/main.cpp:15:
-lib/vehicle/can/ids.h:109:15: error: redefinition of 'int8_t readGtwAutopilotTier(const Frame&)'
- inline int8_t readGtwAutopilotTier(const Frame &f)
-               ^~~~~~~~~~~~~~~~~~~~
-In file included from lib/core/driver/esp32/board.h:6,
-                 from src/esp32/main.cpp:14:
-lib/infra/can/bus.h:146:15: note: 'int8_t readGtwAutopilotTier(const Frame&)' previously defined here
- inline int8_t readGtwAutopilotTier(const Frame &f)
-               ^~~~~~~~~~~~~~~~~~~~
-In file included from lib/vehicle/can/handler/dispatch.h:2,
-                 from src/esp32/main.cpp:15:
-lib/vehicle/can/ids.h:118:13: error: redefinition of 'void setBit(Frame&, int, bool)'
- inline void setBit(Frame &f, int bit, bool val)
-             ^~~~~~
-In file included from lib/core/driver/esp32/board.h:6,
-                 from src/esp32/main.cpp:14:
-lib/infra/can/bus.h:155:13: note: 'void setBit(Frame&, int, bool)' previously defined here
- inline void setBit(Frame &f, int bit, bool val)
-             ^~~~~~
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll.c.o
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h: In function 'String buildStateJson(State&)':
-lib/api/rest/routes.h:7:3: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-   StaticJsonDocument<2048> doc;
-   ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_adv.c.o
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h:63:52: warning: 'ArduinoJson::V700PB2::JsonObject ArduinoJson::V700PB2::JsonDocument::createNestedObject(TChar*) [with TChar = const char]' is deprecated: use doc[key].to<JsonObject>() instead [-Wdeprecated-declarations]
-     JsonObject tpms = doc.createNestedObject("tpms");
-                                                    ^
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:33,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/Document/JsonDocument.hpp:326:14: note: declared here
-   JsonObject createNestedObject(TChar* key) {
-              ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h:75:56: warning: 'ArduinoJson::V700PB2::JsonObject ArduinoJson::V700PB2::JsonDocument::createNestedObject(TChar*) [with TChar = const char]' is deprecated: use doc[key].to<JsonObject>() instead [-Wdeprecated-declarations]
-     JsonObject pt = doc.createNestedObject("powertrain");
-                                                        ^
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:33,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/Document/JsonDocument.hpp:326:14: note: declared here
-   JsonObject createNestedObject(TChar* key) {
-              ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h:85:57: warning: 'ArduinoJson::V700PB2::JsonObject ArduinoJson::V700PB2::JsonDocument::createNestedObject(TChar*) [with TChar = const char]' is deprecated: use doc[key].to<JsonObject>() instead [-Wdeprecated-declarations]
-     JsonObject ws = doc.createNestedObject("wheelSpeeds");
-                                                         ^
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:33,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/Document/JsonDocument.hpp:326:14: note: declared here
-   JsonObject createNestedObject(TChar* key) {
-              ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h:92:56: warning: 'ArduinoJson::V700PB2::JsonObject ArduinoJson::V700PB2::JsonDocument::createNestedObject(TChar*) [with TChar = const char]' is deprecated: use doc[key].to<JsonObject>() instead [-Wdeprecated-declarations]
-     JsonObject mt = doc.createNestedObject("motorTemps");
-                                                        ^
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:33,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/Document/JsonDocument.hpp:326:14: note: declared here
-   JsonObject createNestedObject(TChar* key) {
-              ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h:101:51: warning: 'ArduinoJson::V700PB2::JsonObject ArduinoJson::V700PB2::JsonDocument::createNestedObject(TChar*) [with TChar = const char]' is deprecated: use doc[key].to<JsonObject>() instead [-Wdeprecated-declarations]
-   JsonObject f = doc.createNestedObject("features");
-                                                   ^
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:33,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/Document/JsonDocument.hpp:326:14: note: declared here
-   JsonObject createNestedObject(TChar* key) {
-              ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h:109:52: warning: 'ArduinoJson::V700PB2::JsonObject ArduinoJson::V700PB2::JsonDocument::createNestedObject(TChar*) [with TChar = const char]' is deprecated: use doc[key].to<JsonObject>() instead [-Wdeprecated-declarations]
-   JsonObject hw = doc.createNestedObject("hardware");
-                                                    ^
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:33,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/Document/JsonDocument.hpp:326:14: note: declared here
-   JsonObject createNestedObject(TChar* key) {
-              ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h: In function 'void handlePostCommand()':
-lib/api/rest/routes.h:169:3: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-   StaticJsonDocument<256> doc;
-   ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h: In function 'String buildWifiStatusJson()':
-lib/api/rest/routes.h:222:3: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-   StaticJsonDocument<384> doc;
-   ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_conn.c.o
-In file included from lib/io/wifi/esp32/board.h:13,
-                 from src/esp32/main.cpp:21:
-lib/api/rest/routes.h: In function 'void handlePostWifiConfig()':
-lib/api/rest/routes.h:257:3: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-   StaticJsonDocument<256> doc;
-   ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:14,
-                 from src/esp32/main.cpp:21:
-lib/io/wifi/esp32/ble_config.h: In function 'String buildBleStatusJson()':
-lib/io/wifi/esp32/ble_config.h:35:3: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-   StaticJsonDocument<192> doc;
-   ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:14,
-                 from src/esp32/main.cpp:21:
-lib/io/wifi/esp32/ble_config.h: In function 'void handlePostBleConfig()':
-lib/io/wifi/esp32/ble_config.h:56:3: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-   StaticJsonDocument<128> doc;
-   ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:15,
-                 from src/esp32/main.cpp:21:
-lib/io/wifi/esp32/init.h: In lambda function:
-lib/io/wifi/esp32/init.h:53:5: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-     StaticJsonDocument<128> doc;
-     ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:15,
-                 from src/esp32/main.cpp:21:
-lib/io/wifi/esp32/init.h: In lambda function:
-lib/io/wifi/esp32/init.h:79:5: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-     StaticJsonDocument<256> doc;
-     ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:15,
-                 from src/esp32/main.cpp:21:
-lib/io/wifi/esp32/init.h: In lambda function:
-lib/io/wifi/esp32/init.h:96:5: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-     StaticJsonDocument<2048> doc;
-     ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:15,
-                 from src/esp32/main.cpp:21:
-lib/io/wifi/esp32/init.h:99:52: warning: 'ArduinoJson::V700PB2::JsonArray ArduinoJson::V700PB2::JsonDocument::createNestedArray(TChar*) [with TChar = const char]' is deprecated: use doc[key].to<JsonArray>() instead [-Wdeprecated-declarations]
-     JsonArray arr = doc.createNestedArray("entries");
-                                                    ^
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:33,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/Document/JsonDocument.hpp:306:13: note: declared here
-   JsonArray createNestedArray(TChar* key) {
-             ^~~~~~~~~~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:15,
-                 from src/esp32/main.cpp:21:
-lib/io/wifi/esp32/init.h:103:49: warning: 'ArduinoJson::V700PB2::JsonObject ArduinoJson::V700PB2::JsonArray::createNestedObject() const' is deprecated: use add<JsonObject>() instead [-Wdeprecated-declarations]
-       JsonObject entry = arr.createNestedObject();
-                                                 ^
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:140:19: note: declared here
- inline JsonObject JsonArray::createNestedObject() const {
-                   ^~~~~~~~~
-In file included from lib/io/wifi/esp32/board.h:15,
-                 from src/esp32/main.cpp:21:
-lib/io/wifi/esp32/init.h: In lambda function:
-lib/io/wifi/esp32/init.h:115:5: warning: 'template<unsigned int N> class ArduinoJson::V700PB2::StaticJsonDocument' is deprecated: use JsonDocument instead [-Wdeprecated-declarations]
-     StaticJsonDocument<256> doc;
-     ^~~~~~~~~~~~~~~~~~
-In file included from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.hpp:53,
-                 from .pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson.h:9,
-                 from lib/io/wifi/esp32/board.h:4,
-                 from src/esp32/main.cpp:21:
-.pio/libdeps/esp32_wifi_ble/ArduinoJson/src/ArduinoJson/compatibility.hpp:63:58: note: declared here
- class ARDUINOJSON_DEPRECATED("use JsonDocument instead") StaticJsonDocument
-                                                          ^~~~~~~~~~~~~~~~~~
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_conn_hci.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_ctrl.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_dtm.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_hci.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_hci_ev.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_iso.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_rand.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_resolv.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_rfmgmt.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_scan.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_sched.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_supp_cmd.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_sync.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_trace.c.o
-Compiling .pio\build\esp32_wifi_ble\lib28e\NimBLE-Arduino\nimble\nimble\controller\src\ble_ll_utils.c.o
-*** [.pio\build\esp32_wifi_ble\src\esp32\main.cpp.o] Error 1
-========================== [FAILED] Took 9.72 seconds ==========================
+|-- Unity @ 2.6.0 (License: MIT, Path: C:\Users\boran\Masa³st³\Tesla-CAN-Mod\firmware\.pio\libdeps\native\Unity@2.6.0)
+Error: Nothing to build. Please put your test suites to the 'C:\Users\boran\Masa³st³\Tesla-CAN-Mod\firmware\test' folder
+Building stage has failed, see errors above. Use `pio test -vvv` option to enable verbose output.
+--------------------- native:* [ERRORED] Took 0.53 seconds ---------------------
 
-Environment     Status    Duration
---------------  --------  ------------
-esp32_wifi_ble  FAILED    00:00:09.717
-==================== 1 failed, 0 succeeded in 00:00:09.717 ====================
+=================================== SUMMARY ===================================
+Environment                                Test    Status    Duration
+-----------------------------------------  ------  --------  ------------
+native                                     *       ERRORED   00:00:00.531
+esp32_chassis_8mhz                         *       SKIPPED
+esp32_chassis_vehicle_8mhz                 *       SKIPPED
+esp32_chassis_body_8mhz                    *       SKIPPED
+esp32_chassis_vehicle_body_8mhz            *       SKIPPED
+esp32_wifi_chassis_8mhz                    *       SKIPPED
+esp32_wifi_chassis_vehicle_8mhz            *       SKIPPED
+esp32_wifi_chassis_body_8mhz               *       SKIPPED
+esp32_wifi_chassis_vehicle_body_8mhz       *       SKIPPED
+esp32_ble_chassis_8mhz                     *       SKIPPED
+esp32_ble_chassis_vehicle_8mhz             *       SKIPPED
+esp32_ble_chassis_body_8mhz                *       SKIPPED
+esp32_ble_chassis_vehicle_body_8mhz        *       SKIPPED
+esp32_wifi_ble_chassis_8mhz                *       SKIPPED
+esp32_wifi_ble_chassis_vehicle_8mhz        *       SKIPPED
+esp32_wifi_ble_chassis_body_8mhz           *       SKIPPED
+esp32_wifi_ble_chassis_vehicle_body_8mhz   *       SKIPPED
+esp32_chassis_16mhz                        *       SKIPPED
+esp32_chassis_vehicle_body_16mhz           *       SKIPPED
+esp32_wifi_ble_chassis_16mhz               *       SKIPPED
+esp32_wifi_ble_chassis_vehicle_body_16mhz  *       SKIPPED
+esp32_vehicle_8mhz                         *       SKIPPED
+esp32_body_8mhz                            *       SKIPPED
+esp32_vehicle_body_8mhz                    *       SKIPPED
+esp32_wifi_ble_vehicle_body_8mhz           *       SKIPPED
+esp32_wifi_ble_vehicle_body_16mhz          *       SKIPPED
+================== 1 test cases: 0 succeeded in 00:00:00.531 ==================

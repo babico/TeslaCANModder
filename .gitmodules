@@ -257,3 +257,24 @@
 [submodule "legacy/zdenekbouresh-ev-open-can-tools"]
 	path = legacy/zdenekbouresh-ev-open-can-tools
 	url = https://github.com/zdenekbouresh/ev-open-can-tools.git
+[submodule "legacy/tesla-local-control-tesla_ble_mqtt_docker"]
+	path = legacy/tesla-local-control-tesla_ble_mqtt_docker
+	url = https://github.com/tesla-local-control/tesla_ble_mqtt_docker
+[submodule "legacy/tesla-local-control-tesla_ble_mqtt_core"]
+	path = legacy/tesla-local-control-tesla_ble_mqtt_core
+	url = https://github.com/tesla-local-control/tesla_ble_mqtt_core
+[submodule "legacy/tesla-local-control-tesla-local-control-addon"]
+	path = legacy/tesla-local-control-tesla-local-control-addon
+	url = https://github.com/tesla-local-control/tesla-local-control-addon
+[submodule "legacy/tesla-local-control-vehicle-command-seth"]
+	path = legacy/tesla-local-control-vehicle-command-seth
+	url = https://github.com/tesla-local-control/vehicle-command-seth
+[submodule "legacy/tesla-local-control-vehicle-command"]
+	path = legacy/tesla-local-control-vehicle-command
+	url = https://github.com/tesla-local-control/vehicle-command
+[submodule "legacy/teslamotors-vehicle-command"]
+	path = legacy/teslamotors-vehicle-command
+	url = https://github.com/teslamotors/vehicle-command
+[submodule "legacy/sethterashima-vehicle-command"]
+	path = legacy/sethterashima-vehicle-command
+	url = https://github.com/sethterashima/vehicle-command
