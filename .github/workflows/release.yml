@@ -33,6 +33,10 @@ jobs:
               run: |
                   git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
                   rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/sethterashima-vehicle-command legacy/tesla-local-control-tesla-local-control-addon
+                  rm -rf legacy/tesla-local-control-tesla_ble_mqtt_core legacy/tesla-local-control-tesla_ble_mqtt_docker
+                  rm -rf legacy/tesla-local-control-vehicle-command legacy/tesla-local-control-vehicle-command-seth
+                  rm -rf legacy/teslamotors-vehicle-command
             - run: git config --global submodule.recurse false
             - uses: actions/setup-node@v6
               with:
@@ -71,6 +75,15 @@ jobs:
               with:
                   submodules: false
                   fetch-depth: 1
+            - name: CI-only custom legacy folder exceptions
+              run: |
+                  git update-index --force-remove legacy/tesla-fsd-can-mod-2-main legacy/tesla-open-can-mod-main 2>/dev/null || true
+                  rm -rf legacy/tesla-fsd-can-mod-2-main legacy/tesla-fsd-can-mod-main legacy/tesla-fsd.netlify.app legacy/tesla-open-can-mod-main
+                  rm -rf legacy/sethterashima-vehicle-command legacy/tesla-local-control-tesla-local-control-addon
+                  rm -rf legacy/tesla-local-control-tesla_ble_mqtt_core legacy/tesla-local-control-tesla_ble_mqtt_docker
+                  rm -rf legacy/tesla-local-control-vehicle-command legacy/tesla-local-control-vehicle-command-seth
+                  rm -rf legacy/teslamotors-vehicle-command
+            - run: git config --global submodule.recurse false
             - id: list
               shell: bash
               run: |
