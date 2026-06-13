@@ -236,7 +236,6 @@ The `legacy/` directory contains 80+ external repositories as read-only git subm
 
 - Individual analyses: `docs/legacy/<repo>.md`
 - Comparison report: `docs/legacy/COMPARISON.md`
-- License compliance: `THIRD_PARTY_LICENSES.md`
 
 ## Contributing
 

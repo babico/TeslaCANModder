@@ -57,7 +57,7 @@ All fields in `firmware/lib/core/types.h` → `struct State`. Fields marked **NV
 | `bmsVoltage`             | float | 0x132  | Pack voltage (V)                |
 | `bmsCurrent`             | float | 0x132  | Pack current (A, neg=discharge) |
 | `bmsPower`               | float | —      | Pack power (kW, computed)       |
-| `bmsSoc`                 | float | 0x132  | State of charge (%)             |
+| `bmsSoc`                 | float | 0x292  | State of charge (%)             |
 | `bmsTempMin`             | int8  | 0x312  | Min cell temp (°C)              |
 | `bmsTempMax`             | int8  | 0x312  | Max cell temp (°C)              |
 | `bmsWhPerKm`             | float | —      | Energy consumption (Wh/km)      |

@@ -269,5 +269,5 @@ RX       →      GPIO17 (TX)
 
 - [ESP32 Hardware Reference](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/)
 - [MCP2515 CAN Bus Controller](https://www.nxp.com/products/wireless-connectivity/long-range-wireless/proprietary-long-range/mcp2515-standalone-can-controller-with-spi-interface)
-- [Tesla CAN Protocol](./can-protocol.md)
+- [Tesla CAN Protocol](../reference/can-protocol.md)
 - [Hardware Setup Guide](./hardware-setup.md)

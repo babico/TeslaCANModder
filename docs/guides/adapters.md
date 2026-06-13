@@ -322,4 +322,4 @@ Once you have one transport working:
 1. Go to **Drive** tab → See live vehicle state
 2. Go to **Controls** tab → Try sending a test command
 3. Open **Monitor** → Inspect CAN frames, decoder datasets
-4. Read [feature-workflows.md](./feature-workflows.md) for usage patterns
+4. Read [feature-workflows.md](../architecture/feature-workflows.md) for usage patterns

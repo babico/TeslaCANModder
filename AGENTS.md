@@ -116,10 +116,10 @@ Firmware builds (run inside `firmware/` using the `pio.ps1` wrapper):
 
 ```powershell
 cd firmware
-.\pio.ps1 run -e esp32
-.\pio.ps1 run -e esp32_wifi
-.\pio.ps1 run -e esp32_ble
-.\pio.ps1 run -e esp32_wifi_ble
+.\pio.ps1 run -e esp32_chassis_8mhz
+.\pio.ps1 run -e esp32_wifi_chassis_8mhz
+.\pio.ps1 run -e esp32_ble_chassis_8mhz
+.\pio.ps1 run -e esp32_wifi_ble_chassis_8mhz
 .\pio.ps1 test -e native
 ```
 
@@ -137,13 +137,13 @@ Never start `expo start`, `npm run web`, `pio monitor`, or other long-running wa
 
 Environments in `firmware/platformio.ini`:
 
-| Environment      | Board        | Features            |
-| ---------------- | ------------ | ------------------- |
-| `native`         | Host         | Tests only          |
-| `esp32`          | ESP32 DevKit | Serial              |
-| `esp32_wifi`     | ESP32 DevKit | Serial + WiFi AP    |
-| `esp32_ble`      | ESP32 DevKit | Serial + BLE        |
-| `esp32_wifi_ble` | ESP32 DevKit | Serial + WiFi + BLE |
+| Environment                   | Board        | Features                      |
+| ----------------------------- | ------------ | ----------------------------- |
+| `native`                      | Host         | Tests only                    |
+| `esp32_chassis_8mhz`          | ESP32 DevKit | Serial + Chassis CAN          |
+| `esp32_wifi_chassis_8mhz`     | ESP32 DevKit | Serial + WiFi + Chassis       |
+| `esp32_ble_chassis_8mhz`      | ESP32 DevKit | Serial + BLE + Chassis        |
+| `esp32_wifi_ble_chassis_8mhz` | ESP32 DevKit | Serial + WiFi + BLE + Chassis |
 
 Bus lanes are controlled with build flags on the Tesla X179 connector:
 
@@ -157,7 +157,7 @@ Bus lanes are controlled with build flags on the Tesla X179 connector:
 
 ```powershell
 $env:PLATFORMIO_BUILD_FLAGS = "-DBUS_CHASSIS_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
-.\pio.ps1 run -e esp32_wifi_ble
+.\pio.ps1 run -e esp32_wifi_ble_chassis_8mhz
 ```
 
 Tagged releases publish merged flash-ready images through GitHub Actions; the client flasher consumes those assets directly.
@@ -213,6 +213,31 @@ Rules for agents:
 - Do not commit or push unless the user explicitly asks. Never push to `main` directly; always use a feature branch with `-u` tracking.
 - Flag any file that looks like it contains secrets (`.env`, credential files) before committing.
 - The `legacy/` tree is read-only reference. Never modify files under `legacy/`. Comparative notes live in `docs/legacy/`.
+
+## MCP Servers
+
+Model Context Protocol (MCP) servers extend OpenCode with additional tools for this project.
+
+| Server                 | Package                                           | Purpose                                     | Status              |
+| ---------------------- | ------------------------------------------------- | ------------------------------------------- | ------------------- |
+| **github**             | `@github/github-mcp-server`                       | GitHub operations (issues, PRs, repos)      | Disabled by default |
+| **playwright**         | `@playwright/mcp`                                 | Browser automation for testing web client   | Disabled by default |
+| **memory**             | `@modelcontextprotocol/server-memory`             | Persistent memory across sessions           | Disabled by default |
+| **sequentialthinking** | `@modelcontextprotocol/server-sequentialthinking` | Step-by-step reasoning for complex analysis | Disabled by default |
+| **time**               | `@modelcontextprotocol/server-time`               | Time utilities and scheduling               | Disabled by default |
+| **superpowers**        | `superpowers-mcp`                                 | General utility enhancements                | Disabled by default |
+
+All MCP servers are **disabled by default** to save context. Enable in `opencode.json`:
+
+```json
+{
+    "mcp": {
+        "github": { "enabled": true }
+    }
+}
+```
+
+Environment variables: `GITHUB_TOKEN` required for GitHub MCP.
 
 ## What to do before claiming a task is done
 

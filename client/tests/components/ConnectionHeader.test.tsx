@@ -18,7 +18,13 @@ const mockBoardConnState = {
 };
 
 jest.mock("../../src/ui/shadcn/sheet", () => ({
-	Sheet: ({ children, visible }: any) => (visible ? children : null),
+	Sheet: ({ children, open }: any) => (open ? children : null),
+}));
+
+jest.mock("lucide-react-native", () => ({
+	Sun: "SunIcon",
+	Moon: "MoonIcon",
+	Monitor: "MonitorIcon",
 }));
 
 jest.mock("../../src/state/BoardConnectionContext", () => ({

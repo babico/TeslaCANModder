@@ -270,7 +270,7 @@ The same field uses different names across the firmware, JSON wire protocol, and
 
 ## CRC-8/OPENSAFETY
 
-Certain Tesla CAN frames (0x229 EPAS_harness, 0x249 DI_steer, 0x370 EPAS_sysStatus) use CRC-8 with polynomial 0x2F and per-ID XOR magic tables. The CRC is stored in `data[0]` high nibble while the low nibble holds the mux counter.
+Certain Tesla CAN frames use CRC-8 with polynomial 0x2F and per-ID XOR magic tables. For 0x229 (EPAS_harness), the CRC is stored in `data[0]` high nibble while the low nibble holds the mux counter. For 0x249 (DI_steer) and 0x370 (EPAS_sysStatus), the counter is at `data[1] & 0x0F`.
 
 **Polynomial:** 0x2F (CRC-8/OPENSAFETY)
 **Init:** 0x00
@@ -306,7 +306,7 @@ The actual drive mode is read back from CAN ID 0x249 (DI_steer) for confirmation
 
 ## Region Detection (CAN ID 0x398)
 
-The low nibble of byte 0 in GTW_carConfig contains the region code:
+The low nibble of byte 2 in GTW_carConfig contains the region code:
 
 | Code | Region        |
 | ---- | ------------- |

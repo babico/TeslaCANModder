@@ -47,7 +47,7 @@ cd client && npm start
 cd client && npm run web
 
 # Local firmware build
-cd firmware && pio run -e esp32
+cd firmware && .\pio.ps1 run -e esp32_chassis_8mhz
 ```
 
 Tagged releases publish prebuilt firmware binaries through GitHub Actions. The client flasher downloads those release assets directly.
@@ -97,20 +97,20 @@ Use the docs checklists as part of normal engineering review, not only at releas
 
 The firmware supports 3 fixed CAN buses on the Tesla X179 connector:
 
-| Bus     | Index | X179 Pins | Build Flag           | Default        |
-| ------- | ----- | --------- | -------------------- | -------------- |
-| Chassis | 0     | 13-14     | `BUS_CHASSIS_ACTIVE` | OFF when unset |
-| Vehicle | 1     | 9-10      | `BUS_VEHICLE_ACTIVE` | OFF            |
-| Body    | 2     | 2-3       | `BUS_BODY_ACTIVE`    | OFF            |
+| Bus     | Index | X179 Pins | Build Flag           | Default                    |
+| ------- | ----- | --------- | -------------------- | -------------------------- |
+| Chassis | 0     | 13-14     | `BUS_CHASSIS_ACTIVE` | On for shipping ESP32 envs |
+| Vehicle | 1     | 9-10      | `BUS_VEHICLE_ACTIVE` | OFF                        |
+| Body    | 2     | 2-3       | `BUS_BODY_ACTIVE`    | OFF                        |
 
 Bus activation is controlled by build flags. GitHub Actions release builds and local environment config inject these when compiling. `BUS_MAX` is always 3; `busActive(i)` checks if a bus is enabled. Shipping ESP32 environments enable the chassis bus explicitly in `firmware/platformio.ini`.
 
 ## Firmware Environments
 
-| Environment      | Board        | Features            |
-| ---------------- | ------------ | ------------------- |
-| `native`         | Host         | Tests only          |
-| `esp32`          | ESP32 DevKit | Serial              |
-| `esp32_wifi`     | ESP32 DevKit | Serial + WiFi AP    |
-| `esp32_ble`      | ESP32 DevKit | Serial + BLE        |
-| `esp32_wifi_ble` | ESP32 DevKit | Serial + WiFi + BLE |
+| Environment                   | Board        | Features                      |
+| ----------------------------- | ------------ | ----------------------------- |
+| `native`                      | Host         | Tests only                    |
+| `esp32_chassis_8mhz`          | ESP32 DevKit | Serial + Chassis CAN          |
+| `esp32_wifi_chassis_8mhz`     | ESP32 DevKit | Serial + WiFi + Chassis       |
+| `esp32_ble_chassis_8mhz`      | ESP32 DevKit | Serial + BLE + Chassis        |
+| `esp32_wifi_ble_chassis_8mhz` | ESP32 DevKit | Serial + WiFi + BLE + Chassis |

@@ -75,7 +75,7 @@ npx tsc --noEmit
 
 Client workflows assume firmware is already built and flashed.
 
-- For the canonical end-to-end setup path (build, flash, first connect, strict validation), use [Unified Setup Guide](unified-setup-guide.md).
+- For the canonical end-to-end setup path (build, flash, first connect, strict validation), see `docs/guides/getting-started.md`.
 - For repeatable CLI flashing and board verification, use `node tools/debug.js flash --port COMX --hex <path-to-hex>` from repository root.
 
 ### Runtime Connection Transports
@@ -126,7 +126,6 @@ Monitor now includes converged workflows:
 ## Related Docs
 
 - `README.md`
-- `docs/unified-setup-guide.md`
-- `docs/getting-started.md`
-- `docs/feature-workflows.md`
-- `docs/legacy-summary.md`
+- `docs/guides/getting-started.md`
+- `docs/architecture/feature-workflows.md`
+- `docs/legacy/README.md`

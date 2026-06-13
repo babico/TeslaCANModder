@@ -22,23 +22,22 @@ Cross-validated against hypery11, slxslx, Shayennn, EzeLLM, and ev-open-can-tool
 | 0x3F8 | 1016 | `CAN_ID_FOLLOW_DIST`    | Follow distance control      | 0   | RX/TX     | HW3                              |
 | 0x3FD | 1021 | `CAN_ID_FSD_MUX`        | FSD enable/disable (muxed)   | 0   | RX/TX     | HW4, bit 46/60                   |
 | 0x331 | 817  | `CAN_ID_DAS_AP_CONFIG`  | DAS_autopilotConfig          | 0   | RX/TX     | Tier readback, TLSSC target      |
-| 0x7FF | 2047 | `CAN_ID_GTW_CONFIG_ETH` | GTW carConfig (Ethernet)     | 0   | RX        | AP tier on mixed/Ethernet bridge |
+| 0x7FF | 2047 | `CAN_ID_GTW_CONFIG_ETH` | GTW carConfig (Ethernet)     | 1   | RX        | AP tier on mixed/Ethernet bridge |
 
 ### DAS (Driver Assistance)
 
 | Hex   | Dec | Symbol               | Signal            | Bus | Direction | Notes                                      |
 | ----- | --- | -------------------- | ----------------- | --- | --------- | ------------------------------------------ |
-| 0x39B | 923 | `CAN_ID_DAS_STATUS`  | DAS_status        | 0   | RX        | byte5[5:2]=hands-on, byte4[4:0]=laneChange |
+| 0x39B | 923 | `CAN_ID_DAS_STATUS`  | DAS_status        | 1   | RX        | byte5[5:2]=hands-on, byte4[4:0]=laneChange |
 | 0x389 | 905 | `CAN_ID_DAS_STATUS2` | DAS_accSpeedLimit | 0   | RX        | ACC speed limit readback                   |
 | 0x2B9 | 697 | `CAN_ID_DAS_CONTROL` | DAS_setSpeed      | 0   | RX        | Cruise set-speed readback                  |
-| 0x399 | 921 | `CAN_ID_BLIND_SPOT`  | DAS blind-spot    | 0   | RX        | Left/right warning levels                  |
 
 ### Steering & Stalks
 
 | Hex   | Dec | Symbol                  | Signal                          | Bus | Direction | Notes                                      |
 | ----- | --- | ----------------------- | ------------------------------- | --- | --------- | ------------------------------------------ |
 | 0x370 | 880 | `CAN_ID_EPAS_TORQUE`    | EPAS3P_sysStatus                | 1   | RX/TX     | Nag killer, steering mode, checksum=sum+ID |
-| 0x229 | 553 | `CAN_ID_EPAS_HARNESS`   | EPAS_internalHarness            | 1   | RX        | CRC-8 protected                            |
+| 0x229 | 553 | `CAN_ID_EPAS_HARNESS`   | EPAS_internalHarness            | 0   | RX        | CRC-8 protected                            |
 | 0x249 | 585 | `CAN_ID_DI_STEER`       | DI_steerAssist / SCCM_leftStalk | 0   | RX/TX     | CRC-8 protected, ALC stalk injection       |
 | 0x129 | 297 | `CAN_ID_STEERING_ANGLE` | SCCM_steeringAngleSensor        | 0   | RX        | Signed 16-bit / 10 = degrees               |
 | 0x3C2 | 962 | `CAN_ID_VCLEFT_SWITCH`  | VCLEFT_switchStatus             | 2   | TX        | Palladium/Yoke turn button injection       |
@@ -83,7 +82,7 @@ Cross-validated against hypery11, slxslx, Shayennn, EzeLLM, and ev-open-can-tool
 | 0x119 | 281  | `CAN_ID_WINDOW_VENT`     | Window vent           | 1   | TX        |                            |
 | 0x082 | 130  | `CAN_ID_PRECONDITION`    | UI_tripPlanning       | 1   | RX/TX     | Preconditioning            |
 | 0x2AA | 682  | `CAN_ID_AIR_RECIRC`      | Air recirculation     | 1   | RX/TX     |                            |
-| 0x3F5 | 1013 | `CAN_ID_VCFRONT_LIGHTS`  | VCFRONT vehicleLights | 2   | RX/TX     | Turn signal status/control |
+| 0x3F5 | 1013 | `CAN_ID_VCFRONT_LIGHTS`  | VCFRONT vehicleLights | 1   | RX/TX     | Turn signal status/control |
 | 0x3F3 | 1011 | `CAN_ID_SEATBELT_STATUS` | Seatbelt status       | 1   | RX/TX     | Seatbelt emulation target  |
 | 0x219 | 537  | `CAN_ID_TPMS`            | TPMS tire pressures   | 1   | RX        |                            |
 
@@ -91,7 +90,7 @@ Cross-validated against hypery11, slxslx, Shayennn, EzeLLM, and ev-open-can-tool
 
 | Hex   | Dec | Symbol                       | Signal                     | Bus | Direction | Notes                       |
 | ----- | --- | ---------------------------- | -------------------------- | --- | --------- | --------------------------- |
-| 0x398 | 920 | `CAN_ID_GTW_CAR_CFG`         | GTW_carConfig              | 0   | RX        | HW auto-detect, region code |
+| 0x398 | 920 | `CAN_ID_GTW_CAR_CFG`         | GTW_carConfig              | 1   | RX        | HW auto-detect, region code |
 | 0x318 | 792 | `CAN_ID_GTW_CAR_STATE`       | GTW_carState               | 1   | RX        | OTA detection               |
 | 0x102 | 258 | `CAN_ID_VCLEFT_DOOR_STATUS`  | VCLEFT doors               | 2   | RX        | Door/latch status           |
 | 0x103 | 259 | `CAN_ID_VCRIGHT_DOOR_STATUS` | VCRIGHT doors              | 2   | RX        | Trunk/latch status          |

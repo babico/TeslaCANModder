@@ -526,4 +526,3 @@ If you hit token limits:
 - [GitHub Integration](https://opencode.ai/docs/github/)
 - [Config Schema](https://opencode.ai/config.json)
 - [Project Config (`opencode.json`)](../../opencode.json)
-- [MCP Reference (`MCP_SERVERS.md`)](../../MCP_SERVERS.md)

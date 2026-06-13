@@ -18,7 +18,7 @@ const makeState = (overrides: Record<string, any> = {}) =>
 describe("ChargeStatusCard", () => {
 	it("renders unavailable message when no BMS", () => {
 		const { getByText } = render(<ChargeStatusCard state={makeState()} />);
-		expect(getByText(/BMS data unavailable/)).toBeTruthy();
+		expect(getByText(/NO DATA/)).toBeTruthy();
 	});
 
 	it("renders charging metrics when state indicates charging", () => {

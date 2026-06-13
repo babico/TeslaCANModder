@@ -15,10 +15,10 @@ Use this checklist whenever a change touches TeslaCANModder code that can alter 
 
 Primary review scope:
 
-- `firmware/lib/feature/*` — feature handlers and frame mutation helpers (fsd, summon, climate, lock, etc.)
-- `firmware/lib/handler/*` — variant handlers (`hw3`, `hw4`, `legacy`) and dispatch logic
+- `firmware/lib/vehicle/can/feature/*` — feature handlers and frame mutation helpers (fsd, summon, climate, lock, etc.)
+- `firmware/lib/vehicle/can/handler/*` — variant handlers (`hw3`, `hw4`, `legacy`) and dispatch logic
 - `firmware/lib/core/driver/*` — MCP2515 driver, CAN bus init, frame TX/RX
-- `firmware/lib/infra/*` — shared CAN helpers, burst helpers, parsing, and low-level bit logic
+- `firmware/lib/core/can/*` — shared CAN helpers, burst helpers, parsing, and low-level bit logic
 - `firmware/lib/io/*` — serial, WiFi REST API, BLE (NimBLE) I/O layers
 
 This checklist is meant for review and regression discipline. It is not a generic style guide.
@@ -54,7 +54,7 @@ This checklist is meant for review and regression discipline. It is not a generi
 - `boot` and `status` still describe capability changes accurately.
 - Stream output still preserves `dir`, `id`, `dlc`, `d`, and any required metadata fields.
 - WiFi REST API (`firmware/lib/io/wifi/board.h`) and BLE NUS (`firmware/lib/io/ble/board.h`) produce identical command semantics to serial.
-- Changes to command routing were checked against `firmware/lib/handler/dispatch/*` and the serial/WiFi/BLE entry points.
+- Changes to command routing were checked against `firmware/lib/vehicle/can/handler/*` and the serial/WiFi/BLE entry points.
 
 ## 5. Required regression tests
 
@@ -92,10 +92,10 @@ Recommended existing suites:
 
 Treat these as review-sensitive even if the diff looks small:
 
-- helper changes in `firmware/lib/infra/can.h`, `firmware/lib/infra/burst.h`, or any `firmware/lib/feature/*` file
+- helper changes in `firmware/lib/core/can/*` or any `firmware/lib/vehicle/can/feature/*` file
 - mux / profile / offset / ISA-related changes in feature handlers such as `profile.h`, `offsets.h`, `isa_chime.h`, or `nag.h`
 - checksum changes
-- handler filter ID changes in `firmware/lib/handler/*`
+- handler filter ID changes in `firmware/lib/vehicle/can/handler/*`
 - stream message shape changes
 - serial / WiFi / BLE command entry changes that affect CAN mutation state
 - MCP2515 driver changes in `firmware/lib/core/driver/`
