@@ -41,6 +41,22 @@ function normalizeCanHealth(value: unknown): JsonRecord | undefined {
 	return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
 
+function normalizeBusMetrics(value: unknown): JsonRecord | undefined {
+	if (!isJsonRecord(value)) {
+		return undefined;
+	}
+
+	const normalized: JsonRecord = {};
+	for (const key of ["chassis", "vehicle", "body"]) {
+		const busValue = value[key];
+		if (typeof busValue === "number" && Number.isFinite(busValue)) {
+			normalized[key] = busValue;
+		}
+	}
+
+	return Object.keys(normalized).length > 0 ? normalized : undefined;
+}
+
 function normalizeBooleanLike(value: unknown): unknown {
 	if (value === 0 || value === 1) {
 		return Boolean(value);
@@ -166,6 +182,16 @@ function normalizeCanSection(target: JsonRecord, can: JsonRecord | undefined): v
 
 	const canHealth = normalizeCanHealth(can?.health);
 	assignIfDefined(target, "canHealth", canHealth);
+
+	assignIfDefined(target, "canNagEchoCount", can?.nagEchoCount);
+	assignIfDefined(target, "canEapModCount", can?.eapModCount);
+	assignIfDefined(target, "canTxFailCount", can?.txFailCount);
+	assignIfDefined(target, "canBusOffCount", can?.busOffCount);
+
+	mergeObjectField(target, "canFrames", normalizeBusMetrics(can?.frames));
+	mergeObjectField(target, "canHz", normalizeBusMetrics(can?.hz));
+	mergeObjectField(target, "canHzMin", normalizeBusMetrics(can?.hzMin));
+	mergeObjectField(target, "canHzMax", normalizeBusMetrics(can?.hzMax));
 }
 
 function normalizeFeaturesSection(target: JsonRecord, features: JsonRecord | undefined): void {

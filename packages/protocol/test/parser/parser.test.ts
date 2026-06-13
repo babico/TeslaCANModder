@@ -203,6 +203,41 @@ describe("parseSerialLine", () => {
 		expect(events[0].message?.banDetectCount).toBe(7);
 	});
 
+	it("normalizes CAN diagnostic counters and per-bus metrics from status payload", () => {
+		const events = parseSerialLine(
+			'{"t":"status","can":{"nagEchoCount":42,"eapModCount":7,"txFailCount":3,"busOffCount":1,"frames":{"chassis":1234,"vehicle":5678,"body":90},"hz":{"chassis":450,"vehicle":220,"body":80},"hzMin":{"chassis":400,"vehicle":200,"body":70},"hzMax":{"chassis":500,"vehicle":250,"body":95}}}',
+		);
+		expect(events).toHaveLength(1);
+		expect(events[0].type).toBe("message");
+		expect(events[0].message).toMatchObject({
+			t: "status",
+			canNagEchoCount: 42,
+			canEapModCount: 7,
+			canTxFailCount: 3,
+			canBusOffCount: 1,
+			canFrames: { chassis: 1234, vehicle: 5678, body: 90 },
+			canHz: { chassis: 450, vehicle: 220, body: 80 },
+			canHzMin: { chassis: 400, vehicle: 200, body: 70 },
+			canHzMax: { chassis: 500, vehicle: 250, body: 95 },
+		});
+	});
+
+	it("normalizes CAN diagnostic fields from boot payload", () => {
+		const events = parseSerialLine(
+			'{"t":"boot","can":{"nagEchoCount":0,"eapModCount":0,"txFailCount":0,"busOffCount":0,"frames":{"chassis":100,"vehicle":0,"body":0}}}',
+		);
+		expect(events).toHaveLength(1);
+		expect(events[0].type).toBe("message");
+		expect(events[0].message).toMatchObject({
+			t: "boot",
+			canNagEchoCount: 0,
+			canEapModCount: 0,
+			canTxFailCount: 0,
+			canBusOffCount: 0,
+			canFrames: { chassis: 100, vehicle: 0, body: 0 },
+		});
+	});
+
 	it("strips null bytes before parsing", () => {
 		const events = parseSerialLine('\0{"t":"pong"}\0');
 		expect(events).toHaveLength(1);

@@ -19,6 +19,7 @@ type WireBool = boolean | number;
 type CanHealthKey = "chassis" | "vehicle" | "body";
 type CanHealthMessage = Partial<Record<CanHealthKey, { on: WireBool; det: WireBool }>>;
 type CanHealthState = Partial<Record<CanHealthKey, { on: boolean; det: boolean }>>;
+type CanBusMetrics = Partial<Record<CanHealthKey, number>>;
 
 interface StatusMetaPayload {
 	hw?: string;
@@ -59,6 +60,8 @@ interface StatusStatePayload {
 	assistHandsOff?: WireBool;
 	assistDevMode?: WireBool;
 	assistTelemetryOff?: WireBool;
+	nagOrgBypass?: WireBool;
+	rawCan?: WireBool;
 }
 
 interface StatusCanClockPayload {
@@ -69,6 +72,14 @@ interface StatusCanClockPayload {
 interface StatusCanPayload {
 	clock?: StatusCanClockPayload;
 	health?: CanHealthMessage;
+	nagEchoCount?: number;
+	eapModCount?: number;
+	txFailCount?: number;
+	busOffCount?: number;
+	frames?: CanBusMetrics;
+	hz?: CanBusMetrics;
+	hzMin?: CanBusMetrics;
+	hzMax?: CanBusMetrics;
 }
 
 interface StatusCompactConnectivityPayload {
@@ -97,6 +108,7 @@ export interface BootMessage {
 	summonInject?: number;
 	nagKiller?: number;
 	nagKillerMode?: string;
+	nagOrgBypass?: number;
 	dasHandsOn?: number;
 	turnSignalLeft?: number;
 	turnSignalRight?: number;
@@ -122,6 +134,7 @@ export interface BootMessage {
 	detectedHW?: number;
 	variantAutoDetect?: number;
 	gtwAutopilotTier?: number;
+	rawCan?: number;
 	canClockReqMHz?: number;
 	canClockMHz?: number;
 	banShield?: number;
@@ -186,6 +199,14 @@ export interface BootMessage {
 	platformSwCompat?: number;
 	platformResolved?: number;
 	canHealth?: CanHealthMessage;
+	canNagEchoCount?: number;
+	canEapModCount?: number;
+	canTxFailCount?: number;
+	canBusOffCount?: number;
+	canFrames?: CanBusMetrics;
+	canHz?: CanBusMetrics;
+	canHzMin?: CanBusMetrics;
+	canHzMax?: CanBusMetrics;
 	chassisOnline?: number;
 	standby?: number;
 	vehicleOnline?: number;
@@ -291,6 +312,14 @@ export interface StatusMessage {
 	platformSwCompat?: number;
 	platformResolved?: number;
 	canHealth?: CanHealthMessage;
+	canNagEchoCount?: number;
+	canEapModCount?: number;
+	canTxFailCount?: number;
+	canBusOffCount?: number;
+	canFrames?: CanBusMetrics;
+	canHz?: CanBusMetrics;
+	canHzMin?: CanBusMetrics;
+	canHzMax?: CanBusMetrics;
 	bmsNomFullPack?: number;
 	bmsNomRemain?: number;
 	bmsIdealRemain?: number;
@@ -312,6 +341,7 @@ export interface StatusMessage {
 	summonInject?: number;
 	nagKiller?: number;
 	nagKillerMode?: string;
+	nagOrgBypass?: number;
 	dasHandsOn?: number;
 	turnSignalLeft?: number;
 	turnSignalRight?: number;
@@ -336,6 +366,7 @@ export interface StatusMessage {
 	apGateReason?: string;
 	detectedHW?: number;
 	variantAutoDetect?: number;
+	rawCan?: number;
 	stream?: { on: WireBool; emitted: number };
 	features?: BoardFeatures;
 	chassisOnline?: number;
@@ -425,6 +456,8 @@ export interface StatusStateMessage {
 	fsdForce?: WireBool;
 	nag?: WireBool;
 	nagKiller?: WireBool;
+	nagOrgBypass?: WireBool;
+	rawCan?: WireBool;
 	sp?: number;
 	spPin?: WireBool;
 	offset?: number;
@@ -675,6 +708,8 @@ export interface BoardState {
 
 	nagKiller: boolean;
 	nagKillerMode: string;
+	nagOrgBypass: boolean;
+	rawCan: boolean;
 	dasHandsOn: number;
 	turnSignalLeft: boolean;
 	turnSignalRight: boolean;
@@ -834,6 +869,18 @@ export interface BoardState {
 
 	// CAN bus health (per-bus MCP2515 status)
 	canHealth: CanHealthState;
+
+	// CAN diagnostic counters (firmware CanDiag aggregate)
+	canNagEchoCount: number;
+	canEapModCount: number;
+	canTxFailCount: number;
+	canBusOffCount: number;
+
+	// CAN per-bus frame counts and rate (uint16_t * 10 on wire for hz* fields)
+	canFrames: CanBusMetrics;
+	canHz: CanBusMetrics;
+	canHzMin: CanBusMetrics;
+	canHzMax: CanBusMetrics;
 
 	// Powertrain telemetry
 	vehicleSpeed: number;

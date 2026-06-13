@@ -114,6 +114,8 @@ export const initialBoardState: BoardState = {
 
 	nagKiller: false,
 	nagKillerMode: "legacy",
+	nagOrgBypass: false,
+	rawCan: false,
 	dasHandsOn: 0,
 	turnSignalLeft: false,
 	turnSignalRight: false,
@@ -246,6 +248,15 @@ export const initialBoardState: BoardState = {
 	platformResolved: false,
 
 	canHealth: {},
+
+	canNagEchoCount: 0,
+	canEapModCount: 0,
+	canTxFailCount: 0,
+	canBusOffCount: 0,
+	canFrames: {},
+	canHz: {},
+	canHzMin: {},
+	canHzMax: {},
 
 	vehicleSpeed: 0,
 	gearState: 0,
@@ -451,6 +462,18 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 		canClockReqMHz:
 			msg.canClockReqMHz !== undefined ? Number(msg.canClockReqMHz) : prev.canClockReqMHz,
 		canClockMHz: msg.canClockMHz !== undefined ? Number(msg.canClockMHz) : prev.canClockMHz,
+		canNagEchoCount:
+			msg.canNagEchoCount !== undefined ? Number(msg.canNagEchoCount) : prev.canNagEchoCount,
+		canEapModCount:
+			msg.canEapModCount !== undefined ? Number(msg.canEapModCount) : prev.canEapModCount,
+		canTxFailCount:
+			msg.canTxFailCount !== undefined ? Number(msg.canTxFailCount) : prev.canTxFailCount,
+		canBusOffCount:
+			msg.canBusOffCount !== undefined ? Number(msg.canBusOffCount) : prev.canBusOffCount,
+		canFrames: msg.canFrames ? { ...prev.canFrames, ...msg.canFrames } : prev.canFrames,
+		canHz: msg.canHz ? { ...prev.canHz, ...msg.canHz } : prev.canHz,
+		canHzMin: msg.canHzMin ? { ...prev.canHzMin, ...msg.canHzMin } : prev.canHzMin,
+		canHzMax: msg.canHzMax ? { ...prev.canHzMax, ...msg.canHzMax } : prev.canHzMax,
 		banShield: msg.banShield !== undefined ? Boolean(msg.banShield) : prev.banShield,
 		banThreat: msg.banThreat !== undefined ? Number(msg.banThreat) : prev.banThreat,
 		banDetectCount:
@@ -684,6 +707,18 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 		canClockReqMHz:
 			msg.canClockReqMHz !== undefined ? Number(msg.canClockReqMHz) : prev.canClockReqMHz,
 		canClockMHz: msg.canClockMHz !== undefined ? Number(msg.canClockMHz) : prev.canClockMHz,
+		canNagEchoCount:
+			msg.canNagEchoCount !== undefined ? Number(msg.canNagEchoCount) : prev.canNagEchoCount,
+		canEapModCount:
+			msg.canEapModCount !== undefined ? Number(msg.canEapModCount) : prev.canEapModCount,
+		canTxFailCount:
+			msg.canTxFailCount !== undefined ? Number(msg.canTxFailCount) : prev.canTxFailCount,
+		canBusOffCount:
+			msg.canBusOffCount !== undefined ? Number(msg.canBusOffCount) : prev.canBusOffCount,
+		canFrames: msg.canFrames ? { ...prev.canFrames, ...msg.canFrames } : prev.canFrames,
+		canHz: msg.canHz ? { ...prev.canHz, ...msg.canHz } : prev.canHz,
+		canHzMin: msg.canHzMin ? { ...prev.canHzMin, ...msg.canHzMin } : prev.canHzMin,
+		canHzMax: msg.canHzMax ? { ...prev.canHzMax, ...msg.canHzMax } : prev.canHzMax,
 		streaming: msg.stream !== undefined ? Boolean(msg.stream?.on) : prev.streaming,
 		banShield: msg.banShield !== undefined ? Boolean(msg.banShield) : prev.banShield,
 		banThreat: msg.banThreat !== undefined ? Number(msg.banThreat) : prev.banThreat,
@@ -1016,6 +1051,18 @@ function applyStatusState(prev: BoardState, msg: StatusStateMessage): BoardState
 				: state?.nagKiller !== undefined
 					? Boolean(state.nagKiller)
 					: prev.nagKiller,
+		nagOrgBypass:
+			msg.nagOrgBypass !== undefined
+				? Boolean(msg.nagOrgBypass)
+				: state?.nagOrgBypass !== undefined
+					? Boolean(state.nagOrgBypass)
+					: prev.nagOrgBypass,
+		rawCan:
+			msg.rawCan !== undefined
+				? Boolean(msg.rawCan)
+				: state?.rawCan !== undefined
+					? Boolean(state.rawCan)
+					: prev.rawCan,
 		profile: msg.sp ?? profile ?? prev.profile,
 		profilePinned:
 			msg.spPin !== undefined
