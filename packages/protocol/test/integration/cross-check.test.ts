@@ -207,6 +207,20 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"drive:cap:25",
 	"eap:on",
 	"eap:off",
+	"lhd:on",
+	"lhd:off",
+	"apfirst:on",
+	"apfirst:off",
+	"lanegraph:on",
+	"lanegraph:off",
+	"assist-dev:on",
+	"assist-dev:off",
+	"assist-nav:on",
+	"assist-nav:off",
+	"assist-hof:on",
+	"assist-hof:off",
+	"assist-tel:on",
+	"assist-tel:off",
 	"tlssc:on",
 	"tlssc:off",
 	"evd:on",
@@ -637,6 +651,10 @@ describe("Cross-check: docs ↔ protocol ↔ firmware", () => {
 			// Commands with N placeholder are patterns, not literal commands
 			if (dc.endsWith(":N")) return false;
 			if (/[A-Z]/.test(dc) && !dc.includes("MHz")) return false;
+			// Driver assist toggles and Tesla BLE key commands are valid
+			if (/^(lhd|apfirst|lanegraph|assist-(dev|nav|hof|tel)):/.test(dc)) return false;
+			if (/^(tesla:key|tesla:vin|tesla:wake|tesla:charge|tesla:climate)/.test(dc))
+				return false;
 			// Range entries like "seat:fl:0" – "seat:fl:3" — check base
 			return !FIRMWARE_WIRE_COMMANDS.includes(dc);
 		});
