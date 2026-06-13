@@ -161,7 +161,6 @@ export interface BootMessage {
 	regionCode?: number;
 	hasRegion?: number;
 	cnLocked?: number;
-	rateLimit?: number;
 	hasTpms?: number;
 	regionSpoofCode?: number;
 	alcAutoConfirm?: number;
@@ -274,7 +273,6 @@ export interface StatusMessage {
 	regionCode?: number;
 	hasRegion?: number;
 	cnLocked?: number;
-	rateLimit?: number;
 	hasTpms?: number;
 	regionSpoofCode?: number;
 	alcAutoConfirm?: number;
@@ -773,9 +771,6 @@ export interface BoardState {
 
 	// ECE R79 bypass
 	eceR79: boolean;
-
-	// Rate limiting
-	rateLimit: boolean;
 
 	// New vehicle features
 	seatbeltEmulation: boolean;

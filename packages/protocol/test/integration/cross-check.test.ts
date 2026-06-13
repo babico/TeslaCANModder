@@ -228,8 +228,6 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"das:arm",
 	"das:disarm",
 	"das:status",
-	"ratelimit:on",
-	"ratelimit:off",
 	"tpms",
 	"turn:left3",
 	"turn:right3",
@@ -417,7 +415,6 @@ function extractProtocolCommands(): string[] {
 				key === "rawCan" ||
 				key === "summonInject" ||
 				key === "eceR79" ||
-				key === "rateLimit" ||
 				key === "seatbelt" ||
 				key === "airRecirc" ||
 				key === "wiperPersist" ||
@@ -437,6 +434,13 @@ function extractProtocolCommands(): string[] {
 				key === "eap" ||
 				key === "tlssc" ||
 				key === "evd" ||
+				key === "lhd" ||
+				key === "apFirstToggle" ||
+				key === "laneGraph" ||
+				key === "assistDev" ||
+				key === "assistNav" ||
+				key === "assistHof" ||
+				key === "assistTel" ||
 				key === "drive" ||
 				key === "gamepad" ||
 				key === "nagBypass"

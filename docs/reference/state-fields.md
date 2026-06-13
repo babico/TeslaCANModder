@@ -204,7 +204,6 @@ unified command interface (`nag:mode:<name>`).
 | `wiperPersistEnabled`   | bool  | false   | Wiper speed persistence           |
 | `mirrorAutoFoldEnabled` | bool  | false   | Auto fold on lock                 |
 | `singleShotTx`          | bool  | false   | MCP2515 one-shot TX               |
-| `rateLimitEnabled`      | bool  | false   | Per-CAN-ID TX rate limiting       |
 | `driveModeOverride`     | uint8 | 0       | Ghost mode (0=off, 1–3)           |
 | `canSimEnabled`         | bool  | false   | CAN simulation mode               |
 

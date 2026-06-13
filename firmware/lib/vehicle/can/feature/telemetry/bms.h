@@ -314,17 +314,6 @@ inline float decodeBmsCoolTarget(const uint8_t *data)
 }
 
 /**
- * @brief Decode passive cooling target temperature from BMS thermal status (bits 26-34)
- * @param data Raw CAN payload from frame 0x312 (786)
- * @return Passive cooling inlet target in Celsius
- */
-inline float decodeBmsPassiveTarget(const uint8_t *data)
-{
-	uint16_t raw = ((uint16_t)(data[3] & 0x3F) << 3) | (data[4] >> 5); // bits 26-34
-	return raw * 0.25f - 25.0f; // offset-25 encoding to °C
-}
-
-/**
  * @brief Decode active heating target temperature from BMS thermal status (bits 35-43)
  * @param data Raw CAN payload from frame 0x312 (786)
  * @return Active heating inlet target in Celsius

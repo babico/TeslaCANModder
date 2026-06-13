@@ -732,14 +732,6 @@ const COMMAND_GATES: Record<string, Gate[]> = {
 		},
 	],
 
-	// Rate limiting (requires chassis)
-	rateLimit: [
-		{
-			check: (s) => s.chassisOnline,
-			message: "Chassis CAN bus not available",
-		},
-	],
-
 	// Turn signals (requires body)
 	turnLeft3: [
 		{

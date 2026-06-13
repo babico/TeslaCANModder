@@ -45,10 +45,6 @@ describe("reducer: new feature fields", () => {
 			expect(initialBoardState.eceR79).toBe(false);
 		});
 
-		it("has rate limit default", () => {
-			expect(initialBoardState.rateLimit).toBe(true);
-		});
-
 		it("has AP unlock/restore defaults", () => {
 			expect(initialBoardState.gtwShieldArmed).toBe(false);
 			expect(initialBoardState.gtwShieldBlocks).toBe(0);
@@ -71,7 +67,6 @@ describe("reducer: new feature fields", () => {
 				regionCode: 2,
 				hasRegion: 1,
 				cnLocked: 0,
-				rateLimit: 0,
 				hasTpms: 1,
 			};
 			const state = boardReducer({ ...initialBoardState }, msg);
@@ -81,7 +76,6 @@ describe("reducer: new feature fields", () => {
 			expect(state.regionCode).toBe(2);
 			expect(state.hasRegion).toBe(true);
 			expect(state.cnLocked).toBe(false);
-			expect(state.rateLimit).toBe(false);
 			expect(state.hasTpms).toBe(true);
 		});
 
@@ -119,7 +113,6 @@ describe("reducer: new feature fields", () => {
 				regionCode: 3,
 				hasRegion: 1,
 				cnLocked: 1,
-				rateLimit: 1,
 				hasTpms: 0,
 			};
 			const state = boardReducer({ ...initialBoardState }, msg);
@@ -129,7 +122,6 @@ describe("reducer: new feature fields", () => {
 			expect(state.regionCode).toBe(3);
 			expect(state.hasRegion).toBe(true);
 			expect(state.cnLocked).toBe(true);
-			expect(state.rateLimit).toBe(true);
 			expect(state.hasTpms).toBe(false);
 		});
 

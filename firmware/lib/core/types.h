@@ -413,7 +413,6 @@ struct State
 	float bmsPowerDissipation; // Thermal power (kW)
 	float bmsFlowRequest;	   // Coolant flow (LPM)
 	float bmsCoolTarget;	   // Active cooling target (deg C)
-	float bmsPassiveTarget;	   // Passive target (deg C)
 	float bmsHeatTarget;	   // Active heating target (deg C)
 	float bmsPackTMin;		   // Pack min temp (deg C)
 	float bmsPackTMax;		   // Pack max temp (deg C)
@@ -716,7 +715,7 @@ struct State
 		  bmsIdealRemaining(0), bmsCellVoltageMax(0), bmsCellVoltageMin(0), bmsMaxRegenPower(0),
 		  bmsMaxDischargePower(0), hasEnhancedBms(false), bmsSocUI(0), bmsSocMax(0), bmsSocAvg(0),
 		  bmsInitialFullPack(0), bmsExpectedRange(0), bmsIdealRange(0), bmsRatedConsumption(0), bmsActualSocInt(0),
-		  bmsUsableSocInt(0), bmsPowerDissipation(0), bmsFlowRequest(0), bmsCoolTarget(0), bmsPassiveTarget(0),
+		  bmsUsableSocInt(0), bmsPowerDissipation(0), bmsFlowRequest(0), bmsCoolTarget(0),
 		  bmsHeatTarget(0), bmsPackTMin(0), bmsPackTMax(0), bmsStationaryHeatPower(0), bmsHvacPowerBudget(0),
 		  bmsPrecondAllowed(false), bmsHeatingWorthwhile(false), bmsContactorState(0), bmsHvState(0),
 		  bmsMinBusVoltage(0), bmsMaxBusVoltage(0), bmsMaxChargeCurrent(0), bmsMaxDischargeCurrent(0),

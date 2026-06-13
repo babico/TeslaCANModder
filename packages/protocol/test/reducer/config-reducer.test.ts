@@ -124,7 +124,6 @@ describe("reducer: config features", () => {
 				regionCode: 0,
 				hasRegion: 0,
 				cnLocked: 0,
-				rateLimit: 1,
 				hasTpms: 0,
 				seatbeltEmulation: 0,
 				wiperPersist: 0,

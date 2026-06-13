@@ -105,7 +105,6 @@ inline void handleVehicleBus(Frame &f, State &s)
 			s.bmsPowerDissipation = decodeBmsPowerDissipation(f.data);
 			s.bmsFlowRequest = decodeBmsFlowRequest(f.data);
 			s.bmsCoolTarget = decodeBmsCoolTarget(f.data);
-			s.bmsPassiveTarget = decodeBmsPassiveTarget(f.data);
 			s.bmsHeatTarget = decodeBmsHeatTarget(f.data);
 			s.bmsPackTMin = decodeBmsPackTMin(f.data);
 			s.bmsPackTMax = decodeBmsPackTMax(f.data);

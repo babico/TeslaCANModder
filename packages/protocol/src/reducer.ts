@@ -171,7 +171,6 @@ export const initialBoardState: BoardState = {
 	cnLocked: false,
 
 	eceR79: false,
-	rateLimit: true,
 
 	alcAutoConfirm: false,
 	dasLaneChangeState: 0,
@@ -491,7 +490,6 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 		regionCode: msg.regionCode ?? prev.regionCode,
 		hasRegion: msg.hasRegion !== undefined ? Boolean(msg.hasRegion) : prev.hasRegion,
 		cnLocked: msg.cnLocked !== undefined ? Boolean(msg.cnLocked) : prev.cnLocked,
-		rateLimit: msg.rateLimit !== undefined ? Boolean(msg.rateLimit) : prev.rateLimit,
 		hasTpms: msg.hasTpms !== undefined ? Boolean(msg.hasTpms) : prev.hasTpms,
 		regionSpoofCode: msg.regionSpoofCode ?? prev.regionSpoofCode,
 		alcAutoConfirm:
@@ -737,7 +735,6 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 		regionCode: msg.regionCode ?? prev.regionCode,
 		hasRegion: msg.hasRegion !== undefined ? Boolean(msg.hasRegion) : prev.hasRegion,
 		cnLocked: msg.cnLocked !== undefined ? Boolean(msg.cnLocked) : prev.cnLocked,
-		rateLimit: msg.rateLimit !== undefined ? Boolean(msg.rateLimit) : prev.rateLimit,
 		hasTpms: msg.hasTpms !== undefined ? Boolean(msg.hasTpms) : prev.hasTpms,
 		regionSpoofCode: msg.regionSpoofCode ?? prev.regionSpoofCode,
 		alcAutoConfirm:

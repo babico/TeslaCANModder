@@ -173,6 +173,15 @@ export const commands = {
 	apGate: (on: boolean) => (on ? "apgate:on" : "apgate:off"),
 	apGateStatus: () => "apgate:status",
 
+	// Driver Assist toggles
+	lhd: (on: boolean) => (on ? "lhd:on" : "lhd:off"),
+	apFirstToggle: (on: boolean) => (on ? "apfirst:on" : "apfirst:off"),
+	laneGraph: (on: boolean) => (on ? "lanegraph:on" : "lanegraph:off"),
+	assistDev: (on: boolean) => (on ? "assist-dev:on" : "assist-dev:off"),
+	assistNav: (on: boolean) => (on ? "assist-nav:on" : "assist-nav:off"),
+	assistHof: (on: boolean) => (on ? "assist-hof:on" : "assist-hof:off"),
+	assistTel: (on: boolean) => (on ? "assist-tel:on" : "assist-tel:off"),
+
 	// DAS Drive (gamepad-driven CAN injection of openpilot-protocol frames)
 	// See firmware/lib/vehicle/can/feature/das_drive.h. Speed values are
 	// integer km/h; cap is bounded firmware-side to 1..200, user limit to
@@ -322,9 +331,6 @@ export const commands = {
 
 	// Auto Lane Change confirmation
 	alc: (on: boolean) => (on ? "alc:on" : "alc:off"),
-
-	// Rate limiting
-	rateLimit: (on: boolean) => (on ? "ratelimit:on" : "ratelimit:off"),
 
 	// Turn signals (3-blink lane change)
 	turnLeft3: () => "turn:left3",

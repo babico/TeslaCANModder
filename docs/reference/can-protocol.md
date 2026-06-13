@@ -282,7 +282,6 @@ The same field uses different names across the firmware, JSON wire protocol, and
 | `regionCode`           | `regionCode`       | `regionCode`            |
 | `hasRegion`            | `hasRegion`        | `hasRegion`             |
 | `chineseGatewayLocked` | `cnLocked`         | `cnLocked`              |
-| `rateLimitEnabled`     | `rateLimit`        | `rateLimit`             |
 | `hasTpms`              | `hasTpms`          | `hasTpms`               |
 | `tpmsPressure[0]`      | `fl`               | `tpmsPressureFL`        |
 | `tpmsPressure[1]`      | `fr`               | `tpmsPressureFR`        |

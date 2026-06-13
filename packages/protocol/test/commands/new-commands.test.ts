@@ -19,11 +19,6 @@ describe("new commands", () => {
 		it("off", () => expect(commands.eceR79(false)).toBe("ecer79:off"));
 	});
 
-	describe("Rate Limit", () => {
-		it("on", () => expect(commands.rateLimit(true)).toBe("ratelimit:on"));
-		it("off", () => expect(commands.rateLimit(false)).toBe("ratelimit:off"));
-	});
-
 	describe("AP unlock and restore controls", () => {
 		it("gtwShieldArm", () => expect(commands.gtwShieldArm()).toBe("gtwshield:arm"));
 		it("gtwShieldDisarm", () => expect(commands.gtwShieldDisarm()).toBe("gtwshield:disarm"));

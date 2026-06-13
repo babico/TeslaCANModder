@@ -545,19 +545,6 @@ When enabled, monitors `DAS_laneChangeState` on 0x39B. When Autopilot requests a
 
 A 2-second cooldown prevents duplicate injections. Direction is derived from the active turn signal state.
 
-## Rate Limiting
-
-| Command         | Description                                        |
-| --------------- | -------------------------------------------------- |
-| `ratelimit:on`  | Enable per-CAN-ID TX rate limiting (10 Hz default) |
-| `ratelimit:off` | Disable rate limiting                              |
-
-Status payload includes:
-
-- `rateLimit` — rate limiting enabled (0=off, 1=on)
-
-Rate limiting prevents excessive CAN frame transmission by enforcing a minimum interval between TX frames for each CAN ID.
-
 ## TPMS (Tire Pressure Monitoring)
 
 | Command | Description                                                        |

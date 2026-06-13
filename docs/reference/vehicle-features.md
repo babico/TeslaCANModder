@@ -656,17 +656,6 @@ Vehicle capabilities (FSD support, motor configuration) are inferred from the mo
 
 All received CAN frames are pushed into a 256-entry lock-free ring buffer with monotonic sequence numbers. Multiple consumers (serial output, MQTT, WiFi streaming) independently track their read position. Overflow is detected per consumer.
 
-## TX Rate Limiting
-
-Enforces a per-CAN-ID minimum interval between transmitted frames (default 10 Hz / 100ms). Prevents CAN bus flooding from rapid command execution.
-
-```bash
-ratelimit:on    # Enable rate limiting (default)
-ratelimit:off   # Disable rate limiting
-```
-
-Rate limiting also includes self-echo detection: frames sent by the device are tracked in a ring buffer and filtered out when received back, preventing infinite feedback loops.
-
 ## Debug Log Ring Buffer
 
 A 256-entry circular buffer captures timestamped debug events from all firmware subsystems. Useful for diagnosing issues without a serial connection.
@@ -799,4 +788,4 @@ Controls vehicle power states via CAN ID 0x273.
 
 ## NVS Persistence
 
-All toggle states (FSD, nag, ISA chime, nag killer, precondition, track mode, profile, offset, variant, drive mode, ECE R79, rate limit, single-shot TX, MQTT settings) are saved to NVS flash (ESP32) or EEPROM (Arduino) and persist across reboots. NVS version is `0x0C`.
+All toggle states (FSD, nag, ISA chime, nag killer, precondition, track mode, profile, offset, variant, drive mode, ECE R79, single-shot TX, MQTT settings) are saved to NVS flash (ESP32) or EEPROM (Arduino) and persist across reboots. NVS version is `0x0C`.
