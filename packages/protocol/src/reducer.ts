@@ -113,7 +113,7 @@ export const initialBoardState: BoardState = {
 	summonActive: false,
 
 	nagKiller: false,
-	nagKillerMode: "legacy",
+	nagMode: "legacy",
 	nagOrgBypass: false,
 	rawCan: false,
 	dasHandsOn: 0,
@@ -402,7 +402,7 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 		summonInject:
 			msg.summonInject !== undefined ? Boolean(msg.summonInject) : prev.summonInject,
 		nagKiller: msg.nagKiller !== undefined ? Boolean(msg.nagKiller) : prev.nagKiller,
-		nagKillerMode: msg.nagKillerMode || prev.nagKillerMode,
+		nagMode: msg.nagMode || prev.nagMode,
 		dasHandsOn: msg.dasHandsOn ?? prev.dasHandsOn,
 		turnSignalLeft:
 			msg.turnSignalLeft !== undefined ? Boolean(msg.turnSignalLeft) : prev.turnSignalLeft,
@@ -655,7 +655,7 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 		summonInject:
 			msg.summonInject !== undefined ? Boolean(msg.summonInject) : prev.summonInject,
 		nagKiller: msg.nagKiller !== undefined ? Boolean(msg.nagKiller) : prev.nagKiller,
-		nagKillerMode: msg.nagKillerMode || prev.nagKillerMode,
+		nagMode: msg.nagMode || prev.nagMode,
 		dasHandsOn: msg.dasHandsOn ?? prev.dasHandsOn,
 		turnSignalLeft:
 			msg.turnSignalLeft !== undefined ? Boolean(msg.turnSignalLeft) : prev.turnSignalLeft,

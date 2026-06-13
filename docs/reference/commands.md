@@ -139,12 +139,13 @@ DAS frames (`DAS_control 0x2B9 @25 Hz`, `DAS_steeringControl 0x488 @50 Hz`,
 steering and pedals. **Not** Autopilot/FSD — there is no perception or
 planning. See [DAS Drive guide](../guides/das-drive.md) for safety model.
 
-| Command         | Description                                                 |
-| --------------- | ----------------------------------------------------------- |
-| `drive:on`      | Enable DAS drive (gamepad takes over actuators)             |
-| `drive:off`     | Disable DAS drive and emit a 5-frame cancel burst           |
-| `drive:speed:N` | User speed limit in km/h (1..current cap), persisted to NVS |
-| `drive:cap:N`   | Hard safety cap in km/h (1..200), persisted to NVS          |
+| Command         | Description                                                                  |
+| --------------- | ---------------------------------------------------------------------------- |
+| `drive:on`      | Enable DAS drive (gamepad takes over actuators)                              |
+| `drive:off`     | Disable DAS drive and emit a 5-frame cancel burst                            |
+| `drive:speed:N` | User speed limit in km/h (1..current cap), persisted to NVS                  |
+| `drive:cap:N`   | Hard safety cap in km/h (1..200), persisted to NVS                           |
+| `drive:status`  | Returns drive telemetry (enabled, active, steerDeg, accel range, speed, cap) |
 
 Status payload includes:
 
@@ -163,6 +164,7 @@ plus its 16 buttons into bound serial commands. Pairing, button bindings
 | Command                                | Description                                               |
 | -------------------------------------- | --------------------------------------------------------- |
 | `gamepad:scan`                         | Start a 6-second BLE HID scan                             |
+| `gamepad:rescan`                       | Alias for `gamepad:scan`                                  |
 | `gamepad:pair:<addr>`                  | Pair with the scanned MAC address (`AA:BB:CC:DD:EE:FF`)   |
 | `gamepad:unpair`                       | Forget the paired device                                  |
 | `gamepad:on`                           | Enable gamepad input (saved to NVS)                       |
@@ -183,6 +185,17 @@ Status payload (`gamepad` field) includes:
 - `rssi`, `battery`
 - `devices[]` — last scan result
 - `bindings[]` — current tap and hold bindings per button
+
+## BLE Radio
+
+Low-level control of the BLE radio. Useful to disable BLE when only WiFi or serial transports are in use. BLE builds only.
+
+| Command           | Description                                 |
+| ----------------- | ------------------------------------------- |
+| `ble:on`          | Enable BLE radio (BLE builds only)          |
+| `ble:off`         | Disable BLE radio                           |
+| `ble:status`      | Returns enabled/connected/deviceName        |
+| `ble:name:<name>` | Set BLE advertised device name (1-32 chars) |
 
 ## FSD & Autopilot
 
@@ -360,6 +373,17 @@ When disabled, any in-progress summon burst is stopped immediately. Setting is p
 | `stream:off`  | Stop frame streaming                           |
 | `can:raw:on`  | Listen to all CAN IDs (unfiltered)             |
 | `can:raw:off` | Return to filtered mode (variant-specific IDs) |
+
+## CAN Frame Recorder
+
+Captures incoming CAN frames into an on-device ring buffer for later retrieval and analysis. Useful for bench work and post-mortem debugging.
+
+| Command           | Description                                                   |
+| ----------------- | ------------------------------------------------------------- |
+| `recorder:on`     | Start recording CAN frames                                    |
+| `recorder:off`    | Stop recording                                                |
+| `recorder:clear`  | Clear the recording buffer                                    |
+| `recorder:status` | Returns enabled/count/capacity/captured/dropped/lastCaptureMs |
 
 ## Vehicle Commands (3 CAN buses required)
 

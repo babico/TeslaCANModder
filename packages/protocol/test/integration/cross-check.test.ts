@@ -123,6 +123,12 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"can:raw:on",
 	"can:raw:off",
 
+	// CAN Frame Recorder
+	"recorder:on",
+	"recorder:off",
+	"recorder:clear",
+	"recorder:status",
+
 	// Vehicle Commands (3 CAN buses)
 	"lock",
 	"unlock",
@@ -205,6 +211,7 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"drive:off",
 	"drive:speed:25",
 	"drive:cap:25",
+	"drive:status",
 	"eap:on",
 	"eap:off",
 	"lhd:on",
@@ -289,6 +296,11 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"elm327:on",
 	"elm327:off",
 
+	// BLE Radio
+	"ble:on",
+	"ble:off",
+	"ble:status",
+
 	// Tesla BLE
 	"teslable:on",
 	"teslable:off",
@@ -324,6 +336,7 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 
 	// Gamepad (BLE HID)
 	"gamepad:scan",
+	"gamepad:rescan",
 	"gamepad:unpair",
 	"gamepad:on",
 	"gamepad:off",
@@ -427,6 +440,8 @@ function extractProtocolCommands(): string[] {
 				key === "scanMyTesla" ||
 				key === "elm327" ||
 				key === "teslaBle" ||
+				key === "ble" ||
+				key === "recorder" ||
 				key === "homeAssistant" ||
 				key === "bleEncrypt" ||
 				key === "alc" ||

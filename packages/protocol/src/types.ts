@@ -109,7 +109,7 @@ export interface BootMessage {
 	isaChime?: number;
 	summonInject?: number;
 	nagKiller?: number;
-	nagKillerMode?: string;
+	nagMode?: string;
 	nagOrgBypass?: number;
 	dasHandsOn?: number;
 	turnSignalLeft?: number;
@@ -344,7 +344,7 @@ export interface StatusMessage {
 	isaChime?: number;
 	summonInject?: number;
 	nagKiller?: number;
-	nagKillerMode?: string;
+	nagMode?: string;
 	nagOrgBypass?: number;
 	dasHandsOn?: number;
 	turnSignalLeft?: number;
@@ -715,7 +715,7 @@ export interface BoardState {
 	summonActive: boolean;
 
 	nagKiller: boolean;
-	nagKillerMode: string;
+	nagMode: string;
 	nagOrgBypass: boolean;
 	rawCan: boolean;
 	dasHandsOn: number;

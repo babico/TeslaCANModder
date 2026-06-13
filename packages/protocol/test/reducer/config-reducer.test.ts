@@ -95,7 +95,7 @@ describe("reducer: config features", () => {
 				vehicleOnline: 1,
 				summonInject: 0,
 				nagKiller: 0,
-				nagKillerMode: "legacy",
+				nagMode: "legacy",
 				dasHandsOn: 0,
 				precondition: 0,
 				trackMode: 0,

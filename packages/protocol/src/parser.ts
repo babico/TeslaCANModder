@@ -100,7 +100,7 @@ function normalizeStateSection(target: JsonRecord, state: JsonRecord | undefined
 	assignIfDefined(target, "isaChime", state?.isaChime);
 	assignIfDefined(target, "summonInject", state?.summonInject);
 	assignIfDefined(target, "nagKiller", state?.nagKiller);
-	assignIfDefined(target, "nagKillerMode", state?.nagKillerMode);
+	assignIfDefined(target, "nagMode", state?.nagMode);
 	assignIfDefined(target, "dasHandsOn", state?.dasHandsOn);
 	assignIfDefined(target, "precondition", state?.precondition);
 	assignIfDefined(target, "trackMode", state?.trackMode);

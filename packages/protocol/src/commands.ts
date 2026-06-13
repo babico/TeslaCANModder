@@ -189,6 +189,7 @@ export const commands = {
 	drive: (on: boolean) => (on ? "drive:on" : "drive:off"),
 	driveSpeed: (kph: number) => `drive:speed:${Math.max(1, Math.floor(kph))}`,
 	driveCap: (kph: number) => `drive:cap:${Math.max(1, Math.min(200, Math.floor(kph)))}`,
+	driveStatus: () => "drive:status",
 
 	// Preconditioning
 	precondition: (on: boolean) => (on ? "precondition:on" : "precondition:off"),
@@ -430,6 +431,15 @@ export const commands = {
 	teslaBleAuth: () => "teslable:auth",
 	teslaBleForget: () => "teslable:forget",
 
+	// BLE Radio
+	ble: (on: boolean) => (on ? "ble:on" : "ble:off"),
+	bleStatus: () => "ble:status",
+
+	// CAN Frame Recorder
+	recorder: (on: boolean) => (on ? "recorder:on" : "recorder:off"),
+	recorderClear: () => "recorder:clear",
+	recorderStatus: () => "recorder:status",
+
 	// Home Assistant / ESPHome integration (4.5)
 	homeAssistant: (on: boolean) => (on ? "ha:on" : "ha:off"),
 	haDiscovery: () => "ha:discovery",
@@ -447,6 +457,7 @@ export const commands = {
 	// Gamepad (BLE HID) — pair/unpair, scan, enable, status, bindings, axis tuning.
 	// See firmware/lib/client/gamepad/* and dispatch.h "gamepad:" handler.
 	gamepadScan: () => "gamepad:scan",
+	gamepadRescan: () => "gamepad:rescan",
 	gamepadPair: (addr: string) => {
 		if (!/^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$/.test(addr)) {
 			throw new RangeError(`gamepadPair expects MAC AA:BB:CC:DD:EE:FF, got "${addr}"`);
