@@ -9,6 +9,17 @@
 
 #include "core/types.h"
 
+// 0x39B DAS_status byte masks
+#define DAS_STATUS_NIBBLE_MASK         0x0F
+#define DAS_STATE_SHIFT                4
+#define DAS_STATE_NIBBLE_MASK          0x0F
+#define DAS_STATUS_ACTIVE_MIN          3
+#define DAS_STATUS_ACTIVE_MAX          5
+
+// 0x7FF GTW_carConfig mux 2 byte 5
+#define GTW_TIER_SHIFT                 2
+#define GTW_TIER_NIBBLE_MASK           0x07
+
 /**
  * @brief Read DAS autopilot status from a 0x39B frame
  * @param f Reference to the CAN frame to decode
@@ -16,7 +27,7 @@
  */
 inline uint8_t readDASAutopilotStatus(const Frame &f)
 {
-	return f.dlc >= 1 ? (f.data[0] & 0x0F) : 0;
+	return f.dlc >= 1 ? (f.data[0] & DAS_STATUS_NIBBLE_MASK) : 0;
 }
 
 /**
@@ -30,7 +41,7 @@ inline uint8_t readDASAutopilotStatus(const Frame &f)
  */
 inline uint8_t readDASAutopilotState(const Frame &f)
 {
-	return f.dlc >= 2 ? ((f.data[1] >> 4) & 0x0F) : 0;
+	return f.dlc >= 2 ? ((f.data[1] >> DAS_STATE_SHIFT) & DAS_STATE_NIBBLE_MASK) : 0;
 }
 
 /**
@@ -40,7 +51,7 @@ inline uint8_t readDASAutopilotState(const Frame &f)
  */
 inline bool isDASAutopilotActive(uint8_t status)
 {
-	return status >= 3 && status <= 5;
+	return status >= DAS_STATUS_ACTIVE_MIN && status <= DAS_STATUS_ACTIVE_MAX;
 }
 
 /**
@@ -57,5 +68,5 @@ inline int8_t readGtwAutopilotTier(const Frame &f)
 		return -1;
 	if (readMuxID(f) != 2)
 		return -1;
-	return (int8_t)((f.data[5] >> 2) & 0x07);
+	return (int8_t)((f.data[5] >> GTW_TIER_SHIFT) & GTW_TIER_NIBBLE_MASK);
 }

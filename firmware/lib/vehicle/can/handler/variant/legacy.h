@@ -9,6 +9,7 @@
 
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
+#include "bits.h"
 #include "feature/fsd/profile.h"
 #include "feature/fsd/offsets.h"
 
@@ -64,7 +65,7 @@ void handleLegacy(Frame &f, State &s)
 			int steps = readHW3UiOffsetSteps(f);
 			if (!s.profileOverride && steps >= 0 && steps <= 2)
 				s.speedProfile = steps;
-			setBit(f, 46, true);
+			setBit(f, FSD_BIT_EAP, true);
 			setSpeedProfileV12V13(f, s.speedProfile);
 			driverSend(f, BUS_CHASSIS);
 			ONCE_LOG(legacyLoggedFSD, F("Legacy: FSD mod active on CAN"));
@@ -73,7 +74,7 @@ void handleLegacy(Frame &f, State &s)
 
 		if (mux == 1 && nagModeUsesBit19(s.nagMode) && apGateOpen)
 		{
-			setBit(f, 19, false); // Clear ECE R79 hands-on nag bit
+			setBit(f, NAG_BIT_HANDS_ON_REQUIREMENT, false); // Clear ECE R79 hands-on nag bit
 			driverSend(f, BUS_CHASSIS);
 			s.canDiag.eapModCount++;
 			ONCE_LOG(legacyLoggedNag, F("Legacy: Nag suppressed on CAN"));

@@ -9,6 +9,7 @@
 
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
+#include "bits.h"
 #include "feature/fsd/profile.h"
 #include "feature/fsd/offsets.h"
 #include "feature/fsd/region.h"
@@ -38,12 +39,12 @@ void resetHW3LogFlags()
  */
 inline void applyHW3NagSuppressBits(Frame &f, State &s)
 {
-	setBit(f, 19, false); // ECE R79 hands-on nag disable
-	setBit(f, 47, true);  // Summon EU unlock
+	setBit(f, NAG_BIT_HANDS_ON_REQUIREMENT, false); // ECE R79 hands-on nag disable
+	setBit(f, FSD_BIT_NAG_ORGANIC, true);			 // Summon EU unlock
 	if (s.enhancedAutopilot)
-		setBit(f, 46, true); // EAP/Summon unlock on mux=1
+		setBit(f, FSD_BIT_EAP, true); // EAP/Summon unlock on mux=1
 	if (s.laneGraphEnable)
-		setBit(f, 45, true); // Lane graph visualization enable
+		setBit(f, UI_BIT_LANE_GRAPH, true); // Lane graph visualization enable
 	// Clear EU speed restriction bit for European-market vehicles
 	if (s.eceR79Bypass && s.hasRegion && isEuropeanMarket(s.regionCode))
 		applyEceR79Bypass(f);
@@ -79,29 +80,29 @@ void handleHW3(Frame &f, State &s)
 			bool fdModified = false;
 			if (s.lhdEnabled)
 			{
-				setBit(f, 41, false); // UI_drivingSide: 0 = LHD
+				setBit(f, FSD_BIT_DRIVING_SIDE, false); // UI_drivingSide: 0 = LHD
 				fdModified = true;
 			}
 			if (s.assistNavEnable)
 			{
-				setBit(f, 13, true); // UI_driveOnMapsEnable
-				setBit(f, 48, true); // UI_hasDriveOnNav
-				setBit(f, 49, true); // UI_followNavRouteEnable
+				setBit(f, UI_BIT_DRIVE_ON_MAPS, true); // UI_driveOnMapsEnable
+				setBit(f, UI_BIT_HAS_DRIVE_ON_NAV, true); // UI_hasDriveOnNav
+				setBit(f, UI_BIT_FOLLOW_NAV_ROUTE, true); // UI_followNavRouteEnable
 				fdModified = true;
 			}
 			if (s.assistHandsOff)
 			{
-				setBit(f, 14, true); // UI_handsOnRequirementDisable
+				setBit(f, UI_BIT_HANDS_ON_REQ_DISABLE, true); // UI_handsOnRequirementDisable
 				fdModified = true;
 			}
 			if (s.assistDevMode)
 			{
-				setBit(f, 5, true); // UI_dasDeveloper
+				setBit(f, UI_BIT_DAS_DEVELOPER, true); // UI_dasDeveloper
 				fdModified = true;
 			}
 			if (s.assistTelemetryOff)
 			{
-				setBit(f, 43, false); // UI_enableTripTelemetry disable
+				setBit(f, UI_BIT_TRIP_TELEMETRY, false); // UI_enableTripTelemetry disable
 				fdModified = true;
 			}
 			if (fdModified)
@@ -127,9 +128,9 @@ void handleHW3(Frame &f, State &s)
 			if (!s.offsetOverride)
 				s.speedOffset = calculateHW3SpeedOffset(steps);
 
-			setBit(f, 38, true);
-			setBit(f, 39, true); // UI_fsdContinueOnGreenWithCIPV
-			setBit(f, 46, true);
+			setBit(f, FSD_BIT_AP_ACTIVE, true);
+			setBit(f, FSD_BIT_CONTINUE_ON_GREEN, true); // UI_fsdContinueOnGreenWithCIPV
+			setBit(f, FSD_BIT_EAP, true);
 			setSpeedProfileV12V13(f, s.speedProfile);
 			driverSend(f, BUS_CHASSIS);
 			ONCE_LOG(hw3LoggedFSD, F("HW3: FSD mod active on CAN"));

@@ -9,6 +9,7 @@
 
 #include "core/forward.h"
 #include "vehicle/can/ids.h"
+#include "bits.h"
 #include "feature/fsd/profile.h"
 #include "feature/fsd/isa_chime.h"
 #include "feature/fsd/region.h"
@@ -38,12 +39,12 @@ void resetHW4LogFlags()
  */
 inline void applyHW4NagSuppressBits(Frame &f, State &s)
 {
-	setBit(f, 19, false); // ECE R79 hands-on nag disable
-	setBit(f, 47, true);  // Summon EU unlock
+	setBit(f, NAG_BIT_HANDS_ON_REQUIREMENT, false); // ECE R79 hands-on nag disable
+	setBit(f, FSD_BIT_NAG_ORGANIC, true);			 // Summon EU unlock
 	if (s.enhancedAutopilot)
-		setBit(f, 46, true); // EAP/Summon unlock on mux=1
+		setBit(f, FSD_BIT_EAP, true); // EAP/Summon unlock on mux=1
 	if (s.laneGraphEnable)
-		setBit(f, 45, true); // Lane graph visualization enable
+		setBit(f, UI_BIT_LANE_GRAPH, true); // Lane graph visualization enable
 	// Clear EU speed restriction bit for European-market vehicles
 	if (s.eceR79Bypass && s.hasRegion && isEuropeanMarket(s.regionCode))
 		applyEceR79Bypass(f);
@@ -70,8 +71,8 @@ void handleHW4(Frame &f, State &s)
 	{
 		if (f.dlc >= 8)
 		{
-			f.data[1] |= 0x20;					  // Set chime-suppress flag in byte 1
-			f.data[7] = computeHW4IsaChecksum(f); // Recompute trailing checksum
+			f.data[ISA_CHIME_SUPPRESS_BYTE] |= ISA_CHIME_SUPPRESS_MASK; // Set chime-suppress flag
+			f.data[7] = computeHW4IsaChecksum(f);						 // Recompute trailing checksum
 			driverSend(f, BUS_CHASSIS);
 			ONCE_LOG(hw4LoggedISA, F("HW4: ISA chime suppressed"));
 			return;
@@ -93,29 +94,29 @@ void handleHW4(Frame &f, State &s)
 			bool fdModified = false;
 			if (s.lhdEnabled)
 			{
-				setBit(f, 41, false); // UI_drivingSide: 0 = LHD
+				setBit(f, FSD_BIT_DRIVING_SIDE, false); // UI_drivingSide: 0 = LHD
 				fdModified = true;
 			}
 			if (s.assistNavEnable)
 			{
-				setBit(f, 13, true); // UI_driveOnMapsEnable
-				setBit(f, 48, true); // UI_hasDriveOnNav
-				setBit(f, 49, true); // UI_followNavRouteEnable
+				setBit(f, UI_BIT_DRIVE_ON_MAPS, true); // UI_driveOnMapsEnable
+				setBit(f, UI_BIT_HAS_DRIVE_ON_NAV, true); // UI_hasDriveOnNav
+				setBit(f, UI_BIT_FOLLOW_NAV_ROUTE, true); // UI_followNavRouteEnable
 				fdModified = true;
 			}
 			if (s.assistHandsOff)
 			{
-				setBit(f, 14, true); // UI_handsOnRequirementDisable
+				setBit(f, UI_BIT_HANDS_ON_REQ_DISABLE, true); // UI_handsOnRequirementDisable
 				fdModified = true;
 			}
 			if (s.assistDevMode)
 			{
-				setBit(f, 5, true); // UI_dasDeveloper
+				setBit(f, UI_BIT_DAS_DEVELOPER, true); // UI_dasDeveloper
 				fdModified = true;
 			}
 			if (s.assistTelemetryOff)
 			{
-				setBit(f, 43, false); // UI_enableTripTelemetry disable
+				setBit(f, UI_BIT_TRIP_TELEMETRY, false); // UI_enableTripTelemetry disable
 				fdModified = true;
 			}
 			if (fdModified)
@@ -134,13 +135,13 @@ void handleHW4(Frame &f, State &s)
 
 		if (mux == 0 && fsdAllowed && apGateOpen)
 		{
-			setBit(f, 38, true);
-			setBit(f, 39, true); // UI_fsdContinueOnGreenWithCIPV
-			setBit(f, 46, true);
-			setBit(f, 60, true);
+			setBit(f, FSD_BIT_AP_ACTIVE, true);
+			setBit(f, FSD_BIT_CONTINUE_ON_GREEN, true); // UI_fsdContinueOnGreenWithCIPV
+			setBit(f, FSD_BIT_EAP, true);
+			setBit(f, FSD_BIT_DAS_DEV, true);
 			// Emergency Vehicle Detection: bit 59 allows AP to respond to EVs
 			if (s.evdEnabled)
-				setBit(f, 59, true);
+				setBit(f, FSD_BIT_EVD, true);
 			driverSend(f, BUS_CHASSIS);
 			ONCE_LOG(hw4LoggedFSD, F("HW4: FSD mod active on CAN"));
 			return;
@@ -159,7 +160,7 @@ void handleHW4(Frame &f, State &s)
 			if (s.speedOffset > 0)
 			{
 				// Encode speed offset into bits [5:0] of byte 1, preserving upper 2 bits
-				f.data[1] = (f.data[1] & 0xC0) | (s.speedOffset & 0x3F);
+				f.data[1] = (f.data[1] & HW4_OFFSET_PRESERVE_MASK) | (s.speedOffset & HW4_OFFSET_FIELD_MASK);
 			}
 			driverSend(f, BUS_CHASSIS);
 			return;
