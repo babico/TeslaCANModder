@@ -33,16 +33,23 @@ The ESP32 supports up to three CAN buses on a shared SPI fabric. All three lanes
 | 130    | 0x082 | UI_tripPlanning (preconditioning)                      | Vehicle | HW3, HW4 |
 | 281    | 0x119 | Window vent control                                    | Vehicle | HW3, HW4 |
 | 306    | 0x132 | BMS_hvBusStatus (voltage/current)                      | Vehicle | HW3, HW4 |
+| 530    | 0x212 | BMS_preconditionStatus                                 | Vehicle | HW3, HW4 |
 | 537    | 0x219 | TPMS tire pressure/temperature                         | Vehicle | HW3, HW4 |
 | 553    | 0x229 | EPAS_harness (CRC-protected)                           | Chassis | HW3, HW4 |
 | 585    | 0x249 | DI_steer (drive mode readback)                         | Chassis | HW3, HW4 |
+| 594    | 0x252 | BMS_powerAvailable                                     | Vehicle | HW3, HW4 |
 | 627    | 0x273 | UI_vehicleControl (summon, lock, etc.)                 | Vehicle | HW3, HW4 |
+| 637    | 0x27D | APS_eacMonitor                                         | Chassis | HW3, HW4 |
 | 644    | 0x284 | Sentry mode control                                    | Vehicle | HW3, HW4 |
 | 658    | 0x292 | BMS_socStatus (state of charge)                        | Vehicle | HW3, HW4 |
+| 697    | 0x2B9 | DAS_control                                            | Chassis | HW3, HW4 |
+| 722    | 0x2D2 | BMS_driveLimit                                         | Vehicle | HW3, HW4 |
 | 755    | 0x2F3 | Climate control                                        | Vehicle | HW3, HW4 |
 | 786    | 0x312 | BMS_thermalStatus (cell temps)                         | Vehicle | HW3, HW4 |
 | 787    | 0x313 | UI_trackModeSettings                                   | Vehicle | HW3, HW4 |
 | 792    | 0x318 | GTW_carState (OTA detection)                           | Vehicle | HW3, HW4 |
+| 817    | 0x331 | DAS_autopilotConfig                                    | Vehicle | HW3, HW4 |
+| 818    | 0x332 | BMS_minMax                                             | Vehicle | HW3, HW4 |
 | 819    | 0x333 | Charge control                                         | Vehicle | HW3, HW4 |
 | 820    | 0x334 | Drive config (pedal/regen/stop/drive mode inject)      | Vehicle | HW3, HW4 |
 | 826    | 0x33A | BMS_energyStatus (Wh/km)                               | Vehicle | HW3, HW4 |
@@ -53,9 +60,11 @@ The ESP32 supports up to three CAN buses on a shared SPI fabric. All three lanes
 | 923    | 0x39B | DAS_status (hands-on request state)                    | Vehicle | HW3, HW4 |
 | 2047   | 0x7FF | GTW_carConfig mux (autopilot tier readback)            | Vehicle | HW3, HW4 |
 | 947    | 0x3B3 | Trunk/Glovebox control                                 | Vehicle | HW3, HW4 |
+| 962    | 0x3C2 | VCLEFT_switchStatus                                    | Vehicle | HW3, HW4 |
 | 1006   | 0x3EE | Legacy FSD mux                                         | Chassis | Legacy   |
 | 1016   | 0x3F8 | Follow distance (profile mapping)                      | Chassis | HW3, HW4 |
 | 1021   | 0x3FD | FSD mux (FSD/nag/profile/offset/ECE R79)               | Chassis | HW3, HW4 |
+| 1160   | 0x488 | DAS_steeringControl                                    | Chassis | HW3, HW4 |
 | 262    | 0x106 | Rear motor RPM                                         | Vehicle | HW3, HW4 |
 | 277    | 0x115 | Front motor RPM (dual motor)                           | Vehicle | HW3, HW4 |
 | 280    | 0x118 | DI_state (gear/accelerator pedal)                      | Vehicle | HW3, HW4 |

@@ -150,6 +150,9 @@ plus its 16 buttons into bound serial commands. Pairing, button bindings
 | `gamepad:off`                          | Disable gamepad input (saved to NVS)                      |
 | `gamepad:status`                       | Emit a JSON status (battery, RSSI, axes, mode)            |
 | `gamepad:cancel`                       | Send a one-shot DAS cancel burst                          |
+| `das:arm`                              | Arm DAS safety gate before injection (pre-drive check)    |
+| `das:disarm`                           | Disarm DAS safety gate and block all injection            |
+| `das:status`                           | Query DAS gate status and open-condition                  |
 | `gamepad:bind:<n>:<cmd>`               | Bind tap of button `n` (0..15) to a serial command        |
 | `gamepad:hold:<n>:<cmd>`               | Bind ≥500 ms long-press of button `n` to a serial command |
 | `gamepad:axis:<n>:<dz\|expo\|inv>:<v>` | Per-axis tuning, axes 0..5                                |
@@ -170,6 +173,24 @@ Status payload (`gamepad` field) includes:
 | `fsd:off`       | Disable FSD CAN modification                              |
 | `fsd:force:on`  | Force FSD CAN edits even when UI FSD selection bit is off |
 | `fsd:force:off` | Require UI FSD selection bit before FSD edits             |
+
+## TLSSC Restore (Autopilot Tier)
+
+| Command     | Description                                    |
+| ----------- | ---------------------------------------------- |
+| `tlssc:on`  | Enable TLSSC restore (spoof SELF_DRIVING tier) |
+| `tlssc:off` | Disable TLSSC restore                          |
+
+When enabled, rewrites DAS_autopilotConfig (0x331) byte[0] lower 6 bits to 0x1B (SELF_DRIVING tier) while preserving the upper counter bits. Setting is persisted to NVS.
+
+## Emergency Vehicle Detection (HW4)
+
+| Command   | Description                                  |
+| --------- | -------------------------------------------- |
+| `evd:on`  | Enable emergency vehicle detection bit (HW4) |
+| `evd:off` | Disable emergency vehicle detection bit      |
+
+When enabled, sets bit 59 in the FSD mux-0 frame so Autopilot can respond to emergency vehicles. HW4 only. Setting is persisted to NVS.
 
 ## Speed Profile
 
@@ -302,6 +323,15 @@ The `bms` response now includes enhanced fields when available:
 | `summon:stop`    | Stop summon                   |
 
 > Summon requires a cached 0x273 frame. Console shows "Waiting for 0x273" if not yet received.
+
+## Summon Injection Gate
+
+| Command             | Description                                         |
+| ------------------- | --------------------------------------------------- |
+| `summon-inject:on`  | Enable summon frame injection (required for summon) |
+| `summon-inject:off` | Disable summon frame injection                      |
+
+When disabled, any in-progress summon burst is stopped immediately. Setting is persisted to NVS.
 
 ## Streaming & Raw CAN
 
@@ -760,6 +790,27 @@ Button names: `lamp`, `parking`. Press types: `short`, `long`, `double`. Actions
 | ------------ | ---------------------------------- |
 | `elm327:on`  | Enable ELM327 AT command emulation |
 | `elm327:off` | Disable ELM327 emulation           |
+
+## Tesla BLE Key Protocol
+
+Low-level Tesla BLE key management and vehicle commands over the Tesla BLE protocol.
+Distinct from the high-level VCSEC control below.
+
+| Command                           | Description                                   |
+| --------------------------------- | --------------------------------------------- |
+| `tesla:key:gen`                   | Generate a new Tesla BLE key pair             |
+| `tesla:key:show`                  | Show the current key's public key hash        |
+| `tesla:key:role:owner`            | Set key role to owner                         |
+| `tesla:key:role:charging_manager` | Set key role to charging manager              |
+| `tesla:key:send`                  | Send the generated key to the vehicle via BLE |
+| `tesla:vin:<VIN>`                 | Set vehicle VIN for BLE connection            |
+| `tesla:wake`                      | Wake vehicle via BLE                          |
+| `tesla:charge:start`              | Start charging via BLE                        |
+| `tesla:charge:stop`               | Stop charging via BLE                         |
+| `tesla:charge:amps:<1-32>`        | Set charging amperage (1–32 A) via BLE        |
+| `tesla:charge:limit:<50-100>`     | Set charge limit percentage (50–100%) via BLE |
+| `tesla:climate:on`                | Turn climate on via BLE                       |
+| `tesla:climate:off`               | Turn climate off via BLE                      |
 
 ## Tesla BLE Vehicle Control
 

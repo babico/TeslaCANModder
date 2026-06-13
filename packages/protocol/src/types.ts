@@ -52,6 +52,13 @@ interface StatusStatePayload {
 	apGateEnabled?: WireBool;
 	apGateOpen?: WireBool;
 	apGateReason?: string;
+	lhdEnabled?: WireBool;
+	apFirstEnabled?: WireBool;
+	laneGraphEnabled?: WireBool;
+	assistNavEnable?: WireBool;
+	assistHandsOff?: WireBool;
+	assistDevMode?: WireBool;
+	assistTelemetryOff?: WireBool;
 }
 
 interface StatusCanClockPayload {
@@ -149,6 +156,12 @@ export interface BootMessage {
 	seatbeltEmulation?: number;
 	apFirst?: number;
 	dasApState?: number;
+	lhdEnabled?: number;
+	laneGraphEnabled?: number;
+	assistNavEnable?: number;
+	assistHandsOff?: number;
+	assistDevMode?: number;
+	assistTelemetryOff?: number;
 	wiperPersist?: number;
 	mirrorAutoFold?: number;
 	canSim?: number;
@@ -248,6 +261,12 @@ export interface StatusMessage {
 	seatbeltEmulation?: number;
 	apFirst?: number;
 	dasApState?: number;
+	lhdEnabled?: number;
+	laneGraphEnabled?: number;
+	assistNavEnable?: number;
+	assistHandsOff?: number;
+	assistDevMode?: number;
+	assistTelemetryOff?: number;
 	wiperPersist?: number;
 	mirrorAutoFold?: number;
 	canSim?: number;
@@ -415,6 +434,13 @@ export interface StatusStateMessage {
 	apGateEnabled?: WireBool;
 	apGateOpen?: WireBool;
 	apGateReason?: string;
+	lhdEnabled?: WireBool;
+	apFirstEnabled?: WireBool;
+	laneGraphEnabled?: WireBool;
+	assistNavEnable?: WireBool;
+	assistHandsOff?: WireBool;
+	assistDevMode?: WireBool;
+	assistTelemetryOff?: WireBool;
 }
 
 export interface StatusCompactMessage {
@@ -725,6 +751,14 @@ export interface BoardState {
 	// AP-First mode (2026.14.x compatibility)
 	apFirstEnabled: boolean;
 	dasApState: number;
+
+	// LHD + Assist features
+	lhdEnabled: boolean;
+	laneGraphEnabled: boolean;
+	assistNavEnable: boolean;
+	assistHandsOff: boolean;
+	assistDevMode: boolean;
+	assistTelemetryOff: boolean;
 
 	// Single-shot TX
 	singleShot: boolean;

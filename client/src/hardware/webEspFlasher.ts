@@ -95,6 +95,9 @@ export async function flashMergedEspReleaseImage(options: WebEspFlashOptions): P
 		await loader.after("hard_reset");
 		logLine(options.onLog, "ESP32 reset requested.");
 	} finally {
-		await transport.disconnect().catch(() => undefined);
+		await transport.disconnect().catch((err) => {
+			console.warn("Flashing cleanup: transport disconnect failed", err);
+			return undefined;
+		});
 	}
 }

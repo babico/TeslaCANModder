@@ -207,6 +207,13 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"drive:cap:25",
 	"eap:on",
 	"eap:off",
+	"tlssc:on",
+	"tlssc:off",
+	"evd:on",
+	"evd:off",
+	"das:arm",
+	"das:disarm",
+	"das:status",
 	"ratelimit:on",
 	"ratelimit:off",
 	"tpms",
@@ -275,6 +282,21 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"teslable:off",
 	"teslable:auth",
 	"teslable:forget",
+
+	// Tesla BLE Key Protocol
+	"tesla:key:gen",
+	"tesla:key:show",
+	"tesla:key:role:owner",
+	"tesla:key:role:charging_manager",
+	"tesla:key:send",
+	"tesla:vin:<VIN>",
+	"tesla:wake",
+	"tesla:charge:start",
+	"tesla:charge:stop",
+	"tesla:charge:amps:16",
+	"tesla:charge:limit:80",
+	"tesla:climate:on",
+	"tesla:climate:off",
 
 	// Home Assistant
 	"ha:on",
@@ -399,6 +421,8 @@ function extractProtocolCommands(): string[] {
 				key === "alc" ||
 				key === "apGate" ||
 				key === "eap" ||
+				key === "tlssc" ||
+				key === "evd" ||
 				key === "drive" ||
 				key === "gamepad" ||
 				key === "nagBypass"
@@ -468,6 +492,18 @@ function extractProtocolCommands(): string[] {
 			}
 			if (key === "mqttBroker") {
 				cmds.push((fn as (h: string) => string)("<host>"));
+				continue;
+			}
+			if (key === "teslaVin") {
+				cmds.push((fn as (v: string) => string)("<VIN>"));
+				continue;
+			}
+			if (key === "teslaChargeAmps") {
+				cmds.push((fn as (n: number) => string)(16));
+				continue;
+			}
+			if (key === "teslaChargeLimit") {
+				cmds.push((fn as (n: number) => string)(80));
 				continue;
 			}
 			if (key === "btnMap") {

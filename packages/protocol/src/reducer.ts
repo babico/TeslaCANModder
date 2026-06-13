@@ -177,6 +177,12 @@ export const initialBoardState: BoardState = {
 	seatbeltEmulation: false,
 	apFirstEnabled: false,
 	dasApState: 0,
+	lhdEnabled: false,
+	laneGraphEnabled: false,
+	assistNavEnable: false,
+	assistHandsOff: false,
+	assistDevMode: false,
+	assistTelemetryOff: false,
 	wiperPersist: false,
 	mirrorAutoFold: false,
 	canSim: false,
@@ -474,6 +480,21 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 				: prev.seatbeltEmulation,
 		apFirstEnabled: msg.apFirst !== undefined ? Boolean(msg.apFirst) : prev.apFirstEnabled,
 		dasApState: msg.dasApState ?? prev.dasApState,
+		lhdEnabled: msg.lhdEnabled !== undefined ? Boolean(msg.lhdEnabled) : prev.lhdEnabled,
+		laneGraphEnabled:
+			msg.laneGraphEnabled !== undefined
+				? Boolean(msg.laneGraphEnabled)
+				: prev.laneGraphEnabled,
+		assistNavEnable:
+			msg.assistNavEnable !== undefined ? Boolean(msg.assistNavEnable) : prev.assistNavEnable,
+		assistHandsOff:
+			msg.assistHandsOff !== undefined ? Boolean(msg.assistHandsOff) : prev.assistHandsOff,
+		assistDevMode:
+			msg.assistDevMode !== undefined ? Boolean(msg.assistDevMode) : prev.assistDevMode,
+		assistTelemetryOff:
+			msg.assistTelemetryOff !== undefined
+				? Boolean(msg.assistTelemetryOff)
+				: prev.assistTelemetryOff,
 		wiperPersist:
 			msg.wiperPersist !== undefined ? Boolean(msg.wiperPersist) : prev.wiperPersist,
 		mirrorAutoFold:
@@ -693,6 +714,21 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 				: prev.seatbeltEmulation,
 		apFirstEnabled: msg.apFirst !== undefined ? Boolean(msg.apFirst) : prev.apFirstEnabled,
 		dasApState: msg.dasApState ?? prev.dasApState,
+		lhdEnabled: msg.lhdEnabled !== undefined ? Boolean(msg.lhdEnabled) : prev.lhdEnabled,
+		laneGraphEnabled:
+			msg.laneGraphEnabled !== undefined
+				? Boolean(msg.laneGraphEnabled)
+				: prev.laneGraphEnabled,
+		assistNavEnable:
+			msg.assistNavEnable !== undefined ? Boolean(msg.assistNavEnable) : prev.assistNavEnable,
+		assistHandsOff:
+			msg.assistHandsOff !== undefined ? Boolean(msg.assistHandsOff) : prev.assistHandsOff,
+		assistDevMode:
+			msg.assistDevMode !== undefined ? Boolean(msg.assistDevMode) : prev.assistDevMode,
+		assistTelemetryOff:
+			msg.assistTelemetryOff !== undefined
+				? Boolean(msg.assistTelemetryOff)
+				: prev.assistTelemetryOff,
 		wiperPersist:
 			msg.wiperPersist !== undefined ? Boolean(msg.wiperPersist) : prev.wiperPersist,
 		mirrorAutoFold:

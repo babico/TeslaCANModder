@@ -472,7 +472,32 @@ export const commands = {
 		}
 		return `gamepad:axis:${axis}:${kind}:${value}`;
 	},
+
+	// DAS Gate
+	dasArm: () => "das:arm",
+	dasDisarm: () => "das:disarm",
+	dasStatus: () => "das:status",
+
+	// Tesla BLE Key Protocol
+	teslaKeyGen: () => "tesla:key:gen",
+	teslaKeyShow: () => "tesla:key:show",
+	teslaKeyRoleOwner: () => "tesla:key:role:owner",
+	teslaKeyRoleChargingManager: () => "tesla:key:role:charging_manager",
+	teslaKeySend: () => "tesla:key:send",
+	teslaWake: () => "tesla:wake",
+	teslaChargeStart: () => "tesla:charge:start",
+	teslaChargeStop: () => "tesla:charge:stop",
+	teslaClimateOn: () => "tesla:climate:on",
+	teslaClimateOff: () => "tesla:climate:off",
+	teslaVin: (vin: string) => `tesla:vin:${vin}`,
+	teslaChargeAmps: (amps: number) => `tesla:charge:amps:${amps}`,
+	teslaChargeLimit: (pct: number) => `tesla:charge:limit:${pct}`,
 } as const;
+
+/** Command object returned by standalone command builders. */
+export interface Command {
+	cmd: string;
+}
 
 /** Profile label map */
 export const PROFILE_LABELS: Record<number, string> = {
@@ -482,3 +507,123 @@ export const PROFILE_LABELS: Record<number, string> = {
 	3: "Max",
 	4: "Sloth",
 };
+
+// ── Standalone command builders ──────────────────────────────────────────────
+
+export function lhdOn(): Command {
+	return { cmd: "lhd:on" };
+}
+export function lhdOff(): Command {
+	return { cmd: "lhd:off" };
+}
+export function apFirstOn(): Command {
+	return { cmd: "apfirst:on" };
+}
+export function apFirstOff(): Command {
+	return { cmd: "apfirst:off" };
+}
+export function laneGraphOn(): Command {
+	return { cmd: "lanegraph:on" };
+}
+export function laneGraphOff(): Command {
+	return { cmd: "lanegraph:off" };
+}
+export function assistDevOn(): Command {
+	return { cmd: "assist-dev:on" };
+}
+export function assistDevOff(): Command {
+	return { cmd: "assist-dev:off" };
+}
+export function assistNavOn(): Command {
+	return { cmd: "assist-nav:on" };
+}
+export function assistNavOff(): Command {
+	return { cmd: "assist-nav:off" };
+}
+export function assistHofOn(): Command {
+	return { cmd: "assist-hof:on" };
+}
+export function assistHofOff(): Command {
+	return { cmd: "assist-hof:off" };
+}
+export function assistTelOn(): Command {
+	return { cmd: "assist-tel:on" };
+}
+export function assistTelOff(): Command {
+	return { cmd: "assist-tel:off" };
+}
+
+// ── TLSSC Restore ──────────────────────────────────────────────────────────
+
+export function tlsscOn(): Command {
+	return { cmd: "tlssc:on" };
+}
+export function tlsscOff(): Command {
+	return { cmd: "tlssc:off" };
+}
+
+// ── Emergency Vehicle Detection ────────────────────────────────────────────
+
+export function evdOn(): Command {
+	return { cmd: "evd:on" };
+}
+export function evdOff(): Command {
+	return { cmd: "evd:off" };
+}
+
+// ── DAS Gate ───────────────────────────────────────────────────────────────
+
+export function dasArm(): Command {
+	return { cmd: "das:arm" };
+}
+export function dasDisarm(): Command {
+	return { cmd: "das:disarm" };
+}
+export function dasStatus(): Command {
+	return { cmd: "das:status" };
+}
+
+// ── Tesla BLE Key Protocol ─────────────────────────────────────────────────
+
+export function teslaKeyGen(): Command {
+	return { cmd: "tesla:key:gen" };
+}
+export function teslaKeyShow(): Command {
+	return { cmd: "tesla:key:show" };
+}
+export function teslaKeyRoleOwner(): Command {
+	return { cmd: "tesla:key:role:owner" };
+}
+export function teslaKeyRoleChargingManager(): Command {
+	return { cmd: "tesla:key:role:charging_manager" };
+}
+export function teslaKeySend(): Command {
+	return { cmd: "tesla:key:send" };
+}
+export function teslaWake(): Command {
+	return { cmd: "tesla:wake" };
+}
+export function teslaChargeStart(): Command {
+	return { cmd: "tesla:charge:start" };
+}
+export function teslaChargeStop(): Command {
+	return { cmd: "tesla:charge:stop" };
+}
+export function teslaClimateOn(): Command {
+	return { cmd: "tesla:climate:on" };
+}
+export function teslaClimateOff(): Command {
+	return { cmd: "tesla:climate:off" };
+}
+
+// ── Aliases ─────────────────────────────────────────────────────────────────
+
+export function pedalStd(): Command {
+	return { cmd: "pedal:std" };
+}
+export function regenStandard(): Command {
+	return { cmd: "regen:standard" };
+}
+export function frunk(): Command {
+	return { cmd: "frunk" };
+}

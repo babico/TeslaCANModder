@@ -33,8 +33,47 @@ export type {
 } from "./types.js";
 
 // Commands
-export { commands, PROFILE_LABELS, COMMAND_RANGES, VALID_VARIANTS } from "./commands.js";
-export type { Variant, NagMode } from "./commands.js";
+export {
+	commands,
+	PROFILE_LABELS,
+	COMMAND_RANGES,
+	VALID_VARIANTS,
+	lhdOn,
+	lhdOff,
+	apFirstOn,
+	apFirstOff,
+	laneGraphOn,
+	laneGraphOff,
+	assistDevOn,
+	assistDevOff,
+	assistNavOn,
+	assistNavOff,
+	assistHofOn,
+	assistHofOff,
+	assistTelOn,
+	assistTelOff,
+	tlsscOn,
+	tlsscOff,
+	evdOn,
+	evdOff,
+	dasArm,
+	dasDisarm,
+	dasStatus,
+	teslaKeyGen,
+	teslaKeyShow,
+	teslaKeyRoleOwner,
+	teslaKeyRoleChargingManager,
+	teslaKeySend,
+	teslaWake,
+	teslaChargeStart,
+	teslaChargeStop,
+	teslaClimateOn,
+	teslaClimateOff,
+	pedalStd,
+	regenStandard,
+	frunk,
+} from "./commands.js";
+export type { Variant, NagMode, Command } from "./commands.js";
 
 // Feature settings specs
 export {

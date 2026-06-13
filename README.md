@@ -243,4 +243,4 @@ See `CONTRIBUTING.md` for setup instructions, coding standards, and PR guideline
 
 ## License
 
-[WTFPL v2](LICENSE)
+GPL-3.0

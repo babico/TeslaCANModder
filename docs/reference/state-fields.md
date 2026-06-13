@@ -52,47 +52,49 @@ All fields in `firmware/lib/core/types.h` → `struct State`. Fields marked **NV
 
 ## BMS Telemetry (RO)
 
-| Field                    | Type  | CAN ID | Description                     |
-| ------------------------ | ----- | ------ | ------------------------------- |
-| `bmsVoltage`             | float | 0x132  | Pack voltage (V)                |
-| `bmsCurrent`             | float | 0x132  | Pack current (A, neg=discharge) |
-| `bmsPower`               | float | —      | Pack power (kW, computed)       |
-| `bmsSoc`                 | float | 0x292  | State of charge (%)             |
-| `bmsTempMin`             | int8  | 0x312  | Min cell temp (°C)              |
-| `bmsTempMax`             | int8  | 0x312  | Max cell temp (°C)              |
-| `bmsWhPerKm`             | float | —      | Energy consumption (Wh/km)      |
-| `bmsNominalFullPack`     | float | 0x352  | Full capacity (kWh)             |
-| `bmsNominalRemaining`    | float | 0x352  | Energy remaining (kWh)          |
-| `bmsIdealRemaining`      | float | 0x352  | Ideal energy remaining (kWh)    |
-| `bmsCellVoltageMax`      | float | 0x332  | Max cell voltage (V)            |
-| `bmsCellVoltageMin`      | float | 0x332  | Min cell voltage (V)            |
-| `bmsMaxRegenPower`       | float | 0x252  | Max regen power (kW)            |
-| `bmsMaxDischargePower`   | float | 0x252  | Max discharge power (kW)        |
-| `bmsSocUI`               | float | 0x292  | SoC shown to user               |
-| `bmsSocMax`              | float | 0x292  | Maximum SoC                     |
-| `bmsSocAvg`              | float | 0x292  | Average SoC                     |
-| `bmsInitialFullPack`     | float | 0x292  | Factory capacity (kWh)          |
-| `bmsExpectedRange`       | float | 0x33A  | Expected range (km)             |
-| `bmsIdealRange`          | float | 0x33A  | Ideal range (km)                |
-| `bmsRatedConsumption`    | float | 0x33A  | Rated Wh/km                     |
-| `bmsPowerDissipation`    | float | 0x312  | Thermal power (kW)              |
-| `bmsFlowRequest`         | float | 0x312  | Coolant flow (LPM)              |
-| `bmsCoolTarget`          | float | 0x312  | Cooling target (°C)             |
-| `bmsHeatTarget`          | float | 0x312  | Heating target (°C)             |
-| `bmsPackTMin`            | float | 0x312  | Pack min temp (°C)              |
-| `bmsPackTMax`            | float | 0x312  | Pack max temp (°C)              |
-| `bmsStationaryHeatPower` | float | 0x252  | Stationary heat budget (kW)     |
-| `bmsHvacPowerBudget`     | float | 0x252  | HVAC power budget (kW)          |
-| `bmsPrecondAllowed`      | bool  | 0x212  | BMS allows preconditioning      |
-| `bmsContactorState`      | uint8 | 0x212  | Contactor state (0–7)           |
-| `bmsMinBusVoltage`       | float | 0x2D2  | Min HV bus voltage (V)          |
-| `bmsMaxChargeCurrent`    | float | 0x2D2  | Max charge current (A)          |
-| `bmsExpectedRemaining`   | float | 0x352  | Expected remaining (kWh)        |
-| `bmsEnergyToCharge`      | float | 0x352  | Energy to full (kWh)            |
-| `bmsFullyCharged`        | bool  | 0x352  | Fully charged flag              |
-| `bmsKwhDischargeTotal`   | float | 0x3D2  | Lifetime discharged (kWh)       |
-| `bmsKwhChargeTotal`      | float | 0x3D2  | Lifetime charged (kWh)          |
-| `bmsChargeTimeToFull`    | float | 0x132  | Hours to full charge            |
+| Field                    | Type  | CAN ID | Description                      |
+| ------------------------ | ----- | ------ | -------------------------------- |
+| `bmsVoltage`             | float | 0x132  | Pack voltage (V)                 |
+| `bmsCurrent`             | float | 0x132  | Pack current (A, neg=discharge)  |
+| `bmsPower`               | float | —      | Pack power (kW, computed)        |
+| `bmsSoc`                 | float | 0x292  | State of charge (%)              |
+| `bmsTempMin`             | int8  | 0x312  | Min cell temp (°C)               |
+| `bmsTempMax`             | int8  | 0x312  | Max cell temp (°C)               |
+| `bmsWhPerKm`             | float | —      | Energy consumption (Wh/km)       |
+| `hasBms`                 | bool  | —      | Set when valid BMS data received |
+| `bmsNominalFullPack`     | float | 0x352  | Full capacity (kWh)              |
+| `bmsNominalRemaining`    | float | 0x352  | Energy remaining (kWh)           |
+| `bmsIdealRemaining`      | float | 0x352  | Ideal energy remaining (kWh)     |
+| `bmsCellVoltageMax`      | float | 0x332  | Max cell voltage (V)             |
+| `bmsCellVoltageMin`      | float | 0x332  | Min cell voltage (V)             |
+| `bmsMaxRegenPower`       | float | 0x252  | Max regen power (kW)             |
+| `bmsMaxDischargePower`   | float | 0x252  | Max discharge power (kW)         |
+| `bmsSocUI`               | float | 0x292  | SoC shown to user                |
+| `bmsSocMax`              | float | 0x292  | Maximum SoC                      |
+| `bmsSocAvg`              | float | 0x292  | Average SoC                      |
+| `bmsInitialFullPack`     | float | 0x292  | Factory capacity (kWh)           |
+| `bmsExpectedRange`       | float | 0x33A  | Expected range (km)              |
+| `bmsIdealRange`          | float | 0x33A  | Ideal range (km)                 |
+| `bmsRatedConsumption`    | float | 0x33A  | Rated Wh/km                      |
+| `bmsPowerDissipation`    | float | 0x312  | Thermal power (kW)               |
+| `bmsFlowRequest`         | float | 0x312  | Coolant flow (LPM)               |
+| `bmsCoolTarget`          | float | 0x312  | Cooling target (°C)              |
+| `bmsHeatTarget`          | float | 0x312  | Heating target (°C)              |
+| `bmsHeatingWorthwhile`   | bool  | 0x212  | Battery heating worthwhile       |
+| `bmsPackTMin`            | float | 0x312  | Pack min temp (°C)               |
+| `bmsPackTMax`            | float | 0x312  | Pack max temp (°C)               |
+| `bmsStationaryHeatPower` | float | 0x252  | Stationary heat budget (kW)      |
+| `bmsHvacPowerBudget`     | float | 0x252  | HVAC power budget (kW)           |
+| `bmsPrecondAllowed`      | bool  | 0x212  | BMS allows preconditioning       |
+| `bmsContactorState`      | uint8 | 0x212  | Contactor state (0–7)            |
+| `bmsMinBusVoltage`       | float | 0x2D2  | Min HV bus voltage (V)           |
+| `bmsMaxChargeCurrent`    | float | 0x2D2  | Max charge current (A)           |
+| `bmsExpectedRemaining`   | float | 0x352  | Expected remaining (kWh)         |
+| `bmsEnergyToCharge`      | float | 0x352  | Energy to full (kWh)             |
+| `bmsFullyCharged`        | bool  | 0x352  | Fully charged flag               |
+| `bmsKwhDischargeTotal`   | float | 0x3D2  | Lifetime discharged (kWh)        |
+| `bmsKwhChargeTotal`      | float | 0x3D2  | Lifetime charged (kWh)           |
+| `bmsChargeTimeToFull`    | float | 0x132  | Hours to full charge             |
 
 ## Nag Alert Suppression
 
@@ -153,6 +155,11 @@ unified command interface (`nag:mode:<name>`).
 | `trunkOpen`          | bool  | —      | Trunk open               |
 | `cruiseSetSpeedKph`  | float | —      | Cruise set speed (km/h)  |
 | `mapSpeedLimitKph`   | float | —      | Map speed limit (km/h)   |
+| `hasSteeringMode`    | bool  | 0x370  | Steering mode available  |
+| `vehicleLockedState` | bool  | —      | Vehicle locked status    |
+| `driverDoorOpen`     | bool  | —      | Driver door open         |
+| `anyDoorOpen`        | bool  | —      | Any door open            |
+| `brakePedalState`    | uint  | —      | Brake pedal position %   |
 
 ## OTA & Hardware Detection
 

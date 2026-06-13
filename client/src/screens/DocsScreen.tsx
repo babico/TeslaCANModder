@@ -259,7 +259,9 @@ export function DocsScreen({ activeDocRoute, onNavigateDoc }: DocsScreenProps) {
 			return false;
 		}
 
-		void Linking.openURL(url).catch(() => undefined);
+		void Linking.openURL(url).catch((err) => {
+			console.warn("Failed to open URL", url, err);
+		});
 		return false;
 	};
 
