@@ -15,8 +15,13 @@ import {
 	View,
 	useWindowDimensions,
 } from "react-native";
-import type { BoardState } from "@teslacanmodder/protocol";
-import { formatAutopilotTier, formatDriveMode, formatGear } from "@teslacanmodder/protocol";
+import type { BoardState, ApClusterState } from "@teslacanmodder/protocol";
+import {
+	formatAutopilotTier,
+	formatDriveMode,
+	formatGear,
+	formatUptime,
+} from "@teslacanmodder/protocol";
 import { colors, selectDashColors, font, radius, spacing, motion } from "../design/tokens";
 import { useBreakpoint } from "../state/useBreakpoint";
 import { useSpeedUnit } from "../state/useSpeedUnit";
@@ -73,8 +78,6 @@ function buildGlow(color: string, opacity: number, blur: number) {
 		shadowRadius: blur,
 	};
 }
-
-export type ApClusterState = "unavailable" | "inactive" | "active" | "hands_warning";
 
 export function resolveApState(
 	tier: number,
@@ -728,16 +731,6 @@ function TopBar({
 			</View>
 		</View>
 	);
-}
-
-function formatUptime(ms: number): string {
-	if (!ms) return "--";
-	const s = Math.floor(ms / 1000),
-		m = Math.floor(s / 60),
-		h = Math.floor(m / 60);
-	if (h > 0) return `${h}h ${m % 60}m`;
-	if (m > 0) return `${m}m ${s % 60}s`;
-	return `${s}s`;
 }
 
 function HudInfo({ state }: { state: BoardState }) {
