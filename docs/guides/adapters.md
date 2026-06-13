@@ -243,7 +243,7 @@ Easiest method for development, best range.
 Your firmware must include WiFi support. Check with:
 
 ```
-Phone WiFi settings → Look for "ESP32_xxxxx" or "TeslaCAN_xxxxx" network
+Phone WiFi settings → Look for "TeslaCANModder" network
 ```
 
 ### Setup Steps
@@ -252,8 +252,8 @@ Phone WiFi settings → Look for "ESP32_xxxxx" or "TeslaCAN_xxxxx" network
 
 ```
 Phone/Computer WiFi settings
-SSID: ESP32_12AB (or similar)
-Password: (check your firmware config, default often: tesla1234)
+SSID: TeslaCANModder
+Password: T3SL@c@n123.
 ```
 
 #### 2. Find Device IP

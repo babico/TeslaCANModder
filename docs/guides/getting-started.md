@@ -23,7 +23,7 @@ For a single end-to-end setup flow (build, flash, connect, and validation), use 
 
 ## Quick Start — ESP32-S DevKit
 
-1. Wire 1–3× MCP2515 modules to ESP32 via SPI (see [Hardware Setup](hardware-setup)) — chassis bus is required for DAS injection; vehicle / body are optional
+1. Wire 1–3× MCP2515 modules to ESP32 via SPI (see [Hardware Setup](hardware-setup.md)) — chassis bus is required for DAS injection; vehicle / body are optional
 2. Go to **Flasher** tab → select ESP32 firmware variant → flash
 3. Go to **Dashboard** → Connect USB → verify boot message
 4. Connect to WiFi AP `TeslaCANModder` (password: `T3SL@c@n123.`) for wireless control

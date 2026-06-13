@@ -21,7 +21,7 @@ This is the canonical setup path for TeslaCANModder across firmware, transport, 
 
 - Node.js 18+
 - npm workspaces installed from repository root (`npm install`)
-- GitHub release access for prebuilt firmware assets, or PlatformIO available for local builds (`firmware/.pio.ps1`)
+- GitHub release access for prebuilt firmware assets, or PlatformIO available for local builds (`firmware/pio.ps1`)
 - Chrome or Edge for Web Serial flows
 - Data-capable USB cable
 - Correct MCP2515 crystal profile in hardware (8 MHz or 16 MHz — the env suffix `_8mhz` / `_16mhz` must match)

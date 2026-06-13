@@ -244,7 +244,7 @@ interface LayoutConfig {
 
 - [ ] `useBreakpoint()` returns correct breakpoint for all 5 values
 - [ ] `DriveScreen` renders without overflow at each breakpoint (snapshot)
-- [ ] `LayoutConfig` object documented and tested in `DriveScreen.responsive.test.tsx`
+- [ ] `LayoutConfig` object documented and tested in `client/tests/screens/DriveScreen.test.tsx`
 - [ ] `density` tier applied correctly per breakpoint
 - [ ] `theme` applies correct background/foreground per mode
 - [ ] Visual regression signs off the relevant VR rows in `docs/checklists/testing-plan.md#ui-1-visual-regression-coverage`

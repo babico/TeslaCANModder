@@ -105,7 +105,6 @@ describe("reducer: new feature fields", () => {
 			const msg: StatusMessage = {
 				t: "status",
 				fsd: 1,
-				nag: 0,
 				up: 500,
 				driveMode: 3,
 				currentDriveMode: 3,
@@ -129,7 +128,6 @@ describe("reducer: new feature fields", () => {
 			const msg: StatusMessage = {
 				t: "status",
 				fsd: 1,
-				nag: 0,
 				up: 100,
 				gtwShieldArmed: 0,
 				gtwShieldBlocks: 14,

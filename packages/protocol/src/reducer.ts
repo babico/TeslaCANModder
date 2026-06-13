@@ -393,7 +393,6 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 		features: msg.features || prev.features,
 		fsd: msg.fsd !== undefined ? Boolean(msg.fsd) : prev.fsd,
 		fsdForce: msg.fsdForce !== undefined ? Boolean(msg.fsdForce) : prev.fsdForce,
-		nag: msg.nag !== undefined ? Boolean(msg.nag) : prev.nag,
 		profile: msg.sp ?? prev.profile,
 		profilePinned: msg.spPin !== undefined ? Boolean(msg.spPin) : prev.profilePinned,
 		offset: msg.offset ?? prev.offset,
@@ -401,7 +400,6 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 		isaChime: msg.isaChime !== undefined ? Boolean(msg.isaChime) : prev.isaChime,
 		summonInject:
 			msg.summonInject !== undefined ? Boolean(msg.summonInject) : prev.summonInject,
-		nagKiller: msg.nagKiller !== undefined ? Boolean(msg.nagKiller) : prev.nagKiller,
 		nagMode: msg.nagMode || prev.nagMode,
 		dasHandsOn: msg.dasHandsOn ?? prev.dasHandsOn,
 		turnSignalLeft:
@@ -512,21 +510,8 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 				: prev.seatbeltEmulation,
 		apFirstEnabled: msg.apFirst !== undefined ? Boolean(msg.apFirst) : prev.apFirstEnabled,
 		dasApState: msg.dasApState ?? prev.dasApState,
-		lhdEnabled: msg.lhdEnabled !== undefined ? Boolean(msg.lhdEnabled) : prev.lhdEnabled,
-		laneGraphEnabled:
-			msg.laneGraphEnabled !== undefined
-				? Boolean(msg.laneGraphEnabled)
-				: prev.laneGraphEnabled,
-		assistNavEnable:
-			msg.assistNavEnable !== undefined ? Boolean(msg.assistNavEnable) : prev.assistNavEnable,
 		assistHandsOff:
 			msg.assistHandsOff !== undefined ? Boolean(msg.assistHandsOff) : prev.assistHandsOff,
-		assistDevMode:
-			msg.assistDevMode !== undefined ? Boolean(msg.assistDevMode) : prev.assistDevMode,
-		assistTelemetryOff:
-			msg.assistTelemetryOff !== undefined
-				? Boolean(msg.assistTelemetryOff)
-				: prev.assistTelemetryOff,
 		wiperPersist:
 			msg.wiperPersist !== undefined ? Boolean(msg.wiperPersist) : prev.wiperPersist,
 		mirrorAutoFold:
@@ -643,10 +628,8 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 		driver: msg.drv || prev.driver,
 		board: hw ? detectBoard(hw) : prev.board,
 		uptime: msg.up ?? prev.uptime,
-		rate: msg.rate ?? prev.rate,
 		fsd: msg.fsd !== undefined ? Boolean(msg.fsd) : prev.fsd,
 		fsdForce: msg.fsdForce !== undefined ? Boolean(msg.fsdForce) : prev.fsdForce,
-		nag: msg.nag !== undefined ? Boolean(msg.nag) : prev.nag,
 		profile: msg.sp ?? prev.profile,
 		profilePinned: msg.spPin !== undefined ? Boolean(msg.spPin) : prev.profilePinned,
 		offset: msg.offset ?? prev.offset,
@@ -654,7 +637,6 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 		isaChime: msg.isaChime !== undefined ? Boolean(msg.isaChime) : prev.isaChime,
 		summonInject:
 			msg.summonInject !== undefined ? Boolean(msg.summonInject) : prev.summonInject,
-		nagKiller: msg.nagKiller !== undefined ? Boolean(msg.nagKiller) : prev.nagKiller,
 		nagMode: msg.nagMode || prev.nagMode,
 		dasHandsOn: msg.dasHandsOn ?? prev.dasHandsOn,
 		turnSignalLeft:
@@ -766,21 +748,8 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 				: prev.seatbeltEmulation,
 		apFirstEnabled: msg.apFirst !== undefined ? Boolean(msg.apFirst) : prev.apFirstEnabled,
 		dasApState: msg.dasApState ?? prev.dasApState,
-		lhdEnabled: msg.lhdEnabled !== undefined ? Boolean(msg.lhdEnabled) : prev.lhdEnabled,
-		laneGraphEnabled:
-			msg.laneGraphEnabled !== undefined
-				? Boolean(msg.laneGraphEnabled)
-				: prev.laneGraphEnabled,
-		assistNavEnable:
-			msg.assistNavEnable !== undefined ? Boolean(msg.assistNavEnable) : prev.assistNavEnable,
 		assistHandsOff:
 			msg.assistHandsOff !== undefined ? Boolean(msg.assistHandsOff) : prev.assistHandsOff,
-		assistDevMode:
-			msg.assistDevMode !== undefined ? Boolean(msg.assistDevMode) : prev.assistDevMode,
-		assistTelemetryOff:
-			msg.assistTelemetryOff !== undefined
-				? Boolean(msg.assistTelemetryOff)
-				: prev.assistTelemetryOff,
 		wiperPersist:
 			msg.wiperPersist !== undefined ? Boolean(msg.wiperPersist) : prev.wiperPersist,
 		mirrorAutoFold:

@@ -13,7 +13,7 @@ The new `MonitorScreen.tsx` component is a complete replacement for the bloated 
 
 ## Status
 
-✅ **Component Created**: `client/src/components/MonitorScreen.tsx` (608 lines)
+✅ **Component Created**: `client/src/components/monitor/` (organized as a directory of section components)
 ✅ **Fully Typed**: All props are TypeScript interfaces
 ✅ **Responsive**: Mobile→Tablet→Desktop adaptive layouts
 ✅ **Exported**: Both named export and default export available
@@ -25,7 +25,7 @@ The new `MonitorScreen.tsx` component is a complete replacement for the bloated 
 In `client/src/AppExperience.tsx`, add to imports:
 
 ```typescript
-import { MonitorScreen } from "./components/MonitorScreen";
+import { MonitorScreen } from "./components/monitor";
 ```
 
 ### Step 2: Replace the Old Monitor Rendering
@@ -133,7 +133,7 @@ The MonitorScreen provides four organized tabs:
 
 ## Props Reference
 
-See `MonitorScreenProps` interface in `MonitorScreen.tsx` for complete prop documentation.
+See `MonitorScreenProps` interface under `client/src/components/monitor/` for complete prop documentation.
 
 ## Migration Checklist
 

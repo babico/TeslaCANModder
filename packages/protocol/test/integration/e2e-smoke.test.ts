@@ -152,7 +152,6 @@ describe("E2E Smoke: Status Heartbeat", () => {
 			t: "status",
 			variant: "hw4",
 			up: 12345,
-			rate: 42,
 			fsd: true,
 			nag: false,
 			sp: 2,
@@ -170,7 +169,6 @@ describe("E2E Smoke: Status Heartbeat", () => {
 		const status = ev.message as unknown as StatusMessage;
 		expect(status.t).toBe("status");
 		expect(status.up).toBe(12345);
-		expect(status.rate).toBe(42);
 		expect(status.fsd).toBe(true);
 		expect(status.stream).toBe(true);
 		expect(status.banShield).toBe(1);

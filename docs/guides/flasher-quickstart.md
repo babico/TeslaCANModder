@@ -53,10 +53,9 @@ esptool.py version
 
 ### Step 2: Download Firmware
 
-Navigate to the [releases page](../../releases/) and download the latest `firmware.bin` for your board:
+Navigate to the [releases page](https://github.com/anomalyco/opencode/releases) and download the latest `firmware.bin` for your board:
 
-- `firmware-hw3.bin` for HW3 (Model 3 / Standard)
-- `firmware-hw4.bin` for HW4 (Model Y / High Perf)
+- `esp32_chassis_8mhz.bin` (default — USB serial + chassis CAN, 8 MHz crystals)
 
 ### Step 3: Connect ESP32 to Computer
 
@@ -70,10 +69,10 @@ Navigate to the [releases page](../../releases/) and download the latest `firmwa
 
 ```powershell
 # Windows
-esptool.py --chip esp32 --port COM7 --baud 460800 write_flash 0x1000 firmware-hw3.bin
+esptool.py --chip esp32 --port COM7 --baud 460800 write_flash 0x1000 esp32_chassis_8mhz.bin
 
 # macOS/Linux
-esptool.py --chip esp32 --port /dev/cu.SLAB_USBtoUART --baud 460800 write_flash 0x1000 firmware-hw3.bin
+esptool.py --chip esp32 --port /dev/cu.SLAB_USBtoUART --baud 460800 write_flash 0x1000 esp32_chassis_8mhz.bin
 ```
 
 **Expected output:**
@@ -188,8 +187,8 @@ The easiest connection method for development.
 Your ESP32 firmware must support WiFi. Verify by checking your device's AP list:
 
 1. On your phone, open WiFi settings
-2. Look for **"TeslaCAN_xxxxx"** or **"ESP32_xxxxx"**
-3. Connect to it (default password: `tesla1234`)
+2. Look for **"TeslaCANModder"**
+3. Connect to it (default password: `T3SL@c@n123.`)
 
 ### Application Setup
 

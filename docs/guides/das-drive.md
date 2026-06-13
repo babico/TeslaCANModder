@@ -7,7 +7,7 @@
 
 ## What it actually is
 
-The firmware module `firmware/lib/vehicle/can/feature/das_drive.h` emits the
+The firmware module `firmware/lib/vehicle/can/feature/das/das_drive.h` emits the
 same three CAN frames that openpilot's Tesla port uses to command the car:
 
 | ID      | Frame                 | Rate  | Purpose                         |
@@ -20,7 +20,7 @@ Bus: `BUS_CHASSIS` (X179 pins 13–14, autopilot party CAN). The encoding
 (byte layout, counter/checksum, units) is taken straight from
 [`opendbc/car/tesla/teslacan.py`](../../legacy/commaai-openpilot/opendbc_repo/opendbc/car/tesla/teslacan.py).
 
-The gamepad mapping (in `firmware/lib/io/ble/esp32/gamepad.h::gamepadDriveTick`):
+The gamepad mapping (in `firmware/lib/client/gamepad/drive.h::gamepadDriveTick`):
 
 | Input         | Output                                     |
 | ------------- | ------------------------------------------ |

@@ -33,8 +33,8 @@ This guide documents the canonical client experience in `client/`.
     - `Drive`, `Controls`, `Monitor` are orchestrated in `client/src/AppExperience.tsx`.
 
 1. Feature modules:
-    - Drive cluster: `client/src/components/DriveScreen.tsx`.
-    - Controls surface: `client/src/components/ControlsScreen.tsx`.
+    - Drive cluster: `client/src/screens/DriveScreen.tsx`.
+    - Controls surface: `client/src/screens/ControlsScreen.tsx`.
     - Monitor diagnostics panels: telemetry/integration/utility panels under `client/src/components/`.
 
 ## Setup
