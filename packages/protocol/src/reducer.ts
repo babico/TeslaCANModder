@@ -129,6 +129,7 @@ export const initialBoardState: BoardState = {
 	anyDoorOpen: false,
 	frunkOpen: false,
 	trunkOpen: false,
+	vehicleLockedState: false,
 	cruiseSetSpeedKph: 0,
 	accSpeedLimitKph: 0,
 	mapSpeedLimitKph: 0,
@@ -141,6 +142,7 @@ export const initialBoardState: BoardState = {
 	detectedHW: 0,
 	variantAutoDetect: true,
 	gtwAutopilotTier: -1,
+	gtwAutopilotSeen: false,
 	canClockReqMHz: 8,
 	canClockMHz: 8,
 	banShield: false,
@@ -227,6 +229,7 @@ export const initialBoardState: BoardState = {
 	fwYear: 0,
 	fwRelease: 0,
 	fwMinor: 0,
+	fwBuild: 0,
 	fwCompat: 0,
 	hasFwVersion: false,
 
@@ -429,6 +432,10 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 		anyDoorOpen: msg.anyDoorOpen !== undefined ? Boolean(msg.anyDoorOpen) : prev.anyDoorOpen,
 		frunkOpen: msg.frunkOpen !== undefined ? Boolean(msg.frunkOpen) : prev.frunkOpen,
 		trunkOpen: msg.trunkOpen !== undefined ? Boolean(msg.trunkOpen) : prev.trunkOpen,
+		vehicleLockedState:
+			msg.vehicleLockedState !== undefined
+				? Boolean(msg.vehicleLockedState)
+				: prev.vehicleLockedState,
 		cruiseSetSpeedKph:
 			msg.cruiseSetSpeed !== undefined
 				? Number(msg.cruiseSetSpeed) / 10
@@ -458,6 +465,10 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 			msg.gtwAutopilotTier !== undefined
 				? Number(msg.gtwAutopilotTier)
 				: prev.gtwAutopilotTier,
+		gtwAutopilotSeen:
+			msg.gtwAutopilotSeen !== undefined
+				? Boolean(msg.gtwAutopilotSeen)
+				: prev.gtwAutopilotSeen,
 		canClockReqMHz:
 			msg.canClockReqMHz !== undefined ? Number(msg.canClockReqMHz) : prev.canClockReqMHz,
 		canClockMHz: msg.canClockMHz !== undefined ? Number(msg.canClockMHz) : prev.canClockMHz,
@@ -557,6 +568,7 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 		fwYear: msg.fwYear ?? prev.fwYear,
 		fwRelease: msg.fwRelease ?? prev.fwRelease,
 		fwMinor: msg.fwMinor ?? prev.fwMinor,
+		fwBuild: msg.fwBuild ?? prev.fwBuild,
 		fwCompat: msg.fwCompat ?? prev.fwCompat,
 		hasFwVersion:
 			msg.hasFwVersion !== undefined ? Boolean(msg.hasFwVersion) : prev.hasFwVersion,
@@ -673,6 +685,10 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 		anyDoorOpen: msg.anyDoorOpen !== undefined ? Boolean(msg.anyDoorOpen) : prev.anyDoorOpen,
 		frunkOpen: msg.frunkOpen !== undefined ? Boolean(msg.frunkOpen) : prev.frunkOpen,
 		trunkOpen: msg.trunkOpen !== undefined ? Boolean(msg.trunkOpen) : prev.trunkOpen,
+		vehicleLockedState:
+			msg.vehicleLockedState !== undefined
+				? Boolean(msg.vehicleLockedState)
+				: prev.vehicleLockedState,
 		cruiseSetSpeedKph:
 			msg.cruiseSetSpeed !== undefined
 				? Number(msg.cruiseSetSpeed) / 10
@@ -702,6 +718,10 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 			msg.gtwAutopilotTier !== undefined
 				? Number(msg.gtwAutopilotTier)
 				: prev.gtwAutopilotTier,
+		gtwAutopilotSeen:
+			msg.gtwAutopilotSeen !== undefined
+				? Boolean(msg.gtwAutopilotSeen)
+				: prev.gtwAutopilotSeen,
 		canClockReqMHz:
 			msg.canClockReqMHz !== undefined ? Number(msg.canClockReqMHz) : prev.canClockReqMHz,
 		canClockMHz: msg.canClockMHz !== undefined ? Number(msg.canClockMHz) : prev.canClockMHz,
@@ -802,6 +822,7 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 		fwYear: msg.fwYear ?? prev.fwYear,
 		fwRelease: msg.fwRelease ?? prev.fwRelease,
 		fwMinor: msg.fwMinor ?? prev.fwMinor,
+		fwBuild: msg.fwBuild ?? prev.fwBuild,
 		fwCompat: msg.fwCompat ?? prev.fwCompat,
 		hasFwVersion:
 			msg.hasFwVersion !== undefined ? Boolean(msg.hasFwVersion) : prev.hasFwVersion,

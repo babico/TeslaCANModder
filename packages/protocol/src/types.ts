@@ -62,6 +62,8 @@ interface StatusStatePayload {
 	assistTelemetryOff?: WireBool;
 	nagOrgBypass?: WireBool;
 	rawCan?: WireBool;
+	gtwAutopilotSeen?: WireBool;
+	vehicleLockedState?: WireBool;
 }
 
 interface StatusCanClockPayload {
@@ -182,6 +184,7 @@ export interface BootMessage {
 	fwYear?: number;
 	fwRelease?: number;
 	fwMinor?: number;
+	fwBuild?: number;
 	fwCompat?: number;
 	hasFwVersion?: number;
 	mqtt?: number;
@@ -213,6 +216,8 @@ export interface BootMessage {
 	busChassis?: number;
 	busVehicle?: number;
 	busBody?: number;
+	vehicleLockedState?: WireBool;
+	gtwAutopilotSeen?: WireBool;
 	// Button remapping
 	btnMapLampShort?: string;
 	btnMapLampLong?: string;
@@ -294,6 +299,7 @@ export interface StatusMessage {
 	fwYear?: number;
 	fwRelease?: number;
 	fwMinor?: number;
+	fwBuild?: number;
 	fwCompat?: number;
 	hasFwVersion?: number;
 	mqtt?: number;
@@ -374,6 +380,8 @@ export interface StatusMessage {
 	busChassis?: number;
 	busVehicle?: number;
 	busBody?: number;
+	vehicleLockedState?: WireBool;
+	gtwAutopilotSeen?: WireBool;
 	// Button remapping
 	btnMapLampShort?: string;
 	btnMapLampLong?: string;
@@ -472,6 +480,8 @@ export interface StatusStateMessage {
 	assistHandsOff?: WireBool;
 	assistDevMode?: WireBool;
 	assistTelemetryOff?: WireBool;
+	gtwAutopilotSeen?: WireBool;
+	vehicleLockedState?: WireBool;
 }
 
 export interface StatusCompactMessage {
@@ -721,6 +731,7 @@ export interface BoardState {
 	anyDoorOpen: boolean;
 	frunkOpen: boolean;
 	trunkOpen: boolean;
+	vehicleLockedState: boolean;
 	cruiseSetSpeedKph: number;
 	accSpeedLimitKph: number;
 	mapSpeedLimitKph: number;
@@ -733,6 +744,7 @@ export interface BoardState {
 	detectedHW: number;
 	variantAutoDetect: boolean;
 	gtwAutopilotTier: number;
+	gtwAutopilotSeen: boolean;
 	canClockReqMHz: number;
 	canClockMHz: number;
 	banShield: boolean;
@@ -840,6 +852,7 @@ export interface BoardState {
 	fwYear: number;
 	fwRelease: number;
 	fwMinor: number;
+	fwBuild: number;
 	fwCompat: number;
 	hasFwVersion: boolean;
 

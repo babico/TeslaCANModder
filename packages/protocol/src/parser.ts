@@ -110,6 +110,7 @@ function normalizeStateSection(target: JsonRecord, state: JsonRecord | undefined
 	assignIfDefined(target, "detectedHW", state?.detectedHW);
 	assignIfDefined(target, "variantAutoDetect", state?.variantAutoDetect);
 	assignIfDefined(target, "gtwAutopilotTier", state?.gtwAutopilotTier);
+	assignIfDefined(target, "gtwAutopilotSeen", state?.gtwAutopilotSeen);
 	assignIfDefined(target, "rawCan", state?.rawCan);
 
 	const profile = state?.profile;
@@ -147,6 +148,7 @@ function normalizeFirmwareSection(target: JsonRecord, firmware: JsonRecord | und
 	assignIfDefined(target, "fwYear", firmware?.year);
 	assignIfDefined(target, "fwRelease", firmware?.release);
 	assignIfDefined(target, "fwMinor", firmware?.minor);
+	assignIfDefined(target, "fwBuild", firmware?.fwBuild);
 	assignIfDefined(target, "fwCompat", firmware?.compat);
 	assignIfDefined(target, "hasFwVersion", firmware?.hasVersion);
 	assignIfDefined(target, "mqtt", firmware?.mqtt);

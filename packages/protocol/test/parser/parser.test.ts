@@ -48,7 +48,7 @@ describe("parseSerialLine", () => {
 
 	it("normalizes structured boot payloads from hardware JSON", () => {
 		const events = parseSerialLine(
-			'{"t":"boot","meta":{"variant":"hw3","hw":"ESP32S_DevKit","drv":"mcp2515"},"connectivity":{"chassisOnline":1,"vehicleOnline":0,"bus":{"chassis":1,"vehicle":1,"body":0}},"state":{"fsd":1,"profile":{"value":3,"pinned":1},"offset":{"value":5,"pinned":0}},"platform":{"model":2,"hwGen":2,"swYear":2026,"swWeek":14,"swRelease":1,"fsdProto":1,"swCompat":1,"resolved":1},"firmware":{"year":2026,"release":14,"minor":1,"compat":1,"hasVersion":1,"mqtt":0,"mqttConnected":0},"can":{"clockReqMHz":8,"clockMHz":8,"health":{"chassis":{"on":1,"det":1},"vehicle":{"on":1,"det":0},"body":{"on":0,"det":0}}},"features":{"fsd":true}}',
+			'{"t":"boot","meta":{"variant":"hw3","hw":"ESP32S_DevKit","drv":"mcp2515"},"connectivity":{"chassisOnline":1,"vehicleOnline":0,"bus":{"chassis":1,"vehicle":1,"body":0}},"state":{"fsd":1,"profile":{"value":3,"pinned":1},"offset":{"value":5,"pinned":0},"gtwAutopilotSeen":1},"vehicle":{"vehicleLockedState":1},"platform":{"model":2,"hwGen":2,"swYear":2026,"swWeek":14,"swRelease":1,"fsdProto":1,"swCompat":1,"resolved":1},"firmware":{"year":2026,"release":14,"minor":1,"fwBuild":12345,"compat":1,"hasVersion":1,"mqtt":0,"mqttConnected":0},"can":{"clockReqMHz":8,"clockMHz":8,"health":{"chassis":{"on":1,"det":1},"vehicle":{"on":1,"det":0},"body":{"on":0,"det":0}}},"features":{"fsd":true}}',
 		);
 
 		expect(events).toHaveLength(1);
@@ -68,12 +68,15 @@ describe("parseSerialLine", () => {
 			spPin: 1,
 			offset: 5,
 			offsetPin: 0,
+			gtwAutopilotSeen: 1,
+			vehicleLockedState: 1,
 			platformModel: 2,
 			platformHwGen: 2,
 			platformResolved: 1,
 			fwYear: 2026,
 			fwRelease: 14,
 			fwMinor: 1,
+			fwBuild: 12345,
 			fwCompat: 1,
 			hasFwVersion: 1,
 			canClockReqMHz: 8,
@@ -142,7 +145,7 @@ describe("parseSerialLine", () => {
 
 	it("normalizes split status_state payloads", () => {
 		const events = parseSerialLine(
-			'{"t":"status_state","state":{"fsd":1,"fsdForce":0,"nag":1,"nagKiller":1,"profile":{"value":2,"pinned":1},"offset":{"value":7,"pinned":0},"precondition":0,"trackMode":1,"apGateEnabled":1,"apGateOpen":0,"apGateReason":"waiting"}}',
+			'{"t":"status_state","state":{"fsd":1,"fsdForce":0,"nag":1,"nagKiller":1,"profile":{"value":2,"pinned":1},"offset":{"value":7,"pinned":0},"precondition":0,"trackMode":1,"apGateEnabled":1,"apGateOpen":0,"apGateReason":"waiting","gtwAutopilotSeen":1}}',
 		);
 
 		expect(events).toHaveLength(1);
@@ -161,6 +164,7 @@ describe("parseSerialLine", () => {
 			apGateEnabled: 1,
 			apGateOpen: 0,
 			apGateReason: "waiting",
+			gtwAutopilotSeen: 1,
 		});
 	});
 
@@ -201,6 +205,20 @@ describe("parseSerialLine", () => {
 		expect(events[0].message?.banShield).toBe(1);
 		expect(events[0].message?.banThreat).toBe(2);
 		expect(events[0].message?.banDetectCount).toBe(7);
+	});
+
+	it("normalizes fwBuild, vehicleLockedState, and gtwAutopilotSeen from boot payload", () => {
+		const events = parseSerialLine(
+			'{"t":"boot","state":{"gtwAutopilotSeen":1},"vehicle":{"vehicleLockedState":0},"firmware":{"fwBuild":98765}}',
+		);
+		expect(events).toHaveLength(1);
+		expect(events[0].type).toBe("message");
+		expect(events[0].message).toMatchObject({
+			t: "boot",
+			fwBuild: 98765,
+			vehicleLockedState: 0,
+			gtwAutopilotSeen: 1,
+		});
 	});
 
 	it("normalizes CAN diagnostic counters and per-bus metrics from status payload", () => {
