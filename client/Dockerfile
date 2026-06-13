@@ -6,7 +6,7 @@ COPY client/package.json client/package.json
 COPY packages/protocol/package.json packages/protocol/package.json
 COPY tools/package.json tools/package.json
 
-RUN npm install --no-audit --no-fund
+RUN rm -f package-lock.json && npm install --no-audit --no-fund
 
 FROM base AS dev
 COPY . .
