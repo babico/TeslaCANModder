@@ -37,8 +37,8 @@
  *
  * Processes control-frame caching, BMS telemetry, DAS status with ALC,
  * blind-spot/turn signals, doors, EPAS nag-killer echo, TPMS, region
- * spoofing, drive mode, powertrain, motor temps, OTA detection, HW
- * auto-detect, GTW shield/ban detection, TLSSC restore, firmware version,
+ * spoofing, drive mode, powertrain, motor temps, HW auto-detect,
+ * GTW shield/ban detection, TLSSC restore, firmware version,
  * and vehicle config piggyback.
  *
  * @param f Reference to the received CAN frame.
@@ -325,7 +325,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		// Capture real handsOnLevel for organic mode driver bypass (byte[4] bits[7:6])
 		s.nagOrganicRealHandsOn = (f.data[4] >> 6) & 0x03;
 
-		if (s.txPaused || !s.apGateOpen() || !nagModeUsesEpasEcho(s.nagMode))
+		if (!s.apGateOpen() || !nagModeUsesEpasEcho(s.nagMode))
 			return;
 
 		const unsigned long nowMs = millis();
@@ -385,7 +385,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 	if (f.id == CAN_ID_GTW_CAR_CFG && f.dlc >= 3)
 	{
 		// Apply region spoof before decoding (modifies frame in-place)
-		if (s.regionSpoofCode != 0 && !s.txPaused && s.apGateOpen())
+		if (s.regionSpoofCode != 0 && s.apGateOpen())
 		{
 			applySpoofRegion(f, s.regionSpoofCode);
 			driverSend(f, BUS_VEHICLE);
@@ -463,44 +463,21 @@ inline void handleVehicleBus(Frame &f, State &s)
 		return;
 	}
 
-	// OTA safety: detect Tesla OTA in progress via GTW_updateInProgress
-	// bits[1:0] of byte 6: 0=none, 1=available, 2=installing, 3=scheduled
-	// Only pause TX when value=2 (installing); value=1 caused false positives.
-	// Uses 3-frame assert / 6-frame clear debounce for stability.
-	if (f.id == CAN_ID_GTW_CAR_STATE && f.dlc >= 7)
-	{
-		static uint8_t otaAssertCnt = 0;
-		static uint8_t otaClearCnt = 0;
-		bool installing = ((f.data[6] & 0x03) == 2);
-		if (installing)
-		{
-			otaAssertCnt = (otaAssertCnt < 3) ? otaAssertCnt + 1 : 3;
-			otaClearCnt = 0;
-			if (otaAssertCnt >= 3 && !s.otaInProgress)
-			{
-				s.otaInProgress = true;
-				s.txPaused = true;
-				sendLog(F("OTA detected - TX paused"));
-			}
-		}
-		else
-		{
-			otaClearCnt = (otaClearCnt < 6) ? otaClearCnt + 1 : 6;
-			otaAssertCnt = 0;
-			if (otaClearCnt >= 6 && s.otaInProgress)
-			{
-				s.otaInProgress = false;
-				s.txPaused = false;
-				sendLog(F("OTA complete - TX resumed"));
-			}
-		}
-		return;
-	}
-
 	// Auto HW detection from GTW_carConfig das_hw field
 	// das_hw: 0/1=Legacy (MCU2/HW1/HW2 retrofit), 2=HW3, 3=HW4
 	if (f.id == CAN_ID_GTW_CAR_CFG && f.dlc >= 1)
 	{
+		// Reject all-zero 0x398 frames — Bus 6 noise on Juniper/Giga Shanghai HW4
+		// An all-zero 8-byte 0x398 is never valid Tesla config data
+		{
+			bool allZero = true;
+			for (uint8_t i = 0; i < f.dlc; i++)
+			{
+				if (f.data[i] != 0) { allZero = false; break; }
+			}
+			if (allZero) return;
+		}
+
 		uint8_t hw = (f.data[0] >> 6) & 0x03; // das_hw = byte[0] bits[7:6]
 		s.detectedHW = hw;
 		s.hwAutoDetected = true;
@@ -538,7 +515,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 	if (f.id == CAN_ID_GTW_CONFIG_ETH)
 	{
 		// GTW shield: learn snapshot or retransmit healthy frame when armed
-		if (!s.txPaused && handleGtwShield(f, s))
+		if (handleGtwShield(f, s))
 		{
 			driverSend(f, BUS_VEHICLE);
 			sendLog(F("GTW shield: blocked frame retransmitted"));
@@ -560,7 +537,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 	// TLSSC Restore: spoof DAS_autopilotConfig to SELF_DRIVING
 	if (f.id == CAN_ID_DAS_AP_CONFIG)
 	{
-		if (!s.txPaused && s.apGateOpen() && handleTlssc(f, s))
+		if (s.apGateOpen() && handleTlssc(f, s))
 		{
 			driverSend(f, BUS_VEHICLE);
 		}

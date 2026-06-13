@@ -10,7 +10,7 @@
 #include "core/types.h"
 
 /**
- * @brief Read DAS autopilot status from a 0x399 frame
+ * @brief Read DAS autopilot status from a 0x39B frame
  * @param f Reference to the CAN frame to decode
  * @return Autopilot status nibble from byte 0 bits [3:0], or 0 if frame too short
  */

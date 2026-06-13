@@ -73,3 +73,12 @@ The most feature-complete single-board Tesla CAN mod, adding battery monitoring 
   - `TESLA_CAN_BATTERY_REFERENCE.md` is an excellent standalone CAN signal reference including cell voltages, thermal data, and charging status
   - MIT license (more permissive than GPL-3.0 used by other FSD mods)
   - LM2596 DC-DC converter for 12V→5V power from the diagnostic port
+
+### Recent Changes (v0.2.0, June 2026)
+
+- **Flipper Zero companion app with UART bridge protocol** — New Flipper Zero app that connects to the ESP32-C6 via UART (GPIO 4 TX / GPIO 5 RX at 115200 baud) using a binary framing protocol with 0xAA start byte, length field, command byte, and XOR checksum. The Flipper provides a secondary display, button controls, and BLE relay for phone connectivity.
+- **ISA speed multiplier** (`isaSpeedMul` 1–15 slider) — Multiplies the detected map speed limit (from 0x238 or GPS) by a configurable factor before injecting the ISA speed limit into the UI display. Range 1–15× in integer steps. Controlled via the web dashboard slider or the `isaspeedmul:N` serial command.
+- **ISA dynamic speed offset** derived from CAN data — Unlike our static `offset:N` command (which applies a fixed offset), this dynamically adjusts the speed offset based on road class detection from 0x238 byte 1 (motorway vs. urban vs. rural), current vehicle speed from 0x257, and the detected speed limit sign type.
+- **Python reference client** (`teslacan_client.py`) — A cross-platform Python client that connects via serial or WiFi and provides: full command-line interface, CSV logging of all CAN frames, real-time BMS graphing (matplotlib), automatic firmware version detection, and a REPL mode for interactive CAN exploration.
+- **SVG battery SoC ring gauge and DNS captive portal in web dashboard** — The web dashboard now features an animated SVG ring gauge showing battery SoC with color gradient (green → yellow → red), plus a DNS captive portal that intercepts all HTTP requests on the AP for a seamless phone connection experience.
+- **Connection health indicators** — The LCD and web dashboard now show per-second CAN frame rate, bus error count (TWAI error warning/bus-off states), UART bridge health (heartbeat and timeout), and WiFi client count, all with color-coded status indicators.

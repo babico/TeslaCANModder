@@ -71,9 +71,10 @@ inline void handleChassisBus(Frame &f, State &s)
 	// P2-06: Fallback variant inference from distinctive frame presence
 	if (s.variantAutoDetect && !s.hwAutoDetected)
 	{
-		if (f.id == CAN_ID_ISA_SPEED && s.variant != HW4)
+		if (f.id == CAN_ID_ISA_SPEED && s.variant != HW4 && s.variant != HW3)
 		{
 			// ISA speed chime (0x399) is HW4-exclusive; infer variant from its presence
+			// HW3 excluded since 0x399 carries DAS_status on HW3 chassis bus
 			bool fromLegacy = (s.variant == LEGACY);
 			s.variant = HW4;
 			if (fromLegacy)
