@@ -31,8 +31,11 @@ The ESP32 supports up to three CAN buses on a shared SPI fabric. All three lanes
 | ------ | ----- | ------------------------------------------------------ | ------- | -------- |
 | 69     | 0x045 | Legacy stalk position                                  | Chassis | Legacy   |
 | 130    | 0x082 | UI_tripPlanning (preconditioning)                      | Vehicle | HW3, HW4 |
+| 258    | 0x102 | VCLEFT_doorStatus                                      | Vehicle | HW3, HW4 |
+| 259    | 0x103 | VCRIGHT_doorStatus                                     | Vehicle | HW3, HW4 |
 | 281    | 0x119 | Window vent control                                    | Vehicle | HW3, HW4 |
 | 306    | 0x132 | BMS_hvBusStatus (voltage/current)                      | Vehicle | HW3, HW4 |
+| 373    | 0x175 | WHEEL_SPEED                                            | Chassis | HW3, HW4 |
 | 530    | 0x212 | BMS_preconditionStatus                                 | Vehicle | HW3, HW4 |
 | 537    | 0x219 | TPMS tire pressure/temperature                         | Vehicle | HW3, HW4 |
 | 553    | 0x229 | EPAS_harness (CRC-protected)                           | Chassis | HW3, HW4 |
@@ -44,26 +47,36 @@ The ESP32 supports up to three CAN buses on a shared SPI fabric. All three lanes
 | 658    | 0x292 | BMS_socStatus (state of charge)                        | Vehicle | HW3, HW4 |
 | 697    | 0x2B9 | DAS_control                                            | Chassis | HW3, HW4 |
 | 722    | 0x2D2 | BMS_driveLimit                                         | Vehicle | HW3, HW4 |
+| 737    | 0x2E1 | VCFRONT_status                                         | Vehicle | HW3, HW4 |
 | 755    | 0x2F3 | Climate control                                        | Vehicle | HW3, HW4 |
 | 786    | 0x312 | BMS_thermalStatus (cell temps)                         | Vehicle | HW3, HW4 |
 | 787    | 0x313 | UI_trackModeSettings                                   | Vehicle | HW3, HW4 |
+| 789    | 0x315 | REAR_INV_TEMPS                                         | Vehicle | HW3, HW4 |
 | 792    | 0x318 | GTW_carState (OTA detection)                           | Vehicle | HW3, HW4 |
 | 817    | 0x331 | DAS_autopilotConfig                                    | Vehicle | HW3, HW4 |
 | 818    | 0x332 | BMS_minMax                                             | Vehicle | HW3, HW4 |
 | 819    | 0x333 | Charge control                                         | Vehicle | HW3, HW4 |
 | 820    | 0x334 | Drive config (pedal/regen/stop/drive mode inject)      | Vehicle | HW3, HW4 |
 | 826    | 0x33A | BMS_energyStatus (Wh/km)                               | Vehicle | HW3, HW4 |
+| 850    | 0x352 | BMS_energyStatus                                       | Vehicle | HW3, HW4 |
 | 880    | 0x370 | EPAS_sysStatus (torque sensor)                         | Vehicle | HW3, HW4 |
+| 886    | 0x376 | FRONT_INV_TEMPS                                        | Vehicle | HW3, HW4 |
+| 905    | 0x389 | DAS_status2                                            | Chassis | HW3, HW4 |
 | 914    | 0x392 | GTW_version (gateway firmware version, muxed)          | Vehicle | HW3, HW4 |
 | 920    | 0x398 | GTW_carConfig (auto HW detect, region, vehicle config) | Vehicle | HW3, HW4 |
 | 921    | 0x399 | ISA speed chime                                        | Chassis | HW4      |
 | 923    | 0x39B | DAS_status (hands-on request state)                    | Vehicle | HW3, HW4 |
+| 929    | 0x3A1 | VCFRONT_vehStatus                                      | Vehicle | HW3, HW4 |
 | 2047   | 0x7FF | GTW_carConfig mux (autopilot tier readback)            | Vehicle | HW3, HW4 |
 | 947    | 0x3B3 | Trunk/Glovebox control                                 | Vehicle | HW3, HW4 |
 | 962    | 0x3C2 | VCLEFT_switchStatus                                    | Vehicle | HW3, HW4 |
+| 978    | 0x3D2 | BMS_kwh_cnt                                            | Vehicle | HW3, HW4 |
+| 985    | 0x3D9 | UI_gpsSpeed                                            | Chassis | HW3, HW4 |
 | 1006   | 0x3EE | Legacy FSD mux                                         | Chassis | Legacy   |
+| 1010   | 0x3F2 | BMS_kwh_mux                                            | Vehicle | HW3, HW4 |
 | 1016   | 0x3F8 | Follow distance (profile mapping)                      | Chassis | HW3, HW4 |
 | 1021   | 0x3FD | FSD mux (FSD/nag/profile/offset/ECE R79)               | Chassis | HW3, HW4 |
+| 1025   | 0x401 | BMS_brick_v                                            | Vehicle | HW3, HW4 |
 | 1160   | 0x488 | DAS_steeringControl                                    | Chassis | HW3, HW4 |
 | 262    | 0x106 | Rear motor RPM                                         | Vehicle | HW3, HW4 |
 | 277    | 0x115 | Front motor RPM (dual motor)                           | Vehicle | HW3, HW4 |

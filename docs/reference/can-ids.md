@@ -26,11 +26,13 @@ Cross-validated against hypery11, slxslx, Shayennn, EzeLLM, and ev-open-can-tool
 
 ### DAS (Driver Assistance)
 
-| Hex   | Dec | Symbol               | Signal            | Bus | Direction | Notes                                      |
-| ----- | --- | -------------------- | ----------------- | --- | --------- | ------------------------------------------ |
-| 0x39B | 923 | `CAN_ID_DAS_STATUS`  | DAS_status        | 1   | RX        | byte5[5:2]=hands-on, byte4[4:0]=laneChange |
-| 0x389 | 905 | `CAN_ID_DAS_STATUS2` | DAS_accSpeedLimit | 0   | RX        | ACC speed limit readback                   |
-| 0x2B9 | 697 | `CAN_ID_DAS_CONTROL` | DAS_setSpeed      | 0   | RX        | Cruise set-speed readback                  |
+| Hex   | Dec | Symbol                   | Signal            | Bus | Direction | Notes                                      |
+| ----- | --- | ------------------------ | ----------------- | --- | --------- | ------------------------------------------ |
+| 0x39B | 923 | `CAN_ID_DAS_STATUS`      | DAS_status        | 1   | RX        | byte5[5:2]=hands-on, byte4[4:0]=laneChange |
+| 0x389 | 905 | `CAN_ID_DAS_STATUS2`     | DAS_accSpeedLimit | 0   | RX        | ACC speed limit readback                   |
+| 0x2B9 | 697 | `CAN_ID_DAS_CONTROL`     | DAS_setSpeed      | 0   | RX        | Cruise set-speed readback                  |
+| 0x175 | 373 | `CAN_ID_WHEEL_SPEED`     | ID175WheelSpeed   | 0   | RX        | FL/FR/RL/RR 13-bit LE, 0.04 km/h           |
+| 0x27D | 637 | `CAN_ID_APS_EAC_MONITOR` | APS_eacMonitor    | 0   | TX        | EPAS steer-allow gate (DAS drive)          |
 
 ### Steering & Stalks
 
@@ -38,20 +40,22 @@ Cross-validated against hypery11, slxslx, Shayennn, EzeLLM, and ev-open-can-tool
 | ----- | --- | ----------------------- | ------------------------------- | --- | --------- | ------------------------------------------ |
 | 0x370 | 880 | `CAN_ID_EPAS_TORQUE`    | EPAS3P_sysStatus                | 1   | RX/TX     | Nag killer, steering mode, checksum=sum+ID |
 | 0x229 | 553 | `CAN_ID_EPAS_HARNESS`   | EPAS_internalHarness            | 0   | RX        | CRC-8 protected                            |
-| 0x249 | 585 | `CAN_ID_DI_STEER`       | DI_steerAssist / SCCM_leftStalk | 0   | RX/TX     | CRC-8 protected, ALC stalk injection       |
-| 0x129 | 297 | `CAN_ID_STEERING_ANGLE` | SCCM_steeringAngleSensor        | 0   | RX        | Signed 16-bit / 10 = degrees               |
+| 0x249 | 585 | `CAN_ID_DI_STEER`       | DI_steerAssist / SCCM_leftStalk | 1   | RX/TX     | CRC-8 protected, ALC stalk injection       |
+| 0x129 | 297 | `CAN_ID_STEERING_ANGLE` | SCCM_steeringAngleSensor        | 1   | RX        | Signed 16-bit / 10 = degrees               |
 | 0x3C2 | 962 | `CAN_ID_VCLEFT_SWITCH`  | VCLEFT_switchStatus             | 2   | TX        | Palladium/Yoke turn button injection       |
 
 ### Drive & Powertrain
 
-| Hex   | Dec | Symbol                 | Signal               | Bus | Direction | Notes                              |
-| ----- | --- | ---------------------- | -------------------- | --- | --------- | ---------------------------------- |
-| 0x118 | 280 | `CAN_ID_DI_STATE`      | DI_systemStatus      | 1   | RX        | Track mode, traction control       |
-| 0x334 | 820 | `CAN_ID_DRIVE_CONFIG`  | Drive config         | 1   | RX/TX     | Pedal, regen, creep (checksum=sum) |
-| 0x257 | 599 | `CAN_ID_VEHICLE_SPEED` | Vehicle speed        | 1   | RX        | km/h readback                      |
-| 0x106 | 262 | `CAN_ID_REAR_MOTOR`    | Rear motor RPM       | 1   | RX        |                                    |
-| 0x115 | 277 | `CAN_ID_FRONT_MOTOR`   | Front motor RPM      | 1   | RX        |                                    |
-| 0x313 | 787 | `CAN_ID_TRACK_MODE`    | UI_trackModeSettings | 1   | RX/TX     |                                    |
+| Hex   | Dec | Symbol                   | Signal                  | Bus | Direction | Notes                                            |
+| ----- | --- | ------------------------ | ----------------------- | --- | --------- | ------------------------------------------------ |
+| 0x118 | 280 | `CAN_ID_DI_STATE`        | DI_systemStatus         | 1   | RX        | Track mode, traction control                     |
+| 0x334 | 820 | `CAN_ID_DRIVE_CONFIG`    | Drive config            | 1   | RX/TX     | Pedal, regen, creep (checksum=sum)               |
+| 0x257 | 599 | `CAN_ID_VEHICLE_SPEED`   | Vehicle speed           | 1   | RX        | km/h readback                                    |
+| 0x106 | 262 | `CAN_ID_REAR_MOTOR`      | Rear motor RPM          | 1   | RX        |                                                  |
+| 0x115 | 277 | `CAN_ID_FRONT_MOTOR`     | Front motor RPM         | 1   | RX        |                                                  |
+| 0x313 | 787 | `CAN_ID_TRACK_MODE`      | UI_trackModeSettings    | 1   | RX/TX     |                                                  |
+| 0x315 | 789 | `CAN_ID_REAR_INV_TEMPS`  | ID315RearInverterTemps  | 1   | RX        | Rear drive unit inverter temps (°C)              |
+| 0x376 | 886 | `CAN_ID_FRONT_INV_TEMPS` | ID376FrontInverterTemps | 1   | RX        | Front drive unit inverter temps, dual-motor only |
 
 ### BMS (Battery Management)
 
@@ -75,7 +79,7 @@ Cross-validated against hypery11, slxslx, Shayennn, EzeLLM, and ev-open-can-tool
 | Hex   | Dec  | Symbol                   | Signal                | Bus | Direction | Notes                      |
 | ----- | ---- | ------------------------ | --------------------- | --- | --------- | -------------------------- |
 | 0x273 | 627  | `CAN_ID_UI_VEHICLE_CTRL` | UI_vehicleControl     | 1   | RX/TX     | Summon, window, etc.       |
-| 0x284 | 644  | `CAN_ID_SENTRY`          | Sentry mode           | 1   | RX        |                            |
+| 0x284 | 644  | `CAN_ID_SENTRY`          | Sentry mode           | 2   | RX        |                            |
 | 0x2F3 | 755  | `CAN_ID_CLIMATE`         | Climate control       | 1   | RX        |                            |
 | 0x333 | 819  | `CAN_ID_CHARGE`          | Charge control        | 1   | RX        |                            |
 | 0x3B3 | 947  | `CAN_ID_TRUNK_CTRL`      | Trunk/Glovebox        | 1   | RX/TX     |                            |
@@ -92,10 +96,10 @@ Cross-validated against hypery11, slxslx, Shayennn, EzeLLM, and ev-open-can-tool
 | ----- | --- | ---------------------------- | -------------------------- | --- | --------- | --------------------------- |
 | 0x398 | 920 | `CAN_ID_GTW_CAR_CFG`         | GTW_carConfig              | 1   | RX        | HW auto-detect, region code |
 | 0x318 | 792 | `CAN_ID_GTW_CAR_STATE`       | GTW_carState               | 1   | RX        | OTA detection               |
-| 0x102 | 258 | `CAN_ID_VCLEFT_DOOR_STATUS`  | VCLEFT doors               | 2   | RX        | Door/latch status           |
-| 0x103 | 259 | `CAN_ID_VCRIGHT_DOOR_STATUS` | VCRIGHT doors              | 2   | RX        | Trunk/latch status          |
-| 0x2E1 | 737 | `CAN_ID_VCFRONT_STATUS`      | VCFRONT status             | 2   | RX        | Frunk, any-door             |
-| 0x3A1 | 929 | `CAN_ID_VCFRONT_VEH_STATUS`  | VCFRONT vehicle status     | 2   | RX        | Driver door                 |
+| 0x102 | 258 | `CAN_ID_VCLEFT_DOOR_STATUS`  | VCLEFT doors               | 1   | RX        | Door/latch status           |
+| 0x103 | 259 | `CAN_ID_VCRIGHT_DOOR_STATUS` | VCRIGHT doors              | 1   | RX        | Trunk/latch status          |
+| 0x2E1 | 737 | `CAN_ID_VCFRONT_STATUS`      | VCFRONT status             | 1   | RX        | Frunk, any-door             |
+| 0x3A1 | 929 | `CAN_ID_VCFRONT_VEH_STATUS`  | VCFRONT vehicle status     | 1   | RX        | Driver door                 |
 | 0x3D9 | 985 | `CAN_ID_UI_GPS_SPEED`        | UI GPS speed / speed limit | 0   | RX        | Map speed limit             |
 
 ### ISA (Intelligent Speed Assistance)

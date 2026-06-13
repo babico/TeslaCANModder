@@ -112,6 +112,25 @@ Status payload includes:
 
 - `enhancedAutopilot` — hidden AP setting state (0=off, 1=on)
 
+## Driver Assist Toggles
+
+| Command          | Description                        |
+| ---------------- | ---------------------------------- |
+| `lhd:on`         | Left-hand drive mode               |
+| `lhd:off`        | Right-hand drive mode              |
+| `apfirst:on`     | Enable AP-First injection gate     |
+| `apfirst:off`    | Disable AP-First gate              |
+| `lanegraph:on`   | Enable lane graph visualization    |
+| `lanegraph:off`  | Disable lane graph visualization   |
+| `assist-dev:on`  | Enable developer mode              |
+| `assist-dev:off` | Disable developer mode             |
+| `assist-nav:on`  | Enable drive-on-navigation assist  |
+| `assist-nav:off` | Disable drive-on-navigation assist |
+| `assist-hof:on`  | Enable hands-off mode              |
+| `assist-hof:off` | Disable hands-off mode             |
+| `assist-tel:on`  | Enable trip telemetry              |
+| `assist-tel:off` | Disable trip telemetry             |
+
 ## DAS Drive (Gamepad CAN Injection)
 
 Manual remote-control of the car's actuators by injecting openpilot-protocol
