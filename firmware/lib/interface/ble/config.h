@@ -49,7 +49,7 @@ bool bleSetDeviceName(const char *name);
 const char *bleGetDeviceName();
 
 static Preferences blePrefs;
-#define BLE_NVS_NS "tcm_ble" // NVS namespace for BLE settings
+static constexpr const char *BLE_NVS_NS = "tcm_ble"; // NVS namespace for BLE settings
 
 static bool bleEnabledCfg = true;
 static char bleNameCfg[33] = BLE_DEVICE_NAME;

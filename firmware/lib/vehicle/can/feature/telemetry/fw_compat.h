@@ -57,7 +57,7 @@ inline void decodeFwVersion(const Frame &f, State &s)
 {
 	if (f.dlc < 5)
 		return;
-	uint8_t mux = f.data[0] & 0x07; // bits 2:0 — mux selector
+	uint8_t mux = f.data[0] & MUX_MASK; // bits 2:0 — mux selector
 	if (mux == 0)
 	{
 		s.fwYear = ((uint16_t)f.data[1] << 8) | f.data[2];    // bytes 1-2: year (BE)

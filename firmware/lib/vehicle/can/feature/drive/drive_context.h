@@ -99,7 +99,7 @@ inline bool decodeTrunkOpen(const Frame &f)
  */
 inline bool decodeFrunkOpen(const Frame &f)
 {
-	const uint8_t mux = (uint8_t)(readBitsLE(f.data, 0, 3) & 0x07); // bits 0-2: mux selector
+	const uint8_t mux = (uint8_t)(readBitsLE(f.data, 0, 3) & MUX_MASK); // bits 0-2: mux selector
 	if (mux != 0)
 		return false;
 	return decodeLatchOpen((uint8_t)(readBitsLE(f.data, 3, 4) & 0x0F)); // bits 3-6: frunk latch
@@ -112,7 +112,7 @@ inline bool decodeFrunkOpen(const Frame &f)
  */
 inline bool decodeAnyDoorOpen(const Frame &f)
 {
-	const uint8_t mux = (uint8_t)(readBitsLE(f.data, 0, 3) & 0x07); // bits 0-2: mux selector
+	const uint8_t mux = (uint8_t)(readBitsLE(f.data, 0, 3) & MUX_MASK); // bits 0-2: mux selector
 	if (mux != 0)
 		return false;
 	return readBitsLE(f.data, 50, 1) != 0; // bit 50: any-door-open flag

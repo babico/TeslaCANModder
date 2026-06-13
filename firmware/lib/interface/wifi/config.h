@@ -27,8 +27,8 @@ static Preferences wifiPrefs;
 #define WIFI_NVS_NS "tcm_wifi"
 #define TCM_WIFI_MODE_AP 0
 #define TCM_WIFI_MODE_STA 1
-#define WIFI_STA_TIMEOUT 15000  // Milliseconds to wait for STA connection before AP fallback
-#define WIFI_CFG_MAGIC 0xA1    // NVS sentinel indicating a valid saved config
+static constexpr unsigned long WIFI_STA_TIMEOUT = 15000;  // Milliseconds to wait for STA connection before AP fallback
+static constexpr uint32_t WIFI_CFG_MAGIC = 0xA1;          // NVS sentinel indicating a valid saved config
 
 /**
  * @brief Load WiFi configuration from NVS, or apply defaults if no saved config exists.

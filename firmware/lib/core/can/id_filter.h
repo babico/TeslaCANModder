@@ -17,7 +17,7 @@
  */
 static constexpr uint32_t CAN_ID_MAX = 2048; // 11-bit ID space
 
-#define ID_FILTER_WORDS 64 // 2048 bits / 32 bits per word
+static constexpr size_t ID_FILTER_WORDS = 64; // 2048 bits / 32 bits per word
 
 /**
  * @brief Bitmask filter for constant-time CAN ID acceptance testing

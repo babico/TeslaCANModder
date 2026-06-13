@@ -17,6 +17,10 @@
 #define BUS_MAX 3
 #endif
 
+// CAN frame multiplexer (3-bit mux in low nibble of byte 0)
+static constexpr uint8_t MUX_BITS = 3;
+static constexpr uint8_t MUX_MASK = 0x07;
+
 enum TeslaModel : uint8_t;
 enum HWGeneration : uint8_t;
 enum FsdProtocol : uint8_t;
@@ -58,7 +62,7 @@ inline void setBit(Frame &f, int bit, bool val)
  */
 inline uint8_t readMuxID(const Frame &f)
 {
-	return f.dlc >= 1 ? (f.data[0] & 0x07) : 0; // mask lowest 3 bits
+	return f.dlc >= 1 ? (f.data[0] & MUX_MASK) : 0; // mask lowest MUX_BITS bits
 }
 
 /**

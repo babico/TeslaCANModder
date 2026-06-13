@@ -21,7 +21,7 @@ void printLn();
 #endif
 
 #ifndef SERIAL_CMD_BUFFER_SIZE
-#define SERIAL_CMD_BUFFER_SIZE 32
+#define SERIAL_CMD_BUFFER_SIZE 64
 #endif
 
 /**

@@ -9,7 +9,7 @@
 
 #include "core/types.h"
 
-#define CAN_RECORDER_SIZE 256 // Maximum number of frames stored in the ring buffer
+static constexpr size_t CAN_RECORDER_SIZE = 256; // Maximum number of frames stored in the ring buffer
 
 /**
  * @brief Single recorded CAN frame with metadata

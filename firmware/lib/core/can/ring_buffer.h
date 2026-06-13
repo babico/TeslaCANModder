@@ -9,7 +9,7 @@
 
 #include "core/types.h"
 
-#define RING_BUF_SIZE 256 // Power of 2 for fast modulo via bitmask
+static constexpr size_t RING_BUF_SIZE = 256; // Power of 2 for fast modulo via bitmask
 
 /**
  * @brief Single entry in the frame ring buffer

@@ -96,7 +96,7 @@ static bool handleGtwShield(Frame &f, State &s)
 {
 	if (f.dlc < 8)
 		return false;
-	uint8_t mux = f.data[0] & 0x07; // Mux variant from bits[2:0] of byte[0]
+	uint8_t mux = f.data[0] & MUX_MASK; // Mux variant from bits[2:0] of byte[0]
 
 	if (!s.gtwShieldArmed)
 	{
