@@ -1,15 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-	Linking,
-	Pressable,
-	ScrollView,
-	StyleSheet,
-	Text,
-	View,
-	useWindowDimensions,
-} from "react-native";
+import { Linking, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 
-import { colors, font, spacing } from "../design/tokens";
 import {
 	DEFAULT_DOC_ROUTE,
 	EMPTY_DOC_TREE,
@@ -273,19 +264,17 @@ export function DocsScreen({ activeDocRoute, onNavigateDoc }: DocsScreenProps) {
 	};
 
 	return (
-		<View style={[styles.screen, isDesktop ? styles.screenDesktop : styles.screenMobile]}>
+		<View className={`flex-1 bg-background ${isDesktop ? "flex-row" : "flex-col"}`}>
 			<View
-				style={[styles.sidebar, isDesktop ? styles.sidebarDesktop : styles.sidebarMobile]}
+				className={`bg-card p-3 gap-3 ${isDesktop ? "w-[390px] border-r border-border" : "max-h-[330px]"}`}
 			>
-				<Pressable style={styles.rootRow} onPress={() => onNavigateDoc(DEFAULT_DOC_ROUTE)}>
-					<View style={styles.rootDot} />
+				<Pressable
+					className="flex-row items-center gap-2 pb-2 border-b border-border"
+					onPress={() => onNavigateDoc(DEFAULT_DOC_ROUTE)}
+				>
+					<View className="w-2 h-2 rounded-full bg-primary" />
 					<Text
-						style={[
-							styles.rootTitle,
-							activeContent?.routePath === DEFAULT_DOC_ROUTE
-								? styles.rootTitleActive
-								: undefined,
-						]}
+						className={`text-sm font-bold ${activeContent?.routePath === DEFAULT_DOC_ROUTE ? "text-primary" : "text-card-foreground"}`}
 					>
 						{docTree.title}
 					</Text>
@@ -293,7 +282,7 @@ export function DocsScreen({ activeDocRoute, onNavigateDoc }: DocsScreenProps) {
 
 				<ScrollView
 					showsVerticalScrollIndicator={false}
-					contentContainerStyle={styles.sidebarList}
+					contentContainerStyle={{ paddingBottom: 20, gap: 2 }}
 				>
 					{treeRows.map((row) => {
 						const active =
@@ -322,14 +311,19 @@ export function DocsScreen({ activeDocRoute, onNavigateDoc }: DocsScreenProps) {
 				</ScrollView>
 			</View>
 
-			<ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
-				<Text style={styles.kicker}>
+			<ScrollView
+				className="flex-1"
+				contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 8 }}
+			>
+				<Text className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
 					{activeContent?.path ?? (catalog ? "docs" : "loading")}
 				</Text>
 				{activeContent?.description ? (
-					<Text style={styles.summary}>{activeContent.description}</Text>
+					<Text className="text-sm text-muted-foreground leading-5 mb-2">
+						{activeContent.description}
+					</Text>
 				) : catalogError ? (
-					<Text style={styles.summary}>{catalogError}</Text>
+					<Text className="text-sm text-destructive">{catalogError}</Text>
 				) : null}
 				<MarkdownRenderer
 					markdown={
@@ -343,79 +337,5 @@ export function DocsScreen({ activeDocRoute, onNavigateDoc }: DocsScreenProps) {
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	screen: {
-		flex: 1,
-		backgroundColor: colors.dashBackground,
-	},
-	screenDesktop: {
-		flexDirection: "row",
-	},
-	screenMobile: {
-		flexDirection: "column",
-	},
-	sidebar: {
-		backgroundColor: colors.dashCard,
-		padding: spacing.md,
-		gap: spacing.md,
-	},
-	sidebarDesktop: {
-		width: 390,
-		borderRightWidth: 1,
-		borderRightColor: colors.dashCardBorder,
-	},
-	sidebarMobile: {
-		width: "100%",
-		maxHeight: 330,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.dashCardBorder,
-	},
-	rootRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: spacing.sm,
-		paddingBottom: spacing.sm,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.dashCardBorder,
-	},
-	rootDot: {
-		width: 8,
-		height: 8,
-		borderRadius: 4,
-		backgroundColor: colors.dashPrimary,
-	},
-	rootTitle: {
-		color: colors.dashValue,
-		fontSize: font.size.lg,
-		fontWeight: font.weight.extrabold,
-	},
-	rootTitleActive: {
-		color: colors.dashPrimary,
-	},
-	sidebarList: {
-		paddingBottom: spacing.lg,
-		gap: spacing.xs2,
-	},
-	content: {
-		flex: 1,
-	},
-	contentInner: {
-		padding: spacing.lg2,
-		gap: spacing.md,
-		paddingBottom: spacing.xl3,
-	},
-	kicker: {
-		color: colors.dashMuted,
-		fontSize: font.size.sm,
-		letterSpacing: 0.7,
-		textTransform: "uppercase",
-	},
-	summary: {
-		color: colors.dashLabel,
-		fontSize: font.size.md,
-		lineHeight: 22,
-	},
-});
 
 export default DocsScreen;

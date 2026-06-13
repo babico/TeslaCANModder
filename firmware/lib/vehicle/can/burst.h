@@ -24,8 +24,6 @@
  */
 inline void startBurst(State &s, const Frame &f, uint8_t bus, uint8_t count, uint8_t delayMs)
 {
-	if (s.txPaused)
-		return;
 	if (!s.apGateOpen())
 		return;
 	s.burstFrame = f;

@@ -8,7 +8,8 @@ import {
 	View,
 	useWindowDimensions,
 } from "react-native";
-import { colors } from "../../../design/tokens";
+import { colors, selectDashColors } from "../../../design/tokens";
+import { useThemeState } from "../../../state/ThemeContext";
 import type { MonitorScreenProps } from "./types";
 
 const BUS_FILTER_OPTIONS: Array<{ value: string; label: string }> = [
@@ -69,6 +70,8 @@ function formatBoardMessageText(text: string): string {
 }
 
 export function MonitorSection(props: MonitorScreenProps) {
+	const { isDark } = useThemeState();
+	const colors = selectDashColors(isDark);
 	const { width } = useWindowDimensions();
 	const isWide = width >= 1024;
 	const [rawCommand, setRawCommand] = useState("status");

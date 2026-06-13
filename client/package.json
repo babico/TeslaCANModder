@@ -6,8 +6,10 @@
 	"scripts": {
 		"start": "expo start",
 		"web": "expo start --web",
+		"preweb": "node scripts/generate-docs-catalog.mjs ../docs",
 		"web:open": "expo start --web",
 		"web:build": "expo export --platform web --output-dir dist-web",
+		"generate-docs": "node scripts/generate-docs-catalog.mjs ../docs",
 		"android": "expo start --android",
 		"ios": "expo start --ios",
 		"lint": "eslint .",

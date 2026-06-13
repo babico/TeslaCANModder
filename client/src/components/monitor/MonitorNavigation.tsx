@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colors } from "../../design/tokens";
+import { Pressable, Text, View } from "react-native";
+import { selectDashColors } from "../../design/tokens";
+import { useThemeState } from "../../state/ThemeContext";
 
 export type MonitorSectionTab = "console" | "connection" | "diagnostics";
 
@@ -24,43 +25,38 @@ export function MonitorSidebarNavigation({
 	frameCount,
 	canConnected,
 }: MonitorNavigationProps) {
+	const { isDark: _isDark } = useThemeState();
+	const _colors = selectDashColors(_isDark);
 	return (
-		<View style={styles.sidebar}>
-			<View style={styles.sidebarHeader}>
-				<Text style={styles.sidebarBrand}>Console</Text>
-				<Text style={styles.sidebarSub}>CAN Workspace</Text>
+		<View className="w-[200px] bg-card border-r border-border flex-col">
+			<View className="px-5 pt-6 pb-4 border-b border-border gap-0.5">
+				<Text className="text-lg font-bold text-card-foreground tracking-wide">
+					Console
+				</Text>
+				<Text className="text-xs text-muted-foreground tracking-wide">CAN Workspace</Text>
 			</View>
-			<View style={styles.sidebarNav}>
+			<View className="flex-1 py-2 gap-0.5">
 				{items.map((item) => (
 					<Pressable
 						key={item.tab}
 						onPress={() => onChangeSection(item.tab)}
-						style={[
-							styles.sidebarItem,
-							activeSection === item.tab ? styles.sidebarItemActive : undefined,
-						]}
+						className={`flex-row items-center gap-2.5 px-4 py-2.5 mx-2 rounded-md ${activeSection === item.tab ? "bg-muted" : ""}`}
 					>
 						<Text
-							style={[
-								styles.sidebarIcon,
-								activeSection === item.tab ? styles.sidebarIconActive : undefined,
-							]}
+							className={`text-sm ${activeSection === item.tab ? "text-primary" : "text-muted-foreground"}`}
 						>
 							{item.icon}
 						</Text>
 						<Text
-							style={[
-								styles.sidebarLabel,
-								activeSection === item.tab ? styles.sidebarLabelActive : undefined,
-							]}
+							className={`text-[13px] font-medium ${activeSection === item.tab ? "text-primary font-bold" : "text-muted-foreground"}`}
 						>
 							{item.label}
 						</Text>
 					</Pressable>
 				))}
 			</View>
-			<View style={styles.sidebarFooter}>
-				<Text style={styles.sidebarFooterText}>
+			<View className="px-5 py-4 border-t border-border">
+				<Text className="text-xs text-muted-foreground">
 					{frameCount} frames · {canConnected ? "CAN OK" : "No CAN"}
 				</Text>
 			</View>
@@ -75,30 +71,23 @@ interface MonitorBottomBarProps {
 }
 
 export function MonitorBottomBar({ items, activeSection, onChangeSection }: MonitorBottomBarProps) {
+	const { isDark: _isDark } = useThemeState();
+	const _colors = selectDashColors(_isDark);
 	return (
-		<View style={styles.bottomBar}>
+		<View className="flex-row bg-card border-t border-border">
 			{items.map((item) => (
 				<Pressable
 					key={item.tab}
 					onPress={() => onChangeSection(item.tab)}
-					style={[
-						styles.bottomBarItem,
-						activeSection === item.tab ? styles.bottomBarItemActive : undefined,
-					]}
+					className={`flex-1 py-2.5 items-center gap-0.5 ${activeSection === item.tab ? "border-t-2 border-primary" : ""}`}
 				>
 					<Text
-						style={[
-							styles.bottomBarIcon,
-							activeSection === item.tab ? styles.bottomBarIconActive : undefined,
-						]}
+						className={`text-base ${activeSection === item.tab ? "text-primary" : "text-muted-foreground"}`}
 					>
 						{item.icon}
 					</Text>
 					<Text
-						style={[
-							styles.bottomBarLabel,
-							activeSection === item.tab ? styles.bottomBarLabelActive : undefined,
-						]}
+						className={`text-[10px] font-medium ${activeSection === item.tab ? "text-primary" : "text-muted-foreground"}`}
 					>
 						{item.label}
 					</Text>
@@ -107,106 +96,3 @@ export function MonitorBottomBar({ items, activeSection, onChangeSection }: Moni
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	sidebar: {
-		width: 200,
-		backgroundColor: colors.dashCard,
-		borderRightWidth: 1,
-		borderRightColor: colors.dashCardBorder,
-		flexDirection: "column",
-	},
-	sidebarHeader: {
-		paddingHorizontal: 20,
-		paddingTop: 24,
-		paddingBottom: 16,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.dashCardBorder,
-		gap: 2,
-	},
-	sidebarBrand: {
-		fontSize: 16,
-		fontWeight: "700",
-		color: colors.dashValue,
-		letterSpacing: 0.5,
-	},
-	sidebarSub: {
-		fontSize: 11,
-		color: colors.dashLabel,
-		letterSpacing: 0.3,
-	},
-	sidebarNav: {
-		flex: 1,
-		paddingVertical: 8,
-		gap: 2,
-	},
-	sidebarItem: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 10,
-		paddingHorizontal: 16,
-		paddingVertical: 10,
-		marginHorizontal: 8,
-		borderRadius: 6,
-	},
-	sidebarItemActive: {
-		backgroundColor: colors.backgroundDarkSubtle,
-	},
-	sidebarIcon: {
-		fontSize: 14,
-		color: colors.dashMuted,
-	},
-	sidebarIconActive: {
-		color: colors.dashPrimary,
-	},
-	sidebarLabel: {
-		fontSize: 13,
-		fontWeight: "500",
-		color: colors.dashLabel,
-	},
-	sidebarLabelActive: {
-		color: colors.dashPrimary,
-		fontWeight: "700",
-	},
-	sidebarFooter: {
-		paddingHorizontal: 20,
-		paddingVertical: 16,
-		borderTopWidth: 1,
-		borderTopColor: colors.dashCardBorder,
-	},
-	sidebarFooterText: {
-		fontSize: 11,
-		color: colors.dashMuted,
-	},
-	bottomBar: {
-		flexDirection: "row",
-		backgroundColor: colors.dashCard,
-		borderTopWidth: 1,
-		borderTopColor: colors.dashCardBorder,
-	},
-	bottomBarItem: {
-		flex: 1,
-		paddingVertical: 10,
-		alignItems: "center",
-		gap: 2,
-	},
-	bottomBarItemActive: {
-		borderTopWidth: 2,
-		borderTopColor: colors.dashPrimary,
-	},
-	bottomBarIcon: {
-		fontSize: 16,
-		color: colors.dashMuted,
-	},
-	bottomBarIconActive: {
-		color: colors.dashPrimary,
-	},
-	bottomBarLabel: {
-		fontSize: 10,
-		fontWeight: "500",
-		color: colors.dashMuted,
-	},
-	bottomBarLabelActive: {
-		color: colors.dashPrimary,
-	},
-});

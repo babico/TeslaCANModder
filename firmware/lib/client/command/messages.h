@@ -70,8 +70,7 @@ void sendBoot(State &s)
       o.boolean("wifiEnabled", false);
 #endif
 					o.object("bus",
-							 [&](JsonLineBuilder::JsonObjectBuilder &bus)
-							 {
+							 [&](JsonLineBuilder::JsonObjectBuilder &bus) {
 								 bus.boolean("chassis", BUS_CHASSIS_ACTIVE)
 									 .boolean("vehicle", BUS_VEHICLE_ACTIVE)
 									 .boolean("body", BUS_BODY_ACTIVE);
@@ -112,8 +111,6 @@ void sendBoot(State &s)
 								{ off.num("value", s.speedOffset).boolean("pinned", s.offsetOverride); })
 						.boolean("precondition", s.preconditionEnabled)
 						.boolean("trackMode", s.trackModeEnabled)
-						.boolean("otaInProgress", s.otaInProgress)
-						.boolean("txPaused", s.txPaused)
 						.boolean("apGateEnabled", s.apInjectionGateEnabled)
 						.boolean("apGateOpen", s.apGateOpen())
 						.str("apGateReason", apGateReason(s))
@@ -324,8 +321,7 @@ void sendStatus(State &s, unsigned long now)
       o.boolean("wifiEnabled", false);
 #endif
 					o.object("bus",
-							 [&](JsonLineBuilder::JsonObjectBuilder &bus)
-							 {
+							 [&](JsonLineBuilder::JsonObjectBuilder &bus) {
 								 bus.boolean("chassis", BUS_CHASSIS_ACTIVE)
 									 .boolean("vehicle", BUS_VEHICLE_ACTIVE)
 									 .boolean("body", BUS_BODY_ACTIVE);
@@ -359,8 +355,6 @@ void sendStatus(State &s, unsigned long now)
 								{ off.num("value", s.speedOffset).boolean("pinned", s.offsetOverride); })
 						.boolean("precondition", s.preconditionEnabled)
 						.boolean("trackMode", s.trackModeEnabled)
-						.boolean("otaInProgress", s.otaInProgress)
-						.boolean("txPaused", s.txPaused)
 						.boolean("apGateEnabled", s.apInjectionGateEnabled)
 						.boolean("apGateOpen", s.apGateOpen())
 						.str("apGateReason", apGateReason(s))
@@ -618,8 +612,6 @@ void sendStatusState(State &s)
 								{ off.num("value", s.speedOffset).boolean("pinned", s.offsetOverride); })
 						.boolean("precondition", s.preconditionEnabled)
 						.boolean("trackMode", s.trackModeEnabled)
-						.boolean("otaInProgress", s.otaInProgress)
-						.boolean("txPaused", s.txPaused)
 						.boolean("apGateEnabled", s.apInjectionGateEnabled)
 						.boolean("apGateOpen", s.apGateOpen())
 						.str("apGateReason", apGateReason(s));
@@ -639,8 +631,7 @@ void sendStatusCompact(State &s, unsigned long now)
 	jsonLine()
 		.str("t", "status_compact")
 		.object("meta",
-				[&](JsonLineBuilder::JsonObjectBuilder &o)
-				{
+				[&](JsonLineBuilder::JsonObjectBuilder &o) {
 					o.str("hw", BOARD_HW_NAME)
 						.str("variant", variantName(s.variant))
 						.str("ready", "runtime-ready")
@@ -707,9 +698,10 @@ void sendStatusCompact(State &s, unsigned long now)
 							 {
 								 for (uint8_t i = 0; i < BUS_MAX; i++)
 								 {
-									 health.object(
-										 kBusName[i], [&](JsonLineBuilder::JsonObjectBuilder &bus)
-										 { bus.boolean("on", busActive(i)).boolean("det", mcpAvailable[i]); });
+									 health.object(kBusName[i],
+												   [&](JsonLineBuilder::JsonObjectBuilder &bus) {
+													   bus.boolean("on", busActive(i)).boolean("det", mcpAvailable[i]);
+												   });
 								 }
 							 });
 				})

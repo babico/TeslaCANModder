@@ -19,20 +19,6 @@ describe("selectors: selectConnectionSummary", () => {
 		expect(summary.anyOnline).toBe(false);
 	});
 
-	it("reports paused when any bus is online but tx is suppressed", () => {
-		const summary = selectConnectionSummary({
-			...initialBoardState,
-			chassisOnline: true,
-			vehicleOnline: false,
-			bodyOnline: false,
-			txPaused: true,
-		});
-
-		expect(summary.onlineBuses).toBe(1);
-		expect(summary.status).toBe("paused");
-		expect(summary.txSuppressed).toBe(true);
-	});
-
 	it("reports partial when some buses are online", () => {
 		const summary = selectConnectionSummary({
 			...initialBoardState,

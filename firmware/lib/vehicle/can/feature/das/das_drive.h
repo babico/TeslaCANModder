@@ -409,12 +409,10 @@ static void dasApplyStandstillHold(float v_kph, float &accel_min, float &accel_m
  * dead-man timeout, cancel burst sequencing, and speed-aware angle clamping.
  *
  * @param now Current timestamp in milliseconds (millis()).
- * @param s Global state reference (provides vehicle speed, variant, txPaused flag).
+ * @param s Global state reference (provides vehicle speed, variant).
  */
 static void dasTick(unsigned long now, const State &s)
 {
-	if (s.txPaused)
-		return;
 	if (!dasDriveEnabled && dasCancelCount == 0)
 		return;
 

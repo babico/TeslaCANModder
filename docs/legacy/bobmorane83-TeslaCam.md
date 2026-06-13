@@ -55,3 +55,6 @@ Highly relevant — a complete, well-architected Tesla CAN bus project with dual
   - Valid CAN ID whitelist approach for filtering
   - Auto-port detection by MAC address prevents cross-flashing
   - LVGL-based round display dashboard pattern
+  - Brake light anti-flicker: timestamp-only hold timer (600ms), refresh on ON only
+  - Speed limit tolerance arc sizing and positioning aligned with firmware constants
+  - Mockup/firmware color alignment: teal accent (#00e5c8), gear display bottom-right, status dots, clock/temp area

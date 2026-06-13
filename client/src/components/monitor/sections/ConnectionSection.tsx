@@ -8,11 +8,14 @@ import {
 	View,
 	useWindowDimensions,
 } from "react-native";
-import { colors } from "../../../design/tokens";
+import { colors, selectDashColors } from "../../../design/tokens";
+import { useThemeState } from "../../../state/ThemeContext";
 import type { CommandName } from "../../../hardware/controller";
 import type { MonitorScreenProps } from "./types";
 
 export function ConnectionSection(props: MonitorScreenProps) {
+	const { isDark } = useThemeState();
+	const colors = selectDashColors(isDark);
 	const { width } = useWindowDimensions();
 	const isWide = width >= 980;
 
@@ -50,9 +53,11 @@ export function ConnectionSection(props: MonitorScreenProps) {
 	};
 
 	return (
-		<View style={styles.section}>
-			<Text style={styles.title}>Connection</Text>
-			<Text style={styles.subtitle}>{props.selectedTransportOption.label}</Text>
+		<View style={[styles.section, { backgroundColor: colors.dashBackground }]}>
+			<Text style={[styles.title, { color: colors.dashValue }]}>Connection</Text>
+			<Text style={[styles.subtitle, { color: colors.dashLabel }]}>
+				{props.selectedTransportOption.label}
+			</Text>
 
 			<View style={styles.metaRow}>
 				<StatusPill

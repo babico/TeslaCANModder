@@ -18,10 +18,10 @@
  */
 enum DriveMode
 {
-	DRIVE_MODE_NONE = 0,        // No injection (pass-through)
-	DRIVE_MODE_CHILL = 1,       // Chill mode — reduced torque response
-	DRIVE_MODE_STANDARD = 2,    // Standard mode — default torque mapping
-	DRIVE_MODE_PERFORMANCE = 3  // Performance mode — maximum torque response
+	DRIVE_MODE_NONE = 0,	   // No injection (pass-through)
+	DRIVE_MODE_CHILL = 1,	   // Chill mode — reduced torque response
+	DRIVE_MODE_STANDARD = 2,   // Standard mode — default torque mapping
+	DRIVE_MODE_PERFORMANCE = 3 // Performance mode — maximum torque response
 };
 
 /**
@@ -107,7 +107,7 @@ inline Frame buildDriveModeFrame(uint8_t mode, const uint8_t *lastDrive)
 		break;
 	}
 	f.data[0] = (f.data[0] & ~0x60) | ((modeBits & 0x03) << 5); // bits 6:5 of byte 0
-	f.data[7] = driveChecksum(f.data, 8); // Recalculate frame checksum
+	f.data[7] = driveChecksum(f.data, 8);						// Recalculate frame checksum
 	return f;
 }
 
@@ -123,8 +123,6 @@ inline void driveModeTick(State &s, unsigned long now)
 	if (!s.hasDrive)
 		return;
 	if (!s.apGateOpen())
-		return;
-	if (s.txPaused)
 		return;
 	if (now - s.driveModeLastMs < DRIVE_MODE_INTERVAL_MS)
 		return;

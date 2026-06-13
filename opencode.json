@@ -7,26 +7,6 @@
 		"docs/reference/commands.md",
 		"docs/reference/can-protocol.md"
 	],
-	"provider": {
-		"openrouter": {
-			"options": {
-				"websearch_cited": {
-					"model": "minimax/minimax-m2.5:free"
-				}
-			}
-		},
-		"opencode-go": {
-			"options": {
-				"baseURL": "https://opencode.ai/zen/go/v1",
-				"apiKey": "{env:OPENCODE_GO_API_KEY}",
-				"websearch_cited": {
-					"model": "deepseek-v4-flash"
-				}
-			}
-		}
-	},
-	"model": "opencode-go/kimi-k2.6",
-	"small_model": "opencode-go/qwen3.5-plus",
 	"lsp": {
 		"clangd": {
 			"command": ["clangd", "--compile-commands-dir=firmware"]
@@ -72,44 +52,6 @@
 		]
 	},
 	"share": "manual",
-	"mcp": {
-		"github-mcp": {
-			"type": "remote",
-			"url": "https://api.githubcopilot.com/mcp/",
-			"headers": { "Authorization": "Bearer {env:GITHUB_TOKEN}" },
-			"enabled": true
-		},
-		"playwright": {
-			"type": "local",
-			"command": ["npx", "-y", "@playwright/mcp@latest"],
-			"enabled": true
-		},
-		"memory": {
-			"type": "local",
-			"command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
-			"enabled": true
-		},
-		"sequentialthinking": {
-			"type": "local",
-			"command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
-			"enabled": true
-		},
-		"time": {
-			"type": "local",
-			"command": ["uvx", "mcp-server-time"],
-			"enabled": true
-		},
-		"superpowers": {
-			"type": "local",
-			"command": ["npx", "-y", "superpowers-mcp"],
-			"enabled": true
-		}
-	},
-	"permission": {
-		"skill": {
-			"*": "allow"
-		}
-	},
 	"agent": {
 		"code": {
 			"description": "Primary development agent with full tool access",
@@ -152,10 +94,5 @@
 			"template": "Run firmware native tests with `cd firmware && .\\pio.ps1 test -e native`. Report any failures.",
 			"description": "Run firmware tests"
 		}
-	},
-	"compaction": {
-		"auto": true,
-		"prune": true,
-		"reserved": 15000
 	}
 }

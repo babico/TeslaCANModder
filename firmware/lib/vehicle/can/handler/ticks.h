@@ -18,7 +18,7 @@
 /**
  * @brief Transmit summon control frames at 20 ms intervals until the burst completes
  *
- * Respects the AP gate, OTA tx-pause flag, and control frame freshness.
+ * Respects the AP gate and control frame freshness.
  * Clears the remaining count if transmission is paused mid-burst.
  *
  * @param s Reference to the global firmware state
@@ -29,11 +29,6 @@ void summonTick(State &s)
 		return;
 	if (!s.apGateOpen())
 		return;
-	if (s.txPaused)
-	{
-		s.summonRemaining = 0;
-		return;
-	}
 	unsigned long now = millis();
 	if (now - s.summonLastMs < 20)
 		return;
@@ -66,8 +61,6 @@ void preconditionTick(State &s)
 		return;
 	if (!s.apGateOpen())
 		return;
-	if (s.txPaused)
-		return;
 	unsigned long now = millis();
 	if (now - s.precondLastMs < 500)
 		return;
@@ -94,11 +87,6 @@ void burstTick(State &s)
 		return;
 	if (!s.apGateOpen())
 		return;
-	if (s.txPaused)
-	{
-		s.burstRemaining = 0;
-		return;
-	}
 	unsigned long now = millis();
 	if (now - s.burstLastMs < s.burstDelayMs)
 		return;

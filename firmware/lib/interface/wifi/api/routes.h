@@ -83,8 +83,6 @@ static String buildStateJson(State &s)
 	doc["mirrorAutoFold"] = s.mirrorAutoFoldEnabled;
 	doc["canSim"] = s.canSimEnabled;
 	doc["hasPowertrain"] = s.hasPowertrain;
-	doc["otaInProgress"] = s.otaInProgress;
-	doc["txPaused"] = s.txPaused;
 	doc["apGateEnabled"] = s.apInjectionGateEnabled;
 	doc["apGateAp"] = s.apGateApActive;
 	doc["apGatePark"] = s.apGateParked;

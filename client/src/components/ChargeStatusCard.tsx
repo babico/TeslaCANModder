@@ -1,140 +1,111 @@
-/**
- * ChargeStatusCard — compact charge telemetry card for the Drive screen.
- *
- * Shows the resolved charge state with appropriate color coding and key metrics.
- * Renders nothing meaningful when state is "unavailable" (hasBms false).
- *
- * Layout:
- *   ┌──────────────────────────────┐
- *   │ ⚡ CHARGING · 7.4 kW        │
- *   │ SOC 82%   ETA 42m   +18kWh  │
- *   └──────────────────────────────┘
- */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { BoardState } from "@teslacanmodder/protocol";
-import { colors, font, radius, spacing } from "../design/tokens";
+import { selectDashColors, font, spacing } from "../design/tokens";
+import { useThemeState } from "../state/ThemeContext";
 import { resolveChargeState } from "../state/resolveChargeState";
 
 interface ChargeStatusCardProps {
 	state: BoardState;
 }
 
-const STATE_COLOR: Record<string, string> = {
-	charging: colors.powerPositive,
-	fully_charged: colors.apActive,
-	standby: colors.alarmWarning,
-	disconnected: colors.dashMuted,
-	unavailable: colors.dashMuted,
-};
-
 const STATE_ICON: Record<string, string> = {
-	charging: "⚡",
-	fully_charged: "✓",
-	standby: "○",
-	disconnected: "–",
-	unavailable: "–",
+	charging: "\u26A1",
+	fully_charged: "\u2713",
+	standby: "\u25CB",
+	disconnected: "\u2013",
+	unavailable: "\u2013",
 };
 
 export function ChargeStatusCard({ state }: ChargeStatusCardProps) {
+	const { isDark } = useThemeState();
+	const c = selectDashColors(isDark);
 	const cs = resolveChargeState(state);
-	const accentColor = STATE_COLOR[cs.state] ?? colors.dashMuted;
-	const icon = STATE_ICON[cs.state] ?? "–";
+
+	const stateColor =
+		{
+			charging: c.powerPositive,
+			fully_charged: c.apActive,
+			standby: c.alarmWarning,
+			disconnected: c.dashMuted,
+			unavailable: c.dashMuted,
+		}[cs.state] ?? c.dashMuted;
+
+	const icon = STATE_ICON[cs.state] ?? "\u2013";
 
 	return (
-		<View style={[styles.card, { borderLeftColor: accentColor }]}>
-			{/* Header row */}
+		<View
+			style={[
+				styles.card,
+				{
+					borderLeftColor: stateColor,
+					backgroundColor: c.dashCard,
+					borderColor: c.dashCardBorder,
+				},
+			]}
+		>
 			<View style={styles.headerRow}>
-				<Text style={[styles.icon, { color: accentColor }]}>{icon}</Text>
-				<Text style={[styles.label, { color: accentColor }]}>{cs.label}</Text>
+				<Text style={[styles.icon, { color: stateColor }]}>{icon}</Text>
+				<Text style={[styles.label, { color: stateColor }]}>{cs.label}</Text>
 				{cs.chargeKw > 0 ? (
-					<Text style={styles.kw}>{cs.chargeKw.toFixed(1)} kW</Text>
+					<Text style={[styles.kw, { color: c.dashValue }]}>
+						{cs.chargeKw.toFixed(1)} kW
+					</Text>
 				) : null}
 			</View>
 
-			{/* Detail row — only shown when data is meaningful */}
 			{cs.state !== "unavailable" ? (
 				<View style={styles.detailRow}>
-					{cs.soc > 0 ? (
-						<View style={styles.stat}>
-							<Text style={styles.statLabel}>SOC</Text>
-							<Text style={styles.statValue}>{cs.soc}%</Text>
-						</View>
-					) : null}
-
+					<Text style={[styles.detailText, { color: c.dashSecondary }]}>
+						SOC {cs.soc}%
+					</Text>
 					{cs.minutesToFull > 0 ? (
-						<View style={styles.stat}>
-							<Text style={styles.statLabel}>ETA</Text>
-							<Text style={styles.statValue}>
-								{cs.minutesToFull >= 60
-									? `${Math.floor(cs.minutesToFull / 60)}h ${cs.minutesToFull % 60}m`
-									: `${cs.minutesToFull}m`}
-							</Text>
-						</View>
+						<Text style={[styles.detailText, { color: c.dashSecondary }]}>
+							ETA {cs.minutesToFull}m
+						</Text>
 					) : null}
-
-					{cs.energyToCharge > 0.1 ? (
-						<View style={styles.stat}>
-							<Text style={styles.statLabel}>TO ADD</Text>
-							<Text style={styles.statValue}>{cs.energyToCharge.toFixed(1)} kWh</Text>
-						</View>
+					{cs.energyToCharge > 0 ? (
+						<Text style={[styles.detailText, { color: c.powerPositive }]}>
+							+{cs.energyToCharge.toFixed(1)} kWh
+						</Text>
 					) : null}
 				</View>
-			) : (
-				<Text style={styles.unavailableText}>BMS data unavailable</Text>
-			)}
+			) : null}
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
 	card: {
-		backgroundColor: colors.dashCard,
-		borderRadius: radius.lg,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
 		borderLeftWidth: 3,
-		paddingHorizontal: spacing.md,
-		paddingVertical: spacing.sm,
-		gap: spacing.xs,
+		borderWidth: 1,
+		borderRadius: 8,
+		padding: 10,
+		gap: 6,
 	},
 	headerRow: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: spacing.xs,
+		gap: 6,
 	},
 	icon: {
-		fontSize: font.size.md,
+		fontSize: 16,
+		fontWeight: "700",
 	},
 	label: {
 		fontSize: font.size.sm,
-		fontWeight: font.weight.bold,
-		letterSpacing: 0.8,
+		fontWeight: "600",
+		flex: 1,
 	},
 	kw: {
 		fontSize: font.size.sm,
-		color: colors.dashSecondary,
-		marginLeft: spacing.xs,
+		fontWeight: "700",
 	},
 	detailRow: {
 		flexDirection: "row",
-		gap: spacing.lg,
+		gap: spacing.md,
 	},
-	stat: {
-		gap: 2,
-	},
-	statLabel: {
+	detailText: {
 		fontSize: font.size.xs,
-		color: colors.dashLabel,
-		letterSpacing: 0.5,
-	},
-	statValue: {
-		fontSize: font.size.sm2,
-		color: colors.dashValue,
-		fontWeight: font.weight.semibold,
-	},
-	unavailableText: {
-		fontSize: font.size.sm,
-		color: colors.dashMuted,
 	},
 });

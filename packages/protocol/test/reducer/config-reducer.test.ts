@@ -99,8 +99,6 @@ describe("reducer: config features", () => {
 				dasHandsOn: 0,
 				precondition: 0,
 				trackMode: 0,
-				otaInProgress: 0,
-				txPaused: 0,
 				detectedHW: 0,
 				gtwAutopilotTier: -1,
 				canClockReqMHz: 8,

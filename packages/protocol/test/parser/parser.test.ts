@@ -142,7 +142,7 @@ describe("parseSerialLine", () => {
 
 	it("normalizes split status_state payloads", () => {
 		const events = parseSerialLine(
-			'{"t":"status_state","state":{"fsd":1,"fsdForce":0,"nag":1,"nagKiller":1,"profile":{"value":2,"pinned":1},"offset":{"value":7,"pinned":0},"precondition":0,"trackMode":1,"otaInProgress":0,"txPaused":0,"apGateEnabled":1,"apGateOpen":0,"apGateReason":"waiting"}}',
+			'{"t":"status_state","state":{"fsd":1,"fsdForce":0,"nag":1,"nagKiller":1,"profile":{"value":2,"pinned":1},"offset":{"value":7,"pinned":0},"precondition":0,"trackMode":1,"apGateEnabled":1,"apGateOpen":0,"apGateReason":"waiting"}}',
 		);
 
 		expect(events).toHaveLength(1);

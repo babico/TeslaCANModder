@@ -65,13 +65,6 @@ void handleHW3(Frame &f, State &s)
 {
 	const bool apGateOpen = s.apGateOpen();
 
-	// Pass-through unmodified frames during OTA update for safety
-	if (s.txPaused)
-	{
-		driverSend(f, 0);
-		return;
-	}
-
 	if (f.id == CAN_ID_FOLLOW_DIST)
 	{
 		// Map follow-distance stalk position to speed profile unless pinned
@@ -91,19 +84,19 @@ void handleHW3(Frame &f, State &s)
 			}
 			if (s.assistNavEnable)
 			{
-				setBit(f, 13, true);  // UI_driveOnMapsEnable
-				setBit(f, 48, true);  // UI_hasDriveOnNav
-				setBit(f, 49, true);  // UI_followNavRouteEnable
+				setBit(f, 13, true); // UI_driveOnMapsEnable
+				setBit(f, 48, true); // UI_hasDriveOnNav
+				setBit(f, 49, true); // UI_followNavRouteEnable
 				fdModified = true;
 			}
 			if (s.assistHandsOff)
 			{
-				setBit(f, 14, true);  // UI_handsOnRequirementDisable
+				setBit(f, 14, true); // UI_handsOnRequirementDisable
 				fdModified = true;
 			}
 			if (s.assistDevMode)
 			{
-				setBit(f, 5, true);   // UI_dasDeveloper
+				setBit(f, 5, true); // UI_dasDeveloper
 				fdModified = true;
 			}
 			if (s.assistTelemetryOff)

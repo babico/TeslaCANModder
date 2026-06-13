@@ -36,6 +36,12 @@ Compares our project (Tesla-CAN-Mod) against the four highest-relevance legacy r
 | **Region Spoofing** | ✅ (ECE R79) | — | — | — | ✅ |
 | **MCP2515 8MHz Crystal** | — | ✅ | ✅ | — | — |
 | **Steering Tune (0x101)** | — | ✅ | — | — | — |
+| **China Mode** | — | ✅ | — | — | — |
+| **Emergency Vehicle Detect (HW4 bit59)** | — | ✅ | ✅ | — | — |
+| **Listen-Only Default Mode** | — | ✅ | — | — | — |
+| **OTA Hardening (consecutive-frame)** | — | ✅ | — | — | — |
+| **TTGO T-Display (on-device LCD)** | — | ✅ | — | — | — |
+| **DAS Status Parsing (0x39B)** | ✅ (nag modes) | ✅ | — | — | — |
 
 ## CAN ID Coverage
 
@@ -53,7 +59,8 @@ Compares our project (Tesla-CAN-Mod) against the four highest-relevance legacy r
 | 880 | 0x370 | EPAS Status (Nag) | ✅ | ✅ | ✅ | ✅ | — |
 | 920 | 0x398 | GTW carConfig (HW detect) | ✅ | ✅ | ✅ | — | ✅ |
 | 921 | 0x399 | ISA Speed Limit | ✅ | ✅ | ✅ | — | — |
-| 923 | 0x39B | DAS Status | — | ✅ | — | — | — |
+| 923 | 0x39B | DAS Status | ✅ (nag modes) | ✅ | — | — | — |
+| 817 | 0x331 | DAS Config (TLSSC) | ✅ | ✅ | — | — | — |
 | 962 | 0x3C2 | VCLEFT (Yoke Blinker) | — | — | — | — | — |
 | 1006 | 0x3EE | AP Control (Legacy) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 1011 | 0x3F3 | Seatbelt | ✅ | — | — | — | — |
@@ -74,20 +81,23 @@ Compares our project (Tesla-CAN-Mod) against the four highest-relevance legacy r
 | Adafruit Feather RP2040 | — | — | ✅ | — | ✅ |
 | Adafruit Feather M4 CAN | — | — | ✅ | ✅ | — |
 | M5Stack Atomic | — | — | ✅ | — | — |
-| LilyGo TCAN485 | — | — | ✅ | — | — |
+| LilyGo TCAN485 | — | ✅ | ✅ | — | — |
+| TTGO T-Display | — | ✅ | — | — | — |
+| LILYGO T-2CAN ESP32-S3 | — | ✅ | — | — | — |
 
 ## Features We Lack (Phase 9 Mining Targets)
 
 | Feature | Source Repo | Priority | Complexity |
 | ------- | ---------- | -------- | --------- |
-| Ban Detection (AP tier readback from 0x7FF mux2) | hypery11 | HIGH | Low |
-| Natural Nag Killer (Gaussian jitter on 0x370) | hypery11 issue #18 | HIGH | Medium |
+| Natural Nag Killer (Gaussian jitter on 0x370) | hypery11 issue #18, linuchoicoegwangsu | HIGH | Medium |
 | ALC Auto-Confirm (0x249 stalk / 0x3C2 Yoke inject) | hypery11 issue #18 | MEDIUM | Medium-High |
 | MCP2515 8MHz Crystal support | slxslx, hypery11 | MEDIUM | Low |
-| Emergency Vehicle Detection (HW4 bit59) | hypery11, slxslx | LOW | Low |
 | Steering Tune Control (0x101 Chassis CAN) | hypery11 | LOW | Low |
 | Steering Angle Parsing (0x129) | hypery11 | LOW | Low |
-| DAS Status Parsing (0x39B hands-on + lane change) | hypery11 | MEDIUM | Low |
+| Listen-Only as Safe Default Boot Mode | hypery11 | MEDIUM | Low |
+| On-Device LCD Dashboard (TTGO T-Display) | hypery11 | LOW | Medium |
+| China Mode (FSD UI bypass for CN vehicles) | hypery11 | LOW | Low |
+| Emergency Vehicle Detect (HW4 bit59) | hypery11, slxslx | LOW | Low |
 
 ## Architecture Comparison
 

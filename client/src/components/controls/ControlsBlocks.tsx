@@ -1,7 +1,8 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import type { BoardState } from "@teslacanmodder/protocol";
-import { colors, font, radius, spacing } from "../../design/tokens";
+import { colors, selectDashColors, font, radius, spacing } from "../../design/tokens";
+import { useThemeState } from "../../state/ThemeContext";
 import { getCommandGate } from "../../state/commandGating";
 import type { CommandName } from "../../hardware/controller";
 
@@ -50,6 +51,20 @@ const PRESET_THEME: Record<ControlsPreset, PresetTheme> = {
 		heroTitle: colors.alarmWarning,
 	},
 };
+
+function getPresetTheme(c: Record<string, string>, preset: ControlsPreset): PresetTheme {
+	const _base = PRESET_THEME[preset];
+	return {
+		railBorder: c.dashCardBorder,
+		railAccent: c.primary,
+		panelAccent: c.dashCard,
+		capsuleBg: c.backgroundDarkSubtle,
+		capsuleBorder: c.dashCardBorder,
+		actionAccent: c.primary,
+		warningAccent: c.alarmWarning,
+		heroTitle: c.dashValue,
+	};
+}
 
 export interface CommandItemShape {
 	name: CommandName;
@@ -109,10 +124,12 @@ interface BusStatusBarProps {
 }
 
 export function BusStatusBar({ boardState, preset, onOpenPalette }: BusStatusBarProps) {
-	const theme = PRESET_THEME[preset];
+	const { isDark } = useThemeState();
+	const colors = selectDashColors(isDark);
+	const theme = getPresetTheme(colors, preset);
 	return (
-		<View style={[styles.busBar, { borderColor: theme.railBorder }]}>
-			<View style={styles.heroStripe} />
+		<View className="bg-card border border-border rounded-xl overflow-hidden px-3 py-2">
+			<View className="absolute top-0 left-0 right-0 h-[3px] bg-primary" />
 			<View style={styles.heroHeader}>
 				<View>
 					<Text style={[styles.heroTitle, { color: theme.heroTitle }]}>
@@ -162,7 +179,9 @@ export function QuickActionsCard({
 	commands,
 	onRunCommand,
 }: QuickActionsCardProps) {
-	const theme = PRESET_THEME[preset];
+	const { isDark } = useThemeState();
+	const colors = selectDashColors(isDark);
+	const theme = getPresetTheme(colors, preset);
 	const columns = splitIntoColumns(commands, 2);
 	return (
 		<View
@@ -217,7 +236,9 @@ export function SpeedTuningCard({
 	onSetOffset,
 	onSetOffsetAuto,
 }: SpeedTuningCardProps) {
-	const theme = PRESET_THEME[preset];
+	const { isDark } = useThemeState();
+	const colors = selectDashColors(isDark);
+	const theme = getPresetTheme(colors, preset);
 	const profileLevel = Math.max(0, Math.min(4, boardState.profile ?? 0));
 	const profileName = PROFILE_LEVEL_NAMES[profileLevel] ?? `Level ${profileLevel}`;
 	const offsetValue = Math.max(0, Math.min(100, boardState.offset ?? 0));
@@ -340,6 +361,8 @@ interface TooltipBannerProps {
 }
 
 export function TooltipBanner({ message, onClose }: TooltipBannerProps) {
+	const { isDark: _isDark } = useThemeState();
+	const _colors = selectDashColors(_isDark);
 	return (
 		<View style={styles.tooltipBanner}>
 			<Text style={styles.tooltipText}>⊘ {message}</Text>
@@ -358,7 +381,9 @@ interface CommandGroupCardProps {
 }
 
 export function CommandGroupCard({ group, boardState, preset, onRun }: CommandGroupCardProps) {
-	const theme = PRESET_THEME[preset];
+	const { isDark } = useThemeState();
+	const colors = selectDashColors(isDark);
+	const theme = getPresetTheme(colors, preset);
 	const busOnline = group.busField ? Boolean(boardState[group.busField]) : true;
 	const glyph = GROUP_GLYPH[group.title] ?? "system";
 	const columns = splitIntoColumns(group.commands, PRESET_COLUMN_COUNT[preset]);
@@ -450,7 +475,9 @@ export function CommandPaletteModal({
 	onTogglePin,
 	onRequestClose,
 }: CommandPaletteModalProps) {
-	const theme = PRESET_THEME[preset];
+	const { isDark } = useThemeState();
+	const colors = selectDashColors(isDark);
+	const theme = getPresetTheme(colors, preset);
 	return (
 		<Modal visible={visible} transparent animationType="fade" onRequestClose={onRequestClose}>
 			<View style={styles.paletteOverlay}>
@@ -568,7 +595,9 @@ function CommandGridCell({
 	capsuleBorder?: string;
 	onPress: () => void;
 }) {
-	const theme = PRESET_THEME[preset];
+	const { isDark: _isDark } = useThemeState();
+	const _dc = selectDashColors(_isDark);
+	const theme = getPresetTheme(_dc, preset);
 	const action = rowActionLabel(available, requiresArgs);
 	const showMeta = preset === "service";
 	return (

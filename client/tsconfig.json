@@ -10,6 +10,6 @@
 		"jsx": "react-jsx",
 		"types": ["react", "react-native", "jest", "w3c-web-serial"]
 	},
-	"include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
+	"include": ["**/*.ts", "**/*.tsx", "**/*.d.ts", "nativewind-env.d.ts"],
 	"exclude": ["node_modules"]
 }

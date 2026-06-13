@@ -80,7 +80,7 @@ export const KNOWN_CAN_IDS: Record<number, string> = {
 	755: "UI_hvacRequest",
 	786: "BMS_thermalStatus (Temp)",
 	787: "UI_trackModeSettings",
-	792: "GTW_carState (OTA)",
+	792: "GTW_carState",
 	819: "UI_chargeRequest",
 	820: "UI_powertrainControl",
 	826: "UI_energyGraphData (Wh/km)",

@@ -36,13 +36,6 @@ void resetLegacyLogFlags()
  */
 void handleLegacy(Frame &f, State &s)
 {
-	// Pass-through unmodified frames during OTA update for safety
-	if (s.txPaused)
-	{
-		driverSend(f, 0);
-		return;
-	}
-
 	if (f.id == CAN_ID_LEGACY_STALK)
 	{
 		// Map stalk position (upper 3 bits of byte 1) to speed profile

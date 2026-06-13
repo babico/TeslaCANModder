@@ -49,8 +49,6 @@ interface StatusStatePayload {
 	offset?: StatusOffsetPayload | number;
 	precondition?: WireBool;
 	trackMode?: WireBool;
-	otaInProgress?: WireBool;
-	txPaused?: WireBool;
 	apGateEnabled?: WireBool;
 	apGateOpen?: WireBool;
 	apGateReason?: string;
@@ -111,8 +109,6 @@ export interface BootMessage {
 	maxSpeed?: number;
 	precondition?: number;
 	trackMode?: number;
-	otaInProgress?: number;
-	txPaused?: number;
 	apGateEnabled?: number;
 	apGateOpen?: number;
 	apGateReason?: string;
@@ -316,8 +312,6 @@ export interface StatusMessage {
 	maxSpeed?: number;
 	precondition?: number;
 	trackMode?: number;
-	otaInProgress?: number;
-	txPaused?: number;
 	apGateEnabled?: number;
 	apGateOpen?: number;
 	apGateReason?: string;
@@ -418,8 +412,6 @@ export interface StatusStateMessage {
 	offsetPin?: WireBool;
 	precondition?: WireBool;
 	trackMode?: WireBool;
-	otaInProgress?: WireBool;
-	txPaused?: WireBool;
 	apGateEnabled?: WireBool;
 	apGateOpen?: WireBool;
 	apGateReason?: string;
@@ -676,8 +668,6 @@ export interface BoardState {
 	maxSpeedKph: number;
 	precondition: boolean;
 	trackMode: boolean;
-	otaInProgress: boolean;
-	txPaused: boolean;
 	apGateEnabled: boolean;
 	apGateOpen: boolean;
 	apGateReason: string;

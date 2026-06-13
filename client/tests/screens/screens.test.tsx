@@ -51,7 +51,6 @@ const mockBoardState = {
 	chassisOnline: true,
 	vehicleOnline: true,
 	bodyOnline: true,
-	otaInProgress: false,
 	hasBms: true,
 	vehicleSpeed: 0,
 	frameCount: 2,

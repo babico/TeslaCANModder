@@ -65,20 +65,13 @@ void handleHW4(Frame &f, State &s)
 {
 	const bool apGateOpen = s.apGateOpen();
 
-	// Pass-through unmodified frames during OTA update for safety
-	if (s.txPaused)
-	{
-		driverSend(f, 0);
-		return;
-	}
-
 	// ISA speed chime suppression (HW4-specific)
 	if (f.id == CAN_ID_ISA_SPEED && s.isaChimeSuppress && apGateOpen)
 	{
 		if (f.dlc >= 8)
 		{
-			f.data[1] |= 0x20;                       // Set chime-suppress flag in byte 1
-			f.data[7] = computeHW4IsaChecksum(f);     // Recompute trailing checksum
+			f.data[1] |= 0x20;					  // Set chime-suppress flag in byte 1
+			f.data[7] = computeHW4IsaChecksum(f); // Recompute trailing checksum
 			driverSend(f, 0);
 			ONCE_LOG(hw4LoggedISA, F("HW4: ISA chime suppressed"));
 			return;
@@ -105,19 +98,19 @@ void handleHW4(Frame &f, State &s)
 			}
 			if (s.assistNavEnable)
 			{
-				setBit(f, 13, true);  // UI_driveOnMapsEnable
-				setBit(f, 48, true);  // UI_hasDriveOnNav
-				setBit(f, 49, true);  // UI_followNavRouteEnable
+				setBit(f, 13, true); // UI_driveOnMapsEnable
+				setBit(f, 48, true); // UI_hasDriveOnNav
+				setBit(f, 49, true); // UI_followNavRouteEnable
 				fdModified = true;
 			}
 			if (s.assistHandsOff)
 			{
-				setBit(f, 14, true);  // UI_handsOnRequirementDisable
+				setBit(f, 14, true); // UI_handsOnRequirementDisable
 				fdModified = true;
 			}
 			if (s.assistDevMode)
 			{
-				setBit(f, 5, true);   // UI_dasDeveloper
+				setBit(f, 5, true); // UI_dasDeveloper
 				fdModified = true;
 			}
 			if (s.assistTelemetryOff)

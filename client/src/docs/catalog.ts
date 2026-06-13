@@ -1,5 +1,4 @@
-import { Asset } from "expo-asset";
-import * as FileSystem from "expo-file-system";
+import { bundledDocs, type BundledDocEntry } from "./_generated-docs";
 
 export interface BundledDocContent {
 	path: string;
@@ -26,25 +25,20 @@ export interface DocsCatalog {
 	docTree: BundledDocTreeNode;
 }
 
-type MarkdownAssetModule = number;
+const docPaths = bundledDocs
+	.map((d: BundledDocEntry) => d.path)
+	.sort((left: string, right: string) => left.localeCompare(right));
 
-type MarkdownRequireContext = {
-	(key: string): MarkdownAssetModule;
-	keys(): string[];
-};
-
-const docsContext = require.context("../../../docs", true, /\.md$/) as MarkdownRequireContext;
-
-const docPaths = docsContext
-	.keys()
-	.map((key) => key.replace(/^\.\//, "").replace(/\\/g, "/"))
-	.sort((left, right) => left.localeCompare(right));
+function findDoc(docPath: string): string {
+	const entry = bundledDocs.find((d: BundledDocEntry) => d.path === docPath);
+	if (!entry) throw new Error(`Doc not found in bundled catalog: ${docPath}`);
+	return entry.content;
+}
 
 export const DEFAULT_DOC_ROUTE = (() => {
 	if (docPaths.some((docPath) => toRoutePath(docPath) === "")) {
 		return "";
 	}
-
 	return docPaths[0] ? toRoutePath(docPaths[0]) : "";
 })();
 
@@ -198,30 +192,8 @@ function buildDocTree(docs: BundledDocContent[]): BundledDocTreeNode {
 	return sortNodes(root);
 }
 
-async function readMarkdownFile(docPath: string): Promise<string> {
-	const asset = Asset.fromModule(docsContext(`./${docPath}`));
-	await asset.downloadAsync();
-
-	const uri = asset.localUri ?? asset.uri;
-	if (!uri) {
-		throw new Error(`Missing asset URI for ${docPath}`);
-	}
-
-	try {
-		return await FileSystem.readAsStringAsync(uri);
-	} catch {
-		const response = await fetch(uri);
-		if (!response.ok) {
-			throw new Error(`Failed to read ${docPath}`);
-		}
-		return response.text();
-	}
-}
-
 async function buildDocsCatalog(): Promise<DocsCatalog> {
-	const docs = await Promise.all(
-		docPaths.map(async (docPath) => parseFrontmatter(await readMarkdownFile(docPath), docPath)),
-	);
+	const docs = docPaths.map((docPath) => parseFrontmatter(findDoc(docPath), docPath));
 
 	const docsByRoute = Object.fromEntries(docs.map((doc) => [doc.routePath, doc]));
 	const docTree = buildDocTree(docs);
@@ -235,10 +207,7 @@ async function buildDocsCatalog(): Promise<DocsCatalog> {
 
 export function loadDocsCatalog(): Promise<DocsCatalog> {
 	if (!docsCatalogPromise) {
-		docsCatalogPromise = buildDocsCatalog().catch((error) => {
-			docsCatalogPromise = null;
-			throw error;
-		});
+		docsCatalogPromise = buildDocsCatalog();
 	}
 
 	return docsCatalogPromise;

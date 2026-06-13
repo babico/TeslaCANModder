@@ -133,8 +133,6 @@ export const initialBoardState: BoardState = {
 	maxSpeedKph: 0,
 	precondition: false,
 	trackMode: false,
-	otaInProgress: false,
-	txPaused: false,
 	apGateEnabled: true,
 	apGateOpen: false,
 	apGateReason: "waiting",
@@ -431,9 +429,6 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 		precondition:
 			msg.precondition !== undefined ? Boolean(msg.precondition) : prev.precondition,
 		trackMode: msg.trackMode !== undefined ? Boolean(msg.trackMode) : prev.trackMode,
-		otaInProgress:
-			msg.otaInProgress !== undefined ? Boolean(msg.otaInProgress) : prev.otaInProgress,
-		txPaused: msg.txPaused !== undefined ? Boolean(msg.txPaused) : prev.txPaused,
 		apGateEnabled:
 			msg.apGateEnabled !== undefined ? Boolean(msg.apGateEnabled) : prev.apGateEnabled,
 		apGateOpen: msg.apGateOpen !== undefined ? Boolean(msg.apGateOpen) : prev.apGateOpen,
@@ -652,9 +647,6 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 		precondition:
 			msg.precondition !== undefined ? Boolean(msg.precondition) : prev.precondition,
 		trackMode: msg.trackMode !== undefined ? Boolean(msg.trackMode) : prev.trackMode,
-		otaInProgress:
-			msg.otaInProgress !== undefined ? Boolean(msg.otaInProgress) : prev.otaInProgress,
-		txPaused: msg.txPaused !== undefined ? Boolean(msg.txPaused) : prev.txPaused,
 		apGateEnabled:
 			msg.apGateEnabled !== undefined ? Boolean(msg.apGateEnabled) : prev.apGateEnabled,
 		apGateOpen: msg.apGateOpen !== undefined ? Boolean(msg.apGateOpen) : prev.apGateOpen,
@@ -1014,18 +1006,6 @@ function applyStatusState(prev: BoardState, msg: StatusStateMessage): BoardState
 				: state?.trackMode !== undefined
 					? Boolean(state.trackMode)
 					: prev.trackMode,
-		otaInProgress:
-			msg.otaInProgress !== undefined
-				? Boolean(msg.otaInProgress)
-				: state?.otaInProgress !== undefined
-					? Boolean(state.otaInProgress)
-					: prev.otaInProgress,
-		txPaused:
-			msg.txPaused !== undefined
-				? Boolean(msg.txPaused)
-				: state?.txPaused !== undefined
-					? Boolean(state.txPaused)
-					: prev.txPaused,
 		apGateEnabled:
 			msg.apGateEnabled !== undefined
 				? Boolean(msg.apGateEnabled)

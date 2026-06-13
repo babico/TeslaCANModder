@@ -33,8 +33,6 @@ inline void seatbeltEmulationTick(State &s)
 		return;
 	if (!s.apGateOpen())
 		return;
-	if (s.txPaused)
-		return;
 	unsigned long now = millis();
 	if (now - s.seatbeltLastMs < 500)
 		return;

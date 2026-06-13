@@ -43,13 +43,10 @@ export function selectConnectionSummary(state: BoardState): ConnectionSummary {
 	const onlineBuses = buses.filter(Boolean).length;
 	const anyOnline = onlineBuses > 0;
 	const allOnline = onlineBuses === buses.length;
-	const txSuppressed = state.txPaused || state.otaInProgress;
 
 	let status: ConnectionSummary["status"];
 	if (!anyOnline) {
 		status = "offline";
-	} else if (txSuppressed) {
-		status = "paused";
 	} else if (allOnline) {
 		status = "online";
 	} else {
@@ -61,7 +58,7 @@ export function selectConnectionSummary(state: BoardState): ConnectionSummary {
 		totalBuses: buses.length,
 		anyOnline,
 		allOnline,
-		txSuppressed,
+		txSuppressed: false,
 		status,
 	};
 }

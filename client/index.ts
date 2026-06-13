@@ -1,3 +1,5 @@
+import "./src/styles/global.css";
+
 import { registerRootComponent } from "expo";
 
 import App from "./App";

@@ -55,7 +55,6 @@ const defaultBoardState = {
 	chassisOnline: true,
 	vehicleOnline: true,
 	bodyOnline: true,
-	otaInProgress: false,
 	hasBms: true,
 	vehicleSpeed: 0,
 	fsd: false,

@@ -1,20 +1,5 @@
-/**
- * TelemetryPanel — E-05
- *
- * Extended diagnostics panel for the Monitor tab.
- * Sections:
- *  1. BMS Extended   — temp range, HV state, contactor state, max regen/discharge
- *  2. TPMS           — 4-wheel pressure + temp (gated by hasTpms)
- *  3. Powertrain     — gated by hasPowertrain
- *  4. Firmware       — fwCompat level, steering mode
- *  5. CAN Health     — per-bus on/detected flags
- */
-
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { BoardState } from "@teslacanmodder/protocol";
-import { colors, font, radius, spacing } from "../design/tokens";
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function pressureBar(raw: number): string {
 	return (raw / 100).toFixed(2);
@@ -42,24 +27,12 @@ function contactorLabel(val: number): string {
 	return CONTACTOR_LABELS[val] ?? `State ${val}`;
 }
 
-const STEERING_MODE_LABELS: Record<number, string> = {
-	0: "Normal",
-	1: "Sport",
-	2: "Comfort",
-};
-function steeringModeLabel(val: number): string {
-	return STEERING_MODE_LABELS[val] ?? `Mode ${val}`;
-}
-
 function formatBusLabel(value: string): string {
-	if (!value) {
-		return value;
-	}
-
+	if (!value) return value;
 	return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
 
-// ── SubSection ────────────────────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────
 
 function Section({
 	title,
@@ -71,26 +44,32 @@ function Section({
 	children: React.ReactNode;
 }) {
 	return (
-		<View style={styles.section}>
-			<Text style={styles.sectionTitle}>{title}</Text>
-			{description ? <Text style={styles.sectionDescription}>{description}</Text> : null}
-			<View style={styles.grid}>{children}</View>
+		<View className="bg-card border border-border rounded-xl p-3 gap-2">
+			<Text className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-0.5">
+				{title}
+			</Text>
+			{description ? (
+				<Text className="text-xs text-muted-foreground/70 leading-4">{description}</Text>
+			) : null}
+			<View className="gap-1">{children}</View>
 		</View>
 	);
 }
 
 function Row({ label, value, dimmed }: { label: string; value: string; dimmed?: boolean }) {
 	return (
-		<View style={styles.row}>
-			<Text style={styles.rowLabel}>{label}</Text>
-			<Text style={[styles.rowValue, dimmed ? styles.rowValueDimmed : undefined]}>
+		<View className="flex-row justify-between items-center">
+			<Text className="text-sm text-muted-foreground">{label}</Text>
+			<Text
+				className={`text-sm font-semibold ${dimmed ? "text-muted-foreground/50" : "text-card-foreground"}`}
+			>
 				{value}
 			</Text>
 		</View>
 	);
 }
 
-// ── TelemetryPanel ────────────────────────────────────────────────────────────
+// ── TelemetryPanel ────────────────────────────────────────────────────────
 
 export interface TelemetryPanelProps {
 	state: BoardState;
@@ -100,8 +79,7 @@ export function TelemetryPanel({ state }: TelemetryPanelProps) {
 	const canEntries = Object.entries(state.canHealth);
 
 	return (
-		<View style={styles.container}>
-			{/* Section 1 — BMS Extended */}
+		<View className="gap-3">
 			{state.hasBms ? (
 				<Section
 					title="BMS Extended"
@@ -125,38 +103,45 @@ export function TelemetryPanel({ state }: TelemetryPanelProps) {
 				</Section>
 			) : null}
 
-			{/* Section 2 — TPMS */}
 			{state.hasTpms ? (
 				<Section
 					title="TPMS"
 					description="Per-wheel pressure and temperature diagnostics from live CAN decode."
 				>
-					{(["FL", "FR", "RL", "RR"] as const).map((pos) => {
-						const pressure = pressureBar(
-							(state as unknown as Record<string, number>)[
-								`tpmsPressure${pos}`
-							] as number,
-						);
-						const temp = (
-							(state as unknown as Record<string, number>)[`tpmsTemp${pos}`] as number
-						).toFixed(0);
-						const low = parseFloat(pressure) < 1.8;
-						return (
-							<View key={pos} style={styles.tpmsCell}>
-								<Text style={styles.tpmsPos}>{pos}</Text>
-								<Text
-									style={[styles.tpmsPressure, low ? styles.tpmsLow : undefined]}
+					<View className="flex-row gap-1">
+						{(["FL", "FR", "RL", "RR"] as const).map((pos) => {
+							const pressure = pressureBar(
+								(state as unknown as Record<string, number>)[
+									`tpmsPressure${pos}`
+								] as number,
+							);
+							const temp = (
+								(state as unknown as Record<string, number>)[
+									`tpmsTemp${pos}`
+								] as number
+							).toFixed(0);
+							const low = parseFloat(pressure) < 1.8;
+							return (
+								<View
+									key={pos}
+									className="flex-1 items-center flex-row justify-between p-1 bg-muted rounded-md border border-border gap-0.5"
 								>
-									{pressure} bar
-								</Text>
-								<Text style={styles.tpmsTemp}>{temp} °C</Text>
-							</View>
-						);
-					})}
+									<Text className="text-xs font-bold text-muted-foreground w-6">
+										{pos}
+									</Text>
+									<Text
+										className={`text-sm font-semibold ${low ? "text-destructive" : "text-card-foreground"}`}
+									>
+										{pressure} bar
+									</Text>
+									<Text className="text-xs text-muted-foreground">{temp} °C</Text>
+								</View>
+							);
+						})}
+					</View>
 				</Section>
 			) : null}
 
-			{/* Section 3 — Powertrain */}
 			{state.hasPowertrain ? (
 				<Section
 					title="Powertrain"
@@ -167,20 +152,15 @@ export function TelemetryPanel({ state }: TelemetryPanelProps) {
 				</Section>
 			) : null}
 
-			{/* Section 4 — Firmware */}
 			<Section
 				title="Firmware"
 				description="Compatibility, steering-mode decode, and ingest-rate heartbeat."
 			>
 				<Row label="FW Compat" value={String(state.fwCompat)} />
-				{state.hasSteeringMode ? (
-					<Row label="Steering Mode" value={steeringModeLabel(state.steeringMode)} />
-				) : null}
 				<Row label="Uptime" value={`${state.uptime} s`} />
 				<Row label="Rate" value={`${state.rate} msg/s`} />
 			</Section>
 
-			{/* Section 5 — CAN Health */}
 			{canEntries.length > 0 ? (
 				<Section
 					title="CAN Health"
@@ -205,82 +185,3 @@ export function TelemetryPanel({ state }: TelemetryPanelProps) {
 		</View>
 	);
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-	container: {
-		gap: spacing.md,
-	},
-	section: {
-		backgroundColor: colors.dashCard,
-		borderRadius: radius.lg,
-		padding: spacing.md,
-		gap: spacing.sm,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-	},
-	sectionTitle: {
-		color: colors.dashSecondary,
-		fontSize: font.size.xs,
-		fontWeight: font.weight.bold,
-		textTransform: "uppercase",
-		letterSpacing: 0.7,
-		marginBottom: spacing.xs2,
-	},
-	sectionDescription: {
-		color: colors.dashMuted,
-		fontSize: font.size.xs,
-		lineHeight: 16,
-	},
-	grid: {
-		gap: spacing.xs,
-	},
-	row: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-	rowLabel: {
-		color: colors.dashSecondary,
-		fontSize: font.size.sm,
-	},
-	rowValue: {
-		color: colors.dashValue,
-		fontSize: font.size.sm,
-		fontWeight: font.weight.semibold,
-	},
-	rowValueDimmed: {
-		color: colors.dashMuted,
-	},
-	tpmsCell: {
-		alignItems: "center",
-		flex: 1,
-		padding: spacing.xs,
-		backgroundColor: colors.backgroundDarkSubtle,
-		borderRadius: radius.md,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		gap: spacing.xs2,
-		flexDirection: "row",
-		justifyContent: "space-between",
-	},
-	tpmsPos: {
-		color: colors.dashSecondary,
-		fontSize: font.size.xs,
-		fontWeight: font.weight.bold,
-		width: 24,
-	},
-	tpmsPressure: {
-		color: colors.dashValue,
-		fontSize: font.size.sm,
-		fontWeight: font.weight.semibold,
-	},
-	tpmsLow: {
-		color: colors.alarmWarning,
-	},
-	tpmsTemp: {
-		color: colors.dashSecondary,
-		fontSize: font.size.xs,
-	},
-});

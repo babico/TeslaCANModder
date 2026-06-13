@@ -15,9 +15,9 @@
 /**
  * @brief Known DAS lane change states from 0x39B byte[4] bits[4:0].
  */
-static constexpr uint8_t ALC_STATE_IDLE = 0;      // No lane change activity
-static constexpr uint8_t ALC_STATE_REQUESTED = 1;  // Lane change prompted, awaiting confirmation
-static constexpr uint8_t ALC_STATE_STARTED = 2;    // Lane change in progress
+static constexpr uint8_t ALC_STATE_IDLE = 0;	  // No lane change activity
+static constexpr uint8_t ALC_STATE_REQUESTED = 1; // Lane change prompted, awaiting confirmation
+static constexpr uint8_t ALC_STATE_STARTED = 2;	  // Lane change in progress
 
 // Throttle interval: don't re-confirm more than once per 2000ms
 static constexpr unsigned long ALC_CONFIRM_COOLDOWN_MS = 2000;
@@ -51,9 +51,9 @@ inline void buildStalkFrame(Frame &f, bool turnLeft)
 	f.dlc = 3;
 	_alcStalkCounter = (_alcStalkCounter + 1) & 0x0F;
 
-	uint8_t stalkBits = turnLeft ? 0xC0 : 0x40; // DOWN_1=left, UP_1=right in bits[7:6]
+	uint8_t stalkBits = turnLeft ? 0xC0 : 0x40;		   // DOWN_1=left, UP_1=right in bits[7:6]
 	f.data[1] = stalkBits | (_alcStalkCounter & 0x0F); // Stalk position | alive counter in bits[3:0]
-	f.data[2] = 0x00; // No wiper/wash activity
+	f.data[2] = 0x00;								   // No wiper/wash activity
 
 	f.data[0] = teslaCrc8(&f.data[1], 2, _alcStalkCounter, MAGIC_0x249); // CRC-8 over bytes[1..2]
 }
@@ -95,8 +95,6 @@ inline void buildPalladiumTurnFrame(Frame &f, bool turnLeft)
 inline bool alcShouldConfirm(const State &s, unsigned long nowMs)
 {
 	if (!s.alcAutoConfirmEnabled)
-		return false;
-	if (s.txPaused)
 		return false;
 	if (s.dasLaneChangeState != ALC_STATE_REQUESTED)
 		return false;

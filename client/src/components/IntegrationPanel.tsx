@@ -1,6 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { BoardState } from "@teslacanmodder/protocol";
-import { colors, font, radius, spacing } from "../design/tokens";
 
 function Section({
 	title,
@@ -12,19 +11,25 @@ function Section({
 	children: React.ReactNode;
 }) {
 	return (
-		<View style={styles.section}>
-			<Text style={styles.sectionTitle}>{title}</Text>
-			{description ? <Text style={styles.sectionDescription}>{description}</Text> : null}
-			<View style={styles.grid}>{children}</View>
+		<View className="bg-card border border-border rounded-xl p-3 gap-2">
+			<Text className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+				{title}
+			</Text>
+			{description ? (
+				<Text className="text-xs text-muted-foreground/70 leading-4">{description}</Text>
+			) : null}
+			<View className="gap-1">{children}</View>
 		</View>
 	);
 }
 
 function Row({ label, value, dimmed }: { label: string; value: string; dimmed?: boolean }) {
 	return (
-		<View style={styles.row}>
-			<Text style={styles.rowLabel}>{label}</Text>
-			<Text style={[styles.rowValue, dimmed ? styles.rowValueDimmed : undefined]}>
+		<View className="flex-row justify-between items-center">
+			<Text className="text-sm text-muted-foreground">{label}</Text>
+			<Text
+				className={`text-sm font-semibold text-right flex-1 ${dimmed ? "text-muted-foreground/50" : "text-card-foreground"}`}
+			>
 				{value}
 			</Text>
 		</View>
@@ -37,7 +42,7 @@ export interface IntegrationPanelProps {
 
 export function IntegrationPanel({ state }: IntegrationPanelProps) {
 	return (
-		<View style={styles.container}>
+		<View className="gap-3">
 			<Section
 				title="Connectivity & Integrations"
 				description="Live bridge and transport links between the board and external tools."
@@ -125,52 +130,3 @@ export function IntegrationPanel({ state }: IntegrationPanelProps) {
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		gap: spacing.md,
-	},
-	section: {
-		backgroundColor: colors.dashCard,
-		borderRadius: radius.lg,
-		padding: spacing.md,
-		gap: spacing.sm,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-	},
-	sectionTitle: {
-		color: colors.dashSecondary,
-		fontSize: font.size.xs,
-		fontWeight: font.weight.bold,
-		textTransform: "uppercase",
-		letterSpacing: 0.7,
-	},
-	sectionDescription: {
-		color: colors.dashMuted,
-		fontSize: font.size.xs,
-		lineHeight: 16,
-	},
-	grid: {
-		gap: spacing.xs,
-	},
-	row: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-	rowLabel: {
-		color: colors.dashSecondary,
-		fontSize: font.size.sm,
-		flex: 1,
-	},
-	rowValue: {
-		color: colors.dashValue,
-		fontSize: font.size.sm,
-		fontWeight: font.weight.semibold,
-		textAlign: "right",
-		flex: 1,
-	},
-	rowValueDimmed: {
-		color: colors.dashMuted,
-	},
-});

@@ -57,7 +57,6 @@ void setUp()
 }
 void tearDown() {}
 
-
 void test_enable_sets_flag()
 {
 	State s = {};
@@ -73,7 +72,6 @@ void test_disable_clears_flag()
 	TEST_ASSERT_FALSE(s.seatbeltEmulation);
 }
 
-
 void test_tick_does_nothing_when_disabled()
 {
 	State s = {};
@@ -83,21 +81,10 @@ void test_tick_does_nothing_when_disabled()
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
 
-void test_tick_does_nothing_when_tx_paused()
-{
-	State s = {};
-	s.seatbeltEmulation = true;
-	s.txPaused = true;
-	fake_millis_val = 1000;
-	seatbeltEmulationTick(s);
-	TEST_ASSERT_EQUAL(0, stub_send_count);
-}
-
 void test_tick_sends_frame_after_interval()
 {
 	State s = {};
 	s.seatbeltEmulation = true;
-	s.txPaused = false;
 	s.seatbeltLastMs = 0;
 	fake_millis_val = 600;
 	seatbeltEmulationTick(s);
@@ -111,13 +98,11 @@ void test_tick_respects_interval()
 {
 	State s = {};
 	s.seatbeltEmulation = true;
-	s.txPaused = false;
 	s.seatbeltLastMs = 500;
 	fake_millis_val = 800;
 	seatbeltEmulationTick(s);
 	TEST_ASSERT_EQUAL(0, stub_send_count);
 }
-
 
 void test_cmd_on()
 {
@@ -140,14 +125,12 @@ void test_cmd_unknown()
 	TEST_ASSERT_FALSE(executeSeatbeltCmd("seatbelt:toggle", s));
 }
 
-
 int main(int, char **)
 {
 	UNITY_BEGIN();
 	RUN_TEST(test_enable_sets_flag);
 	RUN_TEST(test_disable_clears_flag);
 	RUN_TEST(test_tick_does_nothing_when_disabled);
-	RUN_TEST(test_tick_does_nothing_when_tx_paused);
 	RUN_TEST(test_tick_sends_frame_after_interval);
 	RUN_TEST(test_tick_respects_interval);
 	RUN_TEST(test_cmd_on);
@@ -155,4 +138,3 @@ int main(int, char **)
 	RUN_TEST(test_cmd_unknown);
 	return UNITY_END();
 }
-

@@ -193,6 +193,35 @@ export const colors = {
 	gearPark: palette.green500,
 } as const;
 
+export type ColorTokens = typeof colors;
+
+// ── Light-mode dashboard equivalents ──────────────────────────────────────
+
+export const lightDashColors = {
+	dashBackground: palette.slate50,
+	dashCard: palette.white,
+	dashCardBorder: palette.slate200,
+	dashPrimary: palette.cyan600,
+	dashSecondary: palette.slate500,
+	dashMuted: palette.slate400,
+	dashValue: palette.slate900,
+	dashLabel: palette.slate500,
+	dashUnit: palette.slate400,
+	backgroundDarkSubtle: palette.slate100,
+	backgroundDarkCard: palette.white,
+	backgroundDark: palette.slate50,
+	foregroundDark: palette.slate900,
+	foregroundDarkMuted: palette.slate500,
+	foregroundDarkSubtle: palette.slate400,
+} as const;
+
+export function selectDashColors(isDark: boolean): Record<keyof typeof colors, string> {
+	if (!isDark) {
+		return { ...colors, ...lightDashColors };
+	}
+	return colors;
+}
+
 // ── Spacing ───────────────────────────────────────────────────────────────────
 
 export const spacing = {

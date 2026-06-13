@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { ThemeSwitch } from "../ThemeSwitch";
 
 export interface ConnectionStatusBarProps {
 	isReady: boolean;
@@ -49,6 +50,8 @@ export function ConnectionStatusBar({
 					{statusLabel}
 				</Text>
 			</Pressable>
+
+			<ThemeSwitch />
 		</View>
 	);
 }

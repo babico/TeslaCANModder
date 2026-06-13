@@ -88,8 +88,6 @@ static bool executeGtwShieldCmd(const char *cmd, State &s)
  *   - Armed: compares incoming frames against the snapshot; if any byte differs,
  *     overwrites frame data with the healthy snapshot for retransmission.
  *
- * Suspended during OTA to avoid blocking firmware update frames.
- *
  * @param f CAN frame to inspect and potentially overwrite.
  * @param s Device state with shield configuration and snapshot storage.
  * @return True if the frame was overwritten (caller should retransmit).
@@ -97,9 +95,6 @@ static bool executeGtwShieldCmd(const char *cmd, State &s)
 static bool handleGtwShield(Frame &f, State &s)
 {
 	if (f.dlc < 8)
-		return false;
-	// Suspend shield during OTA to avoid blocking firmware update frames
-	if (s.otaInProgress)
 		return false;
 	uint8_t mux = f.data[0] & 0x07; // Mux variant from bits[2:0] of byte[0]
 

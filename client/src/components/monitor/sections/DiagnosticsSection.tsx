@@ -1,8 +1,11 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { colors } from "../../../design/tokens";
+import { colors, selectDashColors } from "../../../design/tokens";
+import { useThemeState } from "../../../state/ThemeContext";
 import type { MonitorScreenProps } from "./types";
 
 export function DiagnosticsSection(props: MonitorScreenProps) {
+	const { isDark } = useThemeState();
+	const colors = selectDashColors(isDark);
 	return (
 		<View style={styles.section}>
 			<Text style={styles.title}>Diagnostics & History</Text>

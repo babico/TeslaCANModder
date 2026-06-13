@@ -22,26 +22,11 @@
 void setUp() {}
 void tearDown() {}
 
-/* ── startBurst blocks when txPaused ─────────────────────────────────────── */
-
-void test_burst_blocked_when_tx_paused()
-{
-	State s = {};
-	s.txPaused = true;
-	s.apInjectionGateEnabled = false;
-	Frame f = {};
-	f.id = 0x100;
-	f.dlc = 8;
-	startBurst(s, f, 1, 10, 20);
-	TEST_ASSERT_EQUAL_UINT8(0, s.burstRemaining);
-}
-
 /* ── startBurst blocks when AP gate closed ───────────────────────────────── */
 
 void test_burst_blocked_when_ap_gate_closed()
 {
 	State s = {};
-	s.txPaused = false;
 	s.apInjectionGateEnabled = true;
 	s.apGateApActive = false;
 	s.apGateParked = false;
@@ -58,7 +43,6 @@ void test_burst_blocked_when_ap_gate_closed()
 void test_burst_sets_up_frame()
 {
 	State s = {};
-	s.txPaused = false;
 	s.apInjectionGateEnabled = false;
 	Frame f = {};
 	f.id = 0x273;
@@ -74,7 +58,6 @@ void test_burst_sets_up_frame()
 void test_burst_sets_bus()
 {
 	State s = {};
-	s.txPaused = false;
 	s.apInjectionGateEnabled = false;
 	Frame f = {};
 	f.dlc = 8;
@@ -85,7 +68,6 @@ void test_burst_sets_bus()
 void test_burst_resets_timer()
 {
 	State s = {};
-	s.txPaused = false;
 	s.apInjectionGateEnabled = false;
 	Frame f = {};
 	f.dlc = 8;
@@ -99,7 +81,6 @@ void test_burst_resets_timer()
 void test_burst_allowed_when_parked()
 {
 	State s = {};
-	s.txPaused = false;
 	s.apInjectionGateEnabled = true;
 	s.apGateParked = true;
 	Frame f = {};
@@ -112,7 +93,6 @@ void test_burst_allowed_when_parked()
 void test_burst_allowed_when_summoning()
 {
 	State s = {};
-	s.txPaused = false;
 	s.apInjectionGateEnabled = true;
 	s.apGateSummoning = true;
 	Frame f = {};
@@ -126,7 +106,6 @@ int main()
 {
 	UNITY_BEGIN();
 
-	RUN_TEST(test_burst_blocked_when_tx_paused);
 	RUN_TEST(test_burst_blocked_when_ap_gate_closed);
 	RUN_TEST(test_burst_sets_up_frame);
 	RUN_TEST(test_burst_sets_bus);

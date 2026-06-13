@@ -17,12 +17,13 @@ import {
 } from "react-native";
 import type { BoardState } from "@teslacanmodder/protocol";
 import { formatAutopilotTier, formatDriveMode, formatGear } from "@teslacanmodder/protocol";
-import { colors, font, radius, spacing, motion } from "../design/tokens";
+import { colors, selectDashColors, font, radius, spacing, motion } from "../design/tokens";
 import { useBreakpoint } from "../state/useBreakpoint";
 import { useSpeedUnit } from "../state/useSpeedUnit";
 import { useSocDisplay } from "../state/useSocDisplay";
 import { usePowerCapture } from "../state/usePowerCapture";
 import { useTheme } from "../state/useTheme";
+import { useThemeState } from "../state/ThemeContext";
 import { useGaugeMode } from "../state/useGaugeMode";
 import type { GaugeMode } from "../state/useGaugeMode";
 import { Badge } from "../ui/shadcn/badge";
@@ -857,6 +858,8 @@ export interface DriveScreenProps {
 }
 
 export function DriveScreen({ boardState: s }: DriveScreenProps) {
+	const { isDark: _isDark } = useThemeState();
+	const _colors = selectDashColors(_isDark);
 	const { width, height } = useWindowDimensions();
 	const bp = useBreakpoint();
 	const isLand = bp.bp === "phoneLandscape" || (bp.isPhone && width > height);

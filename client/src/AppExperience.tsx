@@ -43,7 +43,7 @@ const FlasherScreen = lazy(() =>
 );
 import { ConnectionHeader } from "./components/ConnectionHeader";
 import { MenuHeader } from "./components/MenuHeader";
-import { colors } from "./design/tokens";
+import { ThemeProvider, useThemeState } from "./state/ThemeContext";
 import { type AppTabRoute, useAppRouteState } from "./state/appRoute";
 
 type HistoryEntry = {
@@ -122,7 +122,7 @@ function verifyExportIntegrity(
 	return computeExportChecksum(rows) === expectedChecksum;
 }
 
-export default function AppExperience() {
+function AppExperienceInner() {
 	const connection = useBoardConnection();
 	const controller = connection.controller;
 	const baseUrl = connection.baseUrl;
@@ -1116,8 +1116,25 @@ export default function AppExperience() {
 		});
 	};
 
+	// Ensure color-scheme meta tag for proper system bar theming on mobile web
+	useEffect(() => {
+		if (typeof document !== "undefined") {
+			const existing = document.querySelector('meta[name="color-scheme"]');
+			if (!existing) {
+				const meta = document.createElement("meta");
+				meta.name = "color-scheme";
+				meta.content = "light dark";
+				document.head.appendChild(meta);
+			}
+		}
+	}, []);
+
+	const { isDark } = useThemeState();
+
 	return (
-		<SafeAreaView style={styles.safeArea}>
+		<SafeAreaView
+			style={[styles.safeArea, { backgroundColor: isDark ? "#0a1628" : "#f8fafc" }]}
+		>
 			{/* Shared connection header */}
 			<ConnectionHeader />
 
@@ -1206,9 +1223,16 @@ export default function AppExperience() {
 	);
 }
 
+export default function AppExperience() {
+	return (
+		<ThemeProvider>
+			<AppExperienceInner />
+		</ThemeProvider>
+	);
+}
+
 const styles = StyleSheet.create({
 	safeArea: {
 		flex: 1,
-		backgroundColor: colors.dashBackground,
 	},
 });

@@ -1,6 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-
-import { colors, font, radius, spacing } from "../../design/tokens";
+import { Pressable, Text, View } from "react-native";
 
 type DocTreeItemProps = {
 	title: string;
@@ -22,93 +20,33 @@ export function DocTreeItem({
 	onPress,
 }: DocTreeItemProps) {
 	return (
-		<Pressable onPress={onPress} style={[styles.row, active ? styles.rowActive : undefined]}>
-			<View style={styles.guides}>
+		<Pressable
+			onPress={onPress}
+			className={`min-h-[30px] flex-row items-center rounded-md px-1 ${active ? "bg-muted" : ""}`}
+		>
+			<View className="flex-row items-center mr-1">
 				{Array.from({ length: depth }).map((_, index) => (
-					<View key={`${title}-guide-${index}`} style={styles.guideSlot}>
+					<View key={`${title}-guide-${index}`} className="w-[14px] items-center">
 						<View
-							style={[
-								styles.guideLine,
-								hasNextSiblings[index] ? styles.guideLineVisible : undefined,
-							]}
+							className={`w-px h-6 ${hasNextSiblings[index] ? "bg-border" : "bg-transparent"}`}
 						/>
 					</View>
 				))}
-				<View style={styles.connectorSlot}>
-					<View style={styles.connectorHorizontal} />
+				<View className="w-[14px] items-center">
+					<View className="w-2.5 h-px bg-border" />
 				</View>
 			</View>
-			<Text style={[styles.icon, active ? styles.textActive : undefined]}>
-				{isFolder ? (expanded ? "▾" : "▸") : "•"}
+			<Text
+				className={`w-4 text-base mr-1.5 ${active ? "text-primary" : "text-muted-foreground"}`}
+			>
+				{isFolder ? (expanded ? "\u25BE" : "\u25B8") : "\u2022"}
 			</Text>
 			<Text
 				numberOfLines={1}
-				style={[
-					styles.title,
-					isFolder ? styles.folderTitle : undefined,
-					active ? styles.textActive : undefined,
-				]}
+				className={`flex-1 text-sm leading-5 ${active ? "text-primary" : isFolder ? "text-card-foreground font-semibold" : "text-card-foreground"}`}
 			>
 				{title}
 			</Text>
 		</Pressable>
 	);
 }
-
-const styles = StyleSheet.create({
-	row: {
-		minHeight: 30,
-		flexDirection: "row",
-		alignItems: "center",
-		borderRadius: radius.sm,
-		paddingHorizontal: spacing.xs,
-	},
-	rowActive: {
-		backgroundColor: colors.backgroundDarkSubtle,
-	},
-	guides: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginRight: spacing.xs,
-	},
-	guideSlot: {
-		width: 14,
-		alignItems: "center",
-	},
-	guideLine: {
-		width: 1,
-		height: 24,
-		backgroundColor: "transparent",
-	},
-	guideLineVisible: {
-		backgroundColor: colors.dashCardBorder,
-	},
-	connectorSlot: {
-		width: 14,
-		alignItems: "center",
-	},
-	connectorHorizontal: {
-		width: 10,
-		height: 1,
-		backgroundColor: colors.dashCardBorder,
-	},
-	icon: {
-		width: 16,
-		color: colors.dashMuted,
-		fontSize: font.size.md,
-		marginRight: spacing.sm2,
-	},
-	title: {
-		flex: 1,
-		color: colors.dashValue,
-		fontSize: font.size.md,
-		lineHeight: 20,
-	},
-	folderTitle: {
-		color: colors.dashLabel,
-		fontWeight: font.weight.semibold,
-	},
-	textActive: {
-		color: colors.dashPrimary,
-	},
-});

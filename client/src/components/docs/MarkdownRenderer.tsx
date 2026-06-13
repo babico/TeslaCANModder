@@ -9,9 +9,10 @@ import abbr from "markdown-it-abbr";
 import ins from "markdown-it-ins";
 import mark from "markdown-it-mark";
 import taskLists from "markdown-it-task-lists";
-import { StyleSheet } from "react-native";
 
-import { colors, font, radius, spacing } from "../../design/tokens";
+import { selectDashColors, font, radius, spacing } from "../../design/tokens";
+import { useThemeState } from "../../state/ThemeContext";
+import { useMemo } from "react";
 
 type MarkdownItParser = InstanceType<typeof MarkdownIt>;
 type MarkdownItPlugin = Parameters<MarkdownItParser["use"]>[0];
@@ -29,7 +30,6 @@ function resolvePlugin(pluginModule: unknown): MarkdownItPlugin | undefined {
 		defaultMod?.light,
 		defaultMod?.bare,
 	];
-
 	return candidates.find((candidate) => typeof candidate === "function") as
 		| MarkdownItPlugin
 		| undefined;
@@ -41,19 +41,12 @@ function usePluginSafe(
 	options?: Record<string, unknown>,
 ): MarkdownItParser {
 	const plugin = resolvePlugin(pluginModule);
-	if (!plugin) {
-		return parser;
-	}
+	if (!plugin) return parser;
 	return options ? parser.use(plugin, options) : parser.use(plugin);
 }
 
 const markdownParser = (() => {
-	const parser = new MarkdownIt({
-		html: false,
-		linkify: true,
-		typographer: true,
-	});
-
+	const parser = new MarkdownIt({ html: false, linkify: true, typographer: true });
 	usePluginSafe(parser, emoji);
 	usePluginSafe(parser, footnote);
 	usePluginSafe(parser, sub);
@@ -63,7 +56,6 @@ const markdownParser = (() => {
 	usePluginSafe(parser, ins);
 	usePluginSafe(parser, mark);
 	usePluginSafe(parser, taskLists, { enabled: true, label: true });
-
 	return parser;
 })();
 
@@ -74,10 +66,26 @@ export function MarkdownRenderer({
 	markdown: string;
 	onLinkPress?: (url: string) => boolean;
 }) {
+	const { isDark } = useThemeState();
+	const colors = selectDashColors(isDark);
+	const mdStyles = useMemo(() => {
+		const styles = getMarkdownStyles(colors);
+		console.warn(
+			"[md-styles] isDark:",
+			isDark,
+			"backgroundDark:",
+			(colors as Record<string, string>).backgroundDark,
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(styles.code_block as any).backgroundColor,
+		);
+		return styles;
+	}, [isDark, colors]);
 	return (
 		<Markdown
+			key={isDark ? "md-dark" : "md-light"}
 			markdownit={markdownParser}
-			style={markdownStyles as StyleSheet.NamedStyles<Record<string, unknown>>}
+			style={mdStyles as never}
+			mergeStyle={true}
 			onLinkPress={onLinkPress}
 		>
 			{markdown || "No document selected."}
@@ -85,156 +93,120 @@ export function MarkdownRenderer({
 	);
 }
 
-const markdownStyles = StyleSheet.create({
-	h1: {
-		color: colors.dashValue,
-		fontSize: font.size.xl3,
-		fontWeight: font.weight.bold,
-		lineHeight: 38,
-		marginTop: spacing.sm,
-		marginBottom: spacing.md,
-	},
-	h2: {
-		color: colors.dashValue,
-		fontSize: font.size.xl2,
-		fontWeight: font.weight.bold,
-		lineHeight: 34,
-		marginTop: spacing.sm,
-		marginBottom: spacing.sm,
-	},
-	h3: {
-		color: colors.dashValue,
-		fontSize: font.size.xl,
-		fontWeight: font.weight.bold,
-		lineHeight: 30,
-		marginTop: spacing.xs,
-		marginBottom: spacing.sm,
-	},
-	h4: {
-		color: colors.dashValue,
-		fontSize: font.size.lg,
-		fontWeight: font.weight.bold,
-		lineHeight: 26,
-		marginBottom: spacing.xs,
-	},
-	body: {
-		color: colors.foregroundDark,
-		fontSize: font.size.md2,
-		lineHeight: 24,
-	},
-	paragraph: {
-		marginTop: 0,
-		marginBottom: spacing.sm,
-	},
-	blockquote: {
-		borderLeftWidth: 3,
-		borderLeftColor: colors.primary,
-		backgroundColor: colors.backgroundDarkSubtle,
-		paddingVertical: spacing.sm,
-		paddingHorizontal: spacing.md,
-		borderRadius: radius.sm,
-		marginTop: spacing.xs,
-		marginBottom: spacing.md,
-	},
-	code_block: {
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		backgroundColor: colors.backgroundDark,
-		borderRadius: radius.md,
-		marginTop: spacing.xs,
-		padding: spacing.md,
-		marginBottom: spacing.md,
-	},
-	fence: {
-		color: colors.dashPrimary,
-		fontSize: font.size.sm2,
-		lineHeight: 20,
-		fontFamily: "Courier",
-	},
-	code_inline: {
-		color: colors.dashPrimary,
-		backgroundColor: colors.backgroundDark,
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		borderRadius: radius.sm,
-		paddingHorizontal: spacing.xs,
-		paddingVertical: 1,
-		fontFamily: "Courier",
-		fontSize: font.size.sm2,
-	},
-	bullet_list: {
-		marginTop: spacing.xs,
-		marginBottom: spacing.sm,
-	},
-	ordered_list: {
-		marginTop: spacing.xs,
-		marginBottom: spacing.sm,
-	},
-	list_item: {
-		color: colors.foregroundDark,
-		fontSize: font.size.md2,
-		lineHeight: 22,
-		marginBottom: spacing.xs2,
-	},
-	bullet_list_icon: {
-		color: colors.dashMuted,
-		fontSize: font.size.md,
-	},
-	ordered_list_icon: {
-		color: colors.dashMuted,
-		fontSize: font.size.md,
-	},
-	table: {
-		borderWidth: 1,
-		borderColor: colors.dashCardBorder,
-		borderRadius: radius.md,
-		marginTop: spacing.xs,
-		marginBottom: spacing.md,
-		overflow: "hidden",
-	},
-	thead: {
-		backgroundColor: colors.backgroundDarkSubtle,
-	},
-	tbody: {
-		backgroundColor: colors.dashCard,
-	},
-	th: {
-		color: colors.dashPrimary,
-		fontWeight: font.weight.bold,
-		paddingHorizontal: spacing.sm,
-		paddingVertical: spacing.sm2,
-		borderRightWidth: 1,
-		borderRightColor: colors.dashCardBorder,
-	},
-	td: {
-		color: colors.foregroundDark,
-		paddingHorizontal: spacing.sm,
-		paddingVertical: spacing.sm2,
-		borderTopWidth: 1,
-		borderTopColor: colors.dashCardBorder,
-		borderRightWidth: 1,
-		borderRightColor: colors.dashCardBorder,
-	},
-	hr: {
-		height: 1,
-		backgroundColor: colors.dashCardBorder,
-		marginVertical: spacing.sm,
-	},
-	link: {
-		color: colors.primary,
-		textDecorationLine: "underline",
-	},
-	inline: {
-		color: colors.foregroundDark,
-	},
-	strong: {
-		color: colors.dashValue,
-		fontWeight: font.weight.bold,
-	},
-	em: {
-		color: colors.foregroundDark,
-	},
-	footnote_reference: {
-		color: colors.primary,
-	},
-});
+function getMarkdownStyles(c: Record<string, string>) {
+	return {
+		h1: {
+			color: c.dashValue,
+			fontSize: font.size.xl3,
+			fontWeight: font.weight.bold,
+			lineHeight: 38,
+			marginTop: spacing.sm,
+			marginBottom: spacing.md,
+		},
+		h2: {
+			color: c.dashValue,
+			fontSize: font.size.xl2,
+			fontWeight: font.weight.bold,
+			lineHeight: 34,
+			marginTop: spacing.sm,
+			marginBottom: spacing.sm,
+		},
+		h3: {
+			color: c.dashValue,
+			fontSize: font.size.xl,
+			fontWeight: font.weight.bold,
+			lineHeight: 30,
+			marginTop: spacing.xs,
+			marginBottom: spacing.sm,
+		},
+		h4: {
+			color: c.dashValue,
+			fontSize: font.size.lg,
+			fontWeight: font.weight.bold,
+			lineHeight: 26,
+			marginBottom: spacing.xs,
+		},
+		body: { color: c.foregroundDark, fontSize: font.size.md2, lineHeight: 24 },
+		paragraph: { marginTop: 0, marginBottom: spacing.sm },
+		blockquote: {
+			borderLeftWidth: 3,
+			borderLeftColor: c.primary,
+			backgroundColor: c.backgroundDarkSubtle,
+			paddingVertical: spacing.sm,
+			paddingHorizontal: spacing.md,
+			borderRadius: radius.sm,
+			marginTop: spacing.xs,
+			marginBottom: spacing.md,
+		},
+		code_block: {
+			borderWidth: 1,
+			borderColor: c.dashCardBorder,
+			backgroundColor: c.backgroundDark,
+			borderRadius: radius.md,
+			marginTop: spacing.xs,
+			padding: spacing.md,
+			marginBottom: spacing.md,
+		},
+		fence: {
+			backgroundColor: c.backgroundDark,
+			color: c.dashPrimary,
+			fontSize: font.size.sm2,
+			lineHeight: 20,
+			fontFamily: "Courier",
+		},
+		code_inline: {
+			color: c.dashPrimary,
+			backgroundColor: c.backgroundDark,
+			borderWidth: 1,
+			borderColor: c.dashCardBorder,
+			borderRadius: radius.sm,
+			paddingHorizontal: spacing.xs,
+			paddingVertical: 1,
+			fontFamily: "Courier",
+			fontSize: font.size.sm2,
+		},
+		bullet_list: { marginTop: spacing.xs, marginBottom: spacing.sm },
+		ordered_list: { marginTop: spacing.xs, marginBottom: spacing.sm },
+		list_item: {
+			color: c.foregroundDark,
+			fontSize: font.size.md2,
+			lineHeight: 22,
+			marginBottom: spacing.xs2,
+		},
+		bullet_list_icon: { color: c.dashMuted, fontSize: font.size.md },
+		ordered_list_icon: { color: c.dashMuted, fontSize: font.size.md },
+		table: {
+			borderWidth: 1,
+			borderColor: c.dashCardBorder,
+			borderRadius: radius.md,
+			marginTop: spacing.xs,
+			marginBottom: spacing.md,
+			overflow: "hidden",
+		},
+		thead: { backgroundColor: c.backgroundDarkSubtle },
+		tbody: { backgroundColor: c.dashCard },
+		th: {
+			color: c.dashPrimary,
+			fontWeight: font.weight.bold,
+			paddingHorizontal: spacing.sm,
+			paddingVertical: spacing.sm2,
+			borderRightWidth: 1,
+			borderRightColor: c.dashCardBorder,
+		},
+		td: {
+			color: c.foregroundDark,
+			paddingHorizontal: spacing.sm,
+			paddingVertical: spacing.sm2,
+			borderTopWidth: 1,
+			borderTopColor: c.dashCardBorder,
+			borderRightWidth: 1,
+			borderRightColor: c.dashCardBorder,
+		},
+		hr: { height: 1, backgroundColor: c.dashCardBorder, marginVertical: spacing.sm },
+		link: { color: c.primary, textDecorationLine: "underline" },
+		inline: { color: c.foregroundDark },
+		strong: { color: c.dashValue, fontWeight: font.weight.bold },
+		em: { color: c.foregroundDark },
+		footnote_reference: { color: c.primary },
+	};
+}

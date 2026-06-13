@@ -88,8 +88,6 @@ function normalizeStateSection(target: JsonRecord, state: JsonRecord | undefined
 	assignIfDefined(target, "dasHandsOn", state?.dasHandsOn);
 	assignIfDefined(target, "precondition", state?.precondition);
 	assignIfDefined(target, "trackMode", state?.trackMode);
-	assignIfDefined(target, "otaInProgress", state?.otaInProgress);
-	assignIfDefined(target, "txPaused", state?.txPaused);
 	assignIfDefined(target, "apGateEnabled", state?.apGateEnabled);
 	assignIfDefined(target, "apGateOpen", state?.apGateOpen);
 	assignIfDefined(target, "apGateReason", state?.apGateReason);
