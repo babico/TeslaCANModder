@@ -14,6 +14,15 @@
 #include "vehicle/can/ids.h"
 
 /**
+ * @brief Maximum number of hardware-acceptance filter slots on the chassis bus
+ *
+ * The MCP2515 has 6 acceptance filters per mask group, but the chassis filter
+ * set is bounded by the number of feature-specific CAN IDs we may need to
+ * intercept (DAS frames + variant discriminators).
+ */
+static constexpr size_t CHASSIS_FILTER_MAX = 14;
+
+/**
  * @brief Configure hardware acceptance filters on all three CAN buses
  *
  * Applies a toggle-inject pattern: when a feature is enabled its CAN IDs are
@@ -27,11 +36,11 @@ void applyFilters(State &s)
 	// Bus 0 — Chassis (X179 pins 13-14): dynamic filter set based on enabled features
 	if (s.rawCanListen)
 	{
-		driverSetBusFilters(0, nullptr, 0);
+		driverSetBusFilters(BUS_CHASSIS, nullptr, 0);
 	}
 	else
 	{
-		uint32_t ids[14];
+		uint32_t ids[CHASSIS_FILTER_MAX];
 		uint8_t count = 0;
 		ids[count++] = CAN_ID_DAS_CONTROL;
 		ids[count++] = CAN_ID_DAS_STEERING_CTRL;
@@ -78,6 +87,9 @@ void applyFilters(State &s)
 		}
 		else
 		{
+			// No relevant chassis IDs: program hardware to accept only ID 0x000,
+			// which Tesla never uses. The MCP2515 filter mask remains 0x7FF (exact
+			// match) so this effectively blocks all chassis traffic at the HW level.
 			static const uint32_t none[] = {0x000};
 			driverSetBusFilters(BUS_CHASSIS, none, 1);
 		}

@@ -9,6 +9,14 @@
 
 #include <stdint.h>
 
+/**
+ * @brief Maximum 11-bit CAN identifier (exclusive upper bound)
+ *
+ * Standard CAN IDs occupy 11 bits, so valid IDs range from 0 to CAN_ID_MAX-1.
+ * Used to size the bitmask filter and to bound-range-check add/remove/test.
+ */
+static constexpr uint32_t CAN_ID_MAX = 2048; // 11-bit ID space
+
 #define ID_FILTER_WORDS 64 // 2048 bits / 32 bits per word
 
 /**
@@ -36,7 +44,7 @@ inline void idFilterClear(IdFilter &f)
  */
 inline void idFilterAdd(IdFilter &f, uint16_t id)
 {
-	if (id < 2048)
+	if (id < CAN_ID_MAX)
 	{
 		f.bits[id >> 5] |= (1UL << (id & 0x1F)); // Set bit at word[id/32], position id%32
 	}
@@ -49,7 +57,7 @@ inline void idFilterAdd(IdFilter &f, uint16_t id)
  */
 inline void idFilterRemove(IdFilter &f, uint16_t id)
 {
-	if (id < 2048)
+	if (id < CAN_ID_MAX)
 	{
 		f.bits[id >> 5] &= ~(1UL << (id & 0x1F)); // Clear bit at word[id/32], position id%32
 	}
@@ -63,7 +71,7 @@ inline void idFilterRemove(IdFilter &f, uint16_t id)
  */
 inline bool idFilterTest(const IdFilter &f, uint16_t id)
 {
-	if (id >= 2048)
+	if (id >= CAN_ID_MAX)
 		return false;
 	return (f.bits[id >> 5] & (1UL << (id & 0x1F))) != 0; // Test bit at word[id/32], position id%32
 }
