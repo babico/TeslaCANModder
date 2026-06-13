@@ -57,6 +57,7 @@
 #define CAN_ID_BMS_ENERGY        0x33A // 826 — UI_energyGraphData (RX, Wh/km)
 #define CAN_ID_BMS_ENERGY_ST     0x352 // 850 — BMS_energyStatus (RX, degradation/range)
 #define CAN_ID_EPAS_TORQUE       0x370 // 880 — EPAS3P_sysStatus (RX, nag killer source)
+#define CAN_ID_GTW_VERSION       0x392 // 914 — GTW_versionInfo (RX, gateway fw version, muxed)
 #define CAN_ID_FRONT_INV_TEMPS   0x376 // 886 — ID376FrontInverterTemps (RX, dual-motor only)
 #define CAN_ID_GTW_CAR_CFG       0x398 // 920 — GTW_carConfig (RX, HW gen byte[0] bits[7:6])
 #define CAN_ID_BLIND_SPOT        0x399 // 921 — DAS_blindSpotMonitor (RX, BSM left/right)

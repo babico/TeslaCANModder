@@ -41,7 +41,7 @@ inline void resetHandlerLogFlags()
  */
 static inline void _updateCanFrameRate(State &s, uint8_t bus, uint32_t now)
 {
-	if (bus >= 3)
+	if (bus >= BUS_MAX)
 		return;
 	CanBusStat &b = s.canDiag.bus[bus];
 	b.frames++;

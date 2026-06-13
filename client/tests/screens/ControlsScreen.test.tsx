@@ -58,20 +58,6 @@ const defaultBoardState = {
 	hasBms: true,
 	vehicleSpeed: 0,
 	fsd: false,
-	dasDriveEnabled: false,
-	dasSpeedLimitKph: 25,
-	dasSpeedCapKph: 25,
-	dasSpeedCapMaxKph: 200,
-	gamepad: {
-		enabled: false,
-		connected: false,
-		scanning: false,
-		pairedAddr: "",
-		pairedName: "",
-		rssi: 0,
-		battery: 0xff,
-		devices: [] as Array<{ addr: string; name: string }>,
-	},
 };
 
 function renderWithState(boardStateOverrides: Record<string, unknown> = {}) {

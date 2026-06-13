@@ -105,6 +105,9 @@ CAN ID 921 — ISA speed chime suppression:
 - Recalculates checksum in `data[7]`
 - Only active when `isaChimeSuppress` is enabled
 
+> **Note:** On HW3, CAN ID 0x399 on the Vehicle bus carries DAS_status (blind spot),
+> not ISA speed chime. The ISA chime handler gates on `variant == HW4`.
+
 ## Follow Distance → Profile Mapping
 
 CAN ID 1016 — The follow distance stalk position is read from `data[5] bits 7:5` and mapped to a speed profile (0–3) unless profile is manually pinned.

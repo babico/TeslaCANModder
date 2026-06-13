@@ -12,7 +12,6 @@
 #include "core/can/id_filter.h"
 #include "core/driver/esp32/board.h"
 #include "vehicle/can/ids.h"
-#include "vehicle/can/feature/telemetry/fw_compat.h"
 
 /**
  * @brief Configure hardware acceptance filters on all three CAN buses

@@ -38,10 +38,6 @@ inline void handleChassisBus(Frame &f, State &s)
 		s.maxSpeedKph = s.cruiseSetSpeedKph;
 		return;
 	}
-	if (f.id == CAN_ID_DAS_STEERING_CTRL && f.dlc >= 3)
-	{
-		return;
-	}
 	if (f.id == CAN_ID_DAS_STATUS2 && f.dlc >= 2)
 	{
 		s.accSpeedLimitKph = decodeAccSpeedLimitKph(f);

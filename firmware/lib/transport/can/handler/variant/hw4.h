@@ -47,7 +47,7 @@ inline void applyHW4NagSuppressBits(Frame &f, State &s)
 	// Clear EU speed restriction bit for European-market vehicles
 	if (s.eceR79Bypass && s.hasRegion && isEuropeanMarket(s.regionCode))
 		applyEceR79Bypass(f);
-	driverSend(f, 0);
+	driverSend(f, BUS_CHASSIS);
 	s.canDiag.eapModCount++;
 }
 
@@ -72,7 +72,7 @@ void handleHW4(Frame &f, State &s)
 		{
 			f.data[1] |= 0x20;					  // Set chime-suppress flag in byte 1
 			f.data[7] = computeHW4IsaChecksum(f); // Recompute trailing checksum
-			driverSend(f, 0);
+			driverSend(f, BUS_CHASSIS);
 			ONCE_LOG(hw4LoggedISA, F("HW4: ISA chime suppressed"));
 			return;
 		}
@@ -141,7 +141,7 @@ void handleHW4(Frame &f, State &s)
 			// Emergency Vehicle Detection: bit 59 allows AP to respond to EVs
 			if (s.evdEnabled)
 				setBit(f, 59, true);
-			driverSend(f, 0);
+			driverSend(f, BUS_CHASSIS);
 			ONCE_LOG(hw4LoggedFSD, F("HW4: FSD mod active on CAN"));
 			return;
 		}
@@ -161,7 +161,7 @@ void handleHW4(Frame &f, State &s)
 				// Encode speed offset into bits [5:0] of byte 1, preserving upper 2 bits
 				f.data[1] = (f.data[1] & 0xC0) | (s.speedOffset & 0x3F);
 			}
-			driverSend(f, 0);
+			driverSend(f, BUS_CHASSIS);
 			return;
 		}
 	}

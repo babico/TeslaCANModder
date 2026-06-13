@@ -10,8 +10,6 @@
 #include "core/types.h"
 #include "vehicle/can/ids.h"
 
-#define CAN_ID_GTW_VERSION 0x392
-
 /**
  * @brief Firmware compatibility level indicating whether the detected vehicle
  *        firmware is fully supported, partially supported, or incompatible.

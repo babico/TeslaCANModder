@@ -133,7 +133,7 @@ export const initialBoardState: BoardState = {
 	maxSpeedKph: 0,
 	precondition: false,
 	trackMode: false,
-	apGateEnabled: true,
+	apGateEnabled: false,
 	apGateOpen: false,
 	apGateReason: "waiting",
 	detectedHW: 0,

@@ -54,7 +54,7 @@ const mockBoardState = {
 	hasBms: true,
 	vehicleSpeed: 0,
 	frameCount: 2,
-	canHealth: { 0: { on: true, det: true } },
+	canHealth: { chassis: { on: true, det: true } },
 };
 
 jest.mock("../../src/state/BoardStateContext", () => ({
