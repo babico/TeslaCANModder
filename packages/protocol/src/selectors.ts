@@ -5,8 +5,7 @@ export interface ConnectionSummary {
 	totalBuses: number;
 	anyOnline: boolean;
 	allOnline: boolean;
-	txSuppressed: boolean;
-	status: "offline" | "partial" | "online" | "paused";
+	status: "offline" | "partial" | "online";
 }
 
 export interface DriveSnapshot {
@@ -58,7 +57,6 @@ export function selectConnectionSummary(state: BoardState): ConnectionSummary {
 		totalBuses: buses.length,
 		anyOnline,
 		allOnline,
-		txSuppressed: false,
 		status,
 	};
 }

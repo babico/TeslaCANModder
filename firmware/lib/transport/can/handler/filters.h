@@ -98,7 +98,6 @@ void applyFilters(State &s)
 										  CAN_ID_CLIMATE,
 										  CAN_ID_BMS_THERMAL,
 										  CAN_ID_TRACK_MODE,
-										  CAN_ID_GTW_CAR_STATE,
 										  CAN_ID_CHARGE,
 										  CAN_ID_DRIVE_CONFIG,
 										  CAN_ID_BMS_ENERGY,

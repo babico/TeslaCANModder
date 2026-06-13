@@ -49,7 +49,7 @@
 #define CAN_ID_BMS_THERMAL       0x312 // 786 — BMS_thermalStatus (RX, pack/coolant/cell temps)
 #define CAN_ID_TRACK_MODE        0x313 // 787 — UI_trackModeSettings (TX/RX, track mode)
 #define CAN_ID_REAR_INV_TEMPS    0x315 // 789 — ID315RearInverterTemps (RX, inverter °C)
-#define CAN_ID_GTW_CAR_STATE     0x318 // 792 — GTW_carState (RX, OTA state byte[6] bits[1:0])
+#define CAN_ID_GTW_CAR_STATE     0x318 // 792 — GTW_carState (RX)
 #define CAN_ID_DAS_AP_CONFIG     0x331 // 817 — DAS_autopilotConfig (RX, AP tier ~1 Hz)
 #define CAN_ID_BMS_MIN_MAX       0x332 // 818 — BMS_bmbMinMax (RX, cell voltage min/max)
 #define CAN_ID_CHARGE            0x333 // 819 — UI_chargeRequest (TX, charge limit/port/schedule)

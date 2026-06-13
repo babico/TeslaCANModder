@@ -89,8 +89,6 @@ describe("reducer: body features", () => {
 				dho: 0,
 				pc: 0,
 				trk: 0,
-				ota: 0,
-				txp: 0,
 				hw: 0,
 				gtw: -1,
 				clkR: 8,
