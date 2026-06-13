@@ -640,7 +640,7 @@ struct State
 	float vehicleSpeed;		 // km/h (signed, from 0x257)
 	uint8_t gearState;		 // 0=inv, 1=P, 2=R, 3=N, 4=D (from 0x118)
 	uint8_t accelPedal;		 // 0-100% (from 0x118)
-	uint8_t brakePedalState; // 0=off, 1=on (bits[20:19] of 0x118 DI_STATE)
+	uint8_t brakePedalState; // 0=off, 1=applied, 2=hard applied (bits[20:19] of 0x118 DI_STATE)
 	int16_t rearMotorRpm;	 // RPM (from 0x106)
 	int16_t frontMotorRpm;	 // RPM (from 0x115)
 	bool hasPowertrain;		 // At least one powertrain frame decoded

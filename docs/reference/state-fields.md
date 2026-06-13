@@ -141,25 +141,25 @@ unified command interface (`nag:mode:<name>`).
 
 ## Safety Cues (RO)
 
-| Field                | Type  | CAN ID | Description              |
-| -------------------- | ----- | ------ | ------------------------ |
-| `turnSignalLeft`     | bool  | 0x3F5  | Left turn signal active  |
-| `turnSignalRight`    | bool  | 0x3F5  | Right turn signal active |
-| `bsmLeftLevel`       | uint8 | 0x399  | Left BSM warning (0–2)   |
-| `bsmRightLevel`      | uint8 | 0x399  | Right BSM warning (0–2)  |
-| `doorFrontLeftOpen`  | bool  | —      | Front-left door open     |
-| `doorFrontRightOpen` | bool  | —      | Front-right door open    |
-| `doorRearLeftOpen`   | bool  | —      | Rear-left door open      |
-| `doorRearRightOpen`  | bool  | —      | Rear-right door open     |
-| `frunkOpen`          | bool  | —      | Frunk open               |
-| `trunkOpen`          | bool  | —      | Trunk open               |
-| `cruiseSetSpeedKph`  | float | —      | Cruise set speed (km/h)  |
-| `mapSpeedLimitKph`   | float | —      | Map speed limit (km/h)   |
-| `hasSteeringMode`    | bool  | 0x370  | Steering mode available  |
-| `vehicleLockedState` | bool  | —      | Vehicle locked status    |
-| `driverDoorOpen`     | bool  | —      | Driver door open         |
-| `anyDoorOpen`        | bool  | —      | Any door open            |
-| `brakePedalState`    | uint  | —      | Brake pedal position %   |
+| Field                | Type  | CAN ID | Description                                          |
+| -------------------- | ----- | ------ | ---------------------------------------------------- |
+| `turnSignalLeft`     | bool  | 0x3F5  | Left turn signal active                              |
+| `turnSignalRight`    | bool  | 0x3F5  | Right turn signal active                             |
+| `bsmLeftLevel`       | uint8 | 0x399  | Left BSM warning (0–2)                               |
+| `bsmRightLevel`      | uint8 | 0x399  | Right BSM warning (0–2)                              |
+| `doorFrontLeftOpen`  | bool  | —      | Front-left door open                                 |
+| `doorFrontRightOpen` | bool  | —      | Front-right door open                                |
+| `doorRearLeftOpen`   | bool  | —      | Rear-left door open                                  |
+| `doorRearRightOpen`  | bool  | —      | Rear-right door open                                 |
+| `frunkOpen`          | bool  | —      | Frunk open                                           |
+| `trunkOpen`          | bool  | —      | Trunk open                                           |
+| `cruiseSetSpeedKph`  | float | —      | Cruise set speed (km/h)                              |
+| `mapSpeedLimitKph`   | float | —      | Map speed limit (km/h)                               |
+| `hasSteeringMode`    | bool  | 0x370  | Steering mode available                              |
+| `vehicleLockedState` | bool  | —      | Vehicle locked status                                |
+| `driverDoorOpen`     | bool  | —      | Driver door open                                     |
+| `anyDoorOpen`        | bool  | —      | Any door open                                        |
+| `brakePedalState`    | uint8 | 0x118  | Brake pedal state (0=off, 1=applied, 2=hard applied) |
 
 ## OTA & Hardware Detection
 
