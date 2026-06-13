@@ -36,7 +36,7 @@
 		"nativewind": "^4.2.3",
 		"react": "19.1.0",
 		"react-dom": "19.1.0",
-		"react-native": "0.81.5",
+		"react-native": "0.86.0",
 		"react-native-css-interop": "^0.2.3",
 		"react-native-markdown-display": "^7.0.2",
 		"react-native-safe-area-context": "~5.7.0",
