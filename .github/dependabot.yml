@@ -1,56 +1,37 @@
 version: 2
 updates:
-    # Root workspace + packages/protocol, web, client, tools
-    - package-ecosystem: npm
-      directory: /
+    - package-ecosystem: "npm"
+      directory: "/"
       schedule:
-          interval: weekly
-          day: monday
+          interval: "weekly"
       open-pull-requests-limit: 10
-      groups:
-          dev-dependencies:
-              dependency-type: development
-              update-types: [minor, patch]
-          prod-dependencies:
-              dependency-type: production
-              update-types: [minor, patch]
-      labels:
-          - dependencies
 
-    # PlatformIO (firmware/)
-    - package-ecosystem: pip
-      directory: /firmware
+    - package-ecosystem: "npm"
+      directory: "/client"
       schedule:
-          interval: weekly
-          day: monday
+          interval: "weekly"
       open-pull-requests-limit: 5
-      labels:
-          - dependencies
 
-    # GitHub Actions
-    - package-ecosystem: github-actions
-      directory: /
+    - package-ecosystem: "npm"
+      directory: "/packages/protocol"
       schedule:
-          interval: weekly
-          day: monday
+          interval: "weekly"
       open-pull-requests-limit: 5
-      labels:
-          - dependencies
-          - ci
 
-    # Docker
-    - package-ecosystem: docker
-      directory: /web
+    - package-ecosystem: "npm"
+      directory: "/tools"
       schedule:
-          interval: monthly
-      labels:
-          - dependencies
-          - docker
+          interval: "weekly"
+      open-pull-requests-limit: 5
 
-    - package-ecosystem: docker
-      directory: /hardware
+    - package-ecosystem: "docker"
+      directory: "/hardware"
       schedule:
-          interval: monthly
-      labels:
-          - dependencies
-          - docker
+          interval: "monthly"
+      open-pull-requests-limit: 3
+
+    - package-ecosystem: "docker"
+      directory: "/web"
+      schedule:
+          interval: "monthly"
+      open-pull-requests-limit: 3

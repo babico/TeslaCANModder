@@ -233,9 +233,6 @@
 [submodule "legacy/slxslx-tesla-open-can-mod-slx-repo"]
 	path = legacy/slxslx-tesla-open-can-mod-slx-repo
 	url = https://gitlab.com/slxslx/tesla-open-can-mod-slx-repo
-[submodule "legacy/Shayennn-FUCKYOU-TESLA-FSD"]
-	path = legacy/Shayennn-FUCKYOU-TESLA-FSD
-	url = https://github.com/Shayennn/FUCKYOU-TESLA-FSD
 [submodule "legacy/EzeLLM-fsd-spoofing"]
 	path = legacy/EzeLLM-fsd-spoofing
 	url = https://github.com/EzeLLM/fsd-spoofing

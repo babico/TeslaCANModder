@@ -1,0 +1,25 @@
+name: Workflow Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install actionlint
+        run: |
+          curl -sSL https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz | tar -xz
+          sudo mv actionlint /usr/local/bin/actionlint
+
+      - name: Lint GitHub workflows
+        run: actionlint -color
