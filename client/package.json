@@ -22,7 +22,7 @@
 		"clsx": "^2.1.1",
 		"esptool-js": "^0.6.0",
 		"expo": "~54.0.33",
-		"lucide-react-native": "^1.14.0",
+		"lucide-react-native": "^1.18.0",
 		"markdown-it": "^14.1.1",
 		"markdown-it-abbr": "^2.0.0",
 		"markdown-it-deflist": "^3.0.0",
