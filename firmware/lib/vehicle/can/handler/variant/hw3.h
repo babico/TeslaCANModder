@@ -47,7 +47,7 @@ inline void applyHW3NagSuppressBits(Frame &f, State &s)
 	// Clear EU speed restriction bit for European-market vehicles
 	if (s.eceR79Bypass && s.hasRegion && isEuropeanMarket(s.regionCode))
 		applyEceR79Bypass(f);
-	driverSend(f, 0);
+	driverSend(f, BUS_CHASSIS);
 	s.canDiag.eapModCount++;
 }
 
@@ -131,7 +131,7 @@ void handleHW3(Frame &f, State &s)
 			setBit(f, 39, true); // UI_fsdContinueOnGreenWithCIPV
 			setBit(f, 46, true);
 			setSpeedProfileV12V13(f, s.speedProfile);
-			driverSend(f, 0);
+			driverSend(f, BUS_CHASSIS);
 			ONCE_LOG(hw3LoggedFSD, F("HW3: FSD mod active on CAN"));
 			return;
 		}
@@ -146,7 +146,7 @@ void handleHW3(Frame &f, State &s)
 		if (mux == 2 && s.fsdEnabled && apGateOpen)
 		{
 			writeHW3SpeedOffset(f, s.speedOffset);
-			driverSend(f, 0);
+			driverSend(f, BUS_CHASSIS);
 			ONCE_LOG(hw3LoggedOffset, F("HW3: Speed offset applied"));
 			return;
 		}

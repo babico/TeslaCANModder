@@ -66,7 +66,7 @@ void handleLegacy(Frame &f, State &s)
 				s.speedProfile = steps;
 			setBit(f, 46, true);
 			setSpeedProfileV12V13(f, s.speedProfile);
-			driverSend(f, 0);
+			driverSend(f, BUS_CHASSIS);
 			ONCE_LOG(legacyLoggedFSD, F("Legacy: FSD mod active on CAN"));
 			return;
 		}
@@ -74,7 +74,7 @@ void handleLegacy(Frame &f, State &s)
 		if (mux == 1 && nagModeUsesBit19(s.nagMode) && apGateOpen)
 		{
 			setBit(f, 19, false); // Clear ECE R79 hands-on nag bit
-			driverSend(f, 0);
+			driverSend(f, BUS_CHASSIS);
 			s.canDiag.eapModCount++;
 			ONCE_LOG(legacyLoggedNag, F("Legacy: Nag suppressed on CAN"));
 			return;

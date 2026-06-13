@@ -141,6 +141,6 @@ void applyFilters(State &s)
 	else
 	{
 		static const uint32_t bodyIds[] = {CAN_ID_WINDOW_VENT, CAN_ID_SENTRY, CAN_ID_TRUNK_CTRL};
-		driverSetBusFilters(BUS_BODY, bodyIds, 3);
+		driverSetBusFilters(BUS_BODY, bodyIds, sizeof(bodyIds) / sizeof(bodyIds[0]));
 	}
 }
