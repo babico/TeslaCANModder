@@ -25,8 +25,8 @@
 
 #define BUS_MAX 3	// Total number of physical CAN bus slots
 
-static const char* const kBusName[BUS_MAX]  = { "chassis", "vehicle", "body" };
-static const bool kBusActive[BUS_MAX]       = { BUS_CHASSIS_ACTIVE, BUS_VEHICLE_ACTIVE, BUS_BODY_ACTIVE };
+inline constexpr const char* const kBusName[BUS_MAX]  = { "chassis", "vehicle", "body" };
+inline constexpr bool kBusActive[BUS_MAX]       = { BUS_CHASSIS_ACTIVE, BUS_VEHICLE_ACTIVE, BUS_BODY_ACTIVE };
 
 /**
  * @brief Check whether a given bus slot is enabled in the current build
