@@ -165,24 +165,36 @@ static uint32_t _driverTxFailCount = 0;  // Cumulative TX send failures since la
 static uint32_t _driverBusOffCount = 0;  // Cumulative bus-off events since last reset
 
 /**
- * @brief Read and reset the TX failure counter (atomic swap pattern)
+ * @brief Read and reset the TX failure counter (atomic read+reset under critical section)
  * @return Number of TX failures since the last call
+ *
+ * The ISR in driverSend() can increment _driverTxFailCount at any time. Wrapping
+ * the read+reset in portDISABLE_INTERRUPTS / portENABLE_INTERRUPTS prevents the
+ * classic read-then-reset race where an increment between the two lines is lost.
  */
 uint32_t driverGetAndResetTxFails()
 {
+	portDISABLE_INTERRUPTS();
 	uint32_t v = _driverTxFailCount;
 	_driverTxFailCount = 0;
+	portENABLE_INTERRUPTS();
 	return v;
 }
 
 /**
- * @brief Read and reset the bus-off event counter (atomic swap pattern)
+ * @brief Read and reset the bus-off event counter (atomic read+reset under critical section)
  * @return Number of bus-off events since the last call
+ *
+ * The poll loop can increment _driverBusOffCount from the same task, but the
+ * function is also called from serial/BLE handlers. The critical section keeps
+ * the snapshot consistent with the reset in case a poll is preempted.
  */
 uint32_t driverGetAndResetBusOffEvents()
 {
+	portDISABLE_INTERRUPTS();
 	uint32_t v = _driverBusOffCount;
 	_driverBusOffCount = 0;
+	portENABLE_INTERRUPTS();
 	return v;
 }
 

@@ -51,7 +51,11 @@ static TeslaRxState s_rx;
 static void teslaNotifyCallback(NimBLERemoteCharacteristic * /*ch*/,
                                 uint8_t *data, size_t len, bool /*notify*/)
 {
-	if (s_rx.overflow) return;
+	// Do NOT short-circuit on s_rx.overflow: that flag is only reset inside
+	// receive(), and a single transient overflow would otherwise permanently
+	// drop every subsequent notification for the lifetime of the program.
+	// The bounds checks below still set s_rx.overflow and bail, and the
+	// consumer's next receive() call clears the flag before reading.
 
 	// On the first chunk, validate the declared payload length fits the buffer
 	if (s_rx.rawLen == 0 && len >= 2) {
