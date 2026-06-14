@@ -223,15 +223,15 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | Step | Action (any channel) | Expected Result            |
 | ---- | -------------------- | -------------------------- |
 | 1    | `fsd:on`             | ACK, FSD enabled           |
-| 2    | `nag:on`             | ACK, nag suppression ON    |
+| 2    | `nag:mode:bit19`     | ACK, nag suppression ON    |
 | 3    | `profile:2`          | Profile pinned to 2        |
 | 4    | `profile:auto`       | Profile follows stalk      |
-| 5    | (HW4) `isa:on`       | ISA chime suppressed       |
+| 5    | (HW4) `isa-chime:on` | ISA chime suppressed       |
 | 6    | (HW3) `offset:60`    | Speed offset 60%           |
 | 7    | `status`             | All settings in JSON       |
 | 8    | Power cycle          | Settings restored from NVS |
 
-**NVS Persistence:** Namespace `tcm`, magic `0xCA`, version `0x02`. Keys: `variant`, `fsd`, `nag`, `sp`, `spPin`, `offset`, `offPin`, `isa`.
+**NVS Persistence:** Namespace `tcm`, magic `0xCA`, version `0x0E`. Keys: `variant`, `fsd`, `nag`, `sp`, `spPin`, `offset`, `offPin`, `isa`.
 
 ---
 
@@ -459,10 +459,10 @@ All commands work identically across all I/O channels:
 | `stream:on` / `stream:off`                                   | System    | —                        |
 | `can:raw:on` / `can:raw:off`                                 | System    | —                        |
 | `fsd:on` / `fsd:off`                                         | FSD       | —                        |
-| `nag:on` / `nag:off`                                         | FSD       | —                        |
+| `nag:mode:bit19` / `nag:mode:off`                            | FSD       | —                        |
 | `profile:0-3` / `profile:auto`                               | FSD       | —                        |
 | `offset:0-100` / `offset:auto`                               | FSD (HW3) | —                        |
-| `isa:on` / `isa:off`                                         | FSD (HW4) | —                        |
+| `isa-chime:on` / `isa-chime:off`                             | FSD (HW4) | —                        |
 | `summon:forward` / `summon:reverse` / `summon:stop`          | Summon    | `hasCtrl` (0x273)        |
 | `variant:hw4` / `variant:hw3` / `variant:legacy`             | System    | —                        |
 | `lock` / `unlock` / `lock:child`                             | Vehicle   | `hasCtrl` (0x273)        |
@@ -487,7 +487,7 @@ All commands work identically across all I/O channels:
 | Field            | ESP32 (NVS)                                 |
 | ---------------- | ------------------------------------------- |
 | Magic            | `magic` key = 0xCA                          |
-| Version          | `ver` key = 0x02                            |
+| Version          | `ver` key = 0x0E                            |
 | Variant          | `variant` key                               |
 | FSD enabled      | `fsd` key                                   |
 | Nag suppress     | `nag` key                                   |

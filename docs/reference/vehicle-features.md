@@ -40,8 +40,8 @@ Suppresses the "hands on wheel" nag prompt by clearing bit 19 in the FSD mux fra
 - **HW3/Legacy:** Clears bit 19 only
 
 ```bash
-nag:on     # Enable nag suppression
-nag:off    # Disable nag suppression
+nag:mode:bit19  # Enable bit-19 nag suppression
+nag:mode:off    # Disable nag suppression
 ```
 
 ## Speed Profile
@@ -140,10 +140,10 @@ More aggressive than basic nag suppression — intercepts CAN ID 0x370 (EPAS tor
 - Setting persisted to NVS/EEPROM
 
 ```bash
-nag:killer:on      # Enable EPAS torque spoofing
-nag:killer:off     # Disable EPAS torque spoofing
-nag:killer:mode:legacy  # Always echo when nag killer is enabled
-nag:killer:mode:safe    # Echo only when DAS hands-on is requested
+nag:mode:legacy    # EPAS echo with fixed zero torque (always-on) — replaces nag:killer:on
+nag:mode:off       # Disable nag suppression — replaces nag:killer:off
+nag:mode:legacy    # Always-on echo mode
+nag:mode:safe      # Echo only when DAS hands-on is requested
 ```
 
 ### Safe Mode
@@ -788,4 +788,4 @@ Controls vehicle power states via CAN ID 0x273.
 
 ## NVS Persistence
 
-All toggle states (FSD, nag, ISA chime, nag killer, precondition, track mode, profile, offset, variant, drive mode, ECE R79, single-shot TX, MQTT settings) are saved to NVS flash (ESP32) or EEPROM (Arduino) and persist across reboots. NVS version is `0x0C`.
+All toggle states (FSD, nag, ISA chime, nag killer, precondition, track mode, profile, offset, variant, drive mode, ECE R79, single-shot TX, MQTT settings) are saved to NVS flash (ESP32) or EEPROM (Arduino) and persist across reboots. NVS version is `0x0E`.

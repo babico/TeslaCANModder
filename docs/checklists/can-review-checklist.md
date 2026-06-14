@@ -49,11 +49,11 @@ This checklist is meant for review and regression discipline. It is not a generi
 
 ## 4. Stream and I/O protocol review
 
-- Any change to transmitted frames was checked against `firmware/lib/io/serial/board.h`.
+- Any change to transmitted frames was checked against `firmware/lib/io/serial/usb/esp32/board.h`.
 - If frame message shape changed, the client-side transport and parsing layers were reviewed at the same time.
 - `boot` and `status` still describe capability changes accurately.
 - Stream output still preserves `dir`, `id`, `dlc`, `d`, and any required metadata fields.
-- WiFi REST API (`firmware/lib/io/wifi/board.h`) and BLE NUS (`firmware/lib/io/ble/board.h`) produce identical command semantics to serial.
+- WiFi REST API (`firmware/lib/io/wifi/esp32/board.h`) and BLE NUS (`firmware/lib/io/ble/esp32/board.h`) produce identical command semantics to serial.
 - Changes to command routing were checked against `firmware/lib/vehicle/can/handler/*` and the serial/WiFi/BLE entry points.
 
 ## 5. Required regression tests

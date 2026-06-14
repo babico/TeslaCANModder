@@ -136,8 +136,10 @@ unified command interface (`nag:mode:<name>`).
 
 ## Auto Lane Change
 
-| `dasLaneChangeState` | uint8 | 0 | RO | DAS lane change state (0x39B) |
-| `alcLastConfirmMs` | ulong | 0 | — | Last ALC injection time |
+| Field                | Type  | Default | Persist | Description                   |
+| -------------------- | ----- | ------- | ------- | ----------------------------- |
+| `dasLaneChangeState` | uint8 | 0       | RO      | DAS lane change state (0x39B) |
+| `alcLastConfirmMs`   | ulong | 0       | —       | Last ALC injection time       |
 
 ## Safety Cues (RO)
 

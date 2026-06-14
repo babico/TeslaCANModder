@@ -114,6 +114,5 @@ If a Test ID cell is `—`, a test must be added before that row can be signed o
 
 - `packages/protocol/src/status.ts` — canonical signal field names
 - `firmware/src/io/wifi.h` — `sendStatus()` JSON builder (firmware source of truth)
-- `docs/can-protocol.md` — CAN ID → signal decode map
-- `docs/deprecation-checklist.md` — Phase 3 uses this matrix for row-by-row verification
-- `docs/adr-003-migration-compatibility-contract.md` — M6 gate criteria
+- `docs/reference/can-protocol.md` — CAN ID → signal decode map
+- `docs/checklists/deprecation-checklist.md` — Phase 3 uses this matrix for row-by-row verification

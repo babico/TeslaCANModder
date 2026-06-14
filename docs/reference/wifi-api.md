@@ -280,7 +280,7 @@ curl -X POST http://192.168.4.1/api/command \
 # Enable nag killer (EPAS torque spoofing)
 curl -X POST http://192.168.4.1/api/command \
   -H "Content-Type: application/json" \
-  -d '{"cmd":"nag:killer:on"}'
+  -d '{"cmd":"nag:mode:legacy"}'
 
 # Start battery preconditioning
 curl -X POST http://192.168.4.1/api/command \

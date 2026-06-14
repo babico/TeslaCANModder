@@ -117,7 +117,7 @@ The main FSD frame uses a multiplexer in the lower 3 bits of byte 0:
 
 ### Force FSD Override
 
-When `forcefsd:on` is enabled, mux-0 FSD edits are applied even if the UI FSD-selected bit is not set. This is an explicit override and should be used with caution.
+When `fsd:force:on` is enabled, mux-0 FSD edits are applied even if the UI FSD-selected bit is not set. This is an explicit override and should be used with caution.
 
 ## ISA Speed Chime (HW4 only)
 

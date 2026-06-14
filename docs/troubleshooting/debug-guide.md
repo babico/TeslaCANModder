@@ -89,11 +89,11 @@ icon: 🔍
 ## Nag Killer Not Working
 
 - Verify CAN ID 0x370 (EPAS torque) is visible in raw CAN mode (`can:raw:on`)
-- If using `nag:killer:mode:safe`, verify CAN ID 0x39B (DAS status) is visible as well
-- The nag killer intercepts the EPAS frame on the vehicle bus — requires a build with `_vehicle` (e.g. `esp32_wifi_ble_chassis_vehicle_8mhz`)
-- Check that `nag:killer:on` was sent (not just `nag:on` — these are different features)
-- `nag:on` = bit-19 suppress, `nag:killer:on` = EPAS torque zeroing
-- `nag:killer:mode:safe` only echoes spoof frames when DAS requests hands-on steering input
+- If using `nag:mode:safe`, verify CAN ID 0x39B (DAS status) is visible as well
+- The nag killer intercepts the EPAS frame on the vehicle bus — requires a build with `_vehicle` (e.g. `esp32_wifi_ble_chassis_vehicle_body_8mhz`)
+- Check that `nag:mode:legacy` was sent (not just `nag:mode:bit19` — these are different features)
+- `nag:mode:bit19` = bit-19 suppress, `nag:mode:legacy` = EPAS torque zeroing
+- `nag:mode:safe` only echoes spoof frames when DAS requests hands-on steering input
 - Use status output to confirm `nagKillerMode` and `dasHandsOn` values
 
 ## BMS Data Not Showing
