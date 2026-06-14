@@ -33,19 +33,19 @@ inline constexpr uint8_t mcpIntPins[BUS_MAX] = {
 	PIN_MCP2515_BODY_INT,
 };
 
-static inline MCP2515 *mcpBus[BUS_MAX];      // MCP2515 instance pointers per bus
-static inline volatile bool mcpFrameReady[BUS_MAX]; // ISR-set flag: frame pending in RX buffer
+static MCP2515 *mcpBus[BUS_MAX];      // MCP2515 instance pointers per bus
+static volatile bool mcpFrameReady[BUS_MAX]; // ISR-set flag: frame pending in RX buffer
 inline bool mcpAvailable[BUS_MAX];           // extern-visible: bus initialized successfully
 static uint8_t mcpClockReqMHz = BOARD_CAN_CLOCK_MHZ; // Requested oscillator (0 = auto)
 static uint8_t mcpClockMHz = BOARD_CAN_CLOCK_MHZ;    // Active clock after fallback probing
 
 // One ISR per bus slot — attachInterrupt requires distinct function pointers.
-inline void IRAM_ATTR mcpISR_chassis() { mcpFrameReady[BUS_CHASSIS] = true; }
-inline void IRAM_ATTR mcpISR_vehicle() { mcpFrameReady[BUS_VEHICLE] = true; }
-inline void IRAM_ATTR mcpISR_body()    { mcpFrameReady[BUS_BODY]    = true; }
+void IRAM_ATTR mcpISR_chassis() { mcpFrameReady[BUS_CHASSIS] = true; }
+void IRAM_ATTR mcpISR_vehicle() { mcpFrameReady[BUS_VEHICLE] = true; }
+void IRAM_ATTR mcpISR_body()    { mcpFrameReady[BUS_BODY]    = true; }
 
 /** @brief ISR function pointer table indexed by bus slot */
-static inline void (*mcpISRs[BUS_MAX])() = {
+static void (*mcpISRs[BUS_MAX])() = {
 	mcpISR_chassis,
 	mcpISR_vehicle,
 	mcpISR_body,
