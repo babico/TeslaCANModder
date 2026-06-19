@@ -2,6 +2,90 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] — 2026-06-15
+
+### Added
+
+- **3 new native test suites** — `test_native_multi_feature`,
+  `test_native_drive_context`, `test_native_serial_common` covering combined
+  feature dispatch, drive context initialization, and shared JSON output
+  helpers
+- **Cross-check filter coverage** — driver-assist and Tesla BLE command
+  families now included in the cross-check integration test
+- **9 new protocol wire fields** — `nagOrgBypass`, `rawCan`, and 9
+  `canDiag.*` fields (tx failures, bus-off events, EW limit hits) wired
+  end-to-end from firmware boot/status to client state
+- **6 new commands** — driver-assist toggles (`lhd`, `assist-dev`, `assist-nav`,
+  `assist-hof`, `assist-tel`, `ap-first`, `lane-graph`) plus `eap:on/off` and
+  `evd:on/off` for HW4 advanced settings
+- **nag unified command** — `nag:mode:<off|bit19|legacy|safe|natural|organic|full>`
+  plus `nag:bypass:on/off` replaces the old `nag:on/off` knob; `nagKillerMode`
+  renamed to `nagMode` in state types
+
+### Changed
+
+- **Protocol refactor: 62 boolean wire fields → `WireBool` type** — replaces
+  ad-hoc `boolean` definitions with a named branded type, eliminating a class
+  of generator bugs and clarifying the JSON contract
+- **Firmware lib inlining pass** — `inline constexpr` applied to per-TU
+  globals (`kBusName`, `kBusActive`, `mcpCsPins`, `mcpIntPins`, `mcpAvailable`,
+  ISR function pointers) so multi-TU native tests no longer drift
+- **Bit-position constants extracted** — FSD/DAS frame bit numbers lifted to
+  named constants in `vehicle/can/handler/variant/bits.h`; magic numbers
+  removed from HW3/HW4/legacy handlers
+- **Chassis filter and CAN ID size constants** — `CHASSIS_FILTER_MAX` and
+  `CAN_ID_MAX` extracted; `SERIAL_CMD` buffer split sizing fixed
+- **CHASSIS lane constant** — magic bus `0` replaced with `BUS_CHASSIS` in
+  all handlers; `sizeof()` used for body filter table
+- **Client redesign** — uses `formatUptime` and `ApClusterState` from the
+  shared protocol package; nativewind + shadcn theme with 11 component
+  primitives; tab connectors removed — screens consume contexts directly
+- **Native test count: 880 → 1000** — all passing in `pio test -e native`
+
+### Fixed
+
+- **Binary size regression** — non-const `inline` on `mcpBus`, `mcpFrameReady`,
+  `mcpISRs`, and the `mcpISR_*` functions actually _increased_ size under
+  the single-TU build (C++17 `inline` semantics differ for non-const data).
+  Reverted to plain `static` for those four, kept `inline constexpr` for the
+  const arrays
+- **BLE sticky overflow flag** — `mcpISR_*` overflow latch no longer
+  clobbers the frame-ready signal; counters wrapped correctly
+- **TX-fail counters now atomic** — `canDiag.txFailCount` and
+  `busOffCount` updated from ISR context with `std::atomic` to prevent
+  torn reads on the bus-error poll path
+- **9 dead `BootMessage`/`StatusMessage` fields removed** — features that
+  were never wired (legacy OTA detection, tx-paused gating) are no longer
+  advertised
+- **10 broken doc paths fixed** — references to `docs/reference/...` and
+  `docs/guides/...` that pointed at renamed or moved files
+- **NVS version bumped** — persistence layer now rejects stale magic/version
+  tuples from firmware < 1.4.0
+- **Legacy command names corrected** in `docs/reference/commands.md` —
+  `fsd:on/off`, `tlssc:on/off`, `gtwshield:arm/disarm`, etc. previously
+  referenced internal codenames
+- **6 missing wire fields** now emitted in `boot` and `status` payloads
+  (matches `BootMessage`/`StatusMessage` schemas in protocol package)
+- **brakePedalState** doc and field mapping corrected across the three
+  layers (C++ State, JSON wire, TypeScript boardState)
+- **7 bus assignments corrected** in `docs/reference/can-ids.md` (e.g.
+  `0x370` EPAS_sysStatus was on Vehicle, now correctly on Chassis)
+- **18 missing CAN IDs added** to the reference table
+- **14 missing commands documented** in `docs/reference/commands.md`
+
+### Documentation
+
+- **Infrastructure audit completed** — orphan files, gitignore gaps, dual-tree
+  firmware lib state (`lib/transport/` ↔ `lib/vehicle/can/`, `lib/interface/`
+  ↔ `lib/client/`), and stale doc references catalogued
+- **`firmware/README.md` Layout table updated** to reflect the current
+  `lib/{core,core/can,vehicle/can/feature,vehicle/can/handler,vehicle/ble,io,client}`
+    - legacy alias tree; AGENTS.md note about `lib/infra|feature|handler`
+      applies only to that file
+- **All `docs/guides/*.md` cross-links** walked; 10 previously broken
+  `docs/...` references fixed
+- **Markdown lint clean** — 41 files, 0 errors
+
 ## [1.3.0] — 2026-05-15
 
 ### Added

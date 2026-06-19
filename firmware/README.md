@@ -71,14 +71,20 @@ See `../docs/guides/hardware-setup.md` for wiring details.
 
 ## Layout
 
-| Path                 | Role                                                                   |
-| -------------------- | ---------------------------------------------------------------------- |
-| `lib/core/`          | core types, config, persistence, and driver plumbing                   |
-| `lib/infra/`         | shared CAN helpers, burst helpers, parsing, and utility infrastructure |
-| `lib/feature/`       | feature command handlers and frame mutation helpers                    |
-| `lib/handler/`       | variant-specific frame handlers and dispatch                           |
-| `lib/io/`            | USB serial, WiFi REST API/dashboard, and BLE transport layers          |
-| `src/esp32/main.cpp` | ESP32 firmware entry point                                             |
-| `test/`              | native PlatformIO regression suites                                    |
+| Path                       | Role                                                                     |
+| -------------------------- | ------------------------------------------------------------------------ |
+| `lib/core/`                | shared types, config, persistence, log ring, CAN plumbing, and driver    |
+| `lib/core/can/`            | MCP2515 bus init, frame TX/RX, ring buffer, recorder, health             |
+| `lib/vehicle/can/feature/` | feature command handlers and frame mutation helpers                      |
+| `lib/vehicle/can/handler/` | variant-specific frame handlers (HW3, HW4, legacy) and dispatch          |
+| `lib/vehicle/ble/`         | Tesla BLE protocol (key, session, vcsec, carserver)                      |
+| `lib/io/`                  | USB serial, WiFi REST API/dashboard, and BLE transport layers            |
+| `lib/client/`              | REST API, dashboard, command dispatch, gamepad                           |
+| `lib/transport/`           | legacy alias tree (uses `core/` types); kept for staged migration        |
+| `lib/interface/`           | legacy alias tree (umbrella for `transport/`); kept for staged migration |
+| `src/esp32/main.cpp`       | ESP32 firmware entry point                                               |
+| `test/`                    | native PlatformIO regression suites                                      |
+
+> The `lib/transport/` and `lib/interface/` trees mirror content under `lib/core/can/` and `lib/vehicle/can/handler/`. They are compiled in the single-TU build (via `lib_ldf_mode = deep+`) and remain in lockstep with their canonical counterparts. Consolidation is tracked as a follow-up.
 
 The shipping firmware lives here. `hardware/` is reference material only and is not the active release target.
