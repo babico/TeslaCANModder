@@ -35,7 +35,7 @@
 		"markdown-it-sub": "^2.0.0",
 		"markdown-it-sup": "^2.0.0",
 		"markdown-it-task-lists": "^2.1.1",
-		"nativewind": "^4.2.3",
+		"nativewind": "^4.2.5",
 		"react": "19.1.0",
 		"react-dom": "19.1.0",
 		"react-native": "0.81.5",
