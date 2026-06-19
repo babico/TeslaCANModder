@@ -30,6 +30,7 @@ jobs:
                   model: opencode-go/kimi-k2.6
                   agent: github-reviewer
                   use_github_token: true
+                  share: "false"
                   prompt: |
                       Review this pull request for TeslaCANModder with these criteria:
 
