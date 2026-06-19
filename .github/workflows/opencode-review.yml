@@ -6,6 +6,7 @@ on:
 
 jobs:
     review:
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         runs-on: ubuntu-latest
         permissions:
             id-token: write
@@ -18,6 +19,7 @@ jobs:
                   persist-credentials: false
 
             - uses: anomalyco/opencode/github@latest
+              continue-on-error: true
               env:
                   # OpenCode Go subscription (recommended)
                   OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
