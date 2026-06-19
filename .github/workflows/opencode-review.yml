@@ -19,6 +19,7 @@ jobs:
                   persist-credentials: false
 
             - uses: anomalyco/opencode/github@latest
+              continue-on-error: true
               env:
                   # OpenCode Go subscription (recommended)
                   OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
