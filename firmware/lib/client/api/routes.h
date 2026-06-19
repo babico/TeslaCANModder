@@ -11,7 +11,7 @@
 #include "io/wifi/esp32/cmd.h"
 #include "auth.h"
 #include "core/can/recorder.h"
-#include "vehicle/can/feature/das_drive.h"
+#include "vehicle/can/feature/das/das_drive.h"
 #if BOARD_ENABLE_BLE
 #include "client/gamepad/gamepad.h"
 #endif
