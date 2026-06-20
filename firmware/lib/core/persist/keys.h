@@ -52,3 +52,7 @@
 #define PKEY_EAP "eap"
 #define PKEY_EVD "evd"
 #define PKEY_TLSSC "tlssc"
+#define PKEY_BLE_DIST_MODE "bleDistM"
+#define PKEY_BLE_DIST_FACTOR "bleDistF"
+#define PKEY_BLE_DIST_OFFSET "bleDistO"
+#define PKEY_BLE_DIST_CAL "bleDistC"

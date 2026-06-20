@@ -99,6 +99,10 @@ inline bool loadSettings(State &s)
 	s.enhancedAutopilot = prefs.getUChar(PKEY_EAP, 0);
 	s.evdEnabled = prefs.getUChar(PKEY_EVD, 0);
 	s.tlsscRestore = prefs.getUChar(PKEY_TLSSC, 0);
+	s.bleDistanceMode = (BleDistanceMode)prefs.getUChar(PKEY_BLE_DIST_MODE, (uint8_t)BLE_DISTANCE_FORMULA);
+	s.bleDistanceFactor = prefs.getFloat(PKEY_BLE_DIST_FACTOR, 2.0f);
+	s.bleDistanceCalOffset = prefs.getFloat(PKEY_BLE_DIST_OFFSET, 0.0f);
+	s.bleDistanceCalibrated = prefs.getUChar(PKEY_BLE_DIST_CAL, 0);
 	prefs.end();
 	return true;
 }
@@ -154,5 +158,9 @@ inline void saveSettings(const State &s)
 	prefs.putUChar(PKEY_EAP, s.enhancedAutopilot ? 1 : 0);
 	prefs.putUChar(PKEY_EVD, s.evdEnabled ? 1 : 0);
 	prefs.putUChar(PKEY_TLSSC, s.tlsscRestore ? 1 : 0);
+	prefs.putUChar(PKEY_BLE_DIST_MODE, (uint8_t)s.bleDistanceMode);
+	prefs.putFloat(PKEY_BLE_DIST_FACTOR, s.bleDistanceFactor);
+	prefs.putFloat(PKEY_BLE_DIST_OFFSET, s.bleDistanceCalOffset);
+	prefs.putUChar(PKEY_BLE_DIST_CAL, s.bleDistanceCalibrated ? 1 : 0);
 	prefs.end();
 }

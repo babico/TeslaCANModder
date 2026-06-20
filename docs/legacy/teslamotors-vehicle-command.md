@@ -74,8 +74,41 @@ This repo is the **primary reference** for:
 3. Authentication protocols
 4. Command request/response schemas
 
+## BLE connection layer
+
+The BLE transport lives under `pkg/connector/` and the gRPC-over-BLE dispatch is in `pkg/protocol/`. While the official SDK does not expose RSSI-based distance estimation, it shows the connection lifecycle used by the phone key:
+
+1. Scan / connect to the vehicle's BLE advertisement
+2. Establish a VCSEC session (ephemeral key exchange)
+3. Sign and send commands over the encrypted BLE link
+
+RSSI is available from the underlying BLE host stack during this flow. Our firmware uses NimBLE-Arduino, so we can read peer RSSI directly via `NimBLEClient::getRssi()` and estimate key-to-car distance without depending on vehicle-side support.
+
 ## Relevant Files
 
-- `pkg/protocol/` — Frame formats, checksums
-- `doc/` — Protocol documentation
-- `pkg/proto/` — gRPC definitions
+| Path | Notes |
+| ---- | ----- |
+| `pkg/protocol/` | Frame formats, checksums, VCSEC session |
+| `pkg/connector/` | BLE connector abstraction |
+| `pkg/vehicle/` | High-level command builders |
+| `doc/` | Protocol documentation |
+| `pkg/proto/` | gRPC definitions |
+
+## Potential improvements for TeslaCANModder
+
+1. **BLE key distance estimator**
+   Read RSSI from the active NimBLE connection and expose selectable modes (threshold / log-distance formula / Kalman-filtered). Add `blekey:distance:*` commands and client UI. This repo confirms the connection is purely BLE+VCSEC, so distance can be measured host-side.
+
+2. **VCSEC command parity**
+   Cross-check `pkg/vehicle/` command builders against our `teslable:*` and `tesla:*` commands. Missing commands (e.g., specific charge-limit behaviors, vent windows) can be added to the BLE command dispatcher.
+
+3. **Session handshake hardening**
+   The official repo implements full ephemeral-key exchange and command signing. Audit our `teslable:auth` flow against the VCSEC spec in `doc/` to ensure we are not skipping required handshake steps.
+
+4. **Protobuf size constraints**
+   The official protocol uses length-prefixed protobuf frames. Verify our BLE MTU and protobuf encode/decode boundaries match the reference, especially for larger carserver commands.
+
+## Safety / legal notes
+
+- This is an official Tesla repository under Apache-2.0. It is safe to read and cite, but per project policy do not copy code directly into shipping firmware.
+- VCSEC/BLE key management is security-critical. Any change to `teslable:auth`, `tesla:key:*`, or session state must be reviewed against the VCSEC spec.

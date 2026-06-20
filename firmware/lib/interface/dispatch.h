@@ -11,6 +11,7 @@
 #include "core/forward.h"
 #include "interface/features.h"
 #include "transport/can/recorder.h"
+#include "vehicle/ble/feature/distance.h"
 
 #if BOARD_ENABLE_BLE
 #include "interface/ble/tesla_board.h"
@@ -970,6 +971,26 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 			return;
 		}
 		sendError(F("Unknown ble sub-command"));
+		return;
+	}
+
+	// BLE key distance estimator commands
+	if (strncmp(cmd, "blekey:distance", 15) == 0) {
+		if (executeBleKeyDistanceCmd(cmd, s)) {
+			sendAck(cmd);
+			sendLog(F("BLE key distance updated - saved"));
+			jsonLine()
+				.str("t", "blekeyDistance")
+				.str("mode", bleDistanceModeName(s.bleDistanceMode))
+				.num("rssi", s.bleRssi)
+				.num("meters", (int)(s.bleDistanceMeters * 100.0f))
+				.num("factor", (int)(s.bleDistanceFactor * 100.0f))
+				.boolean("calibrated", s.bleDistanceCalibrated)
+				.end();
+			sendStatus(s, now);
+			return;
+		}
+		sendError(F("Invalid blekey:distance sub-command"));
 		return;
 	}
 

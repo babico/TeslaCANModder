@@ -192,6 +192,12 @@ static String buildStateJson(State &s)
 	ble["connected"] = bleIsConnected();
 	ble["deviceName"] = bleGetDeviceName();
 
+	doc["bleDistanceMode"] = bleDistanceModeName(s.bleDistanceMode);
+	doc["bleDistanceMeters"] = s.bleDistanceMeters;
+	doc["bleRssi"] = s.bleRssi;
+	doc["bleDistanceFactor"] = s.bleDistanceFactor;
+	doc["bleDistanceCalibrated"] = s.bleDistanceCalibrated ? 1 : 0;
+
 	JsonObject gp = doc["gamepad"].to<JsonObject>();
 	gp["enabled"] = gpEnabled;
 	gp["connected"] = gpConnected;

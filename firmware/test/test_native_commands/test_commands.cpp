@@ -53,6 +53,7 @@ unsigned long millis()
 #include "feature/fsd/isa_chime.h"
 #include "feature/body/summon.h"
 #include "feature/misc/variant.h"
+#include "vehicle/ble/feature/distance.h"
 
 static State makeState(Variant v = HW4)
 {
@@ -565,6 +566,55 @@ void test_summon_inject_rejects_without_feature()
 	TEST_ASSERT_FALSE(executeSummonInjectCmd("summon-inject:on", s));
 }
 
+/** @brief BLE distance mode commands update state and persist */
+void test_ble_distance_mode_commands()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(executeBleKeyDistanceCmd("blekey:distance:off", s));
+	TEST_ASSERT_EQUAL(BLE_DISTANCE_OFF, s.bleDistanceMode);
+	TEST_ASSERT_EQUAL(1, saveCount);
+
+	TEST_ASSERT_TRUE(executeBleKeyDistanceCmd("blekey:distance:threshold", s));
+	TEST_ASSERT_EQUAL(BLE_DISTANCE_THRESHOLD, s.bleDistanceMode);
+
+	TEST_ASSERT_TRUE(executeBleKeyDistanceCmd("blekey:distance:formula", s));
+	TEST_ASSERT_EQUAL(BLE_DISTANCE_FORMULA, s.bleDistanceMode);
+
+	TEST_ASSERT_TRUE(executeBleKeyDistanceCmd("blekey:distance:kalman", s));
+	TEST_ASSERT_EQUAL(BLE_DISTANCE_KALMAN, s.bleDistanceMode);
+}
+
+/** @brief BLE distance factor command validates range */
+void test_ble_distance_factor_command()
+{
+	State s = makeState();
+	TEST_ASSERT_TRUE(executeBleKeyDistanceCmd("blekey:distance:factor:3.5", s));
+	TEST_ASSERT_FLOAT_WITHIN(0.01f, 3.5f, s.bleDistanceFactor);
+
+	TEST_ASSERT_FALSE(executeBleKeyDistanceCmd("blekey:distance:factor:0.5", s));
+	TEST_ASSERT_FALSE(executeBleKeyDistanceCmd("blekey:distance:factor:5.0", s));
+}
+
+/** @brief BLE distance calibrate command computes offset */
+void test_ble_distance_calibrate_command()
+{
+	State s = makeState();
+	s.bleRssi = -59;
+	s.bleDistanceFactor = 2.0f;
+	TEST_ASSERT_TRUE(executeBleKeyDistanceCmd("blekey:distance:calibrate:2.0", s));
+	TEST_ASSERT_TRUE(s.bleDistanceCalibrated);
+	// At -59 dBm default factor, uncalibrated distance is 1 m. Calibrating to 2 m
+	// means offset should shift TX power by 10*2*log10(2) ≈ 6.02 dB.
+	TEST_ASSERT_FLOAT_WITHIN(0.5f, 6.0f, s.bleDistanceCalOffset);
+}
+
+/** @brief BLE distance command rejects invalid sub-commands */
+void test_ble_distance_rejects_invalid()
+{
+	State s = makeState();
+	TEST_ASSERT_FALSE(executeBleKeyDistanceCmd("blekey:distance:unknown", s));
+}
+
 int main()
 {
 	UNITY_BEGIN();
@@ -634,6 +684,11 @@ int main()
 	RUN_TEST(test_summon_inject_on);
 	RUN_TEST(test_summon_inject_off);
 	RUN_TEST(test_summon_inject_rejects_without_feature);
+
+	RUN_TEST(test_ble_distance_mode_commands);
+	RUN_TEST(test_ble_distance_factor_command);
+	RUN_TEST(test_ble_distance_calibrate_command);
+	RUN_TEST(test_ble_distance_rejects_invalid);
 
 	return UNITY_END();
 }
