@@ -144,3 +144,17 @@ This is the primary upstream reference for our firmware. Key differences from ou
 - **Frame timing diagnostics for gate-critical CAN IDs** — The diagnostic system now tracks inter-arrival times (min/max/mean/stddev) for all gate-critical CAN IDs (0x280, 0x390, 0x399, 0x3F8). Alerts fire when any ID deviates >3σ from its observed mean, flagging potential bus congestion, dropped frames, or gateway firmware changes. Exposed via `canstats` serial command and the web dashboard.
 - **Multi-SSID WiFi with auto-failover** — The ESP32 can now scan and store up to 4 preferred SSIDs (configured via `wifiaps` serial command or web UI). On boot, it scans for available APs and connects to the strongest matching SSID. If the connection drops, it auto-failovers to the next available SSID within 5 seconds. The AP-only fallback mode still activates when no saved SSIDs are found.
 - **PlatformIO board targets for AtomS3 Mini CAN Base and Waveshare ESP32-S3** — New `[env:atoms3-mini-can]` and `[env:waveshare-esp32-s3-can]` build environments with matching M5Stack AtomS3 Lite + ATOMIC CAN Base pinout (MCP2515 on SPI2_HOST, CS=GPIO 5, INT=GPIO 6) and Waveshare ESP32-S3 RS485/CAN pinout (TWAI on GPIO 4/5 or MCP2515 on standard SPI).
+
+## Upstream (2026-06-20)
+
+33 new commits on `main` (v2.5.0-beta.9 → **v3.0.1**):
+
+- **ESP-IDF 6.0.1 migration** (223 KB flash savings; FreeRTOS task model) (`9d6536a`).
+- TWAI + MCP2515 per-driver JSON diagnostics + startup logging (`4d273ba`, `a7142de`, `c449e24`).
+- Plugin byte-mask matching + regression test (`58858a0`).
+- RGB LED status indicator (`3d0060e`).
+- Multi-SSID WiFi with auto-failover.
+- Dashboard: gz-array integrity fixes, support-button footer, build-time UI regeneration (`e276b8c`, `05e4750`, `b87491e`, `ad3d55f`, `bb4b5ab`, `086c21c`).
+- Releases: `3.0.0` stable (`67a291a`) and `3.0.1` patch (`fa4dace`).
+
+For TeslaCANModder: the MCP2515 bus-off auto-recovery pattern with exponential backoff is a direct candidate for our `core/can/` health monitor (we currently log but do not auto-recover). The TWAI/MCP2515 diagnostics JSON schema can be lifted into our `candiag` output. The ESP-IDF migration is the reference for a future framework switch. Full commit table: `docs/legacy/upstream-review-2026-06-20.md`.

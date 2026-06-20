@@ -58,3 +58,7 @@ Extremely valuable reference resource. The decoded CAN frame datasets from firmw
   - Extracted from `libQtCarCANData.so` and `libQtCarVAPI.so`
   - 0BSD license allows unrestricted use
   - Ethernet signal alias CSVs show CAN-to-Ethernet bridge mappings
+
+## Upstream (2026-06-20)
+
+Upstream GitHub repo returns **404** (deleted or renamed). Submodule entry commented out in `.gitmodules`; `[submodule]` section removed from `.git/config`; entry removed from `.git/modules/`. Working tree files preserved for local reference. The decoded CAN datasets from firmware 2026.2 are still usable locally even without the live repo. Re-check the URL periodically in case the repo is restored. See `docs/legacy/upstream-review-2026-06-20.md`.

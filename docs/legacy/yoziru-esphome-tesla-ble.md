@@ -57,3 +57,16 @@ This repo represents an alternative communication path to Tesla vehicles — BLE
   - IEC 61851 state mapping from Tesla charge states is directly applicable
   - Smart polling with sleep-awareness (11-min wake window, active vs. awake intervals) is a useful pattern for any Tesla polling implementation
   - BLE key pairing workflow and VCSEC security protocol documentation are useful context for understanding Tesla's security model
+
+## Upstream (2026-06-20)
+
+8 new commits on `main` (v2026.6.7 → v2026.6.8):
+
+- `yoziru/tesla-ble` library bump 5.0.6 → 5.1.1 (`1de8ac2`).
+- `command_builder.h` removed; command logic moved inline to `tesla_ble_vehicle.cpp` (`5154bf2`).
+- `send_command_result` now tracks command **phase** and **outcome** (`bcf5ffb`).
+- `charger_phases` sensor from `ChargeState` proto (`c194917`).
+- CI: PlatformIO package cache + stale-run cancel (`ebc40af`).
+- README rewrite: quick-start, install methods, role docs (`f935126`).
+
+Net: 660 lines deleted, 486 added across 14 files. The component shed the `command_builder.h` indirection and grew inline command logic. The underlying `yoziru/tesla-ble` library 5.0.6→5.1.1 is the most relevant change for anyone re-syncing the embedded dependency. Full commit table: `docs/legacy/upstream-review-2026-06-20.md`.

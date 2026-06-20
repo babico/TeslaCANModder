@@ -112,3 +112,12 @@ RSSI is available from the underlying BLE host stack during this flow. Our firmw
 
 - This is an official Tesla repository under Apache-2.0. It is safe to read and cite, but per project policy do not copy code directly into shipping firmware.
 - VCSEC/BLE key management is security-critical. Any change to `teslable:auth`, `tesla:key:*`, or session state must be reviewed against the VCSEC spec.
+
+## Upstream (2026-06-20)
+
+4 new commits on `main` since v0.4.1 (`49977a1`):
+
+- HSM/TEE external integration: `Session` re-export + `ECDHPrivateKey` HSM/TEE requirements docs (`3c31a68`, `92b5dec`).
+- Lint + gofmt cleanups in `pkg/protocol/external_impl_test.go` (`6609b57`, `e6e889b`).
+
+No BLE distance changes (the relevant code is in a different subtree). Relevant only if we ever move key material to a hardware enclave — the `Session` / `ECDHPrivateKey` interfaces are the integration points. Full commit table: `docs/legacy/upstream-review-2026-06-20.md`.
