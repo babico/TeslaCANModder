@@ -275,3 +275,9 @@
 [submodule "legacy/sethterashima-vehicle-command"]
 	path = legacy/sethterashima-vehicle-command
 	url = https://github.com/sethterashima/vehicle-command
+[submodule "legacy/bogosj-tesla"]
+	path = legacy/bogosj-tesla
+	url = https://github.com/bogosj/tesla.git
+[submodule "legacy/mveplus-tesla-model3-resources"]
+	path = legacy/mveplus-tesla-model3-resources
+	url = https://github.com/mveplus/tesla-model3-resources.git
