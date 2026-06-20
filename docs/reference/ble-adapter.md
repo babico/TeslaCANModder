@@ -76,7 +76,7 @@ BLE uses the exact same command protocol as USB Serial:
 ## Runtime Control
 
 BLE is controlled at runtime through the unified wire-command channel
-([wifi-api.md](./wifi-api.md#api-command)). The same `ble:*` commands work over
+([Command Execution](./wifi-api.md#command-execution---the-one-true-endpoint)). The same `ble:*` commands work over
 USB serial, BLE NUS, and HTTP `POST /api/command`:
 
 ```bash
