@@ -18,6 +18,7 @@ const NAG_MODES = [
 	{ label: "Natural", value: "natural" },
 	{ label: "Organic", value: "organic" },
 	{ label: "Full", value: "full" },
+	{ label: "Feifan", value: "feifan" },
 ];
 
 export function FsdPanel({ boardState, onCommand }: FsdPanelProps) {

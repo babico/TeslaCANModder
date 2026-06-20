@@ -330,46 +330,17 @@ inline void handleVehicleBus(Frame &f, State &s)
 		const unsigned long nowMs = millis();
 		const NagMode mode = s.nagMode;
 
-		// Organic/full mode: full DAS state machine driving byte 6 layout
-		if (mode == NAG_MODE_ORGANIC || mode == NAG_MODE_FULL)
-		{
-			if (s.nagOrganicPrevState != s.dasHandsOnState)
-			{
-				nagOrganicOnStateChange(s, nowMs);
-				s.nagOrganicPrevState = s.dasHandsOnState;
-			}
-			if (nagOrganicTick(s, nowMs))
-			{
-				Frame echo = f;
-				nagOrganicApply(echo, s);
-				driverSend(echo, BUS_VEHICLE);
-				s.canDiag.nagEchoCount++;
-			}
+		// Unified nag echo pipeline: coarse gate -> per-mode strategy -> common apply.
+		// See firmware/lib/vehicle/can/feature/fsd/nag.h for the three-stage contract.
+		if (!nagEchoShouldEcho(s, mode))
 			return;
-		}
-
-		// Natural mode: Gaussian jitter with non-linear interval, byte 1 counter
-		if (mode == NAG_MODE_NATURAL)
-		{
-			if (!nagFixedOrNaturalShouldEcho(s))
-				return;
-			if (!nagNaturalIntervalReady(s, nowMs))
-				return;
-			Frame echo = f;
-			nagApplyNaturalTorque(echo, nagNaturalTorque(s.steeringAngle, s.dasHandsOnState));
-			driverSend(echo, BUS_VEHICLE);
-			s.canDiag.nagEchoCount++;
+		NagTorque t = nagEchoCompute(s, mode, nowMs);
+		if (!t.valid)
 			return;
-		}
-
-		// Legacy/safe mode: zero torque echo with byte 1 counter
-		if (nagFixedOrNaturalShouldEcho(s))
-		{
-			Frame echo = f;
-			nagApplyZeroTorque(echo);
-			driverSend(echo, BUS_VEHICLE);
-			s.canDiag.nagEchoCount++;
-		}
+		Frame echo = f;
+		nagEchoApply(echo, t);
+		driverSend(echo, BUS_VEHICLE);
+		s.canDiag.nagEchoCount++;
 		return;
 	}
 

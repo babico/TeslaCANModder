@@ -189,13 +189,19 @@ enum SummonMode
  */
 enum NagMode
 {
-	NAG_MODE_OFF = 0,	  // No suppression
-	NAG_MODE_BIT19 = 1,	  // Clear bit-19 on 0x3FD only
-	NAG_MODE_LEGACY = 2,  // EPAS echo with fixed zero torque, always-on
-	NAG_MODE_SAFE = 3,	  // EPAS echo only when DAS requests hands-on
-	NAG_MODE_NATURAL = 4, // EPAS echo with Gaussian jitter 0.08-0.18 Nm
-	NAG_MODE_ORGANIC = 5, // EPAS echo with DAS state machine + grip excursions
-	NAG_MODE_FULL = 6	  // Bit-19 + organic EPAS echo combined
+	NAG_MODE_OFF = 0,	   // No suppression
+	NAG_MODE_BIT19 = 1,	   // Clear bit-19 on 0x3FD only
+	NAG_MODE_LEGACY = 2,   // EPAS echo with fixed zero torque, always-on
+	NAG_MODE_SAFE = 3,	   // EPAS echo only when DAS requests hands-on
+	NAG_MODE_NATURAL = 4,  // EPAS echo with Gaussian jitter 0.08-0.18 Nm
+	NAG_MODE_ORGANIC = 5,  // EPAS echo with DAS state machine + grip excursions
+	NAG_MODE_FULL = 6,	   // Bit-19 + organic EPAS echo combined
+	NAG_MODE_FEIFAN = 7	   // EPAS echo mirroring the in-the-wild V4.1.00 capture:
+						   // handsOnLevel left at 0, signed torque random-walks
+						   // around 0 (~ -5..+2 raw = -0.05..+0.02 Nm), counter
+						   // on byte 6. Passes Tesla 2026.14.x preflight where
+						   // forced handsOnLevel=1 trips detection. Gated on DAS
+						   // hands-on request (same gate as safe/natural).
 };
 
 /**
@@ -232,6 +238,8 @@ inline const char *nagModeName(NagMode m)
 		return "organic";
 	case NAG_MODE_FULL:
 		return "full";
+	case NAG_MODE_FEIFAN:
+		return "feifan";
 	default:
 		return "off";
 	}
@@ -280,6 +288,11 @@ inline bool parseNagMode(const char *name, NagMode &out)
 		out = NAG_MODE_FULL;
 		return true;
 	}
+	if (strcmp(name, "feifan") == 0)
+	{
+		out = NAG_MODE_FEIFAN;
+		return true;
+	}
 	return false;
 }
 
@@ -291,7 +304,7 @@ inline bool parseNagMode(const char *name, NagMode &out)
 inline bool nagModeUsesEpasEcho(NagMode m)
 {
 	return m == NAG_MODE_LEGACY || m == NAG_MODE_SAFE || m == NAG_MODE_NATURAL || m == NAG_MODE_ORGANIC ||
-		   m == NAG_MODE_FULL;
+		   m == NAG_MODE_FULL || m == NAG_MODE_FEIFAN;
 }
 
 /**
@@ -515,6 +528,9 @@ struct State
 	// Last generated organic output
 	int16_t nagOrgLastRaw; // Center 2048
 	uint8_t nagOrgLastLevel;
+
+	// Feifan-mode random-walk position (center 2048, ~ -5..+2 raw)
+	int16_t nagFeifanWalkRaw;
 
 	// Auto Lane Change (ALC) — persisted
 	bool alcAutoConfirmEnabled;		// Enable automatic lane change confirmation

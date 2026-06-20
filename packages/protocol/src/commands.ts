@@ -11,6 +11,7 @@ export const VALID_NAG_MODES = [
 	"natural",
 	"organic",
 	"full",
+	"feifan",
 ] as const;
 export type NagMode = (typeof VALID_NAG_MODES)[number];
 

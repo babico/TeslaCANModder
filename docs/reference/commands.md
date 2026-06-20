@@ -271,17 +271,18 @@ command interface.
 
 ### Unified command
 
-| Command            | Description                                                            |
-| ------------------ | ---------------------------------------------------------------------- |
-| `nag:mode:off`     | Disable all nag suppression                                            |
-| `nag:mode:bit19`   | Clear ECE R79 hands-on bit on UI_autopilotControl mux=1 (cheapest)     |
-| `nag:mode:legacy`  | 0x370 EPAS echo, fixed zero torque, always-on                          |
-| `nag:mode:safe`    | 0x370 EPAS echo, only when DAS actively requests hands-on              |
-| `nag:mode:natural` | 0x370 EPAS echo, Gaussian-jittered 0.08–0.18 Nm with steering feedback |
-| `nag:mode:organic` | 0x370 EPAS echo, full DAS state machine + grip excursions ±1.0–3.3 Nm  |
-| `nag:mode:full`    | `bit19` + whichever echo mode was last selected (max suppression)      |
-| `nag:bypass:on`    | Organic mode only: stop injection when real driver hands-on detected   |
-| `nag:bypass:off`   | Organic mode only: keep injecting regardless of driver input           |
+| Command            | Description                                                                                                                                                                                                                                                                                                                                                |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nag:mode:off`     | Disable all nag suppression                                                                                                                                                                                                                                                                                                                                |
+| `nag:mode:bit19`   | Clear ECE R79 hands-on bit on UI_autopilotControl mux=1 (cheapest)                                                                                                                                                                                                                                                                                         |
+| `nag:mode:legacy`  | 0x370 EPAS echo, fixed zero torque, always-on                                                                                                                                                                                                                                                                                                              |
+| `nag:mode:safe`    | 0x370 EPAS echo, only when DAS actively requests hands-on                                                                                                                                                                                                                                                                                                  |
+| `nag:mode:natural` | 0x370 EPAS echo, Gaussian-jittered 0.08–0.18 Nm with steering feedback                                                                                                                                                                                                                                                                                     |
+| `nag:mode:organic` | 0x370 EPAS echo, full DAS state machine + grip excursions ±1.0–3.3 Nm                                                                                                                                                                                                                                                                                      |
+| `nag:mode:full`    | `bit19` + whichever echo mode was last selected (max suppression)                                                                                                                                                                                                                                                                                          |
+| `nag:mode:feifan`  | 0x370 EPAS echo mirroring the in-the-wild V4.1.00 capture: `handsOnLevel` left at 0, signed torque random-walks around 0 (~ -0.05..+0.02 Nm). Gated on DAS hands-on request. Designed to pass Tesla 2026.14.x preflight where forced `handsOnLevel=1` trips detection. See `firmware/lib/vehicle/can/feature/fsd/nag.h` and the hypery11 feifan reference. |
+| `nag:bypass:on`    | Organic mode only: stop injection when real driver hands-on detected                                                                                                                                                                                                                                                                                       |
+| `nag:bypass:off`   | Organic mode only: keep injecting regardless of driver input                                                                                                                                                                                                                                                                                               |
 
 ### Strategy summary
 
@@ -307,7 +308,7 @@ command interface.
 ### Status payload
 
 ```
-"nagMode":      "<off|bit19|legacy|safe|natural|organic|full>"  — active mode
+"nagMode":      "<off|bit19|legacy|safe|natural|organic|full|feifan>"  — active mode
 "nagOrgBypass": <bool>    — organic-mode driver-feedback bypass
 "dasHandsOn":   <uint>    — decoded DAS hands-on-state
 ```
