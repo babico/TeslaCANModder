@@ -33,6 +33,16 @@ export function detectBoard(hw: string): "arduino" | "esp32" | "unknown" {
 	return "unknown";
 }
 
+const BLE_DISTANCE_MODES = ["off", "threshold", "formula", "kalman"] as const;
+
+type BleDistanceMode = (typeof BLE_DISTANCE_MODES)[number];
+
+function decodeBleDistanceMode(raw: unknown): BleDistanceMode {
+	const s = String(raw ?? "");
+	if (BLE_DISTANCE_MODES.includes(s as BleDistanceMode)) return s as BleDistanceMode;
+	return "formula";
+}
+
 /** Prepend a notification to state.messages (capped at 100). */
 export function addNotification(
 	state: BoardState,
@@ -225,6 +235,12 @@ export const initialBoardState: BoardState = {
 
 	bleEncrypt: false,
 	bleEncryptPaired: 0,
+
+	bleDistanceMode: "formula",
+	bleDistanceMeters: -1,
+	bleRssi: 0,
+	bleDistanceFactor: 2.0,
+	bleDistanceCalibrated: false,
 
 	fwYear: 0,
 	fwRelease: 0,
@@ -550,6 +566,16 @@ function applyBoot(prev: BoardState, msg: BootMessage): BoardState {
 		haInterval: msg.haInterval ?? prev.haInterval,
 		bleEncrypt: msg.bleEncrypt !== undefined ? Boolean(msg.bleEncrypt) : prev.bleEncrypt,
 		bleEncryptPaired: msg.bleEncryptPaired ?? prev.bleEncryptPaired,
+		bleDistanceMode: msg.bleDistanceMode
+			? decodeBleDistanceMode(msg.bleDistanceMode)
+			: prev.bleDistanceMode,
+		bleDistanceMeters: msg.bleDistanceMeters ?? prev.bleDistanceMeters,
+		bleRssi: msg.bleRssi ?? prev.bleRssi,
+		bleDistanceFactor: msg.bleDistanceFactor ?? prev.bleDistanceFactor,
+		bleDistanceCalibrated:
+			msg.bleDistanceCalibrated !== undefined
+				? Boolean(msg.bleDistanceCalibrated)
+				: prev.bleDistanceCalibrated,
 		fwYear: msg.fwYear ?? prev.fwYear,
 		fwRelease: msg.fwRelease ?? prev.fwRelease,
 		fwMinor: msg.fwMinor ?? prev.fwMinor,
@@ -788,6 +814,16 @@ function applyStatus(prev: BoardState, msg: StatusMessage): BoardState {
 		haInterval: msg.haInterval ?? prev.haInterval,
 		bleEncrypt: msg.bleEncrypt !== undefined ? Boolean(msg.bleEncrypt) : prev.bleEncrypt,
 		bleEncryptPaired: msg.bleEncryptPaired ?? prev.bleEncryptPaired,
+		bleDistanceMode: msg.bleDistanceMode
+			? decodeBleDistanceMode(msg.bleDistanceMode)
+			: prev.bleDistanceMode,
+		bleDistanceMeters: msg.bleDistanceMeters ?? prev.bleDistanceMeters,
+		bleRssi: msg.bleRssi ?? prev.bleRssi,
+		bleDistanceFactor: msg.bleDistanceFactor ?? prev.bleDistanceFactor,
+		bleDistanceCalibrated:
+			msg.bleDistanceCalibrated !== undefined
+				? Boolean(msg.bleDistanceCalibrated)
+				: prev.bleDistanceCalibrated,
 		fwYear: msg.fwYear ?? prev.fwYear,
 		fwRelease: msg.fwRelease ?? prev.fwRelease,
 		fwMinor: msg.fwMinor ?? prev.fwMinor,

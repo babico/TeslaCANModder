@@ -454,6 +454,21 @@ export const commands = {
 	blePair: () => "bleencrypt:pair",
 	bleUnpair: () => "bleencrypt:unpair",
 
+	// BLE key distance estimation
+	bleDistanceMode: (mode: "off" | "threshold" | "formula" | "kalman") =>
+		`blekey:distance:${mode}`,
+	bleDistanceFactor: (factor: number) => {
+		if (factor < 1.0 || factor > 4.0)
+			throw new RangeError(`BLE distance factor must be 1.0-4.0, got ${factor}`);
+		return `blekey:distance:factor:${factor.toFixed(2)}`;
+	},
+	bleDistanceCalibrate: (meters: number) => {
+		if (meters < 0.1 || meters > 50.0)
+			throw new RangeError(`BLE distance calibration must be 0.1-50.0 m, got ${meters}`);
+		return `blekey:distance:calibrate:${meters.toFixed(2)}`;
+	},
+	bleDistanceStatus: () => "blekey:distance",
+
 	// Gamepad (BLE HID) — pair/unpair, scan, enable, status, bindings, axis tuning.
 	// See firmware/lib/client/gamepad/* and dispatch.h "gamepad:" handler.
 	gamepadScan: () => "gamepad:scan",

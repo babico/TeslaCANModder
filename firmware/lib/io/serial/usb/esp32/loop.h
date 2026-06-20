@@ -48,6 +48,8 @@ void serialTick(State& s) {
 	}
 
 #if BOARD_ENABLE_BLE
+	// Update BLE key distance estimate from peer RSSI
+	bleDistanceTick(s);
 	// Process incoming BLE serial characters
 	while (bleAvailable()) {
 		char c = bleRead();

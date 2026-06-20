@@ -19,6 +19,11 @@ export function GamepadPanel({ boardState, onCommand }: GamepadPanelProps) {
 	const raw = boardState as unknown as Record<string, unknown>;
 	const gp = (raw.gamepad as Record<string, unknown> | undefined) ?? undefined;
 	const enabled = Boolean(gp?.enabled);
+	const bleDistanceMode = String(raw.bleDistanceMode ?? "formula");
+	const bleDistanceMeters = Number(raw.bleDistanceMeters ?? -1);
+	const bleRssi = Number(raw.bleRssi ?? 0);
+	const bleDistanceFactor = Number(raw.bleDistanceFactor ?? 2.0);
+	const bleDistanceCalibrated = Boolean(raw.bleDistanceCalibrated);
 	const connected = Boolean(gp?.connected);
 	const scanning = Boolean(gp?.scanning);
 	const pairedAddr = typeof gp?.pairedAddr === "string" ? (gp.pairedAddr as string) : "";
@@ -116,6 +121,63 @@ export function GamepadPanel({ boardState, onCommand }: GamepadPanelProps) {
 							onPress={() => onCommand("gamepadUnpair")}
 						/>
 					) : null}
+				</View>
+
+				<View className="gap-2 rounded-md bg-muted p-3">
+					<View className="flex-row items-center justify-between">
+						<Text className="text-xs text-muted-foreground">BLE key distance</Text>
+						<Badge
+							label={bleDistanceMode}
+							variant={bleDistanceMode === "off" ? "outline" : "default"}
+						/>
+					</View>
+					<View className="flex-row flex-wrap gap-2">
+						<View className="min-w-[100px] flex-1 gap-0.5">
+							<Text className="text-xs text-muted-foreground">RSSI</Text>
+							<Text className="text-sm font-semibold text-foreground">
+								{bleRssi !== 0 ? `${bleRssi} dBm` : "—"}
+							</Text>
+						</View>
+						<View className="min-w-[100px] flex-1 gap-0.5">
+							<Text className="text-xs text-muted-foreground">Distance</Text>
+							<Text className="text-sm font-semibold text-foreground">
+								{bleDistanceMeters < 0 ? "—" : `${bleDistanceMeters.toFixed(1)} m`}
+								{bleDistanceCalibrated ? " *" : ""}
+							</Text>
+						</View>
+						<View className="min-w-[100px] flex-1 gap-0.5">
+							<Text className="text-xs text-muted-foreground">Factor</Text>
+							<Text className="text-sm font-semibold text-foreground">
+								{bleDistanceFactor.toFixed(2)}
+							</Text>
+						</View>
+					</View>
+					<View className="flex-row flex-wrap gap-2">
+						<Button
+							label="Off"
+							size="sm"
+							variant={bleDistanceMode === "off" ? "default" : "outline"}
+							onPress={() => onCommand("bleDistanceMode", "off")}
+						/>
+						<Button
+							label="Threshold"
+							size="sm"
+							variant={bleDistanceMode === "threshold" ? "default" : "outline"}
+							onPress={() => onCommand("bleDistanceMode", "threshold")}
+						/>
+						<Button
+							label="Formula"
+							size="sm"
+							variant={bleDistanceMode === "formula" ? "default" : "outline"}
+							onPress={() => onCommand("bleDistanceMode", "formula")}
+						/>
+						<Button
+							label="Kalman"
+							size="sm"
+							variant={bleDistanceMode === "kalman" ? "default" : "outline"}
+							onPress={() => onCommand("bleDistanceMode", "kalman")}
+						/>
+					</View>
 				</View>
 
 				{devices.length > 0 ? (

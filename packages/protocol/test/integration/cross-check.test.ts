@@ -334,6 +334,15 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"bleencrypt:pair",
 	"bleencrypt:unpair",
 
+	// BLE key distance estimation
+	"blekey:distance",
+	"blekey:distance:off",
+	"blekey:distance:threshold",
+	"blekey:distance:formula",
+	"blekey:distance:kalman",
+	"blekey:distance:factor:2.00",
+	"blekey:distance:calibrate:1.00",
+
 	// Gamepad (BLE HID)
 	"gamepad:scan",
 	"gamepad:rescan",
@@ -578,6 +587,21 @@ function extractProtocolCommands(): string[] {
 			}
 			if (key === "haInterval") {
 				cmds.push((fn as (n: number) => string)(1000));
+				continue;
+			}
+			if (key === "bleDistanceMode") {
+				cmds.push((fn as (m: string) => string)("off"));
+				cmds.push((fn as (m: string) => string)("threshold"));
+				cmds.push((fn as (m: string) => string)("formula"));
+				cmds.push((fn as (m: string) => string)("kalman"));
+				continue;
+			}
+			if (key === "bleDistanceFactor") {
+				cmds.push((fn as (n: number) => string)(2));
+				continue;
+			}
+			if (key === "bleDistanceCalibrate") {
+				cmds.push((fn as (n: number) => string)(1));
 				continue;
 			}
 			// Gamepad parameterized commands

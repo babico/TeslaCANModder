@@ -869,6 +869,30 @@ Distinct from the high-level VCSEC control below.
 | `bleencrypt:pair`   | Start BLE pairing mode           |
 | `bleencrypt:unpair` | Remove all paired devices        |
 
+## BLE Key Distance
+
+Estimate proximity to the paired BLE key/phone from the ESP32's observed RSSI.
+
+| Command                         | Description                                    |
+| ------------------------------- | ---------------------------------------------- |
+| `blekey:distance`               | Query current RSSI and estimated distance      |
+| `blekey:distance:off`           | Disable distance estimation                    |
+| `blekey:distance:threshold`     | Near / mid / far threshold buckets             |
+| `blekey:distance:formula`       | Log-distance path-loss formula (default)       |
+| `blekey:distance:kalman`        | Formula with 1D Kalman-smoothed RSSI           |
+| `blekey:distance:factor:<N>`    | Set path-loss exponent (1.0–4.0, default 2.0)  |
+| `blekey:distance:calibrate:<M>` | Calibrate current reading to M meters (0.1–50) |
+
+Status payload fields:
+
+| Field                   | Description                                               |
+| ----------------------- | --------------------------------------------------------- |
+| `bleDistanceMode`       | `"off"`, `"threshold"`, `"formula"`, or `"kalman"`        |
+| `bleDistanceMeters`     | Estimated distance in meters (`-1` when disabled/unknown) |
+| `bleRssi`               | Last observed peer RSSI in dBm                            |
+| `bleDistanceFactor`     | Path-loss exponent (fixed-point ×100 on wire)             |
+| `bleDistanceCalibrated` | `1` if a calibration offset has been applied              |
+
 ## Response Format
 
 All responses are JSON with a `t` (type) field:

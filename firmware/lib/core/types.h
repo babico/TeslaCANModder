@@ -199,6 +199,17 @@ enum NagMode
 };
 
 /**
+ * @brief BLE key distance estimation mode
+ */
+enum BleDistanceMode
+{
+	BLE_DISTANCE_OFF = 0,	   // Distance estimation disabled
+	BLE_DISTANCE_THRESHOLD, // RSSI buckets: near / mid / far
+	BLE_DISTANCE_FORMULA,   // Log-distance path-loss formula
+	BLE_DISTANCE_KALMAN	   // Formula + calibration offset
+};
+
+/**
  * @brief Return a human-readable name for a NagMode value
  * @param m Nag mode
  * @return Null-terminated mode name string
@@ -709,6 +720,14 @@ struct State
 	char apiKey[33];	 // 32-char hex key + NUL, generated on first boot
 	bool apiKeyRequired; // True = require X-API-Key header on mutable endpoints
 
+	// BLE key distance estimation
+	BleDistanceMode bleDistanceMode;
+	float bleDistanceMeters;
+	int bleRssi;
+	float bleDistanceFactor;
+	float bleDistanceCalOffset;
+	bool bleDistanceCalibrated;
+
 	State()
 		: variant(HW4), fsdEnabled(false), fsdForceEnabled(false), speedProfile(1), profileOverride(false),
 		  speedOffset(0), offsetOverride(false), isaChimeSuppress(false), summonInject(false), streamEnabled(false),
@@ -756,7 +775,8 @@ struct State
 		  mqttConnected(false), vehicleModel(0), vehicleYear(0), hasVehicleConfig(false), platformModel(0),
 		  platformHwGen(0), platformSwYear(0), platformSwWeek(0), platformSwRelease(0), platformSwPatch(0),
 		  platformFsdProto(0), platformSwCompat(0), platformResolved(false), apiKeyRequired(false), steeringAngle(0),
-		  canDiag()
+		  bleDistanceMode(BLE_DISTANCE_FORMULA), bleDistanceMeters(-1.0f), bleRssi(0), bleDistanceFactor(2.0f),
+		  bleDistanceCalOffset(0.0f), bleDistanceCalibrated(false), canDiag()
 	{
 		for (uint8_t i = 0; i < 8; i++)
 			lastCtrl[i] = 0;

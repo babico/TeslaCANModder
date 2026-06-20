@@ -245,6 +245,12 @@ export interface BootMessage {
 	// Encrypted BLE Multi-Device (4.6)
 	bleEncrypt?: WireBool;
 	bleEncryptPaired?: number;
+	// BLE key distance estimation
+	bleDistanceMode?: string;
+	bleDistanceMeters?: number;
+	bleRssi?: number;
+	bleDistanceFactor?: number;
+	bleDistanceCalibrated?: WireBool;
 }
 
 export interface StatusMessage {
@@ -401,6 +407,12 @@ export interface StatusMessage {
 	// Encrypted BLE Multi-Device (4.6)
 	bleEncrypt?: WireBool;
 	bleEncryptPaired?: number;
+	// BLE key distance estimation
+	bleDistanceMode?: string;
+	bleDistanceMeters?: number;
+	bleRssi?: number;
+	bleDistanceFactor?: number;
+	bleDistanceCalibrated?: WireBool;
 }
 
 export interface PlatformMessage {
@@ -998,6 +1010,13 @@ export interface BoardState {
 	frameCount: number;
 
 	messages: ConsoleMessage[];
+
+	// BLE key distance estimation
+	bleDistanceMode: "off" | "threshold" | "formula" | "kalman";
+	bleDistanceMeters: number;
+	bleRssi: number;
+	bleDistanceFactor: number;
+	bleDistanceCalibrated: boolean;
 
 	features: BoardFeatures;
 }
