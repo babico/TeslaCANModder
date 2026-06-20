@@ -11,6 +11,18 @@ Core shell scripting library for Tesla BLE to MQTT bridging. Enables Home Assist
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Tesla["Tesla BLE"] --> Bash["run.sh<br/>(bash core)"]
+    Bash --> State["read-state.sh"]
+    Bash --> Cmd["tesla-commands.sh"]
+    Bash --> MQTT["mqtt.sh / mqtt-listen.sh"]
+    Bash --> Disc["mqtt-discovery.sh<br/>(HA auto-discovery)"]
+    MQTT --> HA["Home Assistant"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Bash,State,Cmd,MQTT,Disc path
+```
+
 ```
 tesla_ble_mqtt_core/
 ├── mqtt.sh               # MQTT connection management

@@ -23,6 +23,14 @@ A collection of ESP32 projects for Tesla vehicles that includes an ESP-NOW-based
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    ESP32["ESP32"] --> LED["WS2812B LED strips<br/>(multi-strip)"]
+    ESP32 --> Portal["WiFi web portal<br/>(LED control)"]
+    DBC["DBC files<br/>(Tesla CAN signals)"] --> Ref["Reference data<br/>(not wired to code)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP32,LED,Portal path
+```
 The repo is organized into numbered directories:
 
 - `1. Get MAC Address/` — Simple Arduino sketch to retrieve ESP32 MAC address (for ESP-NOW pairing)

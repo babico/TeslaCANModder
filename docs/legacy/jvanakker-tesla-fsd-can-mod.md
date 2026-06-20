@@ -14,6 +14,16 @@ repo: tesla-fsd-can-mod
 
 A mirror of the original Starmixcraft Tesla FSD CAN mod for the Adafruit Feather M4 CAN (MCP25625-based). The firmware intercepts CAN bus messages to enable FSD functionality on Tesla vehicles. Noted as non-functional on Tesla software versions 2026.8.6, 2026.2.9.x and later.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> M4["Feather M4 (ATSAME51)<br/>+ MCP25625"]
+    M4 --> FSD["FSD enable<br/>(intercept + modify)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class M4,FSD path
+```
+
 ## Technical Details
 
 - **Platform**: Adafruit Feather M4 CAN (ATSAME51 + MCP25625)

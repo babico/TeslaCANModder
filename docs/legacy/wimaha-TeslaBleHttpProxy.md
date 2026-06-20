@@ -14,6 +14,17 @@ repo: TeslaBleHttpProxy
 
 A Go-based HTTP-to-BLE proxy that receives HTTP REST commands and forwards them over Bluetooth Low Energy to a Tesla vehicle. Designed primarily for integration with the evcc home energy management system, it provides a Fleet API–compatible interface for vehicle commands (wake, charge start/stop, set amps, lock/unlock, etc.) and vehicle data queries.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Evcc["evcc<br/>(home energy mgmt)"] -->|HTTP REST| Proxy["Go HTTP-to-BLE proxy"]
+    Proxy -->|BLE (D-Bus)| Tesla["Tesla vehicle"]
+    Proxy --> Fleet["Fleet API-compatible<br/>surface (wake, charge,<br/>set amps, lock, …)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Proxy,Fleet path
+```
+
 ## Technical Details
 
 - **Platform**: Linux (requires D-Bus for BLE); Docker or bare metal

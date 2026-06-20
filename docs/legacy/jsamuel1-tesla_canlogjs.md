@@ -23,6 +23,17 @@ A full-stack Tesla CAN logging pipeline: captures CAN messages on a Raspberry Pi
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> Pi["Pi 4 + White Panda"]
+    Pi --> CSV["CSV log"]
+    CSV --> S3["AWS S3"]
+    S3 --> Lambda["AWS Lambda + Timestream"]
+    Lambda --> DBC["Model3CAN.dbc decode"]
+    DBC --> Out["Decoded telemetry"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,S3,Lambda,DBC path
+```
 - `rpi/can_capture.py` — Captures CAN frames from the Panda adapter, writes hourly CSV files with bus, message ID, data, length, and timestamp
 - `rpi/can_upload.py` — Monitors for completed CSV files, compresses with gzip, and uploads to AWS S3
 - `rpi/install.sh` — Sets up systemd services for auto-capture and upload

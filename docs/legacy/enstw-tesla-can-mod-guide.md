@@ -25,6 +25,16 @@ The repo has evolved into a goal-oriented install guide workspace with a canonic
 
 ## Architecture
 
+```mermaid
+flowchart TB
+    HW["2024 Model 3 Highland (HW4)"] --> X179["X179 connector"]
+    X179 --> MCU["Adafruit Feather RP2040 CAN<br/>(MCP2515)"]
+    MCU --> DCDC["DC/DC converter<br/>(board power)"]
+    MCU --> FW["Firmware<br/>(hypery11 CAN logic port)"]
+    FW --> Nag["Nag suppression"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class MCU,DCDC,FW path
+```
 Documentation and planning artifacts:
 
 - `README.md` — Complete step-by-step wiring and installation guide

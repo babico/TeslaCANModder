@@ -14,6 +14,20 @@ repo: TeslaCANPi
 
 A Raspberry Pi Zero-based CAN bus logger for Tesla Model 3 that stores data offline on the Pi's SD card. The system includes power management via an Arduino Pro Mini, a UPS module for clean shutdowns, and a .NET/Mono service that collects CAN data, serves it via HTTP, and communicates over Bluetooth using the ELM327 protocol. Data is compatible with the TeslaLogger project.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Model 3 CAN"] --> HAT["Waveshare RS485 CAN HAT<br/>(MCP2515)"]
+    HAT --> Pi["Pi Zero"]
+    Arduino["Arduino Pro Mini<br/>(power mgmt / UPS)"] --> Pi
+    Pi --> SD["SD log"]
+    Pi --> HTTP["HTTP server"]
+    Pi --> ELM["ELM327 (BT)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class HAT,Pi,Arduino path
+```
+
 ## Technical Details
 
 - **Platform**: Raspberry Pi Zero + Arduino Pro Mini ATMega328

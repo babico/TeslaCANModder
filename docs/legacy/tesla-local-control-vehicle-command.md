@@ -11,6 +11,21 @@ Fork of Tesla's official `vehicle-command` by tesla-local-control. Adds linting 
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Go["Go CLI"] --> Cmd["cmd/ (CLI)"]
+    Go --> Pkg["pkg/ (shared)"]
+    Go --> Internal["internal/"]
+    Go --> Doc["doc/ (protocol)"]
+    Go --> Examples["examples/"]
+    Go --> Lint["golangci.yml"]
+    Cmd & Pkg & Internal --> VCSEC["VCSEC protocol<br/>(Tesla BLE)"]
+    VCSEC --> Tesla["Tesla vehicle"]
+    Go --> Docker["Docker / compose"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Go,VCSEC,Docker path
+```
+
 ```
 tesla-local-control-vehicle-command/
 ├── cmd/                # CLI command implementations

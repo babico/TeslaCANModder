@@ -14,6 +14,18 @@ repo: CANserver
 
 A modified version of Josh Wardell's CANserver that reads Tesla Model 3 CAN bus data on an ESP32, transmits real-time data (battery voltage, current, power) to a slave ESP32 via ESP-NOW, and serves a web interface for viewing additional vehicle telemetry (temperatures, battery life). The slave ESP32 drives quad alphanumeric LED segment displays.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Model 3 CAN"] --> Master["ESP32 master<br/>(CANserver)"]
+    Master -->|ESP-NOW| Slave["ESP32 slave"]
+    Slave --> LED["Quad alphanumeric<br/>LED displays"]
+    Master --> Web["Web interface<br/>(battery, temps)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Master,Slave,Web path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32 (dual ESP32 setup — master + slave)

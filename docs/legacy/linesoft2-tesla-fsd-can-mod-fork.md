@@ -14,6 +14,16 @@ repo: tesla-fsd-can-mod-fork
 
 A Chinese-localized fork of the Starmixcraft Tesla FSD CAN Mod, adapted for Arduino Nano + MCP2515 hardware instead of the original Adafruit Feather. The firmware intercepts and modifies CAN bus messages to enable Full Self-Driving (FSD) functionality on vehicles with a valid FSD entitlement. The README notes that as of 2026.3.31, Chinese vehicles have had FSD disabled at the gateway level, rendering this project ineffective for those vehicles.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> Nano["Arduino Nano<br/>(MCP2515 SPI)"]
+    Nano --> FSD["FSD enable<br/>(intercept + modify)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Nano,FSD path
+```
+
 ## Technical Details
 
 - **Platform**: Arduino Nano

@@ -23,6 +23,13 @@ A hardware documentation repo for a homemade Tesla coil (the electrical device, 
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Hw["Physical hardware:<br/>6-pack glass bottle cap bank,<br/>neon transformer, spark gap,<br/>copper coil winding"] --> Doc["README only<br/>(no code)"]
+    Doc --> Status["Not a Tesla project"]
+    classDef note fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Status note
+```
 The repo contains only a `README.md` with build documentation and photos. No source code exists.
 
 ## CAN Bus Integration

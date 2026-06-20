@@ -23,6 +23,16 @@ A Python tool that patches the EPAS (Electronic Power Assisted Steering) firmwar
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Pre["Pre-AP Tesla"] --> Panda["comma.ai Panda<br/>(USB-CAN)"]
+    Panda --> UDS["UDS extract (0x34/0x36)"]
+    UDS --> Patch["Python patcher<br/>(flip steering-enable bit)"]
+    Patch --> Flash["UDS flash (0x31)"]
+    Flash --> Post["Steering-over-CAN enabled"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Panda,UDS,Patch,Flash path
+```
 - `patch.py` — Main script: extracts firmware from EPAS via UDS, validates MD5 against known good firmware, applies binary patches, recalculates CRC32 checksums, and flashes modified firmware back
 - `requirements.txt` — Python dependencies (tqdm for progress bars)
 - `epas-bootloader-0x3ff7000-0x3ffacbd.bin` — EPAS bootloader binary needed for the flash process

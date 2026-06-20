@@ -14,6 +14,17 @@ repo: ESP32-dash-direct
 
 An ESP32-S3 based Tesla Model 3/Y (HW4) dashboard that directly reads CAN bus frames via the TWAI peripheral and renders real-time vehicle data on a 320×240 ST7789 LCD using LVGL. No WiFi or network required — displays data immediately on boot.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Model 3/Y (HW4) CAN"] --> ESP32["ESP32-S3 (ESP-IDF)<br/>+ SN65HVD230"]
+    ESP32 --> TWAI["Built-in TWAI @ 500kbps"]
+    TWAI --> LVGL["LVGL dashboard<br/>(320x240 ST7789)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP32,LVGL path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32-S3 (ESP-IDF)

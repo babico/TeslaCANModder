@@ -11,7 +11,16 @@ Fork of Tesla's official `vehicle-command` by Seth Terashima. Provides a Dockeri
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Docker["Docker container<br/>(Dockerfile + compose)"] --> Go["Go CLI<br/>(cmd/, pkg/, internal/)"]
+    Go --> BLE["BLE transport"]
+    BLE --> Car["Tesla vehicle-command"]
+    Doc["doc/ + examples/"] --> Go
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Docker,Go,BLE path
 ```
+
 sethterashima-vehicle-command/
 ├── cmd/              # CLI command entry points
 ├── pkg/              # Shared protocol packages

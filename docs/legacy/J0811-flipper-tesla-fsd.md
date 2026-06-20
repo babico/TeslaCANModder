@@ -23,6 +23,17 @@ A Flipper Zero application for Tesla FSD CAN bus unlocking. This is a fork of hy
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN (HW3/HW4)"] --> MCP["MCP2515 (CAN Bus Add-On)"]
+    MCP --> Flip["Flipper Zero<br/>(Cortex-M4)"]
+    Flip --> Detect["Auto-detect variant<br/>(0x398)"]
+    Flip --> FSD["FSD enable + nag suppress"]
+    Flip --> BMS["BMS sniff (V/I/SoC/T)"]
+    Flip --> Pre["Battery precondition"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Detect,FSD,BMS,Pre path
+```
 - `tesla_fsd_app.c` / `tesla_fsd_app.h` — Main Flipper application entry point with scene manager, view dispatcher, and GUI setup.
 - `fsd_logic/fsd_handler.c` / `fsd_handler.h` — Core CAN message handling logic. Clean C implementation with:
   - `FSDState` struct holding all runtime state (HW version, speed profile, FSD status, BMS data, OTA flag).

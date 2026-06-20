@@ -23,6 +23,14 @@ A .NET Core desktop application that parses Tesla CAN bus log files (captured fr
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Log["Tesla CAN log file<br/>(CSV/PCAP)"] --> Net["C# .NET Core parser"]
+    Net --> Factory["Message factory<br/>(decodes known IDs)"]
+    Factory --> Out["JSON / CSV<br/>+ charging session extract"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Net,Factory,Out path
+```
 The solution is split into three projects:
 
 - **TeslaCanBusInspector/** — Main CLI application

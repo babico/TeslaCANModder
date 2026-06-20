@@ -23,6 +23,17 @@ A fork/variant of the CanFeather Tesla FSD CAN bus enabler. Provides firmware fo
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> MCU{"Board"}
+    MCU -->|rp2040| RP["Feather RP2040 CAN<br/>(MCP2515 SPI)"]
+    MCU -->|uno| UNO["Arduino UNO<br/>(MCP2515 SPI)"]
+    RP & UNO --> FSD["FSD enable"]
+    RP & UNO --> Prof["Speed profile"]
+    RP & UNO --> Nag["Nag suppression"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class FSD,Prof,Nag path
+```
 - `RP2040CAN.ino` — Main firmware for Adafruit Feather RP2040 CAN. Uses polymorphic handler pattern (`LegacyHandler`, `HW3Handler`, `HW4Handler`) selected at compile time via `#define HW`.
 - `UNO_MCP2515_CAN.ino` — Port for standard Arduino UNO + MCP2515 shield. Same logic adapted for AVR constraints without smart pointers.
 - Both files share identical CAN message manipulation logic (bit-level operations on autopilot control frames).

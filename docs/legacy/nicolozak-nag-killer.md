@@ -14,6 +14,18 @@ repo: nag-killer
 
 A minimal ESP32-based research firmware that echoes modified CAN ID 0x370 (880, EPAS status) frames with counter-based arbitration. It forces a fixed torque value and sets the handsOn bit to suppress the hands-on-wheel nag warning by transmitting a modified frame before the original, causing the original to be treated as a duplicate.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> ESP["ESP32 (TWAI)<br/>+ SN65HVD230"]
+    ESP --> Modify["Modify 0x370<br/>(counter+1, fixed torque,<br/>handsOn=1)"]
+    Modify --> Bus["Bus TX (before original)"]
+    Bus --> Orig["Original 0x370<br/>rejected as duplicate"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,Modify,Bus path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32 (LILYGO T-CAN485)

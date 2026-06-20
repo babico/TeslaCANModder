@@ -14,6 +14,20 @@ repo: fsd-can-mod-2-main
 
 A Tesla FSD CAN bus enabler firmware with two hardware variants: one for RP2040-based Adafruit Feather CAN boards and one for Arduino UNO with MCP2515 shields. It intercepts autopilot-related CAN frames and modifies specific bits to enable FSD functionality, including nag suppression and speed profile mapping. Includes a Korean-language README. This is an evolution of the tesla-fsd-can-mod-main repo with added UNO support and HW4/FSDV14 features.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> MCU{"Board"}
+    MCU -->|Feather| RP["RP2040 + MCP2515"]
+    MCU -->|Arduino| UNO["UNO + MCP2515"]
+    RP & UNO --> FSD["FSD enable<br/>(incl. HW4/FSDV14)"]
+    RP & UNO --> Nag["Nag suppression"]
+    RP & UNO --> Prof["Speed profile mapping"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class MCU,FSD,Nag,Prof path
+```
+
 ## Technical Details
 
 - **Platform**: Adafruit Feather RP2040 CAN / Arduino UNO

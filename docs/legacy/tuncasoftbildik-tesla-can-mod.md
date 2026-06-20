@@ -14,6 +14,20 @@ repo: tesla-can-mod
 
 A feature-rich Tesla CAN bus modification firmware for the Waveshare ESP32-C6-LCD-1.47 board. Beyond FSD activation, it adds real-time battery monitoring (SoC, voltage, current, temperature), energy consumption tracking, battery preconditioning, a built-in 1.47" color LCD dashboard, and a WiFi web dashboard accessible at 192.168.4.1. Targets Model 3/Y with HW3/HW4 support.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    Car["Tesla CAN (HW3/HW4)"] --> ESP["ESP32-C6<br/>(TWAI + SN65HVD230)"]
+    ESP --> FSD["FSD activation"]
+    ESP --> BMS["Battery monitor<br/>(SoC/V/I/T)"]
+    ESP --> Pre["Battery preconditioning"]
+    ESP --> LCD["1.47\" color LCD<br/>(built-in dashboard)"]
+    ESP --> Web["WiFi web UI<br/>(192.168.4.1)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,FSD,BMS,Pre,LCD,Web path
+```
+
 ## Technical Details
 
 - **Platform**: Waveshare ESP32-C6-LCD-1.47

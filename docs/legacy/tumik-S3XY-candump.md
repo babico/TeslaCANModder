@@ -14,6 +14,18 @@ repo: S3XY-candump
 
 A Python tool for dumping CAN bus data from Tesla vehicles using the Enhauto S3XY Commander (formerly S3XY buttons) hardware. Connects to the Commander's WiFi interface, receives raw CAN data via the Panda protocol, and writes it to log files in candump and SavvyCAN formats. Tested on Model 3 2022.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> S3XY["Enhauto S3XY Commander<br/>(WiFi)"]
+    S3XY -->|Panda protocol over TCP| Py["Python tool"]
+    Py --> Candump["candump log"]
+    Py --> Savvy["SavvyCAN log"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class S3XY,Py path
+```
+
 ## Technical Details
 
 - **Platform**: Python (any OS — Raspberry Pi, laptop, etc.)

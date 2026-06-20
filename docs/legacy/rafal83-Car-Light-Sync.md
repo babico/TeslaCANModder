@@ -14,6 +14,20 @@ repo: Car-Light-Sync
 
 A comprehensive WS2812 RGB LED control system that synchronizes lighting effects with vehicle CAN bus data. Features a web interface, mobile app (BLE), automotive dashboard modes (Park/Drive with speed display, pedal arc, blindspot indicators), OTA updates, and integrated CAN gateways (GVRET TCP for SavvyCAN, CANServer UDP). Supports multi-vehicle CAN integration via dual TWAI channels.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    Car["Vehicle CAN"] --> ESP32["ESP32-C6<br/>(dual TWAI)"]
+    ESP32 --> WS["WS2812 RGB<br/>(lighting)"]
+    ESP32 --> Web["Web UI"]
+    ESP32 --> BLE["Mobile app (BLE)"]
+    ESP32 --> GVRET["GVRET TCP<br/>(SavvyCAN)"]
+    ESP32 --> UDP["CANServer UDP"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP32,WS,Web,BLE path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32-C6, ESP32-S3 (ESP-IDF 5.2+)

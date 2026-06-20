@@ -23,6 +23,15 @@ A small collection of Node.js scripts that control Tesla vehicles via the Tesla 
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Cron["cron job"] --> Node["Node.js script<br/>(teslajs)"]
+    Node --> REST["Tesla REST API"]
+    REST --> Climate["Climate on/off<br/>(timer)"]
+    REST --> Sentry["Sentry mode"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Node,REST path
+```
 - `start_climate.js` — Logs into the Tesla API, starts climate control, waits a configurable number of minutes, then turns it off. Checks for open doors and driver presence before acting.
 - `start_sentry_mode.js` — Logs into the Tesla API and enables Sentry Mode.
 - `package.json` — Dependencies: `teslajs` v4.3.3 and `simple-node-logger`.

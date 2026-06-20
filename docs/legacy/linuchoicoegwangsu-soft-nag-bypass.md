@@ -19,6 +19,18 @@ Files:
 - `STEERING_TORQUE_INJECTION_GUIDE-v2.md` — revised guide (states 1/2/3-4-5, more nuanced)
 - `STEERING_TORQUE_CORE_SNIPPET.md` — complete C++ implementation extract
 
+## Architecture
+
+```mermaid
+flowchart LR
+    DAS["DAS hands-on state"] --> SM["State machine<br/>(v1: 3 states, v2: 1/2/3-4-5)"]
+    SM --> Torque["EPAS torque generation<br/>(grip excursions, jitter)"]
+    Torque --> Echo["0x370 EPAS echo"]
+    Snippet["C++ core snippet"] --> SM
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class SM,Torque path
+```
+
 ## Signal Requirements
 
 All three documents agree on the required CAN signals:

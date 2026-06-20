@@ -14,6 +14,19 @@ repo: homebridge-tesla-remote
 
 A Homebridge plugin that exposes Tesla vehicle controls to Apple HomeKit and Siri. Supports climate control (thermostat), door locks, battery level monitoring, and charge control via the Tesla API (using the teslams library and OAuth tokens).
 
+## Architecture
+
+```mermaid
+flowchart LR
+    HomeKit["Apple HomeKit / Siri"] --> Plugin["Homebridge plugin<br/>(Node.js)"]
+    Plugin --> Teslams["teslams library"]
+    Teslams --> OAuth["Tesla OAuth tokens"]
+    OAuth --> API["Tesla REST API"]
+    API --> Car["Tesla vehicle"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Plugin,API path
+```
+
 ## Technical Details
 
 - **Platform**: Node.js (Homebridge plugin)

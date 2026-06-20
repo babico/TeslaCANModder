@@ -8,6 +8,20 @@
 
 Portable FSD enabler with a shared `vehicle_logic.h` header that is reused across Feather, ESP32, ESP32-IDF, and desktop test builds. Features CI with sanitizer-backed tests, dual OTA slots, and flash coredumps.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    Logic["vehicle_logic.h<br/>(shared single source of truth)"] --> Feather["Feather M4 build"]
+    Logic --> ESP["ESP32 build"]
+    Logic --> IDF["ESP32-IDF v6.0 build<br/>(web UI + dual OTA)"]
+    Logic --> Test["Desktop unit tests<br/>(ASan/UBSan)"]
+    Feather & ESP & IDF --> Car["Tesla CAN<br/>(Legacy/HW3/HW4)"]
+    Test --> CI["CI: CodeQL + test.yml<br/>+ secret-scan + dep-review"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Logic,Feather,ESP,IDF,Test path
+```
+
 ## Key Features
 
 - FSD Activation (HW3/HW4/Legacy via shared logic)

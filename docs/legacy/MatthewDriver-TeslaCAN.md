@@ -14,6 +14,18 @@ repo: TeslaCAN
 
 A Tesla Model 3 CAN bus logging and visualization toolkit built around a Raspberry Pi with SocketCAN. It includes shell scripts for CAN interface setup and data capture, Python scripts for log conversion, DBC files for decoding Tesla Model 3 CAN frames, and a web-based MQTT dashboard for real-time visualization of vehicle data like speed and acceleration.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Model 3 CAN"] --> Pi["Pi + SocketCAN<br/>(can0/can1)"]
+    Pi --> Log["Shell scripts<br/>(capture)"]
+    Pi --> DBC["DBC files<br/>(decode)"]
+    Pi --> Dash["Web dashboard<br/>(MQTT, speed/accel)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,Log,Dash path
+```
+
 ## Technical Details
 
 - **Platform**: Raspberry Pi (Linux/SocketCAN)

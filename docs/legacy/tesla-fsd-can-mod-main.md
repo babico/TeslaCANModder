@@ -14,6 +14,18 @@ repo: fsd-can-mod-main
 
 The original single-file Tesla FSD CAN bus enabler firmware targeting the Adafruit Feather RP2040 CAN board. It intercepts autopilot-related CAN frames and modifies specific bits to enable FSD, suppress nag warnings, and map follow-distance settings to speed profiles. This is the simpler predecessor to tesla-fsd-can-mod-2-main.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> Feather["Feather RP2040 CAN<br/>(MCP2515/MCP25625)"]
+    Feather --> FSD["FSD enable"]
+    Feather --> Nag["Nag suppression"]
+    Feather --> Prof["Speed profile<br/>(follow-distance)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Feather,FSD,Nag,Prof path
+```
+
 ## Technical Details
 
 - **Platform**: Adafruit Feather RP2040 CAN (MCP25625/MCP2515)

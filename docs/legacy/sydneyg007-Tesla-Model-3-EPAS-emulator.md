@@ -14,6 +14,18 @@ repo: Tesla-Model-3-EPAS-emulator
 
 ESP32-based CAN bus emulators that replicate the messages sent by the Tesla Model 3 EPAS (Electric Power-Assisted Steering) module on both the Chassis CAN bus and Party CAN bus. Designed for a 2019 Tesla Model 3 Performance, these emulators prevent error messages when the EPAS module is disconnected or replaced.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla Model 3<br/>(no EPAS / disconnected)"] --> ESP["ESP32 (TWAI)<br/>GPIO 22/23, 500kbps"]
+    ESP --> Chassis["Chassis CAN<br/>(EPAS frames)"]
+    ESP --> Party["Party CAN<br/>(EPAS frames)"]
+    ESP --> Error["Suppress error messages"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,Chassis,Party,Error path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32

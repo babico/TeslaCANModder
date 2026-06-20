@@ -14,6 +14,18 @@ repo: fsd.netlify.app
 
 A local mirror and extraction of the tesla-fsd.netlify.app website, which serves as a guide and firmware distribution site for Tesla FSD CAN bus enabler boards. Contains decoded firmware source files for multiple board variants (ESP8266, ESP32, ESP32-S3, ESP32-C3, RP2040, Arduino UNO), board-to-code mappings, and rendered documentation. Includes a PowerShell script to rebuild the mirror from the live site.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Site["tesla-fsd.netlify.app<br/>(guide + firmware distro)"] --> Mirror["Local mirror<br/>(PowerShell rebuild)"]
+    Mirror --> FW["Firmware .ino files<br/>(ESP8266/ESP32/ESP32-S3/<br/>ESP32-C3/RP2040/UNO)"]
+    Mirror --> Docs["Rendered docs"]
+    FW --> BoardMap["Board-to-code mapping"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Mirror,FW,Docs path
+```
+
 ## Technical Details
 
 - **Platform**: Multiple (ESP8266, ESP32, ESP32-S3, ESP32-C3, RP2040, Arduino UNO)

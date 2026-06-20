@@ -14,6 +14,19 @@ repo: tesla-fsd-can-mod
 
 A well-structured, multi-platform Tesla FSD CAN bus enabler firmware based on the Starmixcraft project. Supports three hardware targets (Adafruit Feather RP2040 CAN with MCP2515, Feather M4 CAN Express with native ATSAME51, and ESP32 with TWAI), three vehicle variants (Legacy/HW3/HW4), and includes PlatformIO build configs, unit tests, and bilingual documentation (Chinese/English). This is effectively the most mature community fork of the FSD CAN mod project.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN<br/>(Legacy/HW3/HW4)"] --> HW{"Platform"}
+    HW -->|RP2040| MCP["MCP2515"]
+    HW -->|M4| MCAN["ATSAME51 native"]
+    HW -->|ESP32| TWAI["ESP32 TWAI"]
+    MCP & MCAN & TWAI --> FSD["FSD enable + nag<br/>+ speed profile"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class HW,FSD path
+```
+
 ## Technical Details
 
 - **Platform**: RP2040 (Adafruit Feather CAN), ATSAME51 (Feather M4 CAN), ESP32 (TWAI), M5Stack Atomic CAN Base

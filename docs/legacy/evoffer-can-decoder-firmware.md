@@ -23,6 +23,13 @@ A collection of binary firmware files for EVOffer's commercial CAN Decoder produ
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    FW["Binary firmware (.bin)<br/>+ update instructions"] --> HW["EVOffer CAN Decoder<br/>(proprietary)"]
+    HW --> Feature["Tailgate foot activation<br/>+ lighted applique"]
+    classDef note fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class HW note
+```
 The repository contains only firmware binaries organized by hardware version and software revision:
 
 - `decoder hw1 sw20X formware.bin` — Hardware v1.00 firmware images

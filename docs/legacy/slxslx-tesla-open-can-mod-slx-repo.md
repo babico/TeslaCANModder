@@ -8,6 +8,25 @@
 
 Production-quality multi-board Tesla CAN mod with the widest hardware support in the community. Supports 8+ board variants via a unified PlatformIO build. Features a web dashboard (ESP32), OTA updates, and comprehensive CAN signal handling.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    HW{"Board variant"} -->|RP2040| MCP["MCP2515"]
+    HW -->|M4| MCAN["ATSAME51"]
+    HW -->|ESP32| TWAI["TWAI + web"]
+    HW -->|LilyGo| CAN["TCAN485"]
+    MCP & MCAN & TWAI & CAN --> Frame["Intercept + modify<br/>(HW3/HW4/Legacy)"]
+    Frame --> FSD["FSD (bit46)"]
+    Frame --> Nag["Nag killer (0x370 echo)"]
+    Frame --> ASS["ASS (EU unlock)"]
+    Frame --> ISA["ISA chime (0x399)"]
+    Frame --> EVD["EVD (HW4)"]
+    TWAI --> Web["Web dashboard + OTA"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class HW,Frame,Web path
+```
+
 ## Key Features
 
 - FSD Activation (bit46) — HW3/HW4/Legacy

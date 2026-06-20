@@ -23,6 +23,15 @@ A Teensy-based Tesla Model 3 battery monitoring system that reads BMS (Battery M
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Tesla["Model 3 CAN"] --> Teensy["Teensy 3.2<br/>(FlexCAN)"]
+    Teensy --> Decode["Decode BMS messages<br/>(cell V/T, SOC, current)"]
+    Decode --> USB["USB serial<br/>(host monitor)"]
+    Decode --> HMI["Nextion HMI<br/>(touchscreen)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Teensy,Decode,USB,HMI path
+```
 - `m3mon.ino` — Main sketch: CAN bus initialization (500 kbps), message receive loop, CAN frame decoding with bitwise extraction of BMS signals, debug serial output
 - `bmsvalues.h` — `BMSValues` class: data container for all BMS telemetry (cell temps, brick voltages, SOC, voltage, current, charge totals, capacity)
 - `nexdisplay.cpp` / `nexdisplay.h` — Nextion HMI display driver: serializes `BMSValues` to Nextion display commands via UART

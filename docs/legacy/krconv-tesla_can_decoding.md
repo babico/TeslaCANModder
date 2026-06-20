@@ -14,6 +14,18 @@ repo: tesla_can_decoding
 
 A collection of Tesla CAN decoding tools focused on an ESPHome component that implements a GVRET (Generalized Vehicle Reverse Engineering Tool) TCP server. This allows an ESP32 running ESPHome with CAN bus to stream CAN frames to tools like SavvyCAN over a TCP connection for real-time decoding and analysis.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> ESP32["ESP32 (ESPHome)"]
+    ESP32 --> TWAI["canbus component<br/>(TWAI or MCP2515)"]
+    TWAI --> GVRET["GVRET TCP server"]
+    GVRET -->|TCP| Savvy["SavvyCAN<br/>(decode + analyze)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP32,GVRET path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32 (via ESPHome framework)

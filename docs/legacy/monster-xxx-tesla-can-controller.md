@@ -14,6 +14,18 @@ repo: xxx-tesla-can-controller
 
 A multi-device ESP32-based Tesla Model Y control system that uses encrypted BLE to coordinate between three devices: an M5Dial controller with LVGL touchscreen UI, an ESP32-C6 CAN reader with dual SN65HVD230 transceivers, and an ESP32-based WS2812 ambient light controller. Provides vehicle monitoring (speed, battery, tire pressure), advanced controls (light control, drift mode via ESP disable, battery preheating), 0-100 km/h performance testing, and ambient lighting effects.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    M5["M5Dial (ESP32-S3)<br/>LVGL touchscreen"] -->|encrypted BLE| C6["ESP32-C6 CAN reader<br/>(dual SN65HVD230)"]
+    C6 --> Car["Tesla Model Y CAN"]
+    C6 -->|BLE| ALC["ESP32 WS2812<br/>ambient light"]
+    M5 --> C6
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class M5,C6,ALC path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32-S3 (M5Dial), ESP32-C6 (CAN reader), ESP32 (ambient light)

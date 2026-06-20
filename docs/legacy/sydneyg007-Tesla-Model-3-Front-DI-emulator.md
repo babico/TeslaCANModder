@@ -14,6 +14,18 @@ repo: Tesla-Model-3-Front-DI-emulator
 
 ESP32-based CAN bus emulators that replicate the messages sent by the Tesla Model 3 Front Drive Inverter (DI) on both the Party CAN bus and Vehicle CAN bus. Designed for a 2019 Tesla Model 3 Performance, these emulators prevent error messages when the front drive inverter logic board is disconnected.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla Model 3<br/>(no front DI / disconnected)"] --> ESP["ESP32 (TWAI)<br/>GPIO 22/23, 500kbps"]
+    ESP --> Party["Party CAN<br/>(DI frames)"]
+    ESP --> Vehicle["Vehicle CAN<br/>(DI frames)"]
+    ESP --> Error["Suppress error messages"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,Party,Vehicle,Error path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32

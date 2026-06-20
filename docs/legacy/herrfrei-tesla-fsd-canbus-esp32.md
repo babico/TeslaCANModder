@@ -14,6 +14,18 @@ repo: tesla-fsd-canbus-esp32
 
 An ESP32 + MCP2515 Arduino sketch that intercepts and modifies Tesla CAN bus frames to enable FSD functionality and configure speed profiles. It is an unofficial port of the original Starmixcraft gitlab firmware, adding support for ESP32-S2, S3, C3, and PICO targets with documented wiring for each variant. Supports Legacy (HW1/HW2), HW3, and HW4 Tesla hardware.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN (HW1/HW2/HW3/HW4)"] --> MCU{"ESP32 variant"}
+    MCU -->|S2/S3/C3/PICO| ESP["TWAI + SPI"]
+    MCU --> Feather["Feather w/ MCP2515"]
+    ESP & Feather --> FSD["FSD enable +<br/>speed profiles"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,Feather,FSD path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32 (S2, S3, C3, PICO-D4, PICO-V3) with MCP2515 CAN module
