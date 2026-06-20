@@ -13,9 +13,11 @@
 [submodule "legacy/nicholasyangyang-my-tt"]
 	path = legacy/nicholasyangyang-my-tt
 	url = https://github.com/nicholasyangyang/my-tt
-[submodule "legacy/mikegapinski-tesla-can-explorer"]
-	path = legacy/mikegapinski-tesla-can-explorer
-	url = https://github.com/mikegapinski/tesla-can-explorer
+# Disabled 2026-06-20: upstream repo deleted (404). Working tree preserved
+# for local reference. See docs/legacy/upstream-review-2026-06-20.md.
+#[submodule "legacy/mikegapinski-tesla-can-explorer"]
+#	path = legacy/mikegapinski-tesla-can-explorer
+#	url = https://github.com/mikegapinski/tesla-can-explorer
 [submodule "legacy/ev-open-can-tools-ev-open-can-tools"]
 	path = legacy/ev-open-can-tools-ev-open-can-tools
 	url = https://github.com/ev-open-can-tools/ev-open-can-tools
