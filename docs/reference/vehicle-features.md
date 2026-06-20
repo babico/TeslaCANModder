@@ -13,6 +13,41 @@ icon: 🚗
 
 TeslaCANModder modifies CAN bus frames to enable and control various Tesla vehicle features. All features are OFF by default and must be explicitly enabled.
 
+```mermaid
+flowchart TB
+    subgraph FSD["FSD / Autopilot"]
+        FSDEnable["FSD enable"]
+        Nag["Nag suppression<br/>(legacy/safe/natural/organic/full/feifan)"]
+        FSDEnable --> Profile["Speed profile + offset"]
+        FSDEnable --> ECE["ECE R79 bypass"]
+    end
+    subgraph Comfort["Comfort & Climate"]
+        Climate["Climate keep"]
+        Precond["Battery precondition"]
+        Sentry["Sentry mode"]
+    end
+    subgraph Drive["Drive"]
+        Mode["Drive mode override"]
+        Pedal["Pedal / regen / stop"]
+        DAS["DAS Drive<br/>(gamepad injection)"]
+        ALC["Auto lane change"]
+    end
+    subgraph Body["Body"]
+        Windows["Window vent"]
+        Locks["Lock / unlock"]
+        Mirrors["Mirror fold / heat"]
+        Lights["Lights / fog / dome"]
+        Trunk["Frunk / trunk / glovebox"]
+        Chime["ISA chime suppress"]
+    end
+    subgraph BLE["BLE"]
+        Key["Tesla BLE key"]
+        Gamepad["BLE HID gamepad"]
+    end
+    classDef grp fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class FSD,Comfort,Drive,Body,BLE grp
+```
+
 ## FSD (Full Self-Driving) Enable
 
 Modifies the FSD mux frame (CAN ID 1021 or 1006) to activate FSD capability.

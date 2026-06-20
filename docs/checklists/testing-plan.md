@@ -11,6 +11,17 @@ icon: 🧪
 
 # End-to-End User Scenarios & Test Plan
 
+```mermaid
+flowchart TB
+    Plan["E2E test plan"] --> U1["Unit / integration<br/>(firmware Unity, Jest protocol/client/tools)"]
+    Plan --> U2["Smoke<br/>(e2e-smoke, docker-smoke)"]
+    Plan --> U3["Bench validation<br/>(tcm-debug, CAN frame recorder)"]
+    Plan --> U4["Visual regression<br/>(fixture + golden image workflow)"]
+    U1 & U2 & U3 & U4 --> Gate["Release gate"]
+    classDef plan fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class U1,U2,U3,U4 plan
+```
+
 Board-specific test scenarios for every supported hardware configuration. Each scenario documents exact wiring, firmware environment, connectivity, and feature coverage.
 
 ---

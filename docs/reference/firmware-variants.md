@@ -13,6 +13,29 @@ icon: 💾
 
 TeslaCANModder ships a full PlatformIO build matrix for the ESP32 instead of a small set of fixed variants. Every connectivity option, every CAN bus, and the MCP2515 crystal frequency compose into the environment name.
 
+```mermaid
+flowchart LR
+    Base["esp32"] --> WiFi{+wifi?}
+    WiFi -->|yes| W["+wifi"]
+    WiFi -->|no| Ble{+ble?}
+    W --> Ble
+    Ble -->|yes| B["+ble"]
+    Ble -->|no| Buses
+    B -->|yes| Ch["+chassis"]
+    B -->|no| Buses
+    Ch --> V{+vehicle?}
+    V -->|yes| Vb["+vehicle"]
+    V -->|no| Bd{+body?}
+    Vb --> Bd
+    Bd -->|yes| Bd2["+body"]
+    Bd -->|no| Crystal
+    Bd2 --> Crystal{crystal MHz?}
+    Crystal -->|8| E8["+8mhz"]
+    Crystal -->|16| E16["+16mhz"]
+    E8 --> Env["env name, e.g.<br/>esp32_wifi_ble_chassis_vehicle_body_8mhz"]
+    E16 --> Env
+```
+
 ## Naming Convention
 
 ```

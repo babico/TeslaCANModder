@@ -3,6 +3,20 @@
 Master reference for all CAN IDs used in Tesla-CAN-Mod firmware.
 Cross-validated against hypery11, slxslx, Shayennn, EzeLLM, and ev-open-can-tools.
 
+```mermaid
+flowchart TB
+    subgraph X179["X179 Connector"]
+        B0["Bus 0: Chassis / AP<br/>pins 13-14"]
+        B1["Bus 1: Vehicle<br/>pins 9-10"]
+        B2["Bus 2: Body<br/>pins 2-3"]
+    end
+    B0 -->|0x3FD, 0x39B, 0x370, 0x229, 0x249| ChassisIDs["DAS / EPAS / FSD<br/>Autopilot, steering"]
+    B1 -->|0x132, 0x292, 0x398, 0x312, 0x33A| VehicleIDs["BMS / Gateway / OTA<br/>Drive, battery, vehicle config"]
+    B2 -->|0x258, 0x259, 0x3C2, 0x3F5, 0x3B3| BodyIDs["Doors / VCSEC / Lights<br/>Body controllers, climate"]
+    classDef bus fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class B0,B1,B2 bus
+```
+
 ## Bus Topology (X179 Connector)
 
 | Bus | Pins  | Name         | Purpose                            |

@@ -23,6 +23,14 @@ A collection of raw CAN bus log files captured from a 2016 Tesla Model S (AP1, s
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["2016 Model S (AP1)"] --> EVTV["EVTV ESP32_CAN<br/>(CAN6 + CAN3)"]
+    EVTV --> Logs["Raw CAN logs<br/>(CSV, SavvyCAN)"]
+    Logs --> Files["Driving + Summon scenarios"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Logs,Files path
+```
 Pure data repository with no code:
 
 ```

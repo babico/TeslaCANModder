@@ -11,6 +11,20 @@ icon: 🏷️
 
 # Release Quality Gate Checklist
 
+```mermaid
+flowchart TB
+    Start([Release candidate]) --> V1["Version aligned (package.json,<br/>CHANGELOG, firmware)"]
+    V1 --> V2["All tests green<br/>(firmware native + protocol + client + tools)"]
+    V2 --> V3["Lint + format clean"]
+    V3 --> V4["Multi-bus build green"]
+    V4 --> V5["Docs regenerated<br/>(prestart)"]
+    V5 --> V6["Tagged release + GitHub release"]
+    V6 --> V7["Client flasher assets<br/>(release pages)"]
+    V7 --> Done([Published])
+    classDef gate fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class V1,V2,V3,V4,V5,V6,V7 gate
+```
+
 Pre-release checklist for TeslaCANModder. Every tagged release **must** pass all gates before publishing artifacts.
 
 ---

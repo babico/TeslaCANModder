@@ -23,6 +23,14 @@ A simple Python script that reads live CAN bus messages from a SocketCAN interfa
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Socket["SocketCAN can0<br/>(500 kbps)"] --> Reader["Python 3.6+<br/>python-can reader"]
+    Reader --> Decode["Decode Tesla IDs<br/>(headlights, SOC, country,<br/>climate)"]
+    Decode --> Out["Console + log file"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Reader,Decode,Out path
+```
 Single-file project:
 
 - `main.py` — Complete application: CLI argument parsing, CAN bus setup, message read loop, and interpretation logic

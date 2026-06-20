@@ -15,6 +15,18 @@ This document maps each CAN-bus signal that the board emits to:
 2. A fallback/default value when the signal is absent
 3. The unit test or test case ID that proves the signal renders correctly
 
+```mermaid
+flowchart LR
+    Bus["CAN bus frame"] --> Decoder["Decoder<br/>(firmware/lib/vehicle/can/decoder)"]
+    Decoder --> State["State field<br/>(firmware State struct)"]
+    State --> Serialize["Status JSON<br/>(serial/WiFi)"]
+    Serialize --> Client["@teslacanmodder/protocol<br/>reducer + parser"]
+    Client --> UI["Client UI component<br/>(display + fallback)"]
+    State -.->|fallback if absent| UI
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Decoder,State,Serialize,Client path
+```
+
 ---
 
 ## Legend

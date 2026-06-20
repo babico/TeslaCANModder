@@ -23,6 +23,15 @@ A Raspberry Pi-based Tesla CAN bus logger and dashboard that reads CAN data from
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Model S/X CAN bus"] --> Pi["Pi 4 + PICAN2<br/>(listen-only)"]
+    Pi --> Decode["Decode 100s of params<br/>(battery, motors, steering,<br/>HVAC, DC-DC)"]
+    Decode --> MQTT["MQTT publish"]
+    MQTT --> Dash["Web dashboard<br/>(in-car browser)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,Decode,MQTT,Dash path
+```
 ```
 canlogger2.1.py          — Main CAN reader + MQTT publisher
 mosquitto/

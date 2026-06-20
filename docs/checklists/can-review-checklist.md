@@ -11,6 +11,20 @@ icon: 📋
 
 # CAN Control Review Checklist
 
+```mermaid
+flowchart TB
+    Change["CAN-control change<br/>(nag.h, handler, MCP2515)"] --> S1["1. Frame mutation safety<br/>(DLC guards, bit isolation, checksum)"]
+    S1 --> S2["2. Bit/field ownership<br/>(document bit numbers, cross-check)"]
+    S2 --> S3["3. Variant behaviour<br/>(hw4 / hw3 / legacy)"]
+    S3 --> S4["4. Stream / I/O protocol<br/>(serial = WiFi = BLE)"]
+    S4 --> S5["5. Regression tests<br/>(bit-set, short-frame, byte-equiv)"]
+    S5 --> S6["6. High-risk review<br/>(nag / profile / ISA / checksum / MCP2515)"]
+    S6 --> S7["7. Acceptance bar<br/>(bit-level + short-frame + variant)"]
+    S7 --> Done([Ship it])
+    classDef step fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class S1,S2,S3,S4,S5,S6,S7 step
+```
+
 Use this checklist whenever a change touches TeslaCANModder code that can alter CAN frame behavior.
 
 Primary review scope:

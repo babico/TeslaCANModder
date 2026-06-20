@@ -13,6 +13,20 @@ icon: 📶
 
 ESP32 firmware envs with BLE enabled (any env containing `_ble`, e.g. `esp32_ble_chassis_8mhz`, `esp32_wifi_ble_chassis_vehicle_body_8mhz`) use **NimBLE** for Bluetooth Low Energy communication. This works natively with iOS and Android — no pairing PIN required.
 
+```mermaid
+flowchart LR
+    Phone["Phone / Tablet<br/>(iOS, Android)"] -->|BLE NUS| NimBLE["NimBLE Central<br/>(firmware/lib/io/ble)"]
+    NimBLE --> NUS["NUS service<br/>(Nordic UART)"]
+    NUS --> Serial["Serial command path<br/>(firmware/lib/io/serial)"]
+    Serial --> Dispatch["Command dispatch"]
+    Gamepad["BLE HID gamepad"] -->|HID| NimBLE2["NimBLE HID consumer<br/>(gamepad)"]
+    NimBLE2 --> DAS["DAS Drive gate"]
+    TeslaKey["Tesla BLE key<br/>(phone-as-key)"] -->|VCSEC| NimBLE3["NimBLE VCSEC client"]
+    NimBLE3 --> BLEKey["BLE key state"]
+    classDef ble fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class NimBLE,NimBLE2,NimBLE3 ble
+```
+
 ## Overview
 
 | Property           | Value                          |
@@ -62,7 +76,7 @@ BLE uses the exact same command protocol as USB Serial:
 ## Runtime Control
 
 BLE is controlled at runtime through the unified wire-command channel
-([wifi-api.md](./wifi-api.md#api-command)). The same `ble:*` commands work over
+([Command Execution](./wifi-api.md#command-execution---the-one-true-endpoint)). The same `ble:*` commands work over
 USB serial, BLE NUS, and HTTP `POST /api/command`:
 
 ```bash

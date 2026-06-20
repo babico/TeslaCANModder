@@ -23,6 +23,14 @@ A full-screen CAN bus dashboard for the **Linde E20 (1252/1254 series)** electri
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Fork["Linde E20 CAN"] --> Pi["Pi 5 + SocketCAN"]
+    Pi --> DBC["cantools DBC decode"]
+    DBC --> UI["Dark Tesla-style<br/>dashboard (Chromium kiosk)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,DBC,UI path
+```
 - `can-bridge/bridge.py` — CAN-to-WebSocket bridge; reads CAN frames from SocketCAN (or replays a log), decodes via DBC, broadcasts JSON over WebSocket
 - `can-bridge/decoder.py` — DBC-based frame decoder using cantools
 - `can-bridge/log_replayer.py` — Replays recorded CAN trace logs in real time

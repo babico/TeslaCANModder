@@ -23,6 +23,14 @@ An ESP32-based controller built with ESP-IDF that connects to an Escort radar de
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Radar["Escort radar<br/>(BLE)"] --> ESP["ESP32 (ESP-IDF)"]
+    ESP --> MQTT["MQTT / WiFi relay"]
+    ESP --> Prov["Provisioning system"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,MQTT,Prov path
+```
 - `main/main.cpp` — Entry point; initializes NVS, event loop, BLE, WiFi provisioning, and MQTT
 - `main/ble/` — BLE central (client) task for connecting to Escort radar detector
 - `main/radar/` — Radar alert processing: handles speed trap, speed camera, red light camera, laser, and police alerts with distance and heading

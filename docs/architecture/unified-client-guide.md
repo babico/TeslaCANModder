@@ -19,6 +19,25 @@ This guide documents the canonical client experience in `client/`.
 
 ## Architecture
 
+```mermaid
+flowchart TB
+    subgraph UI["UI Layer (client/src/components, screens)"]
+        Dashboard --> BoardState
+        Controls --> BoardState
+        Drive --> BoardState
+        Console --> BoardState
+        Flasher --> BoardState
+    end
+    BoardState["Shared board state<br/>(React context + reducer)"]
+    BoardState --> Controller["Hardware Controller<br/>client/src/hardware/controller.ts"]
+    Controller --> Protocol["@teslacanmodder/protocol<br/>(commands, types, decoder, parser)"]
+    Protocol --> Transport["Transports<br/>Web Serial / WiFi HTTP / BLE NUS"]
+    Transport --> ESP["ESP32 Firmware"]
+    ESP -.->|JSON frames| Protocol
+    classDef state fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class BoardState state
+```
+
 ### Runtime layers
 
 1. Transport + command execution:

@@ -40,6 +40,42 @@ TeslaCANModder/
 └── scripts/                       workspace-level validation and smoke scripts
 ```
 
+## System Architecture
+
+```mermaid
+flowchart LR
+    subgraph Vehicle["Tesla Vehicle (X179 Connector)"]
+        direction TB
+        Chassis["Chassis CAN<br/>0x13-0x14"]
+        VBus["Vehicle CAN<br/>0x09-0x0A"]
+        Body["Body CAN<br/>0x02-0x03"]
+        BLEKey["BLE Key / Phone"]
+    end
+
+    ESP["ESP32-S DevKit<br/>(firmware)"]
+    subgraph FW["Firmware (PlatformIO C++)"]
+        MCP["MCP2515 × 3<br/>(Chassis / Vehicle / Body)"]
+        BLE["NimBLE Central<br/>(gamepad, BLE key)"]
+        WiFi["WiFi Soft-AP +<br/>HTTP REST + Dashboard"]
+        Serial["USB Serial<br/>(CDC + BT SPP)"]
+    end
+
+    Client["Client App<br/>(Expo: Web/iOS/Android)"]
+    Protocol["@teslacanmodder/protocol<br/>(commands, types, decoder)"]
+    Tools["tcm-debug CLI<br/>(bench validation)"]
+
+    Chassis & VBus & Body --> MCP
+    BLEKey --> BLE
+    MCP --> ESP
+    BLE --> ESP
+    WiFi --> ESP
+    Serial --> ESP
+    ESP -->|USB / WiFi / BLE NUS| Client
+    Client --> Protocol
+    ESP -.->|JSON over wire| Protocol
+    Tools -.->|serial / HTTP| ESP
+```
+
 ## Quick Start
 
 ### Prerequisites
@@ -104,6 +140,25 @@ All buses are opt-in. Enable multiple lanes:
 ```powershell
 $env:PLATFORMIO_BUILD_FLAGS = "-DBUS_CHASSIS_ACTIVE=1 -DBUS_VEHICLE_ACTIVE=1 -DBUS_BODY_ACTIVE=1"
 .\pio.ps1 run -e esp32_wifi_ble_chassis_8mhz
+```
+
+```mermaid
+flowchart LR
+    subgraph X179["Tesla X179 Connector"]
+        direction LR
+        P13["Pin 13"]
+        P14["Pin 14"]
+        P9["Pin 9"]
+        P10["Pin 10"]
+        P2["Pin 2"]
+        P3["Pin 3"]
+    end
+    X179 -->|13-14| Bus0["Bus 0: Chassis<br/>(MCP2515 #1, 500kbps)"]
+    X179 -->|9-10| Bus1["Bus 1: Vehicle<br/>(MCP2515 #2, 500kbps)"]
+    X179 -->|2-3| Bus2["Bus 2: Body<br/>(MCP2515 #3, 500kbps)"]
+    Bus0 & Bus1 & Bus2 --> ESP["ESP32<br/>SPI fabric"]
+    classDef bus fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Bus0,Bus1,Bus2 bus
 ```
 
 ### Vehicle Features (48 modules)

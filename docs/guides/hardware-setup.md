@@ -11,6 +11,23 @@ icon: 🔧
 
 # Hardware Setup
 
+```mermaid
+flowchart TB
+    ESP["ESP32-S DevKit"]
+    subgraph MCPs["MCP2515 stack (one per active bus)"]
+        MCP0["MCP2515 #0<br/>CS, INT, SCK, MOSI, MISO"]
+        MCP1["MCP2515 #1<br/>CS, INT, SCK, MOSI, MISO"]
+        MCP2["MCP2515 #2<br/>CS, INT, SCK, MOSI, MISO"]
+    end
+    X179["Tesla X179 connector"]
+    ESP <-->|SPI bus| MCPs
+    MCP0 -->|CAN-H/CAN-L| X179
+    MCP1 -->|CAN-H/CAN-L| X179
+    MCP2 -->|CAN-H/CAN-L| X179
+    classDef hw fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,MCPs,MCP0,MCP1,MCP2,X179 hw
+```
+
 ## ESP32-S DevKit
 
 The ESP32 uses **1–3× MCP2515 modules over SPI** for the CAN buses. Chassis is required for DAS injection; Vehicle and Body are optional and selected per build env.

@@ -13,6 +13,21 @@ icon: 📡
 
 ESP32 firmware envs with WiFi enabled (any env containing `_wifi`, e.g. `esp32_wifi_chassis_8mhz`, `esp32_wifi_ble_chassis_vehicle_body_8mhz`) create a wireless access point for HTTP control.
 
+```mermaid
+flowchart LR
+    Client["Client (Web/mobile)"] -->|HTTP| AP["ESP32 Soft-AP<br/>(192.168.4.1)"]
+    AP --> REST["firmware/lib/client/api/<br/>routes.h"]
+    REST --> Status["GET /api/status"]
+    REST --> Cmd["POST /api/cmd<br/>(serial-style command)"]
+    REST --> Stream["GET /api/stream<br/>(CAN frames)"]
+    REST --> Dash["GET /<br/>(HTML dashboard)"]
+    Cmd --> Dispatch["Command dispatch"]
+    Dispatch --> Resp["JSON ack / status"]
+    Stream --> SSE["text/event-stream<br/>SSE frames"]
+    classDef api fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class REST,Status,Cmd,Stream api
+```
+
 ## WiFi Modes
 
 ### Access Point (AP) Mode — Default

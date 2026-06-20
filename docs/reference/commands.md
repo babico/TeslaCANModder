@@ -13,6 +13,19 @@ icon: ⌨️
 
 All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Commands are case-sensitive, lowercase, colon-separated.
 
+```mermaid
+flowchart LR
+    User([User / Client]) --> Transport{Transport}
+    Transport -->|USB CDC| Serial["Serial handler<br/>firmware/lib/io/serial/"]
+    Transport -->|WiFi HTTP| WiFi["REST handler<br/>firmware/lib/io/wifi/"]
+    Transport -->|BLE NUS| BLE["BLE handler<br/>firmware/lib/io/ble/"]
+    Serial & WiFi & BLE --> Dispatch["Command Dispatch<br/>firmware/lib/interface/dispatch.h"]
+    Dispatch --> Handler["Per-command handler<br/>(feature/state/diag)"]
+    Handler --> Ack["ack / status JSON<br/>back to transport"]
+    classDef transport fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Serial,WiFi,BLE transport
+```
+
 ## System Commands
 
 | Command  | Description                                               |

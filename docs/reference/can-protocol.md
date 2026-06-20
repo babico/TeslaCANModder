@@ -13,6 +13,26 @@ icon: 🔌
 
 TeslaCANModder communicates with the vehicle by intercepting and modifying CAN bus frames on the Tesla X179 connector.
 
+```mermaid
+flowchart LR
+    subgraph Frame["CAN Frame (8 bytes)"]
+        ID["ID (11/29-bit)"]
+        DLC["DLC (0-8)"]
+        D0["data[0]"]
+        D1["data[1]"]
+        D7["data[7] (often checksum)"]
+    end
+    RX["Bus RX"] --> Filter["ID filter<br/>(MCP2515 mask)"]
+    Filter --> Variant{"Variant<br/>(HW4 / HW3 / Legacy)"}
+    Variant -->|HW4| HW4Handler["HW4 handler<br/>(0x3FD mux 0/1/2)"]
+    Variant -->|HW3| HW3Handler["HW3 handler"]
+    Variant -->|Legacy| LegacyHandler["Legacy handler"]
+    HW4Handler & HW3Handler & LegacyHandler --> Mutate["Mutate / intercept / inject"]
+    Mutate --> TX["Bus TX"]
+    classDef frame fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ID,DLC,D0,D1,D7 frame
+```
+
 ## Bus Assignments
 
 The ESP32 supports up to three CAN buses on a shared SPI fabric. All three lanes land on the Tesla X179 connector.

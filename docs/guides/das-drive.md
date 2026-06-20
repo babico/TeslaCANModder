@@ -5,6 +5,18 @@
 > Autopilot, EAP, FSD or openpilot. There is no perception, no planning, no
 > path. The sticks become the actuators.
 
+```mermaid
+flowchart LR
+    Gamepad["BLE HID gamepad<br/>(left stick, right stick, triggers)"] --> Bind["firmware/lib/vehicle/can/feature/das/<br/>gamepad hid consumer"]
+    Bind --> Axes["Axis tuning<br/>(deadzone, expo, invert)"]
+    Axes --> Gate["das:arm / safety gate<br/>(firmware/lib/vehicle/can/feature/das)"]
+    Gate -->|armed| Inj["Inject 3 frames @ 25-50 Hz<br/>0x2B9 DAS_control<br/>0x488 DAS_steeringControl<br/>0x27D APS_eacMonitor"]
+    Inj --> Chassis["BUS_CHASSIS<br/>(party CAN)"]
+    Chassis --> Car["Car actuators"]
+    classDef gate fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Gate gate
+```
+
 ## What it actually is
 
 The firmware module `firmware/lib/vehicle/can/feature/das/das_drive.h` emits the

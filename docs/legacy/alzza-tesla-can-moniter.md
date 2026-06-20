@@ -25,6 +25,13 @@ A LILYGO T-Display-S3 (ESP32-S3) wireless display companion for Tesla CAN bus mo
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Tx["CAN-bus transmitter<br/>(separate device)"] -->|ESP-NOW<br/>60-byte struct| Rx["LILYGO T-Display-S3"]
+    Rx --> UI["4-page TFT UI<br/>(EAP, nag, frame rates,<br/>EPAS torque, bus health)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Rx,UI path
+```
 The project is a single-binary receiver:
 
 - **`src/main.cpp`** — Setup + loop. Calls `initEspNowReceiver()`, `ensureReceiverChannel()`, `decodeTelemetryPacket()`, and `uiRender()`. Manages button state machine for page navigation (top/bottom buttons on T-Display-S3). Uses `Preferences` NVS to persist brightness and page across reboots.
