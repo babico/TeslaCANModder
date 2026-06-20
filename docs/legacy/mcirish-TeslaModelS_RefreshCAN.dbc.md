@@ -14,6 +14,16 @@ repo: TeslaModelS_RefreshCAN.dbc
 
 A placeholder repository for CAN bus signal reverse engineering on Tesla Model S Refresh vehicles. Contains a single DBC file defining two CAN frames: one for air suspension ride height sensors (Frame 409) and one for a suspension-related selector (Frame 525). Very minimal content.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    DBC["DBC file<br/>(Model S Refresh)"] --> F409["Frame 409:<br/>air suspension<br/>ride height"]
+    DBC --> F525["Frame 525:<br/>suspension selector"]
+    classDef note fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class F409,F525 note
+```
+
 ## Technical Details
 
 - **Platform**: N/A (DBC database file only)

@@ -14,6 +14,23 @@ repo: my-tt
 
 A Tesla FSD (Full Self-Driving) CAN bus enabler firmware supporting multiple hardware platforms (Adafruit Feather RP2040 CAN, Feather M4 CAN Express, ODrive v3/STM32F405). It intercepts and modifies specific CAN bus messages to enable FSD functionality, suppress nag warnings, and map speed profiles via the follow-distance stalk. Supports HW3, HW4, and Legacy (pre-Palladium) Tesla vehicles.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN (HW3/HW4/Leg)"] --> HW{"Platform"}
+    HW -->|RP2040| MCP["MCP2515 SPI"]
+    HW -->|M4| MCAN["ATSAME51 MCAN"]
+    HW -->|STM32| BX["bxCAN"]
+    HW -->|ESP32| TWAI["TWAI"]
+    MCP & MCAN & BX & TWAI --> Frame["Intercept + modify"]
+    Frame --> FSD["FSD enable"]
+    Frame --> Nag["Nag suppression"]
+    Frame --> Prof["Speed profile"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Frame,FSD,Nag,Prof path
+```
+
 ## Technical Details
 
 - **Platform**: RP2040 (Adafruit Feather CAN), ATSAME51 (Feather M4 CAN), STM32F405 (ODrive v3), ESP32 (TWAI)

@@ -23,6 +23,17 @@ A comprehensive Raspberry Pi-based CAN bus data logger that supports multiple ve
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla / OBD2 / FMS / Outlander CAN"] --> Pi["Pi 3 / Pi Zero W + PiCAN"]
+    Pi --> Log["SD log + GPS"]
+    Pi --> Up["Upload (WiFi/4G)"]
+    Up --> Srv["Remote server"]
+    Pi --> Web["Web visualiser"]
+    Pi --> BT["Bluetooth companion app"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,Log,Up,Web,BT path
+```
 - `rpi_can_logger/main.py` — Entry point; parses CLI args or YAML config, initialises CAN bus, GPS, and selected logger
 - `rpi_can_logger/logger/tesla_pids.py` — Tesla-specific CAN PID decoders (BMS voltage, drive unit power/torque, battery SOC, DC-DC converter)
 - `rpi_can_logger/logger/loggers.py` — Logger implementations: `TeslaSniffingLogger`, `SniffingOBDLogger`, `QueryingOBDLogger`, `FMSLogger`, `BustechLogger`

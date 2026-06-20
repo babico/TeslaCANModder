@@ -23,6 +23,13 @@ A Battery Management System (BMS) firmware for Teensy (ARM) that manages Tesla b
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Cells["Tesla battery modules"] --> BMS["Teensy (ARM) BMS<br/>(cell V/T, balancing,<br/>contactor, SoC)"]
+    BMS --> CAN["FlexCAN output<br/>(charge/bal state)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class BMS,CAN path
+```
 Single file project:
 
 - `TeslaBMS.ino` — Complete BMS firmware containing:

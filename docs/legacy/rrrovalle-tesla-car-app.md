@@ -14,6 +14,15 @@ repo: tesla-car-app
 
 A Flutter-based Tesla car control UI app that simulates door lock/unlock, battery status, air cooler temperature, and tire PSI monitoring. This is purely a front-end UI mockup — it does not communicate with a real Tesla vehicle or any CAN bus.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    UI["Flutter UI<br/>(locks, battery,<br/>AC, tire PSI)"] --> Sim["Static mock data<br/>(no real vehicle)"]
+    classDef note fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Sim note
+```
+
 ## Technical Details
 
 - **Platform**: Flutter (Android/iOS/Web)

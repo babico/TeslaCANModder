@@ -23,6 +23,16 @@ A proof-of-concept EV information system built around an Orion BMS 2 and Tesla M
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Orion["Orion BMS 2"] --> Pi5["Pi 5 + PiCAN2 Duo<br/>(SocketCAN)"]
+    RDU["Tesla Model 3 RDU"] --> Pi5
+    Pi5 --> Py["Python CAN logger/parser"]
+    Py --> Flask["Flask web dashboard"]
+    Flask --> Viz["Pack V/I/SOC, cell V, temps,<br/>relay states"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi5,Py,Flask path
+```
 - `logger/main.py` — CAN logger entry point (stub — mostly in can_parser.py)
 - `logger/can_parser.py` — Comprehensive Orion BMS CAN message parser with DBC-based signal definitions for CAN IDs 0x6B0–0x6B4 and extended IDs (0x1806E7F4, 0x1806E5F4, 0x1806E9F4, 0x18FF50E5)
 - `logger/data/` — JSON output directory for parsed BMS data

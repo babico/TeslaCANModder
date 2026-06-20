@@ -23,6 +23,17 @@ A multi-board Tesla FSD CAN bus enabler that intercepts and modifies specific CA
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> MCU{"Board"}
+    MCU -->|ESP32| ESP["MCP2515 SPI"]
+    MCU -->|ESP32-S3| TWAI["Built-in TWAI"]
+    MCU -->|M4| SAMD["MCP25625 SPI<br/>(SAMD51)"]
+    MCU -->|RP2040| RP["MCP2515 SPI"]
+    ESP & TWAI & SAMD & RP --> FSD["FSD enable"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class MCU,FSD path
+```
 ```
 boards/
 ├── ESP32_MCP2515/ESP32_MCP2515.ino    — ESP32 + external MCP2515 via SPI

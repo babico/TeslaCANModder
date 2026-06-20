@@ -14,6 +14,20 @@ repo: tesberry
 
 A Raspberry Pi-based Tesla CAN bus utility that provides a Docker-compose stack for reading/writing CAN bus data, bridging it to MQTT, and exposing a web UI accessible from the Tesla in-car browser. It decodes CAN messages using DBC files and enables bidirectional CAN communication through NodeRED and MQTT.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> Pi["Pi + SocketCAN<br/>(can0/can1)"]
+    Pi --> Docker["Docker-compose stack"]
+    Pi --> NodeRED["NodeRED<br/>(bridge)"]
+    Pi --> DBC["DBC files<br/>(decode)"]
+    NodeRED --> MQTT["MQTT broker"]
+    MQTT --> Web["Web UI<br/>(in-car browser)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,Docker,NodeRED,MQTT,Web path
+```
+
 ## Technical Details
 
 - **Platform**: Raspberry Pi (32-bit OS Lite)

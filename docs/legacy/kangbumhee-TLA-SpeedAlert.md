@@ -14,6 +14,19 @@ repo: TLA-SpeedAlert
 
 A Korean-language Android app that connects to a Tesla via BLE to receive speed and GPS data, then provides speed camera and enforcement camera alerts. Uses public camera data (data.go.kr CSV), OSRM/Mapbox routing, and BLE GATT notifications from a "TeslaCAN" BLE peripheral device for real-time speed and position.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Tesla["Tesla"] -->|BLE GATT| Peri["TeslaCAN BLE peripheral"]
+    Peri -->|BLE| App["Android app (Kotlin)"]
+    App --> CSV["Public camera CSV<br/>(data.go.kr)"]
+    App --> Route["OSRM / Mapbox"]
+    App --> Alert["Speed / camera alerts"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class App,Alert path
+```
+
 ## Technical Details
 
 - **Platform**: Android (Kotlin)

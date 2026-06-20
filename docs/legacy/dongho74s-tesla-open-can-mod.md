@@ -23,6 +23,17 @@ An open-source firmware for enabling Tesla FSD (Full Self-Driving) functionality
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN (HW3 / HW4)"] --> MCU["RP2040 / M4 / ESP32"]
+    MCU --> Driver["MCP2515 / MCAN / TWAI @ 500kbps"]
+    Driver --> Frame["Intercept + modify"]
+    Frame --> FSD["FSD enable"]
+    Frame --> Nag["Nag suppression"]
+    Frame --> Prof["Speed profile (follow-distance)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class FSD,Nag,Prof path
+```
 - `src/main.cpp` / `RP2040CAN.ino` — Entry points (PlatformIO and Arduino IDE respectively)
 - `include/app.h` — Template-based setup/loop dispatching to the correct CAN driver and handler
 - `include/handlers.h` — Three handler classes (`LegacyHandler`, `HW3Handler`, `HW4Handler`) implementing CAN message interception and modification logic per hardware variant

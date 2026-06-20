@@ -23,6 +23,14 @@ CANdash is an Android app that turns a phone or tablet into an instrument cluste
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Tesla["Tesla Model 3/Y CAN"] --> Bridge["CANserver<br/>(jwardell.com)"]
+    Bridge -->|Wi-Fi| Phone["Android phone/tablet<br/>(CANdash app)"]
+    Phone --> UI["Instrument cluster<br/>(speed, power, SOC,<br/>blind spot, metrics)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Bridge,Phone,UI path
+```
 - `android/` — Standard Android Gradle project
   - `android/app/` — Main application module
   - `android/build.gradle` — Root build configuration

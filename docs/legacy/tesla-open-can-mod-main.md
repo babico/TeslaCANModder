@@ -14,6 +14,25 @@ repo: open-can-mod-main
 
 The most mature and actively developed open-source Tesla CAN bus modification tool. Evolved from the single-file FSD enabler into a well-structured PlatformIO project supporting multiple CAN drivers (MCP2515, ATSAME51, ESP32 TWAI), multiple hardware variants (Legacy/HW3/HW4), and comprehensive test infrastructure. Includes a documentation site, CI/CD pipeline, and native test environment.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    HW{"Platform (build time)"} -->|RP2040| MCP["MCP2515 SPI"]
+    HW -->|M4| MCAN["ATSAME51"]
+    HW -->|ESP32| TWAI["TWAI"]
+    MCP & MCAN & TWAI --> Frame["Intercept + modify<br/>(Legacy/HW3/HW4)"]
+    Frame --> FSD["FSD"]
+    Frame --> Nag["Nag suppression"]
+    Frame --> Prof["Speed profile"]
+    Frame --> ISA["ISA chime"]
+    Frame --> ASS["ASS unlock"]
+    TWAI --> Web["Web dashboard"]
+    Frame --> Test["Native Unity tests"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class HW,Frame,Web,Test path
+```
+
 ## Technical Details
 
 - **Platform**: Adafruit Feather RP2040 CAN, Feather M4 CAN Express, ESP32 (various), M5Stack Atomic CAN Base

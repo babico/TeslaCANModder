@@ -11,6 +11,16 @@ Home Assistant Community Add-on for Tesla BLE MQTT integration. Provides a one-c
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    HA["Home Assistant OS"] --> Addon["tesla-local-control add-on<br/>(config.yaml)"]
+    Addon --> Core["tesla_ble_mqtt core<br/>(see sibling repo)"]
+    Addon --> Tools["Helper tools"]
+    Core --> Tesla["Tesla BLE"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Addon,Core,Tools path
+```
+
 ```
 tesla-local-control-addon/
 ├── tesla_ble_mqtt/           # Add-on configuration

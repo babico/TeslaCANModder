@@ -14,6 +14,17 @@ repo: Tesla_CanBus_Reader
 
 A Java application that reads and decodes raw Tesla CAN bus log dumps. It parses hex-encoded CAN frames from text log files and decodes specific signals (speed, SOC, torque, gear, pedal position, energy stats, temperatures, etc.) using a manually defined signal map with bit-level extraction, scaling, and offset.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Log["Hex-encoded CAN log<br/>(text file)"] --> Java["Java app<br/>(bit-level parser)"]
+    Signal["Signal map<br/>(bit, scale, offset)"] --> Java
+    Java --> Decode["Decoded:<br/>speed, SOC, torque, gear,<br/>pedal, energy, temps"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Java,Decode path
+```
+
 ## Technical Details
 
 - **Platform**: PC (Java)

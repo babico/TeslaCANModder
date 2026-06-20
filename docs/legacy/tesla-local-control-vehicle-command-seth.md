@@ -11,6 +11,18 @@ Fork of Tesla's official `vehicle-command` by Seth Terashima under tesla-local-c
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Go["Go CLI"] --> Cmd["cmd/ (CLI)"]
+    Go --> Pkg["pkg/ (shared)"]
+    Go --> Internal["internal/"]
+    Go --> Examples["examples/"]
+    Cmd & Pkg & Internal --> VCSEC["VCSEC protocol<br/>(Tesla BLE)"]
+    VCSEC --> Tesla["Tesla vehicle"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Go,VCSEC path
+```
+
 ```
 vehicle-command-seth/
 ├── cmd/                # CLI command implementations

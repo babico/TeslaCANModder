@@ -14,6 +14,19 @@ repo: tesla_can_signals
 
 A collection of Tesla CAN bus signal definitions in JSON format covering Model 3, Model Y, Model S, and Model X. Includes compact DBC-like signal databases and legacy self-test parser definitions for each vehicle model. This is a data-only repository with no executable code.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    JSON["JSON signal databases"] --> M3["Model 3<br/>(compact DBC-like)"]
+    JSON --> MY["Model Y"]
+    JSON --> MS["Model S"]
+    JSON --> MX["Model X"]
+    M3 & MY & MS & MX --> Ref["Reference for<br/>DBC decode tools"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class JSON,Ref path
+```
+
 ## Technical Details
 
 - **Platform**: N/A (data files only)

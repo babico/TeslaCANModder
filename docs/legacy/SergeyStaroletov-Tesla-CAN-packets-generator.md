@@ -14,6 +14,17 @@ repo: Tesla-CAN-packets-generator
 
 A simple Arduino sketch that generates and sends pre-defined Tesla CAN packets over an MCP2515 CAN bus shield. It transmits hardcoded frames for RPM, speed, inverter temperature, BMS state, battery state of charge, estimated energy, battery lifetime stats, gear, and odometer, along with random noise messages.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Arduino["Arduino sketch"] --> MCP["MCP2515<br/>(CAN-BUS Shield)"]
+    MCP --> Frames["Hardcoded test frames<br/>(RPM, speed, BMS,<br/>SOC, gear, odometer)"]
+    Frames --> Bus["CAN bus TX"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Arduino,Frames path
+```
+
 ## Technical Details
 
 - **Platform**: Arduino (with CAN-BUS Shield)

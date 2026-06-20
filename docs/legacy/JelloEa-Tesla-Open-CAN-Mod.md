@@ -23,6 +23,17 @@ The main Tesla Open CAN Mod project — a multi-platform firmware that intercept
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> Driver{"Driver<br/>abstraction"}
+    Driver -->|RP2040| MCP["MCP2515 SPI"]
+    Driver -->|M4| MCAN["ATSAME51 native"]
+    Driver -->|ESP32| TWAI["ESP32 TWAI"]
+    MCP & MCAN & TWAI --> Frame["Intercept + modify<br/>(Legacy/HW3/HW4)"]
+    Frame --> FSD["FSD enable"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Driver,Frame,FSD path
+```
 - `src/main.cpp` — PlatformIO entry point. Selects driver at compile time via `DRIVER_MCP2515`, `DRIVER_SAME51`, or `DRIVER_TWAI` macros. Calls templated `appSetup<>()` and `appLoop<>()` functions.
 - `include/app.h` — Core application logic (setup/loop) templated on driver type.
 - `include/handlers.h` — CAN message handlers for Legacy/HW3/HW4 (FSD enable, speed profile, nag suppression).

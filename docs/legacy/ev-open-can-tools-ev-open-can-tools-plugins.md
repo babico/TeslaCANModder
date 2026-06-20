@@ -16,6 +16,17 @@ JSON plugin files for the ev-open-can-tools runtime plugin engine. Plugins are i
 
 The plugins are kept as a submodule for reference only. The CAN signal targets they encode (bit positions, frame IDs) are useful as a cross-check against our own handler implementations.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Engine["ev-open-can-tools plugin engine<br/>(runtime)"] --> Plugins["JSON plugin files<br/>(submodule, ref only)"]
+    Plugins --> Ref["CAN signal targets<br/>(bit/frame IDs)"]
+    Ref --> Xcheck["Cross-check vs our<br/>handler implementations"]
+    classDef note fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Ref,Xcheck note
+```
+
 ## Available Plugins (signal reference only)
 
 | Plugin | HW | CAN target |

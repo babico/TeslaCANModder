@@ -23,6 +23,13 @@ A community-maintained DBC (Database CAN) file for Tesla Model 3 and Model Y CAN
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    DBC["Model3/Y DBC file"] --> Tools["SavvyCAN / CANBUS-Analyzer<br/>/ TeslaX app"]
+    DBC --> Decode["Model 3 / Y signal decode<br/>(battery, drive, BMS, …)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class DBC,Tools,Decode path
+```
 Single file repository:
 
 - `Model3CAN.dbc` — Complete DBC file defining Tesla Model 3/Y CAN message IDs, signal names, bit positions, scaling factors, units, and value descriptions

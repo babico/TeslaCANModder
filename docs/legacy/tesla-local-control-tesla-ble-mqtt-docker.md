@@ -14,6 +14,19 @@ repo: tesla_ble_mqtt_docker
 
 Docker container (and Home Assistant add-on) that bridges Tesla's BLE vehicle-command protocol to MQTT. Runs on a Raspberry Pi or any Linux host within ~3 m of the car. Sends commands and reads vehicle state via MQTT without relying on the Fleet API. Current release is **v0.5.0** which adds Bluetooth stability improvements and automatic state polling.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Tesla["Tesla BLE"] --> Host["Pi 3+ / Linux host<br/>(~3m from car)"]
+    Host --> VC["vehicle-command Go binary<br/>(protobuf over GATT)"]
+    VC --> MQTT["MQTT broker"]
+    MQTT --> HA["Home Assistant<br/>(auto-discovery)"]
+    Host --> Docker["Docker / HA add-on<br/>(v0.5.0)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Host,VC,MQTT,HA,Docker path
+```
+
 ## Technical Details
 
 - **Platform**: Linux (Docker), Raspberry Pi 3+, any host with Bluetooth

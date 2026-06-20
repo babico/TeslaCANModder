@@ -14,6 +14,18 @@ repo: tesla_CAN_traffic_decode
 
 A Python-based CAN data decoder that parses raw CAN bus CSV captures from a Tesla Model 3 using the Model3CAN.dbc file. It reads DBC signal definitions, matches them against captured CAN traffic, extracts physical values using bit-level decoding (little-endian), and outputs decoded results. Uses multiprocessing and numba JIT for performance.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    CSV["Raw CAN CSV<br/>(captures)"] --> Py["Python 3 decoder<br/>(multiprocessing + numba JIT)"]
+    DBC["Model3CAN.dbc"] --> Py
+    Py --> Decode["Little-endian<br/>bit-level decode"]
+    Decode --> Out["Decoded physical values"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Py,Out path
+```
+
 ## Technical Details
 
 - **Platform**: Desktop (Python)

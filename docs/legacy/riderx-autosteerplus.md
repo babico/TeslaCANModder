@@ -14,6 +14,17 @@ repo: autosteerplus
 
 A Capacitor + Vue 3 mobile/web application that wraps the FSD activation portal (fsd.teslaandroid.com) into a native iOS app with Bluetooth bridge and a hosted web fork. It provides onboarding, documentation, FAQ flows, and a cleaner UI around the original portal behavior using Konsta UI and Tailwind CSS.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Web["FSD portal (web fork,<br/>Cloudflare Workers)"] -->|wrapped by| Cap["Capacitor native iOS app"]
+    Cap -->|BLE| Dev["CAN device (separate)"]
+    Dev --> Car["Tesla CAN"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Web,Cap path
+```
+
 ## Technical Details
 
 - **Platform**: iOS (Capacitor native app), Web (Cloudflare Workers)

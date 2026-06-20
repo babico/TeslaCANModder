@@ -14,6 +14,18 @@ repo: TelemetryX
 
 A full-stack vehicle telemetry dashboard simulating Tesla Service Mode. It uses a Python/FastAPI backend that generates mock CAN frames via WebSocket and a React/Vite frontend that visualizes speed, RPM, battery voltage, temperature, and allows toggling a cooling fan with real-time feedback.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Mock["Mock CAN frames"] --> BE["Python FastAPI<br/>(WebSocket)"]
+    BE --> FE["React/Vite<br/>frontend"]
+    FE --> Viz["Speed, RPM, battery V/T"]
+    FE --> Ctrl["Cooling fan toggle"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class BE,FE path
+```
+
 ## Technical Details
 
 - **Platform**: PC (Web application)

@@ -23,6 +23,14 @@ An ESP32 project that reads current measurements from a Tesla P100D shunt sensor
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Shunt["Tesla P100D shunt<br/>(SPI sensor)"] --> ESP32["ESP32<br/>(CAN.h)"]
+    ESP32 --> Bus["CAN bus<br/>(broadcast current)"]
+    Bus --> EV["Custom EV /<br/>battery build"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP32,Bus path
+```
 - `ESP32TeslaShuntCan.ino` — Main sketch. Initializes the shunt via SPI, sets up CAN at 500 kbit/s, and runs a 10ms periodic task to read current and broadcast it.
 - `Shunt.h` / `Shunt.cpp` — Shunt driver class. Communicates with the Tesla P100D current shunt over SPI (chipSelect = SS pin, 500kHz, MODE0). Reads raw ADC values and converts to milliamps.
 - Uses `TaskScheduler` library for periodic 10ms task execution.

@@ -14,6 +14,19 @@ repo: Brown-TeslaCAN
 
 A Python-based CAN bus communication tool for Tesla vehicles that uses the `python-can` and `cantools` libraries. It implements a multiprocessing architecture to read/write CAN messages across two PCAN USB interfaces, with DBC file-based message decoding and configurable message filtering.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] -->|PCAN USB1| PC["PC (Python 3.10+)"]
+    Car2["Tesla CAN bus 2"] -->|PCAN USB2| PC
+    PC --> DBC["DBC decode"]
+    PC --> Filt["Configurable message filter"]
+    DBC & Filt --> Out["Multiprocessing read/write"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class PC,DBC,Filt path
+```
+
 ## Technical Details
 
 - **Platform**: PC (Python)

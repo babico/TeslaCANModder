@@ -23,6 +23,15 @@ A Flutter mobile application for Tesla vehicle authentication and real-time cont
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    User["User"] -->|OAuth| WebView["WebView<br/>(Tesla login)"]
+    WebView --> Token["OAuth token<br/>(stored)"]
+    Token --> App["Flutter app<br/>(Chinese UI)"]
+    App --> REST["Tesla REST API"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class WebView,Token,App,REST path
+```
 - `lib/main.dart` — App entry point. Initializes services, sets up dark theme, uses GetX for state management and ScreenUtil for responsive layout.
 - `lib/screens/index.dart` — Main screen/navigation.
 - `lib/screens/global.dart` — Global service initialization and shared state.

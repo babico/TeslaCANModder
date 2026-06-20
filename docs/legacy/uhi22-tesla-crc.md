@@ -14,6 +14,19 @@ repo: tesla-crc
 
 A pure-C analysis toolkit that reverse-engineers the CRC algorithm used in Tesla CAN bus messages (specifically IDs 0x229 and 0x249). The project proves that Tesla uses CRC-8/OPENSAFETY (polynomial 0x2F) with per-ID "magic byte" tables indexed by the alive counter. It also includes a sub-folder for Volkswagen MQB CAN CRC analysis.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Log["CAN log files<br/>(0x229, 0x249)"] --> C["C analysis toolkit"]
+    C["CRC-8/OPENSAFETY<br/>(poly 0x2F)"] --> Algo
+    C --> Magic["Per-ID magic tables<br/>(alive counter indexed)"]
+    Algo --> Prove["Proof: Tesla uses<br/>CRC-8/OPENSAFETY +<br/>per-ID magic"]
+    VWMQB["VW MQB sub-folder"] -.->|related| C
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Log,Algo,Magic,Prove path
+```
+
 ## Technical Details
 
 - **Platform**: Desktop (GCC / MinGW)

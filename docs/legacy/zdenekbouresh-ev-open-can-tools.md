@@ -16,6 +16,18 @@ Fork of `ev-open-can-tools/ev-open-can-tools`. The default branch (`dev`) tracks
 
 Submodule is on `dev` branch (HEAD = upstream main equivalent).
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Upstream["ev-open-can-tools<br/>(upstream)"] --> Fork["zdenekbouresh fork<br/>(dev branch)"]
+    Fork --> Add["Waveshare ESP32-S3<br/>+ devcontainer"]
+    Fork --> Branch["feat/das-aware-nag-suppression"]
+    Branch --> Nag["DAS-gated NagHandler<br/>(organic torque walk<br/>+ grip excursions)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Fork,Add,Branch,Nag path
+```
+
 ## Technical Details
 
 - **Platform**: Same as upstream ev-open-can-tools (ESP32, RP2040, M4)

@@ -14,6 +14,18 @@ repo: TeslaCAN
 
 A fork/mirror of the MatthewDriver-TeslaCAN repository. Contains the same Tesla Model 3 CAN bus logging scripts, DBC files, and MQTT-connected web dashboard for real-time visualization. The file structure and contents are nearly identical to the MatthewDriver version, including the same scripts, DBC files, and HTML dashboard.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Model 3 CAN"] --> Pi["Pi + SocketCAN<br/>(can0/can1)"]
+    Pi --> Log["Shell scripts<br/>(capture)"]
+    Pi --> DBC["DBC files<br/>(decode)"]
+    Pi --> Dash["Web dashboard<br/>(MQTT, speed/accel)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,Log,Dash path
+```
+
 ## Technical Details
 
 - **Platform**: Raspberry Pi (Linux/SocketCAN)

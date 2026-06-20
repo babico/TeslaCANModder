@@ -23,6 +23,16 @@ An ESP32-based Tesla FSD CAN controller with a built-in WiFi access point and we
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> ESP["ESP32 (TWAI)<br/>+ SN65HVD230"]
+    ESP --> AP["WiFi hotspot"]
+    AP --> Browser["Phone/browser config UI"]
+    Browser --> Settings["HW mode, profile,<br/>ISA chime, etc."]
+    ESP --> OTA["OTA firmware update"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,AP,Browser,OTA path
+```
 - `src/main.cpp` — Main application split across two ESP32 cores:
   - **Core 0**: WiFi AP, AsyncWebServer (status JSON API, config API, OTA upload endpoint), NVS config persistence.
   - **Core 1**: CAN bus read/modify/write loop using TWAI driver.

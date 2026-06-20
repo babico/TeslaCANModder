@@ -14,6 +14,23 @@ repo: tesla_can
 
 This is the upstream open-source Tesla CAN mod firmware (Tesla Open Can Mod) that our project is derived from. It runs on Adafruit Feather RP2040 CAN, Feather M4 CAN Express, or ESP32 boards to intercept and modify CAN bus messages for enabling FSD, speed profile control, nag suppression, and ISA speed chime suppression on Tesla vehicles.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> HW{"Platform"}
+    HW -->|RP2040| MCP["MCP2515"]
+    HW -->|M4| MCAN["ATSAME51"]
+    HW -->|ESP32| TWAI["TWAI"]
+    MCP & MCAN & TWAI --> Frame["Intercept + modify"]
+    Frame --> FSD["FSD enable"]
+    Frame --> Nag["Nag suppression"]
+    Frame --> Prof["Speed profile"]
+    Frame --> ISA["ISA chime suppress"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Frame,FSD,Nag,Prof,ISA path
+```
+
 ## Technical Details
 
 - **Platform**: Adafruit Feather RP2040 CAN (MCP2515), Feather M4 CAN Express (ATSAME51), ESP32 (TWAI)

@@ -17,6 +17,23 @@ status: deleted
 
 A comprehensive fork of Tesla-OPEN-CAN-MOD — an ESP32/ESP32-S3 CAN bus modification firmware for Tesla vehicles. It intercepts, modifies, and injects CAN frames in real time to enable FSD activation, nag suppression, speed profile management, ISA chime mute, battery preheating, and more. Includes a full-featured WiFi web dashboard for runtime control and monitoring.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> ESP{"ESP32 / ESP32-S3<br/>(PlatformIO + Arduino)"}
+    ESP --> TWAI["TWAI +<br/>SIT1050T / SN65HVD230 /<br/>CA-IS3050G"]
+    TWAI --> Frame["Intercept + inject"]
+    Frame --> FSD["FSD activation"]
+    Frame --> Nag["Nag suppression"]
+    Frame --> Prof["Speed profile"]
+    Frame --> ISA["ISA chime mute"]
+    Frame --> Pre["Battery preheating"]
+    ESP --> Web["WiFi web dashboard"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,Frame,Web path
+```
+
 ## Technical Details
 
 - **Platform**: ESP32 / ESP32-S3 (PlatformIO + Arduino framework)
