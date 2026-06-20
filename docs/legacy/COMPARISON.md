@@ -99,6 +99,20 @@ Compares our project (Tesla-CAN-Mod) against the four highest-relevance legacy r
 | China Mode (FSD UI bypass for CN vehicles) | hypery11 | LOW | Low |
 | Emergency Vehicle Detect (HW4 bit59) | hypery11, slxslx | LOW | Low |
 
+## API / BLE / Resource Comparison
+
+These repositories are not CAN firmware, but they define the transports and ecosystem surfaces our firmware can extend.
+
+| Aspect | Tesla-CAN-Mod | bogosj/tesla | mveplus/model3-resources | teslamotors/vehicle-command |
+| ------ | ------------ | ------------ | ------------------------ | --------------------------- |
+| Layer | CAN bus modification | Owner API client | Curated links / guides | Official BLE + Fleet SDK |
+| Transport | CAN, serial, BLE, WiFi | HTTPS (Owner API) | N/A (links) | BLE (VCSEC), gRPC, HTTPS |
+| Auth | None on CAN; BLE pairing | OAuth token | N/A | VCSEC ephemeral keys |
+| Commands | 120+ CAN commands | 30+ REST commands | N/A | 40+ protobuf commands |
+| RSSI / distance | Planned (`blekey:distance`) | N/A | N/A | N/A (no built-in distance) |
+| Home Assistant | MQTT bridge, `ha:*` | Via Tesla custom component | Links to integration | Fleet Telemetry |
+| Reference value | Primary target | API error/rate-limit patterns | Ecosystem coverage checklist | VCSEC handshake + command schemas |
+
 ## Architecture Comparison
 
 | Aspect | Tesla-CAN-Mod | hypery11 | slxslx | Shayennn |

@@ -23,6 +23,7 @@ High-value repos directly driving current or planned features.
 | [Shayennn-FUCKYOU-TESLA-FSD](Shayennn-FUCKYOU-TESLA-FSD.md) | Shayennn | GPL-3.0/MIT | Feather M4, ESP32, ESP32-IDF | Shared `vehicle_logic.h`, CI + sanitizer tests, ESP-IDF v6.0 |
 | [tesla-local-control/tesla_ble_mqtt_docker](tesla-local-control-tesla-ble-mqtt-docker.md) | tesla-local-control | Apache-2.0 | Linux/Docker | MQTT ⇄ BLE bidirectional architecture, HA auto-discovery |
 | [yoziru-esphome-tesla-ble](yoziru-esphome-tesla-ble.md) | yoziru | AGPL-3.0 | ESP32, M5Stack | Tesla vehicle-command BLE protobuf dispatch (climate/lock/trunk/charging) |
+| [teslamotors/vehicle-command](teslamotors-vehicle-command.md) | Tesla Motors | Apache-2.0 | Go/Linux | Official VCSEC/BLE vehicle-command SDK; BLE key distance reference |
 | [commaai/openpilot](commaai-openpilot/) | comma.ai | MIT | — | Tesla CarController reference for DAS drive safety gates (no per-repo doc yet) |
 | [sunnypilot](sunnypilot/) | sunnypilot | MIT | — | openpilot fork with Tesla-focused extensions (no per-repo doc yet) |
 
@@ -99,6 +100,7 @@ for our `ids.h` and signal documentation.
 | [talas9-tesla_can_signals](talas9-tesla_can_signals.md) | talas9 | Multi-model CAN signals (JSON) |
 | [tumik-S3XY-candump](tumik-S3XY-candump.md) | tumik | CAN dump |
 | [uhi22-tesla-crc](uhi22-tesla-crc.md) | uhi22 | Tesla CRC algorithms |
+| [mveplus-tesla-model3-resources](mveplus-tesla-model3-resources.md) | mveplus | Curated ecosystem links: TeslaMate, Fleet Telemetry, HA, SDKs |
 
 ## Tier 5 — BMS / battery
 
@@ -146,6 +148,7 @@ for our `ids.h` and signal documentation.
 | [sydneyg007-Tesla-Model-3-Front-DI-emulator](sydneyg007-Tesla-Model-3-Front-DI-emulator.md) | sydneyg007 | Front DI emulator |
 | [tesberry-tesberry](tesberry-tesberry.md) | tesberry | Raspberry Pi Tesla |
 | [wimaha-TeslaBleHttpProxy](wimaha-TeslaBleHttpProxy.md) | wimaha | BLE HTTP proxy |
+| [bogosj-tesla](bogosj-tesla.md) | bogosj | Unofficial Tesla Owner API + OAuth token helper (Go) |
 
 ## Tier 8 — Unrelated / historical
 
