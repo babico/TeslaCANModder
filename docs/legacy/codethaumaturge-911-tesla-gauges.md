@@ -23,6 +23,14 @@ A project to digitally control stock instrument panel gauges on a classic Porsch
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Tesla["Tesla drive unit<br/>CAN data"] --> Pi["Raspberry Pi"]
+    Pi --> Gauges["Porsche 911<br/>stock gauges"]
+    Repo["No source code<br/>(README + LICENSE only)"] --> Status["Doc-only"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,Gauges path
+```
 The repository is essentially empty:
 
 - `README.md` — Single-line description of the project concept

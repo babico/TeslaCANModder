@@ -11,6 +11,19 @@ icon: 🧭
 
 This is the canonical setup path for TeslaCANModder across firmware, transport, and client surfaces.
 
+```mermaid
+flowchart TB
+    Start([Start]) --> Env["Pick build env<br/>(chassis / vehicle / body / WiFi / BLE)"]
+    Env --> HW["Wire MCP2515 × N to X179<br/>(see hardware-setup)"]
+    HW --> Build["pio run -e &lt;env&gt;"]
+    Build --> Flash["Flash via Web Serial / USB"]
+    Flash --> Connect["Connect (USB / WiFi / BLE)"]
+    Connect --> Validate["Send: ping, status, fsd:on, etc."]
+    Validate --> Live["Live operation"]
+    classDef step fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Env,HW,Build,Flash,Connect,Validate,Live step
+```
+
 ## Goal
 
 - Flash the correct firmware image.

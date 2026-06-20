@@ -23,6 +23,15 @@ An open-source CAN bus modification firmware for Tesla vehicles that intercepts 
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    HW["Platform<br/>(RP2040 / M4 / ESP32)"] --> CAN["CAN driver<br/>(MCP2515 / TWAI / ATSAME51)"]
+    CAN --> Frame["Frame intercept + modify"]
+    Frame --> FSD["FSD enable + ISA chime<br/>+ emergency vehicle detect"]
+    FSD --> Bus["BUS 500 kbit/s"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Frame,FSD path
+```
 - `RP2040CAN.ino` — Arduino IDE entry point; selects board driver and vehicle variant via `#define` directives
 - `src/main.cpp` — PlatformIO entry point; mirrors the .ino logic
 - `include/app.h` — Core application logic (shared between both entry points)

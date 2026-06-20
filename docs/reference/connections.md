@@ -12,6 +12,20 @@ icon: 🔌
 
 This page documents all integration-oriented connection features exposed by Tesla CAN Modder.
 
+```mermaid
+flowchart TB
+    ESP["ESP32 Firmware"]
+    ESP --> MQTT["MQTT<br/>(telemetry bridge)"]
+    ESP --> TBLE["Tesla BLE<br/>(VCSEC, key)"]
+    ESP --> HA["Home Assistant<br/>(MQTT discovery)"]
+    ESP --> EN["ESP-NOW<br/>(multi-device)"]
+    ESP --> GVRET["GVRET TCP<br/>(SavvyCAN)"]
+    ESP --> SMT["ScanMyTesla BT<br/>(SPP bridge)"]
+    ESP --> ELM["ELM327 AT<br/>(OBD-II emul)"]
+    classDef conn fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class MQTT,TBLE,HA,EN,GVRET,SMT,ELM conn
+```
+
 Covered integrations:
 
 - MQTT

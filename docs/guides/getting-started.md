@@ -11,6 +11,18 @@ icon: 🚀
 
 # Getting Started
 
+```mermaid
+flowchart LR
+    Clone[git clone] --> Install[npm install]
+    Install --> Build[Build firmware<br/>pio run -e esp32_chassis_8mhz]
+    Build --> Flash["Flash (Web Serial or pio)"]
+    Flash --> X179["Plug into X179"]
+    X179 --> Client["Open client app<br/>(Expo Web)"]
+    Client --> Send["Send first command<br/>(e.g. ping, fsd:on)"]
+    classDef step fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Clone,Install,Build,Flash,X179,Client,Send step
+```
+
 TeslaCANModder is an open-source CAN bus modification tool for Tesla vehicles. It intercepts and modifies CAN frames to enable features like FSD, nag suppression, nag killer (EPAS torque spoofing), speed profiles, summon, battery preconditioning, track mode, BMS telemetry, and vehicle control commands.
 
 For a single end-to-end setup flow (build, flash, connect, and validation), use the [Full Setup Guide](full-setup.md).

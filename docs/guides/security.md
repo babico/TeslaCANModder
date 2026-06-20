@@ -10,6 +10,20 @@ icon: 🔒
 
 # Security Model
 
+```mermaid
+flowchart TB
+    User([User]) --> Auth{Auth method}
+    Auth -->|WiFi| WPA["WPA2 password<br/>(Soft-AP)"]
+    Auth -->|BLE| Pair["NimBLE pairing<br/>(Just Works / passkey)"]
+    Auth -->|Web| Token["API token<br/>(header / cookie)"]
+    WPA --> Board["Board shell"]
+    Pair --> Board
+    Token --> Board
+    Board --> Cmd["Command execution"]
+    classDef auth fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class WPA,Pair,Token auth
+```
+
 This is a single-user, single-board project. The owner controls their own vehicle. The security model protects against **unauthorized nearby access** — not against the owner.
 
 ## Access Control Layers

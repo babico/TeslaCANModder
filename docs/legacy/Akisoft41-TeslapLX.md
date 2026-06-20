@@ -23,6 +23,17 @@ An ESP32-based ELM327/ST1110 emulator that bridges a Tesla CAN bus to the "ScanM
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    BT["Bluetooth SPP"] --> ESP["ESP32 WROOM<br/>(ESP-IDF)"]
+    UART["UART (USB)"] --> ESP
+    WiFi["WiFi TCP :35000"] --> ESP
+    ESP --> ELM["ELM327 / ST1110<br/>AT emulator"]
+    ELM --> CAN["ESP32 CAN @ 500 kbps<br/>(SN65HVD230)"]
+    ELM --> SIM["CAN sim mode"]
+    classDef bridge fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP,ELM bridge
+```
 The project uses ESP-IDF's native build system (CMake) with a well-modularized structure:
 
 | File | Role |

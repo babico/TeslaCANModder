@@ -23,6 +23,15 @@ A comprehensive Raspberry Pi-based Tesla CAN bus controller/automator for Tesla 
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Model Y/3 CAN"] --> Pi["Pi Zero 2W +<br/>MCP2515 HAT"]
+    Pi --> Socket["SocketCAN can0"]
+    Socket --> Ctrl["Controller features<br/>(autopilot assist, seatbelt,<br/>button remap, recirc, kick-down,<br/>turn signals, wiper, mirror)"]
+    Ctrl --> Navdy["Navdy HUD<br/>(BT, optional)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,Ctrl path
+```
 - `jupiter.py` — Main application: initializes CAN bus, loads feature modules, reads CAN messages in a loop, dispatches to Buffer and feature handlers
 - `tesla.py` — **Not present in the repository** (imported by `jupiter.py` but not committed — the module provides `Buffer`, `Dashboard`, `Logger`, `Autopilot`, `RearCenterBuckle`, `ButtonManager`, `FreshAir`, `KickDown`, `TurnSignal`, `Reboot`, `BatteryLogger`, and `monitoring_addrs` classes, but the file is absent, making the project non-runnable as published)
 - `functions.py` — CAN bus initialization (`modprobe mcp251x`, `ip link set can0`), JSON settings loader

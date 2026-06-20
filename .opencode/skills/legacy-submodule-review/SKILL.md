@@ -71,16 +71,27 @@ Reason: both are large openpilot-family forks where a per-repo analysis would du
 
 ### Handle 404 / dead submodules
 
-When upstream returns 404 or is permanently gone:
+When upstream returns 404 or is permanently gone, the goal is to **remove the submodule from the parent repo entirely while keeping the working tree files on disk for local reference**. Critical: the parent index must NOT keep a gitlink for this path, because `git submodule foreach` (run by the CI checkout action, the local `submodule foreach` scripts, and `git status`) will look up the path in `.gitmodules`, fail to find it, and exit with code 128 — breaking CI and local commands.
 
-1. **Disable the submodule but keep the files.** Steps, in order:
-    - Comment out the `[submodule "<path>"]` block in `.gitmodules` with a note pointing at the review doc
-    - `git config --remove-section submodule.<path>` (removes the entry from `.git/config`)
-    - `Remove-Item -Recurse -Force .git/modules/<path>` (Windows) or `rm -rf .git/modules/<path>` (bash)
-    - `Remove-Item -Force legacy/<path>/.git` (the dangling file pointer inside the legacy dir)
-    - The working tree files at `legacy/<path>/` stay
-2. **Document the disable in the review doc** with: 404 status, action taken, and a recommendation to re-check the URL periodically.
-3. **Do NOT `git rm --cached` the submodule.** That would unstage the files and force them to be committed as regular files, which bloats the repo. The gitlink stays in the index; the working tree files are kept; the submodule is unregistered.
+The required steps, in order:
+
+1. **Comment out the `[submodule "<path>"]` block in `.gitmodules`** with a note pointing at the review doc.
+2. **`git config --remove-section submodule.<path>`** (removes the entry from `.git/config`).
+3. **`git rm --cached <path>`** (CRITICAL — removes the gitlink from the parent index). Without this, the path remains a tracked submodule and `git submodule foreach` errors with `fatal: No url found for submodule path '<path>' in .gitmodules`. The working tree files at `<path>/` are preserved; the directory becomes untracked.
+4. **Remove the `.git` file inside the legacy dir** (the dangling gitfile pointer): `Remove-Item -Force <path>/.git` (Windows) or `rm -f <path>/.git` (bash). Also remove the modules entry: `Remove-Item -Recurse -Force .git/modules/<path>` (or `rm -rf .git/modules/<path>`).
+5. **Do NOT add the path to `.gitignore`.** The files should remain visible to `git status` as untracked, so the user can see them, `git add` them if they ever want to commit the data, or `git rm` them if they want to discard. Adding the path to `.gitignore` silently hides the untracked files from `git status`, makes the disable harder to reverse, and was explicitly rejected as the wrong approach.
+6. **Document the disable in the review doc** with: 404 status, the action taken (with the `git rm --cached` step), and a recommendation to re-check the URL periodically.
+
+### The CI failure mode this prevents
+
+The first attempt at this workflow commented out the `.gitmodules` entry without running `git rm --cached`. Result on main:
+
+```
+Error: fatal: No url found for submodule path 'legacy/mikegapinski-tesla-can-explorer' in .gitmodules
+Error: The process '/usr/bin/git' failed with exit code 128
+```
+
+This was emitted by `git submodule foreach --recursive` in the GitHub Actions checkout action. The gitlink in the parent index still pointed at the path; `.gitmodules` no longer had the entry; the lookup failed; the whole checkout aborted. The fix is the `git rm --cached` step, which fully removes the path from the submodule machinery so the lookup never happens.
 
 ### Submodule SHA bumps are a separate concern
 

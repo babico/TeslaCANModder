@@ -23,6 +23,15 @@ A CAN-to-Bluetooth adapter firmware for ESP32 that bridges the Tesla vehicle CAN
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN bus"] --> ESP32["ESP32 TWAI<br/>(listen-only)"]
+    ESP32 --> Filter["Frame filter"]
+    Filter --> BT["Bluetooth SPP<br/>(ESP32 BT classic)"]
+    BT --> App["ScanMyTesla<br/>(Android)"]
+    classDef bridge fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class ESP32,Filter,BT bridge
+```
 - `ESP32-ScanMyTesla.ino` — Main (v2.0.0, 2024): Initializes TWAI in listen-only mode, buffers incoming CAN frames (16-frame ring buffer), filters by known Tesla IDs, and forwards via Bluetooth Serial
 - `ESP32-ScanMyTesla_v1.ino` — Older version kept for reference
 - `ESP32_can_connection.png` — Hardware wiring diagram

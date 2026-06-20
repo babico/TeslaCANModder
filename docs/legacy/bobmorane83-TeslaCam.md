@@ -23,6 +23,15 @@ A wireless auxiliary dashboard system for Tesla Model 3, composed of three indep
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> Bridge["LilyGo T-2CAN<br/>(MCP2515 + TWAI)"]
+    Bridge -->|ESP-NOW| Disp["JC3636W518C<br/>(LVGL display)"]
+    Bridge -->|ESP-NOW| Cam["Freenove ESP32-S3<br/>(front camera)"]
+    Disp --> UI["Speed, SOC, gear, temps,<br/>turn signals, blind spot,<br/>camera feed"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Bridge,Disp,Cam,UI path
+```
 - `Bridge/src/main.cpp` — CAN bridge firmware for LilyGo T-2CAN: reads from both MCP2515 (VehicleBus) and TWAI (ChassisBus) at 500 kbit/s, filters frames via whitelist (`valid_can_ids.h`), broadcasts via ESP-NOW
 - `Ecran/firmware/src/main.cpp` — Display firmware for JC3636W518C: LVGL dashboard on 360×360 round screen, ESP-NOW receiver for CAN data, UDP receiver for JPEG camera stream, touch-to-toggle camera/dashboard mode
 - `Camera/` — Camera firmware for Freenove ESP32-S3 WROOM CAM: captures JPEG frames, streams via WiFi UDP

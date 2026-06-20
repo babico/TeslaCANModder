@@ -4,6 +4,31 @@
 > Analysed: `values.py`, `carstate.py`, `carcontroller.py`, `teslacan.py`
 > sunnypilot: `sunnypilot/opendbc` fork — `carcontroller.py`, `teslacan.py`, `carstate.py`, `coop_steering.py`
 
+```mermaid
+flowchart TB
+    subgraph Body["Car body"]
+        X179["X179 (Tesla diag)"]
+    end
+    subgraph HarnessA["Harness A"]
+        HA1["Connector A1"]
+    end
+    subgraph HarnessB["Harness B"]
+        HB1["Connector B1"]
+    end
+    subgraph Panda["comma panda"]
+        P1["Panda CH-A"]
+        P2["Panda CH-B"]
+    end
+    AP["comma AP<br/>(3X / two)"]
+    X179 --> HA1 --> P1
+    X179 --> HB1 --> P2
+    P1 -->|USB| AP
+    P2 -->|USB| AP
+    AP -->|CAN to panda| X179
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class HA1,HB1,P1,P2 path
+```
+
 ---
 
 ## 1. The Physical Setup

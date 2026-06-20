@@ -11,6 +11,22 @@ order: 18
 
 This document specifies the concrete layout contract for each breakpoint × display-mode combination in `DriveScreen.tsx`, `AppExperience.tsx`, and the component library. It references `client/src/design/tokens.ts` for all spacing, radius, and breakpoint values, and `useBreakpoint` for responsive switching.
 
+```mermaid
+flowchart TB
+    subgraph Layout["DriveScreen layout zones"]
+        Top["TOP RAIL<br/>(status, AP, variant)"]
+        Left["LEFT PANEL<br/>(power, regen)"]
+        Center["CENTER CLUSTER<br/>(speed, gear, pedal)"]
+        Right["RIGHT PANEL<br/>(SOC, climate)"]
+        Bottom["BOTTOM DOCK<br/>(feature quick-actions)"]
+    end
+    BP{breakpoint}
+    BP -->|phone| Phone["Phone: vertical stack<br/>(Top → Center → Left → Right → Bottom)"]
+    BP -->|tablet| Tablet["Tablet: 2-col<br/>(Top, Left|Center, Right, Bottom)"]
+    BP -->|desktop| Desktop["Desktop: 3-col<br/>(Top, Left | Center | Right, Bottom)"]
+    Phone & Tablet & Desktop --> Layout
+```
+
 ---
 
 ## 1. Canonical Layout Zones

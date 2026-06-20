@@ -11,6 +11,24 @@ order: 0
 
 This folder is the canonical documentation source for the repo and the client docs screen. The app now renders these raw markdown files directly, so there is no separate generated docs bundle to keep in sync.
 
+## Documentation Map
+
+```mermaid
+flowchart TD
+    Start([Start here]) --> Q1{What do you need?}
+    Q1 -->|Set up the device| G["guides/<br/>getting-started, full-setup,<br/>hardware-setup, flasher, adapters"]
+    Q1 -->|Send a command| R["reference/<br/>commands, can-ids,<br/>can-protocol, state-fields, signal-matrix"]
+    Q1 -->|Understand the app| A["architecture/<br/>unified-client-guide,<br/>monitor-architecture, layout-system, feature-workflows"]
+    Q1 -->|Cut a release| C["checklists/<br/>release-checklist,<br/>can-review-checklist, testing-plan"]
+    Q1 -->|Debug a problem| T["troubleshooting/<br/>debug-guide"]
+    Q1 -->|Research the ecosystem| L["legacy/<br/>80+ reference repos,<br/>COMPARISON, upstream-review"]
+    G --> Build["Build → Flash → Drive"]
+    R --> Build
+    A --> Build
+    classDef bucket fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class G,R,A,C,T,L bucket
+```
+
 ## Start Here
 
 - [Getting Started](guides/getting-started.md)

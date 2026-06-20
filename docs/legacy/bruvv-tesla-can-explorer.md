@@ -23,6 +23,13 @@ A web-based research portal for browsing decoded Tesla CAN frames and signal val
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    FW["Firmware libs<br/>(libQtCarCANData.so,<br/>libQtCarVAPI.so)"] --> JSON["Datasets<br/>(Model 3/S/X MCU2/3)"]
+    JSON --> UI["Static web browser<br/>(search frames, signals,<br/>enum values, VAPI)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class JSON,UI path
+```
 - `app.js` — Main application: loads JSON datasets, renders frame list and signal detail panels, provides search/filter/sort across frames, signals, enums, and VAPI aliases
 - `index.html` — Single-page app with left (frame list) and right (signal detail) panels
 - `styles.css` — Styling

@@ -11,6 +11,17 @@ order: 15
 
 Client consolidation is already complete. Keep this document as an ongoing guardrail so the repo does not drift back toward multiple app workspaces.
 
+```mermaid
+flowchart TB
+    Guard["Repo consolidation guardrail"] --> C1["One client workspace<br/>(client/)"]
+    C1 --> C2["No parallel app dirs<br/>(no old web/ or duplicate)"]
+    C2 --> C3["Docs in docs/<br/>(rendered in-app)"]
+    C3 --> C4["CI runs single client suite"]
+    C4 --> C5["Legacy research only in legacy/"]
+    classDef guard fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class C1,C2,C3,C4,C5 guard
+```
+
 Run this checklist whenever changes touch docs, Docker, CI, workspace metadata, or client docs asset loading.
 
 ## Decision

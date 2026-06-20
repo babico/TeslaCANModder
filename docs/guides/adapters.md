@@ -10,6 +10,20 @@ icon: 🔌
 
 ## Quick Reference
 
+```mermaid
+flowchart TB
+    Client["Client (Web/iOS/Android)"] --> Choice{Transport}
+    Choice -->|USB| CDC["USB CDC serial<br/>(baud 115200)"]
+    Choice -->|Bluetooth| NUS["BLE NUS<br/>(NimBLE central)"]
+    Choice -->|WiFi| REST["WiFi Soft-AP + REST"]
+    CDC --> ESP["ESP32 firmware<br/>(lib/io/serial)"]
+    NUS --> ESP
+    REST --> ESP
+    ESP --> Cmd["Command dispatch"]
+    classDef transport fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class CDC,NUS,REST transport
+```
+
 | Connection Type                | Setup Time | Reliability | Use Case                                  |
 | ------------------------------ | ---------- | ----------- | ----------------------------------------- |
 | **USB Serial (COM)**           | <5 min     | High        | Local development, direct MCU access      |

@@ -26,6 +26,16 @@ A Korean-language fork/extension of the Tesla Open CAN Mod project, targeting HW
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    L2["LILYGO T2-CAN (ESP32-S3)"] --> A["MCP2515 SPI"]
+    L2 --> B["ESP32-S3 TWAI"]
+    A --> Nag["Nag Killer"]
+    B --> Web["Web dashboard<br/>(sniffer / recorder)"]
+    Nag --> GW["Gateway Shield<br/>(learning / defense)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Nag,Web,GW path
+```
 Version 2.3.0 with a significantly expanded codebase:
 
 | Component | Role |

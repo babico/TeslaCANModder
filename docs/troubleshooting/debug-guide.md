@@ -11,6 +11,21 @@ icon: 🔍
 
 # Troubleshooting
 
+```mermaid
+flowchart TB
+    Issue([Symptom]) --> Layer{Which layer?}
+    Layer -->|No frames| CAN["CAN health<br/>(candiag, MCP2515 init, bus-off)"]
+    Layer -->|No response| Cmd["Command path<br/>(serial / WiFi / BLE)"]
+    Layer -->|Wrong value| Decode["Decoder / state<br/>(signal-matrix, unit test)"]
+    Layer -->|UI bug| UI["Client renderer<br/>(reducer, parser)"]
+    CAN --> Fix["Apply fix + test"]
+    Cmd --> Fix
+    Decode --> Fix
+    UI --> Fix
+    classDef step fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class CAN,Cmd,Decode,UI step
+```
+
 ## Board Not Connecting
 
 - Use a **data-capable USB cable** (not charge-only)

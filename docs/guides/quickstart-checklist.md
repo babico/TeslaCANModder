@@ -11,6 +11,19 @@ icon: ✅
 
 # Quickstart Checklist
 
+```mermaid
+flowchart TB
+    Start([Start]) --> H["Hardware wired<br/>(X179 + MCP2515 × N)"]
+    H --> F["Firmware flashed"]
+    F --> C["Transport open<br/>(USB / WiFi / BLE)"]
+    C --> V["Validate: ping returns pong"]
+    V --> S["status:compact shows hardware, variant, state"]
+    S --> A["Apply first action<br/>(e.g. fsd:on, then nag:mode:feifan)"]
+    A --> Done([Live operation])
+    classDef step fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class H,F,C,V,S,A step
+```
+
 Use this checklist to verify every step of a first-time setup. Check off each item as you go. If a step fails, see the linked troubleshooting section.
 
 For a detailed narrative setup flow that includes both browser flasher and CLI flasher paths, see the [Full Setup Guide](full-setup.md).

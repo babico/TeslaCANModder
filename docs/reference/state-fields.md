@@ -12,6 +12,28 @@ icon: 📋
 
 All fields in `firmware/lib/core/types.h` → `struct State`. Fields marked **NVS** are persisted across reboots. Fields marked **RO** are read-only (decoded from CAN).
 
+```mermaid
+classDiagram
+    class State {
+        +variant: Variant
+        +fsdEnabled: bool
+        +fsdForceEnabled: bool
+        +nagMode: NagMode
+        +speedProfile: int
+        +dasApState: int
+        +blePairedAddr: string
+        +canDiag: CanDiag
+    }
+    class CanDiag {
+        +nagEchoCount: int
+        +busOffCount: int
+        +txErrorCount: int
+    }
+    State --> CanDiag
+    classDef state fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class State state
+```
+
 ## Core Features
 
 | Field              | Type    | Default | Persist | Description                              |

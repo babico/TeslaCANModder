@@ -23,6 +23,18 @@ A comprehensive Tesla Model 3/Y CAN bus toolkit featuring real-time reading/deco
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Model 3/Y CAN"] --> OBD["OBDLink MX+<br/>(BT, STN2120/ELM327)"]
+    OBD --> PC["PC / Laptop<br/>(Python 3.10+)"]
+    PC --> Read["Read 300+ signals"]
+    PC --> Write["Write (horn, drive mode)"]
+    PC --> Ghost["Ghost mode<br/>(drive mode override)"]
+    PC --> Dash["Live web dashboard"]
+    PC --> Rec["Drive recording /<br/>analysis"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class PC,Read,Write,Ghost,Dash,Rec path
+```
 - `tools/pedalmap_v2.py` — Ghost mode: injects CAN ID 0x334 with Performance pedal map at 50ms intervals
 - `tools/ghost_mode.py` — Advanced ghost mode with simultaneous data logging and mode selection
 - `tools/ghost_ui.py` — UI-based ghost mode controller

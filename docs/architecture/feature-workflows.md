@@ -18,6 +18,21 @@ Each entry shows: command → gate → state → CAN path → bus target.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    User([User selects feature]) --> Cmd[Serial/WiFi/BLE<br/>command]
+    Cmd --> Dispatch["firmware/lib/client/command/dispatch.h"]
+    Dispatch --> Gate["Gate check<br/>(AP active, features enabled, variant)"]
+    Gate -->|passed| Handler["Per-feature handler<br/>(firmware/lib/vehicle/can/feature/*)"]
+    Gate -->|blocked| Drop[Drop + log]
+    Handler --> State["Update State<br/>(persist to NVS)"]
+    Handler --> Frame["Build / intercept CAN frame"]
+    Frame --> Bus["Send on BUS_CHASSIS / VEHICLE / BODY"]
+    Frame --> Stream[Stream JSON to client]
+    classDef gate fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Gate gate
+```
+
 ### Bus Layout (Tesla X179 Connector)
 
 | Bus | ID          | Name                | Direction            |

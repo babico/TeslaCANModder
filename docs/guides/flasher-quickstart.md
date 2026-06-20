@@ -10,6 +10,18 @@ icon: 🔧
 
 ## Overview
 
+```mermaid
+flowchart LR
+    Open["Open flasher<br/>(Chrome/Edge)"] --> Choose["Choose firmware<br/>(release asset or local .bin)"]
+    Choose --> Connect["Connect ESP32<br/>(Web Serial popup)"]
+    Connect --> Erase["Erase flash"]
+    Erase --> Write["Write firmware"]
+    Write --> Verify["Verify (checksum)"]
+    Verify --> Reboot["Reboot into new firmware"]
+    classDef step fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Open,Choose,Connect,Erase,Write,Verify,Reboot step
+```
+
 This guide covers:
 
 - **Flashing firmware** to your ESP32 hardware

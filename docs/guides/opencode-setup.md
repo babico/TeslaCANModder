@@ -11,6 +11,18 @@ icon: 🤖
 
 # OpenCode Setup Guide
 
+```mermaid
+flowchart LR
+    OC["OpenCode"] --> Skills[".opencode/skills/<br/>(load project skills)"]
+    OC --> MCP["MCP servers<br/>(github, etc.)"]
+    OC --> Agent["Subagents<br/>(code, general, etc.)"]
+    Skills --> Help["In-context guidance<br/>(can-protocol-safety,<br/>refactor-over-duplication, …)"]
+    MCP --> Ext["External tools<br/>(gh, playwright)"]
+    Agent --> Tasks["Multi-step task delegation"]
+    classDef oc fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class OC,Skills,MCP,Agent oc
+```
+
 This project uses [OpenCode](https://opencode.ai) for AI-powered development assistance. This guide covers local setup, MCP servers, agent skills, GitHub integration, and usage.
 
 ---

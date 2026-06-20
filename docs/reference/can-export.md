@@ -11,7 +11,16 @@ order: 6
 
 The `canExport` module converts Tesla CAN decoder JSON datasets into three portable formats: **DBC**, **CSV**, and **summary JSON**.
 
-## Formats
+```mermaid
+flowchart LR
+    Decoder["Decoder JSON<br/>(can-frame datasets)"] --> Exp["canExport module<br/>(tools/canExport)"]
+    Exp --> DBC["DBC<br/>(CAN database, SavvyCAN)"]
+    Exp --> CSV["CSV<br/>(spreadsheet)"]
+    Exp --> Summary["summary JSON<br/>(machine-readable index)"]
+    DBC --> Tools["SavvyCAN / cabana /<br/>SocketCAN tools"]
+    CSV --> Sheets["Sheets / Excel / pandas"]
+    Summary --> Index["Doc index / search"]
+```
 
 ### DBC (`.dbc`)
 

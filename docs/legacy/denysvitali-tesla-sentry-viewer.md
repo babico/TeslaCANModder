@@ -23,6 +23,14 @@ A Go-based tool for processing and serving Tesla Sentry Mode video clips. It mer
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Clips["Tesla Sentry clips<br/>(multi-event files)"] --> Go["Go 1.23 CLI<br/>(Cobra/Viper/Lipgloss)"]
+    Go --> FF["ffmpeg merge"]
+    FF --> Server["Gin HTTP API<br/>(browse + stream)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Go,FF,Server path
+```
 - `cmd/server/` — CLI entry point using Cobra command framework
 - `pkg/sentry.go` — Core sentry event handling logic
 - `pkg/clip/` — Video clip processing

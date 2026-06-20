@@ -11,6 +11,21 @@ order: 20
 
 The new `MonitorScreen.tsx` component is a complete replacement for the bloated inline Monitor code that was previously in `AppExperience.tsx`. It provides a clean, responsive, tabbed interface for diagnostics, frame monitoring, decoding, and command execution.
 
+```mermaid
+flowchart TB
+    App["AppExperience.tsx"] --> Monitor["MonitorScreen<br/>(client/src/components/monitor/)"]
+    Monitor --> FrameList["FrameList<br/>(stream JSON frames)"]
+    Monitor --> DecodedView["DecodedView<br/>(per-ID signal decode)"]
+    Monitor --> CmdPanel["CommandPanel<br/>(serial/WiFi command terminal)"]
+    Monitor --> Diagnostics["Diagnostics<br/>(candiag, bus health)"]
+    FrameList --> Transport["Hardware Controller"]
+    DecodedView --> Protocol["@teslacanmodder/protocol<br/>(decoder)"]
+    CmdPanel --> Transport
+    Diagnostics --> Transport
+    classDef screen fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Monitor screen
+```
+
 ## Status
 
 ✅ **Component Created**: `client/src/components/monitor/` (organized as a directory of section components)

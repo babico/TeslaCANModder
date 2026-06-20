@@ -23,6 +23,16 @@ Arduino firmware for enabling Tesla Full Self-Driving (FSD) via CAN bus message 
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Tesla CAN"] --> ESP["ESP32-C3 Super Mini"]
+    ESP --> MCP["MCP2515<br/>(SPI, 500 kbps)"]
+    MCP --> FSD["FSD enable bits"]
+    MCP --> Prof["Follow-distance →<br/>speed profile"]
+    MCP --> Nag["Nag suppression"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class FSD,Prof,Nag path
+```
 Single-file firmware (`CanFeather.ino`):
 
 - `CarManagerBase` — Base struct with virtual `handelMessage()` for CAN frame processing

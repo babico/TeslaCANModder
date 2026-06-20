@@ -23,6 +23,15 @@ A Python-based Tesla Model 3 CAN bus reader using python-can and cantools on a R
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Car["Model 3 CAN"] --> Pi["Pi + SocketCAN"]
+    Pi --> Async["asyncio CAN subscriber"]
+    Async --> DBC["cantools DBC decode"]
+    Async --> Wheel["Volume/scroll flick<br/→ periodic CAN commands"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Pi,Async,DBC,Wheel path
+```
 - `main.py` — Core application:
   - `CANBusSubscriber` — Pub/sub pattern for CAN message callbacks, supports subscribing to specific CAN IDs or all messages
   - `read_can_messages()` — Async loop reading from SocketCAN bus, dispatching to subscribers

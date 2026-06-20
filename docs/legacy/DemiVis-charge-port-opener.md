@@ -23,6 +23,13 @@ A simple CircuitPython project that uses an Adafruit Feather M0 RFM69 radio modu
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    M0["Adafruit Feather M0<br/>(SAMD21, CircuitPython)"] --> RF["RFM69 @ 315 MHz<br/>(charge port signal)"]
+    RF --> Car["Tesla charge port<br/>(open)"]
+    classDef path fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class M0,RF path
+```
 - `code.py` — Main script: configures the RFM69 radio at 315 MHz with Tesla's sync word (`0x8ACB`), then repeatedly sends a hardcoded 42-byte RF signal every 5 seconds (10 bursts per cycle)
 - `lib/adafruit_bus_device/` — CircuitPython I2C/SPI bus device library
 - `boot_out.txt` — Board identification (Feather M0 RFM69)

@@ -23,6 +23,12 @@ This repository is essentially empty — it contains only a `.git` directory wit
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Repo["Empty repo<br/>(.git only)"] --> Status["Abandoned /<br/>placeholder"]
+    classDef warn fill:#1e3a5f,stroke:#4a7fb5,color:#fff
+    class Status warn
+```
 No source files exist. The repository only contains a `.git` directory.
 
 ## CAN Bus Integration
