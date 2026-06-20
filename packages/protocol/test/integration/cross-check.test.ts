@@ -65,6 +65,7 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"nag:mode:natural",
 	"nag:mode:organic",
 	"nag:mode:full",
+	"nag:mode:feifan",
 	"nag:bypass:on",
 	"nag:bypass:off",
 
@@ -483,7 +484,16 @@ function extractProtocolCommands(): string[] {
 			}
 			// Nag mode (unified)
 			if (key === "nagMode") {
-				for (const m of ["off", "bit19", "legacy", "safe", "natural", "organic", "full"]) {
+				for (const m of [
+					"off",
+					"bit19",
+					"legacy",
+					"safe",
+					"natural",
+					"organic",
+					"full",
+					"feifan",
+				]) {
 					cmds.push((fn as (m: string) => string)(m));
 				}
 				continue;

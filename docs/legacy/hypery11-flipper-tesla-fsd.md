@@ -147,3 +147,18 @@ Very high relevance — this is the most feature-complete CAN modification proje
 - **0x398 all-zero stub filter** → `firmware/lib/vehicle/can/handler/bus/vehicle.h` and transport copy
 - **ISA chime HW3 guard** → `firmware/lib/vehicle/can/handler/bus/chassis.h` and transport copy
 - **0x39B comment fix** → `firmware/lib/vehicle/can/handler/frame_readers.h` and transport copy
+
+## Upstream (2026-06-20)
+
+12 new commits on `main` (v2.16-beta.6 → beta.8):
+
+- TWAI auto-recover from bus-off so RX does not silently die (`515e25a`).
+- EPAS-faithful nag rewritten as a **demand-state (Mode-C) machine** (`2bc2f33`, `b9bb6c2`).
+- HW4 Highland `0x39B` byte0 `DAS_autopilotState` auto-fallback (`b78acd2`).
+- `tools/feifan_0x370.py` decode tool for captured `0x370` traffic (`cf631e5`).
+- Web-stream CAN capture enabled during **Active** mode (`e9dbef7`).
+- HARDWARE.md / README: tap Party CAN (2/3) for nag killer; relabel X179 13/14 as Chassis CAN (`8b9e286`, `c1f2c36`, `5c173ec`).
+- Changelog headers for 2.16-beta.7 / beta.8 (`dedb996`, `2e3c4c8`).
+- Contributor credits refresh across EN / zh-CN / zh-TW (`6651805`).
+
+For TeslaCANModder: Mode-C is the same organic-state-machine idea our `nag:mode:organic` already implements but driven by DAS rather than a fixed schedule — worth a future cross-read of `fsd_handler.c`. The HW4 Highland `0x39B` byte0 fallback and the TWAI bus-off recovery pattern are also relevant. Full commit table: `docs/legacy/upstream-review-2026-06-20.md`.
