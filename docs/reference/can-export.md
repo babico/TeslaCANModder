@@ -22,13 +22,13 @@ flowchart LR
     Summary --> Index["Doc index / search"]
 ```
 
-### DBC (`.dbc`)
+## DBC (`.dbc`)
 
 [DBC files](https://www.csselectronics.com/pages/can-dbc-file-database-intro) are the industry–standard format for CAN signal definitions, supported by SavvyCAN, Wireshark, Vector CANdb++, and most analysis tools.
 
 > **Important:** The decoder JSON carries only signal _labels_ (enum values), not bit positions or widths. All `SG_` entries use a `0|8@1+` placeholder layout. **`VAL_` enum lines are fully accurate.** You can use the DBC as a starting point and add bit positions manually.
 
-### CSV (`.csv`)
+## CSV (`.csv`)
 
 Flat table with one row per enum value — easy to import into Excel, pandas, or any data tool.
 
