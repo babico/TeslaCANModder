@@ -110,7 +110,7 @@ Open the Expo URL in Chrome or Edge for Web Serial flashing and runtime control.
 
 ```bash
 npm run test:all       # all workspaces + firmware native tests
-npm run lint:all       # ESLint + Prettier check
+npm run lint:all       # ESLint + Prettier + markdownlint check
 ```
 
 ## Firmware
@@ -230,7 +230,7 @@ See `docs/reference/commands.md` for the full command reference.
 | Task                     | Command                            |
 | ------------------------ | ---------------------------------- |
 | Run all tests            | `npm run test:all`                 |
-| Lint + format check      | `npm run lint:all`                 |
+| Lint + format + md check | `npm run lint:all`                 |
 | Typecheck protocol       | `npm run typecheck:protocol`       |
 | Typecheck client         | `npm run typecheck:client`         |
 | Validate serial contract | `npm run validate:serial-contract` |

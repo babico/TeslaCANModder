@@ -56,7 +56,7 @@ Grouped by where each upstream change could land.
 
 - **Submodule SHAs were not updated.** `legacy/` is read-only research; the recorded commits stay pinned to their last-fetched values. The upstream activity is recorded here for reference, not auto-merged. Bumping submodules is a separate decision per repo and should follow the project's "do not copy legacy code into shipping code" rule.
 - **No code was copied from upstream.** The project policy is to mine for ideas, not to port code.
-- **`commaai-openpilot` and `sunnypilot`** were reviewed but no per-repo doc was created or updated. The previous README entries that read "(no per-repo doc yet)" have been left intact; if per-repo docs are wanted later they should be written as a separate pass.
+- **`commaai-openpilot` and `sunnypilot`** were reviewed but no per-repo doc was created or updated. These submodules were subsequently removed in PR #100 (2026-06-20) along with their README entries; the review notes above remain as a historical record of the upstream activity at the time of review.
 - **Existing per-repo analysis docs were not edited.** This document is the single source of truth for the 2026-06-20 review. The per-repo docs in `docs/legacy/<repo>.md` continue to describe the repos themselves; they are not amended with upstream-activity sections.
 
 ## Reproduction

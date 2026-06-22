@@ -73,12 +73,17 @@ CI fails `markdown-lint` job when any .md in non-ignored paths violates rules. P
 Before declaring any markdown work done, run from repo root:
 
 ```bash
+# Quick check (uses the project script)
+npm run lint:md
+
 # Lint only the files you touched (fast)
 npx markdownlint-cli2 path/to/file.md
 
 # Lint all non-ignored files (matches CI exactly)
 npx markdownlint-cli2 "**/*.md" "#legacy/**" "#docs/legacy/**" "#**/node_modules/**" "#**/dist/**" "#**/.pio/**" "#**/.pio-home/**" "#client/.expo/**" "#.venv/**" "#.opencode/**" "#MCP_SERVERS.md"
 ```
+
+`npm run lint:all` now includes `lint:md`, so a single `npm run lint:all` covers eslint + prettier + markdown-lint before commit.
 
 CI command (from `.github/workflows/ci.yml`):
 
@@ -105,6 +110,16 @@ No `args:` line means default invocation; ignores come from `.markdownlint-cli2.
 ## Emergency Disable (DO NOT USE)
 
 Adding a file to `.markdownlint-cli2.jsonc` `ignores:` is a CODE SMELL. The only legitimate use is generated/vendor content. If you must ignore a real doc, justify it in commit message + mention in PR description.
+
+## Line Ending Pitfall (Windows devs)
+
+If `format:check` complains about files that look identical, the issue is CRLF vs LF. The repo enforces LF via `.gitattributes` (`* text=auto eol=lf` + per-extension overrides). Symptoms:
+
+- `format:check` reports 30+ false-positive format warnings on Windows
+- CI (Linux) reports `All matched files use Prettier code style!`
+- `git status` shows files as `modified` even when content is unchanged
+
+Fix once: `git config core.autocrlf false && npm run format`. Then commit the LF-normalized files. `.gitattributes` prevents re-introduction on future commits.
 
 ## Failure Recovery
 

@@ -24,8 +24,6 @@ High-value repos directly driving current or planned features.
 | [tesla-local-control/tesla_ble_mqtt_docker](tesla-local-control-tesla-ble-mqtt-docker.md) | tesla-local-control | Apache-2.0 | Linux/Docker | MQTT ⇄ BLE bidirectional architecture, HA auto-discovery |
 | [yoziru-esphome-tesla-ble](yoziru-esphome-tesla-ble.md) | yoziru | AGPL-3.0 | ESP32, M5Stack | Tesla vehicle-command BLE protobuf dispatch (climate/lock/trunk/charging) |
 | [teslamotors/vehicle-command](teslamotors-vehicle-command.md) | Tesla Motors | Apache-2.0 | Go/Linux | Official VCSEC/BLE vehicle-command SDK; BLE key distance reference |
-| [commaai/openpilot](commaai-openpilot/) | comma.ai | MIT | — | Tesla CarController reference for DAS drive safety gates (no per-repo doc yet) |
-| [sunnypilot](sunnypilot/) | sunnypilot | MIT | — | openpilot fork with Tesla-focused extensions (no per-repo doc yet) |
 
 ## Tier 2 — FSD / CAN mod firmware
 

@@ -18,7 +18,7 @@ flowchart LR
     Build --> Flash["Flash (Web Serial or pio)"]
     Flash --> X179["Plug into X179"]
     X179 --> Client["Open client app<br/>(Expo Web)"]
-    Client --> Send["Send first command<br/>(e.g. ping, fsd:on)"]
+    Client --> Send["Send first command<br/>(e.g. {"cmd":"ping"}, {"cmd":"fsd:on"})"]
     classDef step fill:#1e3a5f,stroke:#4a7fb5,color:#fff
     class Clone,Install,Build,Flash,X179,Client,Send step
 ```

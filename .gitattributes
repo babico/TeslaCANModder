@@ -1,0 +1,31 @@
+# Normalize line endings across platforms.
+# Force LF on text files; CI runs prettier on Linux (LF) so CRLF in the
+# working tree produces false-positive format warnings on Windows dev.
+* text=auto eol=lf
+
+# Source files: explicit LF
+*.{ts,tsx,js,cjs,mjs,mts,cts,jsx}  eol=lf
+*.{json,jsonc,json5}              eol=lf
+*.{md,markdown}                   eol=lf
+*.{yml,yaml}                      eol=lf
+*.{css,scss,sass}                 eol=lf
+*.{html,htm}                      eol=lf
+*.{c,h,cc,cpp,hpp,ino}            eol=lf
+*.sh                              eol=lf
+.gitignore                        eol=lf
+.gitattributes                    eol=lf
+.editorconfig                     eol=lf
+.clang-format                     eol=lf
+.prettierrc                       eol=lf
+.prettierignore                   eol=lf
+
+# Generated / vendored: do not normalize
+package-lock.json                 linguist-generated=true
+firmware/.pio/**                  binary
+firmware/.pio-home/**             binary
+client/.expo/**                   binary
+**/node_modules/**                binary
+**/dist/**                        binary
+
+# Legacy submodules: preserve whatever they have
+legacy/**                         -text
