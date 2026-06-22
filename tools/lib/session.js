@@ -98,8 +98,30 @@ export class BoardSession {
 		return out;
 	}
 
-	send(command) {
-		if (this._sp.writable !== false) this._sp.write(`${command}\n`);
+	/**
+	 * Send a command to the board.
+	 *
+	 * Firmware expects JSON-RPC envelopes: `{"cmd":"<name>"}` + newline.
+	 * Plain text inputs are auto-wrapped for convenience. Pass
+	 * `{raw: true}` to send the bytes verbatim (escape hatch for protocol
+	 * extensions that are not yet mapped to a `cmd` field).
+	 *
+	 * @param {string} command Either a plain command name (e.g. "status")
+	 *   or a complete JSON object. When the string starts with `{`, it is
+	 *   sent untouched.
+	 * @param {{raw?: boolean}} [opts] Send `command` verbatim when `raw:true`.
+	 */
+	send(command, opts = {}) {
+		if (this._sp.writable === false) return;
+		let line;
+		if (opts.raw) {
+			line = command;
+		} else if (command.startsWith("{")) {
+			line = command;
+		} else {
+			line = JSON.stringify({ cmd: command });
+		}
+		this._sp.write(`${line}\n`);
 	}
 
 	messages() {

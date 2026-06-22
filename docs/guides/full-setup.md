@@ -128,9 +128,9 @@ node tools/debug.js smoke --port COM5 --variant hw4
 
 Run these checks while bench-connected:
 
-- `ping` returns `pong`.
-- `status` returns expected variant and feature fields.
-- Command ack path is healthy (`fsd:on`, `fsd:off`, `profile:1`).
+- `{"cmd":"ping"}` returns `{"t":"pong","v":1}`.
+- `{"cmd":"status"}` returns expected variant and feature fields.
+- Command ack path is healthy (`{"cmd":"fsd:on"}`, `{"cmd":"fsd:off"}`, `{"cmd":"profile:1"}`).
 - No repeated serial parse errors.
 
 Suggested command:

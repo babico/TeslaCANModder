@@ -105,4 +105,19 @@ describe("BoardSession", () => {
 		session.send("ping");
 		expect(sp.write).toHaveBeenCalled();
 	});
+
+	it("send wraps plain command names in JSON-RPC", () => {
+		session.send("ping");
+		expect(sp.write).toHaveBeenCalledWith('{"cmd":"ping"}\n');
+	});
+
+	it("send passes through JSON envelopes unchanged", () => {
+		session.send('{"cmd":"fsd:on"}');
+		expect(sp.write).toHaveBeenCalledWith('{"cmd":"fsd:on"}\n');
+	});
+
+	it("send with {raw:true} writes bytes verbatim", () => {
+		session.send("not-json-payload", { raw: true });
+		expect(sp.write).toHaveBeenCalledWith("not-json-payload\n");
+	});
 });

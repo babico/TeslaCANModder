@@ -1,5 +1,17 @@
 /** Command builders for all TeslaCANModder firmware commands. */
 
+/**
+ * Wire format. Every command on the serial, BLE, and WiFi transports is a
+ * single-line JSON-RPC envelope terminated by `\n`:
+ *
+ *   {"cmd":"<name>"}\n
+ *
+ * The firmware serial parser only accepts inputs that begin with `{` and
+ * contain a `cmd` string field. Plain text commands like `ping` are NOT
+ * accepted on the wire; wrap them in JSON-RPC or use the `tools/lib/session.js`
+ * helper which auto-wraps. See `docs/reference/serial-contract.md`.
+ */
+
 /** Valid firmware variants. */
 export const VALID_VARIANTS = ["hw3", "hw4", "legacy", "auto"] as const;
 export type Variant = (typeof VALID_VARIANTS)[number];

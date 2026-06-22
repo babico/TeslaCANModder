@@ -13,6 +13,41 @@ icon: ⌨️
 
 All commands work over USB Serial, BLE (Nordic UART), and WiFi REST API. Commands are case-sensitive, lowercase, colon-separated.
 
+## Wire Format (JSON-RPC)
+
+Every command MUST be sent as a single-line JSON-RPC envelope on the serial transport:
+
+```json
+{ "cmd": "<name>" }
+```
+
+followed by a single `\n`. The firmware serial parser (`firmware/lib/io/serial/usb/esp32/common.h:handleChar`) only accepts inputs that begin with `{` and contain a `cmd` string field. Any other input — including plain text `ping`, `status`, etc. — returns:
+
+```json
+{ "t": "error", "msg": "rpc: expected json object" }
+```
+
+The `tools/lib/session.js` helper auto-wraps plain command names so callers can write `session.send("status")` and the wire bytes are `{"cmd":"status"}\n`. Send a pre-built envelope as-is to bypass the wrap, or pass `{raw: true}` to push bytes verbatim.
+
+Examples:
+
+```bash
+# Raw serial
+printf '{"cmd":"ping"}\n'   > /dev/ttyUSB0
+printf '{"cmd":"fsd:on"}\n' > /dev/ttyUSB0
+
+# Node tool
+session.send("ping")          # wrapped to {"cmd":"ping"}
+session.send('{"cmd":"raw"}') # sent as-is
+
+# HTTP (WiFi firmware)
+curl -X POST http://device/api/command \
+  -H 'Content-Type: application/json' \
+  -d '{"cmd":"status"}'
+```
+
+Responses are always single-line JSON with a `t` (type) field. See [serial-contract.md](./serial-contract.md) for the full envelope, status/frame/ack shape, and error codes.
+
 ```mermaid
 flowchart LR
     User([User / Client]) --> Transport{Transport}

@@ -56,7 +56,7 @@ TeslaCANModder uses the Nordic UART Service UUIDs, which are widely supported by
 2. Scan for BLE devices
 3. Connect to **TeslaCANModder**
 4. Subscribe to the TX characteristic for notifications
-5. Write commands to the RX characteristic (e.g. `fsd:on\n`)
+5. Write commands to the RX characteristic (e.g. `{"cmd":"fsd:on"}\n`)
 
 ### Android
 

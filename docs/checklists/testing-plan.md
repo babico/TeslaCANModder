@@ -164,17 +164,17 @@ Board-specific test scenarios for every supported hardware configuration. Each s
 | `6E400002-B5A3-F393-E0A9-E50E24DCCA9E` | Write (phone → device)  | RX: Send commands     |
 | `6E400003-B5A3-F393-E0A9-E50E24DCCA9E` | Notify (device → phone) | TX: Receive responses |
 
-| Step | Action                                       | Expected Result                            | Status |
-| ---- | -------------------------------------------- | ------------------------------------------ | ------ |
-| 1    | Flash `esp32_ble_chassis_8mhz` firmware      | Boot shows BLE capability                  | —      |
-| 2    | Open BLE scanner (nRF Connect, LightBlue)    | "TeslaCANModder" device visible            | —      |
-| 3    | Connect to device                            | BLE connection established                 | —      |
-| 4    | Subscribe to TX characteristic (6E400003)    | Status notifications arrive                | —      |
-| 5    | Write `ping` to RX characteristic (6E400002) | `{"t":"pong","v":1}` notified back         | —      |
-| 6    | Write `fsd:on`                               | ACK notification, FSD enabled              | —      |
-| 7    | BLE and USB serial simultaneous              | Both channels work independently           | —      |
-| 8    | Disconnect BLE                               | Board continues, auto-restarts advertising | —      |
-| 9    | Reconnect BLE                                | Resume receiving notifications             | —      |
+| Step | Action                                                 | Expected Result                            | Status |
+| ---- | ------------------------------------------------------ | ------------------------------------------ | ------ |
+| 1    | Flash `esp32_ble_chassis_8mhz` firmware                | Boot shows BLE capability                  | —      |
+| 2    | Open BLE scanner (nRF Connect, LightBlue)              | "TeslaCANModder" device visible            | —      |
+| 3    | Connect to device                                      | BLE connection established                 | —      |
+| 4    | Subscribe to TX characteristic (6E400003)              | Status notifications arrive                | —      |
+| 5    | Write `{"cmd":"ping"}` to RX characteristic (6E400002) | `{"t":"pong","v":1}` notified back         | —      |
+| 6    | Write `{"cmd":"fsd:on"}`                               | ACK notification, FSD enabled              | —      |
+| 7    | BLE and USB serial simultaneous                        | Both channels work independently           | —      |
+| 8    | Disconnect BLE                                         | Board continues, auto-restarts advertising | —      |
+| 9    | Reconnect BLE                                          | Resume receiving notifications             | —      |
 
 **BLE Notes:**
 

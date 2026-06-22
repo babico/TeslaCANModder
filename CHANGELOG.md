@@ -2,6 +2,106 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] — 2026-06-20
+
+### Added
+
+- **Selectable BLE key distance estimator** — three modes (threshold,
+  formula, Kalman) wired through new `blekey:distance:<off|threshold|formula|kalman>`
+  commands, `:factor:<N>` path-loss exponent, and `:calibrate:<M>` one-shot
+  offset. Default TX power `-59 dBm` baseline. Status payload includes
+  `bleDistanceMode`, `bleDistanceMeters`, `bleRssi`, `bleDistanceFactor`,
+  `bleDistanceCalibrated`. Client `GamepadPanel` exposes all three modes
+  with a live RSSI bar.
+- **`nag:mode:feifan`** — eighth nag mode mirroring in-the-wild V4.1.00
+  captures. `handsOnLevel` left at 0, signed torque random-walks around
+  zero (~-0.05..+0.02 Nm), gated on DAS hands-on request. Designed for
+  Tesla 2026.14.x preflight. Implemented via the unified nag pipeline
+  (`nagEchoShouldEcho` / `nagEchoCompute` / `nagEchoApply`).
+- **3 new legacy reference submodules** — `bogosj/tesla`, `mveplus/tesla-model3-resources`,
+  `teslamotors/vehicle-command`. Per-repo analysis docs under
+  `docs/legacy/`. `docs/legacy/README.md` and `COMPARISON.md` updated.
+- **Per-repo mermaid diagrams** — 134 markdown files (53 non-legacy + 81
+  legacy per-repo analyses) now have frontmatter, mermaid overview, and
+  cross-links. Two non-overlapping PRs (wave 1 = 54 files, wave 2 = 73 files).
+- **2026-06-20 legacy upstream review** — `docs/legacy/upstream-review-2026-06-20.md`
+  walks 91 active submodules, identifies 6 with new upstream commits, and
+  re-evaluates them against the shipping codebase. `## Upstream` sections
+  appended to 6 affected per-repo analyses.
+- **Markdown lint skill** — `.opencode/skills/markdown-lint/SKILL.md`
+  formalises the CI parity checks, pre-commit verification command, and
+  config layout to prevent recurring `MD001` heading-increment failures.
+- **Project policy skills** — `commit-ask-first` (no surprise git
+  mutations), `legacy-submodule-review` (skip list + 5-step disable/enable
+  procedure), `refactor-over-duplication` (4th-copy-paste-apply anti-pattern),
+  `skip-auto-generated-files` (dashboard.h, \_generated-docs.ts).
+- **Serial contract reference** — new `docs/reference/serial-contract.md`
+  documents the JSON-RPC wire format, response envelope, transport parity,
+  and toolchain helpers.
+- **Wire-format TS docblock** in `packages/protocol/src/commands.ts` —
+  inline JSDoc on the wire format requirement so every consumer of the
+  protocol package sees the contract.
+
+### Changed
+
+- **JSON-RPC wire format is now documented and required** — every command
+  on USB, BLE, and WiFi is `{"cmd":"<name>"}\n`. The serial parser has
+  always required this since v1.3.0; the documentation now matches the
+  behaviour. Plain-text commands like `ping` are no longer advertised.
+- **Tools auto-wrap plain commands** — `tools/lib/session.js` `send(cmd)`
+  now wraps `cmd` in `{"cmd":"..."}` automatically when the input does
+  not already start with `{`. Pass `{raw: true}` to push bytes verbatim.
+  This unblocks `session.send("status")`, `session.send("ping")`, etc.
+  that previously failed against current firmware.
+- **Worktree version alignment** — root + workspaces bumped from 1.4.0 / 2.0.0
+  mismatch to a unified `1.5.0` for the monorepo release line. Internal
+  workspace versions now follow the root release tag.
+- **3 dead `comm.peer` fields removed from `BoardState`** — legacy OTA
+  detection, tx-paused gating, and a stale 3rd-party feature flag no
+  longer shipped in `status` JSON.
+- **`firmware/lib/interface/` and `lib/transport/` legacy alias tree** —
+  infrastructure audit and `firmware/README.md` cross-link now reflect
+  the current shipping locations (`lib/client/`, `lib/vehicle/can/`,
+  `lib/vehicle/ble/`).
+- **Native test count: 1000 → 1028** — all passing in `pio test -e native`.
+  New suites: `test_native_ble_distance`, `test_native_nag_organic`,
+  `test_native_nag_unified` (49 nag tests covering gate, apply
+  byte-equivalence, feifan, command dispatch).
+- **Two legacy submodules removed** — `legacy/commaai-openpilot` and
+  `legacy/sunnypilot` (~852 MB freed, 91 active submodules remain).
+  Disabled submodule `legacy/mikegapinski-tesla-can-explorer` (upstream 404) via `git rm --cached` to clear the CI `git submodule foreach`
+  loop.
+
+### Fixed
+
+- **`docs/reference/can-export.md` MD001 heading-increment** — `###`
+  jumped from `#`, fixed. Markdown lint CI green again.
+- **`ble-adapter.md` cross-link** — repaired broken reference to a
+  renamed sub-doc.
+- **Unified nag pipeline refactor** — replaced 5 copy-paste `nagApply*`
+  functions with `nagEchoShouldEcho` / `nagEchoCompute` / `nagEchoApply`
+  single-pass pipeline. Avoids the 4th-copy-paste anti-pattern when
+  adding new modes.
+- **`fsd:on` / `nag:mode:feifan` round-trip on real hardware** — flashed
+  and verified on ESP32-S DevKit via CP210x (COM4), boot JSON valid,
+  `{"cmd":"fsd:on"}` → ack + state.fsd:1 + NVS persistence, full
+  `{"cmd":"nag:mode:feifan"}` → state.nagMode:"feifan".
+
+### Documentation
+
+- **`docs/reference/commands.md`** — wire-format section added; required
+  JSON-RPC envelope now called out at the top of the document.
+- **`docs/guides/full-setup.md`, `quickstart-checklist.md`** — quickstart
+  commands now use `{"cmd":"..."}` form.
+- **`docs/checklists/testing-plan.md`** — BLE round-trip steps updated to
+  JSON-RPC envelopes.
+- **`docs/reference/ble-adapter.md`** — RX characteristic write example
+  updated to JSON-RPC.
+- **All `docs/legacy/*` analyses** — added Mermaid overview, frontmatter,
+  and `## Upstream` notes where applicable.
+- **`docs/superpowers/reports/2026-06-20-ci-markdown-lint-fix.md`** —
+  postmortem of the `MD001` CI fix.
+
 ## [1.4.0] — 2026-06-15
 
 ### Added

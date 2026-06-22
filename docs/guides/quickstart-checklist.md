@@ -137,16 +137,18 @@ Run through these final checks before relying on the setup:
 
 ## Quick Reference
 
-| Action               | Command        |
-| -------------------- | -------------- |
-| Ping board           | `ping`         |
-| Check status         | `status`       |
-| Enable FSD           | `fsd:on`       |
-| Disable FSD          | `fsd:off`      |
-| Enable Nag Suppress  | `nag:on`       |
-| Set Profile (Normal) | `profile:1`    |
-| Auto Profile         | `profile:auto` |
-| Start streaming      | `stream:on`    |
-| Stop streaming       | `stream:off`   |
+| Action               | Command (JSON-RPC)          |
+| -------------------- | --------------------------- |
+| Ping board           | `{"cmd":"ping"}`            |
+| Check status         | `{"cmd":"status"}`          |
+| Enable FSD           | `{"cmd":"fsd:on"}`          |
+| Disable FSD          | `{"cmd":"fsd:off"}`         |
+| Enable Nag Suppress  | `{"cmd":"nag:mode:feifan"}` |
+| Set Profile (Normal) | `{"cmd":"profile:1"}`       |
+| Auto Profile         | `{"cmd":"profile:auto"}`    |
+| Start streaming      | `{"cmd":"stream:on"}`       |
+| Stop streaming       | `{"cmd":"stream:off"}`      |
+
+> All serial/BLE commands use the JSON-RPC wrapper. The `tools/lib/session.js` helper auto-wraps plain names; raw bytes must be `{"cmd":"<name>"}\n`. See [Serial Contract](../reference/serial-contract.md).
 
 For all commands, see [Command Reference](../reference/commands.md).

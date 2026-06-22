@@ -1,6 +1,6 @@
 {
 	"name": "teslacanmodder",
-	"version": "1.4.0",
+	"version": "1.5.0",
 	"private": true,
 	"description": "Tesla CAN bus modifier — firmware, client app, and debug tools",
 	"workspaces": [
