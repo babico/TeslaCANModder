@@ -7,201 +7,185 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<title>TeslaCANModder Dashboard</title>
+		<title>TeslaCANModder</title>
 		<style>
-			* {
+			:root {
+				--bg: #f8fafc;
+				--surface: #fff;
+				--text: #0f172a;
+				--muted: #64748b;
+				--border: #e2e8f0;
+				--accent: #d73c1f;
+				--ok: #22c55e;
+				--warn: #f59e0b;
+				--err: #ef4444;
+				--radius: 12px;
+				--shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+				color-scheme: light dark;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--bg: #0f172a;
+					--surface: #1e293b;
+					--text: #f1f5f9;
+					--muted: #94a3b8;
+					--border: #334155;
+					--shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+				}
+			}
+			*,
+			*::before,
+			*::after {
 				box-sizing: border-box;
 				margin: 0;
 				padding: 0;
 			}
-
-			:root {
-				--bg: #f4f6f8;
-				--surface: #ffffff;
-				--surface-2: #fffaf6;
-				--text: #1f2937;
-				--muted: #5f6b7a;
-				--border: #d5dde6;
-				--accent: #d73c1f;
-				--accent-dark: #b93118;
-				--ok: #0f8b57;
-				--warn: #d68400;
-				--shadow: 0 18px 34px rgba(22, 33, 49, 0.12);
-			}
-
 			body {
-				min-height: 100vh;
-				background:
-					radial-gradient(1000px 460px at 0% 0%, #fff6eb 0%, transparent 70%),
-					radial-gradient(800px 420px at 100% 100%, #e4edf6 0%, transparent 70%),
-					var(--bg);
+				background: var(--bg);
 				color: var(--text);
-				font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-				padding: 14px;
+				min-height: 100vh;
+				padding: 12px;
 			}
-
-			.wrap {
-				max-width: 980px;
+			.container {
+				max-width: 1200px;
 				margin: 0 auto;
 				display: grid;
-				gap: 12px;
+				gap: 10px;
 			}
-
 			.hero {
-				background: linear-gradient(135deg, #111827, #253047);
-				color: #f9fafb;
-				border-radius: 18px;
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
 				box-shadow: var(--shadow);
-				border: 1px solid #374151;
-				padding: 14px 16px;
+				padding: 12px 16px;
 				display: flex;
 				justify-content: space-between;
 				align-items: center;
+				flex-wrap: wrap;
+				gap: 8px;
+			}
+			.hero h1 {
+				font-size: 18px;
+				font-weight: 800;
+				color: var(--accent);
+				letter-spacing: -0.3px;
+			}
+			.hero .info {
+				display: flex;
+				align-items: center;
 				gap: 10px;
 				flex-wrap: wrap;
+				font-size: 11px;
+				color: var(--muted);
 			}
-
-			.hero h1 {
-				font-size: 20px;
-				font-weight: 700;
-				letter-spacing: 0.2px;
-			}
-
-			.hero p {
-				color: #cbd5e1;
-				font-size: 12px;
-			}
-
-			.pulse {
-				width: 10px;
-				height: 10px;
+			.dot {
+				width: 8px;
+				height: 8px;
 				border-radius: 999px;
-				background: #22c55e;
-				margin-right: 8px;
-				display: inline-block;
-				animation: pulse 1.8s infinite;
+				background: var(--ok);
+				animation: pulse 2s infinite;
+				flex-shrink: 0;
 			}
-
 			@keyframes pulse {
 				0%,
 				100% {
 					opacity: 1;
-					transform: scale(1);
 				}
 				50% {
-					opacity: 0.35;
-					transform: scale(0.85);
+					opacity: 0.3;
 				}
 			}
-
-			.chips {
+			.chip {
+				display: inline-block;
+				padding: 2px 8px;
+				border-radius: 999px;
+				font-size: 10px;
+				font-weight: 700;
+				border: 1px solid var(--border);
+			}
+			.chip.on {
+				background: var(--accent);
+				color: #fff;
+				border-color: var(--accent);
+			}
+			.tags {
 				display: flex;
 				flex-wrap: wrap;
-				gap: 6px;
+				gap: 5px;
+				margin: 0;
 			}
-
-			.chip {
-				border-radius: 999px;
-				padding: 5px 10px;
-				font-size: 11px;
-				font-weight: 700;
-				border: 1px solid rgba(255, 255, 255, 0.25);
-				color: #e5e7eb;
+			.tags .chip {
+				background: var(--surface);
+				color: var(--muted);
 			}
-
+			.tags .chip.live {
+				color: var(--ok);
+				border-color: var(--ok);
+			}
+			.tags .chip.warn {
+				color: var(--warn);
+				border-color: var(--warn);
+			}
+			.tags .chip.bad {
+				color: var(--err);
+				border-color: var(--err);
+			}
 			.grid {
 				display: grid;
-				grid-template-columns: repeat(12, minmax(0, 1fr));
-				gap: 12px;
+				grid-template-columns: 1fr;
+				gap: 10px;
 			}
-
+			@media (min-width: 640px) {
+				.grid {
+					grid-template-columns: repeat(2, 1fr);
+				}
+			}
+			@media (min-width: 1024px) {
+				.grid {
+					grid-template-columns: repeat(3, 1fr);
+				}
+			}
 			.card {
 				background: var(--surface);
 				border: 1px solid var(--border);
-				border-radius: 16px;
+				border-radius: var(--radius);
 				box-shadow: var(--shadow);
-				padding: 14px;
+				padding: 12px;
+				min-width: 0;
 			}
-
-			.col-12 {
-				grid-column: span 12;
-			}
-
-			.col-6 {
-				grid-column: span 6;
-			}
-
-			.title {
-				font-size: 14px;
-				font-weight: 800;
-				margin-bottom: 10px;
-			}
-
-			.kv {
-				font-family: ui-monospace, Menlo, Consolas, monospace;
-				font-size: 12px;
-				line-height: 1.8;
-				color: #374151;
-			}
-
-			.kv b {
-				color: var(--accent);
-			}
-
-			.seg {
-				display: grid;
-				grid-template-columns: repeat(3, minmax(0, 1fr));
-				gap: 6px;
-			}
-
-			.seg.wide {
-				grid-template-columns: repeat(6, minmax(0, 1fr));
-			}
-
-			.seg button,
-			.btn {
-				background: var(--surface-2);
-				border: 1px solid var(--border);
-				color: var(--muted);
-				border-radius: 10px;
-				padding: 9px 8px;
+			.card h2 {
 				font-size: 12px;
 				font-weight: 700;
-				cursor: pointer;
-				transition: 0.16s ease;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+				color: var(--muted);
+				margin-bottom: 10px;
 			}
-
-			.seg button:hover,
-			.btn:hover {
-				border-color: var(--accent);
-				color: var(--accent);
+			.card h2 span {
+				float: right;
+				font-weight: 400;
+				text-transform: none;
+				font-size: 10px;
 			}
-
-			.seg button.on {
-				background: #ffe8e9;
-				border-color: #f8b4b6;
-				color: var(--accent);
-			}
-
 			.row {
 				display: flex;
 				justify-content: space-between;
 				align-items: center;
 				gap: 8px;
-				margin-bottom: 10px;
+				margin-bottom: 6px;
+				font-size: 12px;
 			}
-
-			.switch {
+			.tgl {
 				position: relative;
-				width: 46px;
-				height: 26px;
+				width: 40px;
+				height: 22px;
+				flex-shrink: 0;
 			}
-
-			.switch input {
+			.tgl input {
 				display: none;
 			}
-
-			.slider {
+			.tgl .sl {
 				position: absolute;
 				inset: 0;
 				background: #d1d5db;
@@ -209,471 +193,475 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 				cursor: pointer;
 				transition: 0.2s;
 			}
-
-			.slider:before {
+			.tgl .sl::before {
 				content: "";
 				position: absolute;
-				width: 18px;
-				height: 18px;
-				left: 4px;
-				top: 4px;
+				width: 16px;
+				height: 16px;
+				left: 3px;
+				top: 3px;
 				border-radius: 999px;
-				background: #ffffff;
-				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+				background: #fff;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 				transition: 0.2s;
 			}
-
-			.switch input:checked + .slider {
+			.tgl input:checked + .sl {
 				background: #fecaca;
 			}
-
-			.switch input:checked + .slider:before {
-				transform: translateX(20px);
+			.tgl input:checked + .sl::before {
+				transform: translateX(18px);
 				background: var(--accent);
 			}
-
-			.input {
-				width: 100%;
+			.sel {
+				background: var(--bg);
 				border: 1px solid var(--border);
-				border-radius: 10px;
-				padding: 9px 10px;
-				background: #ffffff;
-				color: var(--text);
-				font-size: 12px;
-			}
-
-			.label {
-				display: block;
-				color: var(--muted);
+				border-radius: 8px;
+				padding: 5px 8px;
 				font-size: 11px;
-				margin: 8px 0 5px;
+				color: var(--text);
+				width: 100%;
 			}
-
-			.mono {
+			.inp {
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 5px 8px;
+				font-size: 11px;
+				color: var(--text);
+				width: 70px;
+			}
+			.btn {
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 5px 10px;
+				font-size: 11px;
+				font-weight: 600;
+				color: var(--muted);
+				cursor: pointer;
+				transition: 0.15s;
+			}
+			.btn:hover {
+				border-color: var(--accent);
+				color: var(--accent);
+			}
+			.btn.on {
+				background: #ffe8e9;
+				border-color: #f8b4b6;
+				color: var(--accent);
+			}
+			.btns {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 4px;
+			}
+			.val {
+				font-size: 22px;
+				font-weight: 800;
+				line-height: 1.1;
+			}
+			.val small {
+				font-size: 11px;
+				font-weight: 400;
+				color: var(--muted);
+			}
+			.gauge {
+				height: 6px;
+				background: var(--border);
+				border-radius: 999px;
+				margin-top: 4px;
+				overflow: hidden;
+			}
+			.gauge div {
+				height: 100%;
+				background: var(--accent);
+				border-radius: 999px;
+				transition: width 0.4s;
+			}
+			.tpms-grid {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 6px;
+				text-align: center;
+			}
+			.tpms-grid div {
+				font-size: 10px;
+			}
+			.tpms-grid .p {
+				font-size: 14px;
+				font-weight: 700;
+			}
+			.kv {
 				font-family: ui-monospace, Menlo, Consolas, monospace;
+				font-size: 11px;
+				line-height: 1.8;
 			}
-
 			.log {
 				background: #111827;
 				color: #d1d5db;
 				border-radius: 10px;
 				border: 1px solid #374151;
-				min-height: 96px;
-				max-height: 140px;
+				max-height: 160px;
 				overflow: auto;
 				padding: 8px;
 				font-size: 11px;
 				line-height: 1.7;
 				font-family: ui-monospace, Menlo, Consolas, monospace;
 			}
-
-			.status-line {
+			.log-full {
+				grid-column: 1/-1;
+			}
+			.warn-box {
+				background: var(--bg);
+				border: 1px solid var(--warn);
+				border-radius: 8px;
+				padding: 6px 8px;
+				font-size: 10px;
+				font-weight: 600;
+				color: var(--warn);
+				margin-bottom: 6px;
+			}
+			.muted {
 				color: var(--muted);
-				font-size: 11px;
-				margin-top: 6px;
+				font-size: 10px;
+				margin-top: 2px;
 			}
-
-			.warning-box {
-				background: #fff4e5;
-				border: 1px solid #f2c16d;
-				border-radius: 10px;
-				padding: 8px 10px;
-				font-size: 11px;
-				font-weight: 700;
-				color: #7a4900;
-				margin-bottom: 8px;
-			}
-
-			.hidden-card {
-				display: none;
-			}
-
-			.hidden-card.revealed {
-				display: block;
-			}
-
 			.toast {
 				position: fixed;
-				bottom: 18px;
+				bottom: 16px;
 				left: 50%;
 				transform: translateX(-50%) translateY(40px);
 				opacity: 0;
-				transition: 0.2s ease;
+				transition: 0.2s;
 				background: var(--accent);
 				color: #fff;
-				padding: 8px 14px;
+				padding: 6px 14px;
 				border-radius: 10px;
 				font-size: 12px;
 				font-weight: 700;
 				z-index: 20;
 			}
-
 			.toast.show {
 				transform: translateX(-50%) translateY(0);
 				opacity: 1;
 			}
-
-			@media (max-width: 840px) {
-				.col-6 {
-					grid-column: span 12;
-				}
-
-				.seg.wide {
-					grid-template-columns: repeat(3, minmax(0, 1fr));
-				}
-			}
 		</style>
 	</head>
 	<body>
-		<div class="wrap">
-			<section class="hero">
-				<div>
-					<h1>TeslaCANModder Control Deck</h1>
-					<p>
-						<span class="pulse"></span>Live vehicle state, firmware controls, and
-						transport diagnostics
-					</p>
+		<div class="container">
+			<header class="hero">
+				<h1>TeslaCANModder</h1>
+				<div class="info">
+					<span class="dot"></span><span id="heroIp">—</span
+					><span class="chip" id="heroVar">—</span><span id="heroUp">up 0s</span>
 				</div>
-				<div class="chips">
-					<span class="chip" id="chipVariant">Variant: ?</span>
-					<span class="chip" id="chipCan">CAN: ?</span>
-					<span class="chip" id="chipUptime">Up: 0s</span>
-				</div>
-			</section>
+			</header>
+
+			<div class="tags" id="badges"></div>
 
 			<section class="grid">
-				<div class="card col-6">
-					<div class="title">Board Status</div>
-					<div class="kv" id="st">Loading...</div>
+				<div class="card">
+					<h2>HV Battery <span id="bmsUpd">—</span></h2>
+					<div class="val" id="bmsV">—<small>V</small></div>
+					<div class="row"><span>Current</span><span id="bmsA">— A</span></div>
+					<div class="row"><span>Power</span><span id="bmsKW">— kW</span></div>
 				</div>
 
-				<div class="card col-6">
-					<div class="title">Hardware Variant</div>
-					<div class="seg" id="hwSeg">
-						<button onclick="setVariant('hw4')">HW4</button>
-						<button onclick="setVariant('hw3')">HW3</button>
-						<button onclick="setVariant('legacy')">Legacy</button>
-					</div>
-					<div class="status-line">Choose the active firmware mapping mode.</div>
+				<div class="card">
+					<h2>State of Charge</h2>
+					<div class="val" id="bmsSoc">—<small>%</small></div>
+					<div class="gauge"><div id="bmsSocBar" style="width: 0%"></div></div>
+					<div class="row"><span>Cell V</span><span id="bmsCellV">— / —</span></div>
+					<div class="row"><span>Nominal</span><span id="bmsNom">— / — kWh</span></div>
 				</div>
 
-				<div class="card col-6">
-					<div class="title">FSD Controls</div>
-					<div class="status-line" style="margin-bottom: 8px">
-						Driver-assist toggles for FSD behavior, nag handling, and speed-profile
-						shaping.
+				<div class="card">
+					<h2>Temperatures</h2>
+					<div class="row"><span>Pack Min</span><span id="bmsTmin">— °C</span></div>
+					<div class="row"><span>Pack Max</span><span id="bmsTmax">— °C</span></div>
+					<div class="muted" id="bmsThermal"></div>
+				</div>
+
+				<div class="card">
+					<h2>TPMS</h2>
+					<div class="tpms-grid" id="tpmsGrid">
+						<div>
+							<div class="p">—</div>
+							FL
+						</div>
+						<div>
+							<div class="p">—</div>
+							FR
+						</div>
+						<div>
+							<div class="p">—</div>
+							RL
+						</div>
+						<div>
+							<div class="p">—</div>
+							RR
+						</div>
 					</div>
+					<div class="muted">Pressures in bar</div>
+				</div>
+
+				<div class="card">
+					<h2>Power Limits</h2>
+					<div class="row"><span>Max Regen</span><span id="pwRegen">— kW</span></div>
+					<div class="row"><span>Max Discharge</span><span id="pwDch">— kW</span></div>
+					<div class="row"><span>Charge Limit</span><span id="pwChg">— A</span></div>
+				</div>
+
+				<div class="card">
+					<h2>CAN Bus Health</h2>
+					<div id="canHealth"></div>
+				</div>
+
+				<div class="card">
+					<h2>Powertrain</h2>
+					<div class="val" id="ptSpeed">—<small>km/h</small></div>
+					<div class="row"><span>Gear</span><span id="ptGear">—</span></div>
+					<div class="row"><span>Pedal</span><span id="ptPedal">— %</span></div>
+					<div class="row"><span>Steer</span><span id="ptSteer">— °</span></div>
+				</div>
+
+				<div class="card">
+					<h2>FSD &amp; Nag</h2>
 					<div class="row">
-						<span>FSD Enabled</span>
-						<label class="switch"
+						<span>FSD</span
+						><label class="tgl"
 							><input type="checkbox" id="fsdTg" onchange="toggleFsd()" /><span
-								class="slider"
+								class="sl"
 							></span
 						></label>
 					</div>
+					<select class="sel" id="nagModeSel" onchange="setNagMode(this.value)">
+						<option value="off">off</option>
+						<option value="bit19">bit19</option>
+						<option value="legacy">legacy</option>
+						<option value="safe">safe</option>
+						<option value="natural">natural</option>
+						<option value="organic">organic</option>
+						<option value="full">full</option>
+					</select>
 					<div class="row">
-						<span>Nag Mode</span>
-						<select
-							class="input"
-							id="nagModeSel"
-							onchange="setNagMode(this.value)"
-							style="width: auto"
-						>
-							<option value="off">off — no suppression</option>
-							<option value="bit19">bit19 — clear ECE R79 bit</option>
-							<option value="legacy">legacy — EPAS echo, fixed 0 Nm</option>
-							<option value="safe">safe — DAS-gated echo</option>
-							<option value="natural">natural — Gaussian 0.08-0.18 Nm</option>
-							<option value="organic">organic — DAS state machine</option>
-							<option value="full">full — bit19 + organic</option>
-						</select>
-					</div>
-					<div class="row">
-						<span>Nag Organic Driver Bypass</span>
-						<label class="switch"
+						<span>Nag Bypass</span
+						><label class="tgl"
 							><input
 								type="checkbox"
 								id="nagBypassTg"
-								onchange="toggleNagBypass()"
-							/><span class="slider"></span
+								onchange="toggleNagBypass()" /><span class="sl"></span
 						></label>
 					</div>
 					<div class="row">
-						<span>ISA Chime Suppress</span>
-						<label class="switch"
+						<span>ISA Chime</span
+						><label class="tgl"
 							><input type="checkbox" id="isaTg" onchange="toggleIsa()" /><span
-								class="slider"
+								class="sl"
 							></span
 						></label>
 					</div>
-					<div class="row" style="margin-bottom: 4px">
-						<span>Mirror Auto-Fold on Lock</span>
-						<label class="switch"
+					<div class="row">
+						<span>Mirror Auto-Fold</span
+						><label class="tgl"
 							><input
 								type="checkbox"
 								id="mirrorAutoTg"
-								onchange="toggleMirrorAutoFold()" /><span class="slider"></span
+								onchange="toggleMirrorAutoFold()" /><span class="sl"></span
 						></label>
 					</div>
+					<h2 style="margin-top: 8px">Speed Profile</h2>
+					<div class="btns" id="spBtns">
+						<button class="btn" onclick="setProfile(0)">Chill</button
+						><button class="btn" onclick="setProfile(1)">Normal</button
+						><button class="btn" onclick="setProfile(2)">Hurry</button
+						><button class="btn" onclick="setProfile(3)">Max</button
+						><button class="btn" onclick="cmd('profile:auto')">Auto</button>
+					</div>
+				</div>
 
-					<div class="title" style="margin-top: 10px; margin-bottom: 8px">
-						Speed Profile
-					</div>
-					<div class="seg wide" id="spSeg">
-						<button onclick="setProfile(0)">Chill</button>
-						<button onclick="setProfile(1)">Normal</button>
-						<button onclick="setProfile(2)">Hurry</button>
-						<button onclick="setProfile(3)">Max</button>
-						<button onclick="setProfile(4)">Sloth</button>
-						<button onclick="cmd('profile:auto')">Auto</button>
-					</div>
-
-					<div class="title" style="margin-top: 14px; margin-bottom: 6px">
-						Gamepad / DAS Drive Speed
-					</div>
-					<div class="warning-box">
-						Raises the absolute longitudinal-request ceiling sent to the car. Default 25
-						km/h is parking-lot safe; higher values are for closed-track /
-						private-property use only. Hard upper bound is the protocol byte limit.
+				<div class="card">
+					<h2>DAS Drive</h2>
+					<div class="warn-box">
+						Parking-lot safe ≤25 km/h. Closed-track use only above.
 					</div>
 					<div class="row">
-						<span>DAS Drive Enabled</span>
-						<label class="switch"
+						<span>Drive Enabled</span
+						><label class="tgl"
 							><input
 								type="checkbox"
 								id="dasDriveTg"
-								onchange="toggleDasDrive()" /><span class="slider"></span
+								onchange="toggleDasDrive()" /><span class="sl"></span
 						></label>
 					</div>
-					<div class="row" style="gap: 8px; flex-wrap: wrap">
-						<span>User limit (km/h)</span>
-						<input
+					<div class="row">
+						<span>Limit km/h</span
+						><input
 							type="number"
+							class="inp"
 							id="dasSpeedLimitIn"
 							min="1"
-							style="width: 70px"
 							onchange="sendDasSpeedLimit()"
 						/>
-						<span>Hard cap (km/h)</span>
-						<input
+					</div>
+					<div class="row">
+						<span>Hard Cap km/h</span
+						><input
 							type="number"
+							class="inp"
 							id="dasSpeedCapIn"
 							min="1"
-							style="width: 70px"
 							onchange="sendDasSpeedCap()"
-						/>
-						<span class="status-line" id="dasSpeedCapMaxLbl"></span>
+						/><span class="muted" id="dasSpeedCapMaxLbl"></span>
 					</div>
 				</div>
 
-				<div class="card col-6">
-					<div class="title">AP Injection Gate</div>
-					<div class="warning-box">
-						High-risk safety control. Disabling the gate can permit live-frame injection
-						paths.
-					</div>
-					<div class="status-line" style="margin-bottom: 8px">
-						Safety gate for write/injection paths. Closed gate blocks high-risk transmit
-						actions.
-					</div>
+				<div class="card">
+					<h2>AP Gate</h2>
 					<div class="row">
-						<span>Gate Enabled</span>
-						<label class="switch"
+						<span>Gate Enabled</span
+						><label class="tgl"
 							><input type="checkbox" id="apGateTg" onchange="toggleApGate()" /><span
-								class="slider"
+								class="sl"
 							></span
 						></label>
 					</div>
-					<div class="kv" id="apGateSt" style="margin-top: 8px">Loading...</div>
+					<div class="kv" id="apGateSt">—</div>
 				</div>
 
-				<div class="card col-6">
-					<div class="title">Write Probe (TX to RX Confirmation)</div>
-					<div class="status-line" style="margin-bottom: 8px">
-						Sends a controlled command and verifies response echo plus follow-up status
-						confirmation.
+				<div class="card">
+					<h2>Variant</h2>
+					<div class="btns">
+						<button class="btn" onclick="setVariant('hw4')">HW4</button
+						><button class="btn" onclick="setVariant('hw3')">HW3</button
+						><button class="btn" onclick="setVariant('legacy')">Legacy</button>
 					</div>
-					<label class="label">Probe Command</label>
-					<select class="input" id="probeCmd">
-						<option value="apgate:on">apgate:on → apGateEnabled=true</option>
-						<option value="apgate:off">apgate:off → apGateEnabled=false</option>
-						<option value="nag:mode:off">nag:mode:off → nagMode=off</option>
-						<option value="nag:mode:organic">nag:mode:organic → nagMode=organic</option>
-						<option value="mirror:autofold:on">
-							mirror:autofold:on → mirrorAutoFold=true
-						</option>
-						<option value="mirror:autofold:off">
-							mirror:autofold:off → mirrorAutoFold=false
-						</option>
-					</select>
-					<div style="margin-top: 8px">
-						<button class="btn" onclick="runWriteProbe()">Run Probe</button>
+					<div class="muted">Active firmware mapping mode</div>
+					<h2 style="margin-top: 8px">Vehicle Actions</h2>
+					<div class="warn-box">Live vehicle commands — confirm each action.</div>
+					<div class="btns">
+						<button class="btn" onclick="cmd('lock')">Lock</button
+						><button class="btn" onclick="cmd('unlock')">Unlock</button
+						><button class="btn" onclick="cmd('horn')">Horn</button
+						><button class="btn" onclick="cmd('frunk')">Frunk</button
+						><button class="btn" onclick="cmd('trunk:open')">Trunk</button
+						><button class="btn" onclick="cmd('sentry:on')">Sentry</button
+						><button class="btn" onclick="cmd('mirror:fold')">Fold</button
+						><button class="btn" onclick="cmd('mirror:unfold')">Unfold</button
+						><button class="btn" onclick="cmd('climate:keep')">Climate</button
+						><button class="btn" onclick="cmd('summon:fwd')">Summon</button>
 					</div>
-					<div class="kv" id="probeSt" style="margin-top: 8px"><b>Status:</b> idle</div>
-				</div>
-
-				<div class="card col-6">
-					<div class="title">Vehicle Actions</div>
-					<div class="warning-box">
-						These commands affect a live vehicle. Confirm each action and use only when
-						safe.
-					</div>
-					<div class="status-line" style="margin-bottom: 8px">
-						One-shot cabin/body commands. Use carefully while connected to a live
-						vehicle.
-					</div>
-					<div class="seg wide">
-						<button onclick="cmd('lock')">Lock</button>
-						<button onclick="cmd('unlock')">Unlock</button>
-						<button onclick="cmd('horn')">Horn</button>
-						<button onclick="cmd('frunk')">Frunk</button>
-						<button onclick="cmd('trunk:open')">Trunk</button>
-						<button onclick="cmd('sentry:on')">Sentry</button>
-					</div>
-					<div class="seg wide" style="margin-top: 8px">
-						<button onclick="cmd('mirror:fold')">Mirror Fold</button>
-						<button onclick="cmd('mirror:unfold')">Mirror Unfold</button>
-						<button onclick="cmd('climate:keep')">Climate Keep</button>
-						<button onclick="cmd('climate:off')">Climate Off</button>
-						<button onclick="cmd('summon:fwd')">Summon Fwd</button>
-						<button onclick="cmd('summon:stop')">Summon Stop</button>
-					</div>
-
-					<div class="title" style="margin-top: 12px; margin-bottom: 8px">
-						Window Vent Position
-					</div>
+					<h2 style="margin-top: 8px">Window Vent</h2>
 					<input
 						type="range"
 						min="0"
 						max="100"
 						value="0"
 						id="ventRange"
-						oninput="ventPreview()"
+						oninput="$('ventVal').textContent = this.value"
+						style="width: 100%"
 					/>
-					<div class="row" style="margin-top: 8px; margin-bottom: 0">
-						<span class="mono">window:vent:<span id="ventVal">0</span></span>
-						<button class="btn" onclick="sendVent()">Send</button>
+					<div class="row">
+						<span id="ventVal">0</span
+						><button class="btn" onclick="sendVent()">Send</button>
 					</div>
 				</div>
 
-				<div class="card col-6">
-					<div class="title">WiFi Settings</div>
-					<div class="kv" id="wifiSt">Loading...</div>
-					<div class="title" style="margin-top: 10px; margin-bottom: 8px">Mode</div>
-					<div class="seg" id="wifiModeSeg">
-						<button onclick="setWifiMode('ap')">AP</button>
-						<button onclick="setWifiMode('sta')">STA</button>
+				<div class="card" id="wifiCard">
+					<h2>WiFi</h2>
+					<div class="kv" id="wifiSt">—</div>
+					<div class="btns" style="margin-top: 6px" id="wifiModeBtns">
+						<button class="btn" onclick="setWifiMode('ap')">AP</button
+						><button class="btn" onclick="setWifiMode('sta')">STA</button>
 					</div>
 					<div id="staFields" style="display: none">
-						<label class="label">Station SSID</label>
 						<input
 							type="text"
-							class="input"
+							class="sel"
 							id="staSSID"
-							placeholder="WiFi network name"
+							placeholder="SSID"
 							maxlength="32"
-						/>
-						<label class="label">Station Password</label>
-						<input
+							style="margin-top: 4px"
+						/><input
 							type="password"
-							class="input"
+							class="sel"
 							id="staPW"
-							placeholder="WiFi password"
+							placeholder="Password"
 							maxlength="63"
-						/>
-						<div style="margin-top: 8px">
-							<button class="btn" onclick="connectSTA()">Connect STA</button>
-						</div>
+							style="margin-top: 4px"
+						/><button class="btn" onclick="connectSTA()" style="margin-top: 4px">
+							Connect
+						</button>
 					</div>
-					<div id="apFields" style="display: none">
-						<label class="label">AP SSID</label>
+					<div id="apFields">
 						<input
 							type="text"
-							class="input"
+							class="sel"
 							id="apSSID"
-							placeholder="Access point name"
+							placeholder="AP SSID"
 							maxlength="32"
-						/>
-						<label class="label">AP Password</label>
-						<input
+							style="margin-top: 4px"
+						/><input
 							type="password"
-							class="input"
+							class="sel"
 							id="apPW"
-							placeholder="AP password (min 8 chars)"
+							placeholder="AP Password"
 							maxlength="63"
-						/>
-						<div style="margin-top: 8px">
-							<button class="btn" onclick="saveAP()">Save AP Config</button>
-						</div>
+							style="margin-top: 4px"
+						/><button class="btn" onclick="saveAP()" style="margin-top: 4px">
+							Save
+						</button>
 					</div>
 				</div>
 
-				<div class="card col-6" id="bleCard">
-					<div class="title">BLE Settings</div>
-					<div class="kv" id="bleSt">Loading...</div>
-					<div class="row" style="margin-top: 10px; margin-bottom: 0">
-						<span>BLE Enabled</span>
-						<label class="switch"
+				<div class="card" id="bleCard">
+					<h2>BLE</h2>
+					<div class="kv" id="bleSt">—</div>
+					<div class="row" style="margin-top: 6px">
+						<span>Enabled</span
+						><label class="tgl"
 							><input type="checkbox" id="bleTg" onchange="toggleBle()" /><span
-								class="slider"
+								class="sl"
 							></span
 						></label>
 					</div>
 				</div>
 
-				<div class="card col-6" id="gamepadCard">
-					<div class="title">Gamepad Control</div>
-					<div class="kv" id="gpSt">Loading...</div>
-					<div class="seg wide" style="margin-top: 10px">
-						<button onclick="gpScan()">Scan</button>
-						<button onclick="gpUnpair()">Unpair</button>
+				<div class="card" id="gamepadCard">
+					<h2>Gamepad</h2>
+					<div class="kv" id="gpSt">—</div>
+					<div class="btns" style="margin-top: 6px">
+						<button class="btn" onclick="gpScan()">Scan</button
+						><button class="btn" onclick="gpUnpair()">Unpair</button>
 					</div>
-					<div id="gpScanResults" style="display: none; margin-top: 10px">
-						<div style="font-size: 12px; color: var(--muted); margin-bottom: 6px">
-							Found HID devices:
-						</div>
+					<div id="gpScanResults" style="display: none; margin-top: 6px">
+						<div class="muted" style="margin-bottom: 3px">Found devices:</div>
 						<div id="gpDeviceList"></div>
 					</div>
-					<div style="margin-top: 14px">
-						<div
-							style="
-								font-size: 12px;
-								font-weight: 600;
-								color: var(--muted);
-								margin-bottom: 6px;
-								text-transform: uppercase;
-								letter-spacing: 0.05em;
-							"
-						>
-							Button Bindings
-						</div>
-						<table
-							id="gpBindTable"
-							style="width: 100%; border-collapse: collapse; font-size: 12px"
-						>
+					<div style="margin-top: 8px">
+						<div class="muted" style="margin-bottom: 3px">Button Bindings</div>
+						<table style="width: 100%; border-collapse: collapse; font-size: 11px">
 							<thead>
 								<tr>
 									<th
 										style="
 											text-align: left;
-											padding: 3px 6px;
+											padding: 2px 4px;
 											color: var(--muted);
-											font-weight: 600;
 										"
 									>
-										Button
+										Btn
 									</th>
 									<th
 										style="
 											text-align: left;
-											padding: 3px 6px;
+											padding: 2px 4px;
 											color: var(--muted);
-											font-weight: 600;
 										"
 									>
-										Command
+										Cmd
 									</th>
-									<th style="padding: 3px 6px"></th>
+									<th></th>
 								</tr>
 							</thead>
 							<tbody id="gpBindBody"></tbody>
@@ -681,54 +669,61 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					</div>
 				</div>
 
-				<div class="card col-6">
-					<div class="title">CAN Recorder</div>
-					<div class="status-line" style="margin-bottom: 8px">
-						Capture inbound CAN frames to a bounded ring buffer for troubleshooting.
+				<div class="card">
+					<h2>CAN Recorder</h2>
+					<div class="btns">
+						<button class="btn" onclick="startRecorder()">Start</button
+						><button class="btn" onclick="stopRecorder()">Stop</button
+						><button class="btn" onclick="downloadRecorder()">Download</button>
 					</div>
-					<div class="seg wide">
-						<button onclick="startRecorder()">Start</button>
-						<button onclick="stopRecorder()">Stop</button>
-						<button onclick="downloadRecorder()">Download CSV</button>
-					</div>
-					<div class="kv" id="recSt" style="margin-top: 8px">Loading...</div>
+					<div class="kv" id="recSt" style="margin-top: 6px">—</div>
 				</div>
 
-				<div class="card col-6 hidden-card" id="hiddenApCard">
-					<div class="title">Hidden AP Setting (Advanced)</div>
-					<div class="warning-box">
-						Experimental control. Keep disabled unless you understand EAP/Summon side
-						effects.
-					</div>
+				<div class="card">
+					<h2>Write Probe</h2>
+					<select class="sel" id="probeCmd">
+						<option value="apgate:on">apgate:on</option>
+						<option value="apgate:off">apgate:off</option>
+						<option value="nag:mode:off">nag:mode:off</option>
+						<option value="nag:mode:organic">nag:mode:organic</option>
+						<option value="mirror:autofold:on">mirror:autofold:on</option>
+						<option value="mirror:autofold:off">mirror:autofold:off</option></select
+					><button class="btn" onclick="runWriteProbe()" style="margin-top: 6px">
+						Run
+					</button>
+					<div class="kv" id="probeSt" style="margin-top: 6px">idle</div>
+				</div>
+
+				<div class="card" id="hiddenApCard" style="display: none">
+					<h2>Hidden AP</h2>
+					<div class="warn-box">Experimental — EAP/Summon side effects.</div>
 					<div class="row">
-						<span>Enhanced Autopilot (EAP bit 46)</span>
-						<label class="switch"
+						<span>Enhanced AP</span
+						><label class="tgl"
 							><input
 								type="checkbox"
 								id="hiddenApTg"
-								onchange="toggleHiddenAp()" /><span class="slider"></span
+								onchange="toggleHiddenAp()" /><span class="sl"></span
 						></label>
 					</div>
-					<div class="kv" id="hiddenApSt">Hidden until revealed.</div>
-				</div>
-
-				<div class="card col-12">
-					<div class="title">System Log</div>
-					<div class="log" id="logBox"></div>
+					<div class="kv" id="hiddenApSt">—</div>
 				</div>
 			</section>
+
+			<div class="card log-full">
+				<h2>CAN Frame Log</h2>
+				<div class="log" id="logBox"></div>
+			</div>
 		</div>
-
 		<div class="toast" id="toast"></div>
-
 		<script>
 			let S = {},
 				W = {},
 				B = {},
 				R = {},
-				G = {};
-
-			const HIGH_RISK_COMMANDS = new Set([
+				G = {},
+				hiddenAp = false;
+			const HIGH_RISK = new Set([
 				"lock",
 				"unlock",
 				"horn",
@@ -743,64 +738,48 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 				"summon:stop",
 				"apgate:off",
 			]);
-
-			const WRITE_PROBE_CASES = {
-				"apgate:on": { key: "apGateEnabled", expected: true },
-				"apgate:off": { key: "apGateEnabled", expected: false },
-				"nag:mode:off": { key: "nagMode", expected: "off" },
-				"nag:mode:organic": { key: "nagMode", expected: "organic" },
-				"mirror:autofold:on": { key: "mirrorAutoFold", expected: true },
-				"mirror:autofold:off": { key: "mirrorAutoFold", expected: false },
+			const PROBE = {
+				"apgate:on": { k: "apGateEnabled", e: true },
+				"apgate:off": { k: "apGateEnabled", e: false },
+				"nag:mode:off": { k: "nagMode", e: "off" },
+				"nag:mode:organic": { k: "nagMode", e: "organic" },
+				"mirror:autofold:on": { k: "mirrorAutoFold", e: true },
+				"mirror:autofold:off": { k: "mirrorAutoFold", e: false },
 			};
-
-			let hiddenApVisible = false;
-
 			function $(id) {
 				return document.getElementById(id);
 			}
-
-			function escapeHtml(str) {
-				if (str == null) return "";
-				return String(str)
+			function esc(s) {
+				if (s == null) return "";
+				return String(s)
 					.replace(/&/g, "&amp;")
 					.replace(/</g, "&lt;")
 					.replace(/>/g, "&gt;")
 					.replace(/"/g, "&quot;")
 					.replace(/'/g, "&#39;");
 			}
-
-			function appendLog(text) {
-				const box = $("logBox");
-				const stamp = new Date().toLocaleTimeString();
-				box.innerHTML = `[${escapeHtml(stamp)}] ${escapeHtml(text)}<br>` + box.innerHTML;
+			function log(t) {
+				const b = $("logBox"),
+					s = new Date().toLocaleTimeString();
+				b.innerHTML = `[${esc(s)}] ${esc(t)}<br>` + b.innerHTML;
 			}
-
 			function toast(m) {
 				const t = $("toast");
 				t.textContent = m;
 				t.classList.add("show");
 				setTimeout(() => t.classList.remove("show"), 1500);
 			}
-
-			function isHighRiskCommand(c) {
-				if (HIGH_RISK_COMMANDS.has(c)) return true;
-				if (c.startsWith("window:vent:")) return true;
-				if (c.startsWith("summon:")) return true;
-				return false;
+			function isHighRisk(c) {
+				return HIGH_RISK.has(c) || c.startsWith("window:vent:") || c.startsWith("summon:");
 			}
-
-			function cmd(c, opts) {
-				if (!(opts && opts.skipConfirm) && isHighRiskCommand(c)) {
-					const proceed = window.confirm(
-						`Confirm high-risk command: ${c}. Continue only if vehicle conditions are safe.`,
-					);
-					if (!proceed) {
-						appendLog(`Canceled ${c}`);
+			function cmd(c, o) {
+				if (!(o && o.skipConfirm) && isHighRisk(c)) {
+					if (!confirm(`Confirm: ${c}`)) {
+						log(`Canceled ${c}`);
 						toast("Canceled");
 						return Promise.resolve(null);
 					}
 				}
-
 				return fetch("/api/command", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -808,14 +787,13 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 				})
 					.then((r) => {
 						if (!r.ok) throw new Error(r.status);
-						// POST returns RpcResponse Ack — fetch updated state separately.
 						return fetch("/api/status");
 					})
 					.then((r) => r.json())
 					.then((d) => {
 						S = d;
 						render();
-						appendLog(`CMD ${c}`);
+						log(`CMD ${c}`);
 						toast(c);
 						return d;
 					})
@@ -824,207 +802,138 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 						return null;
 					});
 			}
-
-			function probeStateHtml(status, detail, ok) {
-				const color = ok ? "var(--ok)" : "var(--accent)";
-				return `<b>Status:</b> <span style="color:${color}">${escapeHtml(status)}</span><br><b>Detail:</b> ${escapeHtml(detail)}`;
-			}
-
 			async function runWriteProbe() {
-				const probeCmd = $("probeCmd").value;
-				const probeCfg = WRITE_PROBE_CASES[probeCmd];
-				if (!probeCfg) {
-					$("probeSt").innerHTML = probeStateHtml(
-						"FAILED",
-						"Unknown probe command",
-						false,
-					);
+				const p = $("probeCmd").value,
+					c = PROBE[p];
+				if (!c) {
+					$("probeSt").innerHTML = "FAILED: unknown";
 					return;
 				}
-
-				const started = Date.now();
-				$("probeSt").innerHTML = "<b>Status:</b> running...";
-				appendLog(`PROBE TX ${probeCmd}`);
-
-				const txAck = await cmd(probeCmd, { skipConfirm: true });
-				if (!txAck) {
-					$("probeSt").innerHTML = probeStateHtml(
-						"FAILED",
-						"No command acknowledgment from API",
-						false,
-					);
-					appendLog(`PROBE FAIL ${probeCmd}: no ack`);
+				const st = Date.now();
+				$("probeSt").innerHTML = "running...";
+				log(`PROBE TX ${p}`);
+				const a = await cmd(p, { skipConfirm: true });
+				if (!a) {
+					$("probeSt").innerHTML = "FAILED: no ack";
+					log(`PROBE FAIL ${p}`);
 					return;
 				}
-
-				const txOk = txAck[probeCfg.key] === probeCfg.expected;
-				let rxOk = txOk;
-				let verify = txAck;
-
-				for (let i = 0; !rxOk && i < 4; i++) {
-					await new Promise((resolve) => setTimeout(resolve, 250));
+				let ok = a[c.k] === c.e,
+					v = a;
+				for (let i = 0; !ok && i < 4; i++) {
+					await new Promise((r) => setTimeout(r, 250));
 					try {
-						verify = await fetch("/api/status").then((r) => r.json());
-						rxOk = verify[probeCfg.key] === probeCfg.expected;
-					} catch (_err) {
-						rxOk = false;
+						v = await fetch("/api/status").then((r) => r.json());
+						ok = v[c.k] === c.e;
+					} catch (e) {
+						ok = false;
 					}
 				}
-
-				const elapsed = Date.now() - started;
-				const summary = `${probeCfg.key}=${String(verify[probeCfg.key])}, expected=${String(probeCfg.expected)}, ${elapsed}ms`;
-				if (txOk && rxOk) {
-					$("probeSt").innerHTML = probeStateHtml("PASS", summary, true);
-					appendLog(`PROBE PASS ${probeCmd} (${elapsed}ms)`);
-					return;
-				}
-
-				$("probeSt").innerHTML = probeStateHtml("FAILED", summary, false);
-				appendLog(`PROBE FAIL ${probeCmd} (${elapsed}ms)`);
+				const el = Date.now() - st,
+					sum = `${c.k}=${String(v[c.k])}, exp=${String(c.e)}, ${el}ms`;
+				$("probeSt").innerHTML = (ok ? "PASS" : "FAILED") + ": " + esc(sum);
+				log(`PROBE ${ok ? "PASS" : "FAIL"} ${p} (${el}ms)`);
 			}
-
 			function toggleFsd() {
 				cmd(S.fsd ? "fsd:off" : "fsd:on");
 			}
-
-			function setNagMode(mode) {
-				cmd("nag:mode:" + mode);
+			function setNagMode(m) {
+				cmd("nag:mode:" + m);
 			}
-
 			function toggleNagBypass() {
 				cmd(S.nagOrgBypass ? "nag:bypass:off" : "nag:bypass:on");
 			}
-
 			function toggleIsa() {
 				cmd(S.isaChime ? "isa-chime:off" : "isa-chime:on");
 			}
-
 			function toggleMirrorAutoFold() {
 				cmd(S.mirrorAutoFold ? "mirror:autofold:off" : "mirror:autofold:on");
 			}
-
 			function toggleApGate() {
 				cmd(S.apGateEnabled ? "apgate:off" : "apgate:on");
 			}
-
-			function setHiddenApVisibility(visible) {
-				hiddenApVisible = visible;
-				$("hiddenApCard").classList.toggle("revealed", visible);
-				if (visible) {
-					appendLog("Hidden AP controls revealed");
-					toast("Advanced AP controls revealed");
-				}
-			}
-
 			function toggleHiddenAp() {
 				cmd(S.enhancedAutopilot ? "eap:off" : "eap:on");
 			}
-
 			function setVariant(v) {
 				cmd("variant:" + v);
 			}
-
 			function setProfile(p) {
 				cmd("profile:" + p);
 			}
-
 			function toggleDasDrive() {
 				cmd(S.dasDriveEnabled ? "drive:off" : "drive:on");
 			}
-
 			function sendDasSpeedLimit() {
 				const v = parseInt($("dasSpeedLimitIn").value || "0", 10);
 				if (v >= 1) cmd("drive:speed:" + v);
 			}
-
 			function sendDasSpeedCap() {
 				const v = parseInt($("dasSpeedCapIn").value || "0", 10);
 				if (v < 1) return;
-				const max = S.dasSpeedCapMaxKph || 200;
-				if (v > max) {
-					alert("Cap cannot exceed protocol max " + max + " km/h.");
+				const m = S.dasSpeedCapMaxKph || 200;
+				if (v > m) {
+					alert("Cap cannot exceed " + m);
 					return;
 				}
-				if (
-					v > 25 &&
-					!confirm(
-						"Raising the DAS hard cap above 25 km/h is for closed-track use only. Continue?",
-					)
-				)
-					return;
+				if (v > 25 && !confirm("Above 25 km/h for closed-track only. Continue?")) return;
 				cmd("drive:cap:" + v);
 			}
-
-			function ventPreview() {
-				$("ventVal").textContent = $("ventRange").value;
-			}
-
 			function sendVent() {
-				const v = parseInt($("ventRange").value || "0", 10);
-				cmd(`window:vent:${v}`);
+				cmd(`window:vent:${$("ventRange").value}`);
 			}
-
 			function setWifiMode(m) {
-				if (m === "sta") {
-					$("staFields").style.display = "block";
-					$("apFields").style.display = "none";
-				} else {
-					$("staFields").style.display = "none";
-					$("apFields").style.display = "block";
-				}
+				$("staFields").style.display = m === "sta" ? "block" : "none";
+				$("apFields").style.display = m === "ap" ? "block" : "none";
 				document
-					.querySelectorAll("#wifiModeSeg button")
+					.querySelectorAll("#wifiModeBtns button")
 					.forEach((b) => b.classList.toggle("on", b.textContent.toLowerCase() === m));
 			}
-
 			function connectSTA() {
-				const ssid = $("staSSID").value.trim();
-				const pw = $("staPW").value;
-				if (!ssid) {
+				const s = $("staSSID").value.trim();
+				if (!s) {
 					toast("Enter SSID");
 					return;
 				}
 				fetch("/api/wifi/config", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ mode: "sta", ssid: ssid, password: pw }),
+					body: JSON.stringify({ mode: "sta", ssid: s, password: $("staPW").value }),
 				})
 					.then((r) => r.json())
 					.then((d) => {
 						W = d;
 						renderWifi();
-						appendLog(`WIFI STA ${ssid}`);
-						toast("Connecting to " + ssid + "...");
+						log(`WIFI STA ${s}`);
+						toast("Connecting to " + s + "...");
 					})
 					.catch(() => toast("Error"));
 			}
-
 			function saveAP() {
-				const ssid = $("apSSID").value.trim();
-				const pw = $("apPW").value;
-				if (!ssid) {
+				const s = $("apSSID").value.trim(),
+					p = $("apPW").value;
+				if (!s) {
 					toast("Enter AP SSID");
 					return;
 				}
-				if (pw.length > 0 && pw.length < 8) {
-					toast("AP password must be 8+ chars");
+				if (p.length > 0 && p.length < 8) {
+					toast("AP password 8+ chars");
 					return;
 				}
 				fetch("/api/wifi/config", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ mode: "ap", ssid: ssid, password: pw }),
+					body: JSON.stringify({ mode: "ap", ssid: s, password: p }),
 				})
 					.then((r) => r.json())
 					.then((d) => {
 						W = d;
 						renderWifi();
-						appendLog(`WIFI AP ${ssid}`);
+						log(`WIFI AP ${s}`);
 						toast("AP config saved");
 					})
 					.catch(() => toast("Error"));
 			}
-
 			function toggleBle() {
 				const en = $("bleTg").checked;
 				cmd(en ? "ble:on" : "ble:off").then((d) => {
@@ -1034,108 +943,26 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					}
 				});
 			}
-
-			function renderGamepad() {
-				const enabled = !!G.enabled;
-				const connected = !!G.connected;
-				const scanning = !!G.scanning;
-				const addr = G.pairedAddr || "";
-				let h = "<b>Status:</b> ";
-				if (!enabled) {
-					h += '<span style="color:var(--muted)">Disabled</span>';
-				} else if (connected) {
-					h += '<span style="color:var(--ok)">Connected</span>';
-					h +=
-						" &nbsp; <b>Buttons:</b> 0x" +
-						(G.buttons || 0).toString(16).padStart(4, "0");
-					if (G.axes && G.axes.length >= 6) {
-						h +=
-							"<br><b>Axes:</b> LX=" +
-							G.axes[0] +
-							" LY=" +
-							G.axes[1] +
-							" RX=" +
-							G.axes[2] +
-							" RY=" +
-							G.axes[3] +
-							" LT=" +
-							G.axes[4] +
-							" RT=" +
-							G.axes[5];
-					}
-				} else if (addr) {
-					h += '<span style="color:var(--warn)">Disconnected</span>';
-					h += " &nbsp; reconnecting...";
-				} else {
-					h += '<span style="color:var(--muted)">No device paired</span>';
-				}
-				if (addr) h += "<br><b>Paired:</b> " + escapeHtml(addr);
-				if (scanning) h += " &nbsp; <span style='color:var(--warn)'>Scanning...</span>";
-				$("gpSt").innerHTML = h;
-
-				// Scan results panel
-				if (G.scanCount > 0 || scanning) {
-					$("gpScanResults").style.display = "block";
-				} else {
-					$("gpScanResults").style.display = "none";
-				}
-
-				// Build binding table rows if not yet populated
-				if (!$("gpBindBody").dataset.loaded && G.bindings) {
-					renderGpBindings(G.bindings);
-					$("gpBindBody").dataset.loaded = "1";
-				}
-			}
-
-			function renderGpScan(devices) {
+			function renderGpScan(d) {
 				let h = "";
-				(devices || []).forEach(function (d) {
-					h +=
-						'<div style="display:flex;align-items:center;gap:8px;margin:3px 0">' +
-						'<span style="font-family:monospace;font-size:11px">' +
-						escapeHtml(d.addr) +
-						"</span>" +
-						" " +
-						escapeHtml(d.name) +
-						' <button style="padding:2px 8px;font-size:11px" onclick="gpPair(\'' +
-						escapeHtml(d.addr) +
-						"')\">Pair</button>" +
-						"</div>";
+				(d || []).forEach((x) => {
+					h += `<div style="display:flex;align-items:center;gap:6px;margin:2px 0"><span style="font-family:monospace;font-size:10px">${esc(x.addr)}</span> ${esc(x.name)} <button class="btn" style="padding:2px 6px;font-size:10px" onclick="gpPair('${esc(x.addr)}')">Pair</button></div>`;
 				});
-				$("gpDeviceList").innerHTML =
-					h || '<span style="color:var(--muted)">No HID devices found yet</span>';
+				$("gpDeviceList").innerHTML = h || '<span class="muted">No devices yet</span>';
 				$("gpScanResults").style.display = "block";
 			}
-
-			function renderGpBindings(bindings) {
-				let rows = "";
-				(bindings || []).forEach(function (b) {
-					rows +=
-						"<tr>" +
-						'<td style="padding:2px 6px;white-space:nowrap">' +
-						escapeHtml(b.button) +
-						"</td>" +
-						'<td style="padding:2px 6px"><input type="text" class="input" style="padding:3px 6px;font-size:12px;width:100%" ' +
-						'id="gpBind' +
-						b.index +
-						'" value="' +
-						escapeHtml(b.command) +
-						'" placeholder="command e.g. fsd:on" /></td>' +
-						'<td style="padding:2px 6px"><button style="padding:2px 8px;font-size:11px" onclick="gpSaveBind(' +
-						b.index +
-						')">Save</button></td>' +
-						"</tr>";
+			function renderGpBindings(b) {
+				let r = "";
+				(b || []).forEach((x) => {
+					r += `<tr><td style="padding:2px 4px;white-space:nowrap">${esc(x.button)}</td><td style="padding:2px 4px"><input id="gpBind${x.index}" value="${esc(x.command)}" placeholder="cmd" style="width:100%;padding:3px 5px;font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)"></td><td style="padding:2px 4px"><button class="btn" style="padding:2px 6px;font-size:10px" onclick="gpSaveBind(${x.index})">Save</button></td></tr>`;
 				});
-				$("gpBindBody").innerHTML = rows;
+				$("gpBindBody").innerHTML = r;
 			}
-
 			function gpScan() {
 				cmd("gamepad:scan").then(() => {
 					$("gpScanResults").style.display = "block";
-					$("gpDeviceList").innerHTML =
-						'<span style="color:var(--muted)">Scanning…</span>';
-					// Poll /api/status after 7 s to render scan results.
-					setTimeout(function () {
+					$("gpDeviceList").innerHTML = '<span class="muted">Scanning...</span>';
+					setTimeout(() => {
 						fetch("/api/status")
 							.then((r) => r.json())
 							.then((d) => {
@@ -1146,35 +973,20 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					}, 7000);
 				});
 			}
-
-			function gpPair(addr) {
-				cmd("gamepad:pair:" + addr).then(() => {
-					$("gpBindBody").dataset.loaded = ""; // reload bindings on next render
+			function gpPair(a) {
+				cmd("gamepad:pair:" + a).then(() => {
+					$("gpBindBody").dataset.loaded = "";
 				});
 			}
-
 			function gpUnpair() {
 				if (!confirm("Unpair gamepad?")) return;
 				cmd("gamepad:unpair");
 			}
-
-			function gpSaveBind(idx) {
-				const el = $("gpBind" + idx);
-				if (!el) return;
-				const command = el.value.trim();
-				cmd("gamepad:bind:" + idx + ":" + command);
+			function gpSaveBind(i) {
+				const e = $("gpBind" + i);
+				if (!e) return;
+				cmd("gamepad:bind:" + i + ":" + e.value.trim());
 			}
-
-			function renderRecorder() {
-				let h = "<b>Status:</b> " + (R.enabled ? "Running" : "Stopped");
-				h += " &nbsp; <b>Frames:</b> " + escapeHtml(R.count || 0);
-				h += " / " + escapeHtml(R.capacity || 0);
-				h += "<br><b>Captured:</b> " + escapeHtml(R.captured || 0);
-				h += " &nbsp; <b>Dropped:</b> " + escapeHtml(R.dropped || 0);
-				h += "<br><b>Last Capture:</b> " + escapeHtml(R.lastCaptureMs || 0) + " ms";
-				$("recSt").innerHTML = h;
-			}
-
 			function startRecorder() {
 				cmd("recorder:on").then((d) => {
 					if (d && d.recorder) {
@@ -1183,7 +995,6 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					}
 				});
 			}
-
 			function stopRecorder() {
 				cmd("recorder:off").then((d) => {
 					if (d && d.recorder) {
@@ -1192,44 +1003,36 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					}
 				});
 			}
-
 			function downloadRecorder() {
 				fetch("/api/recorder/download")
 					.then((r) => {
-						if (!r.ok) throw new Error("download failed");
+						if (!r.ok) throw new Error("fail");
 						return r.text();
 					})
 					.then((csv) => {
-						const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-						const url = URL.createObjectURL(blob);
-						const a = document.createElement("a");
-						a.href = url;
-						a.download = `can-recorder-${Date.now()}.csv`;
+						const b = new Blob([csv], { type: "text/csv;charset=utf-8" }),
+							u = URL.createObjectURL(b),
+							a = document.createElement("a");
+						a.href = u;
+						a.download = `can-${Date.now()}.csv`;
 						document.body.appendChild(a);
 						a.click();
 						document.body.removeChild(a);
-						URL.revokeObjectURL(url);
-						appendLog("Recorder download complete");
-						toast("Recorder CSV downloaded");
+						URL.revokeObjectURL(u);
+						log("Recorder download");
+						toast("CSV downloaded");
 					})
 					.catch(() => toast("Error"));
 			}
-
 			function renderWifi() {
-				let h = "<b>Mode:</b> " + escapeHtml((W.mode || "?").toUpperCase());
-				h += " &nbsp; <b>IP:</b> " + escapeHtml(W.ip || "N/A");
-				if (W.mode === "sta") {
-					h += "<br><b>SSID:</b> " + escapeHtml(W.ssid || "N/A");
-					h += " &nbsp; <b>RSSI:</b> " + escapeHtml(W.rssi || "?") + " dBm";
-					h += "<br><b>Status:</b> " + (W.connected ? "Connected" : "Disconnected");
-				} else {
-					h += "<br><b>SSID:</b> " + escapeHtml(W.ssid || "N/A");
-					h += " &nbsp; <b>Clients:</b> " + escapeHtml(W.clients || 0);
-					h += "<br><b>Channel:</b> " + escapeHtml(W.channel || "?");
-				}
+				let h = `Mode: ${esc((W.mode || "?").toUpperCase())} &bull; IP: ${esc(W.ip || "N/A")}`;
+				if (W.mode === "sta")
+					h += `<br>SSID: ${esc(W.ssid || "N/A")} RSSI: ${esc(W.rssi || "?")} dBm<br>${W.connected ? "Connected" : "Disconnected"}`;
+				else
+					h += `<br>SSID: ${esc(W.ssid || "N/A")} Clients: ${esc(W.clients || 0)} Ch: ${esc(W.channel || "?")}`;
 				$("wifiSt").innerHTML = h;
 				document
-					.querySelectorAll("#wifiModeSeg button")
+					.querySelectorAll("#wifiModeBtns button")
 					.forEach((b) =>
 						b.classList.toggle("on", b.textContent.toLowerCase() === W.mode),
 					);
@@ -1243,101 +1046,150 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					if (W.ssid) $("apSSID").placeholder = W.ssid;
 				}
 			}
-
 			function renderBle() {
-				let h = "<b>Status:</b> " + (B.enabled ? "Enabled" : "Disabled");
-				h += " &nbsp; <b>Connected:</b> " + (B.connected ? "Yes" : "No");
-				if (B.deviceName) h += "<br><b>Device:</b> " + escapeHtml(B.deviceName);
+				let h = `${B.enabled ? "Enabled" : "Disabled"} &bull; ${B.connected ? "Connected" : "Disconnected"}`;
+				if (B.deviceName) h += `<br>Device: ${esc(B.deviceName)}`;
 				$("bleSt").innerHTML = h;
 				$("bleTg").checked = !!B.enabled;
 			}
-
-			function render() {
-				let h = "<b>Variant:</b> " + escapeHtml(S.variant || "?");
-				h += " &nbsp; <b>CAN:</b> " + (S.chassisOnline ? "Online" : "Offline");
-				h += "<br><b>FSD:</b> " + (S.fsd ? "ON" : "OFF");
-				h += " &nbsp; <b>Nag:</b> " + escapeHtml(S.nagMode || "off");
-				h += " &nbsp; <b>Mirror Auto:</b> " + (S.mirrorAutoFold ? "ON" : "OFF");
-				const pn =
-					["Chill", "Normal", "Hurry", "Max", "Sloth"][S.profile] ||
-					escapeHtml(S.profile);
-				h += "<br><b>Profile:</b> " + pn + (S.profilePin ? " (pinned)" : " (auto)");
-				h += " &nbsp; <b>ISA:</b> " + (S.isaChime ? "Suppressed" : "Normal");
-				h += "<br><b>Uptime:</b> " + Math.floor((S.uptime || 0) / 1000) + "s";
-				if (S.hardware) {
-					const b = [];
-					if (S.hardware.busChassis) b.push("Chassis");
-					if (S.hardware.busVehicle) b.push("Vehicle");
-					if (S.hardware.busBody) b.push("Body");
-					h += " &nbsp; <b>Buses:</b> " + (b.length ? b.join(" + ") : "none");
+			function renderGamepad() {
+				const en = !!G.enabled,
+					co = !!G.connected,
+					sc = !!G.scanning,
+					ad = G.pairedAddr || "";
+				let h = "";
+				if (!en) h = '<span class="muted">Disabled</span>';
+				else if (co) {
+					h = '<span style="color:var(--ok)">Connected</span>';
+					h += ` btns:0x${(G.buttons || 0).toString(16).padStart(4, "0")}`;
+					if (G.axes && G.axes.length >= 6)
+						h += `<br>LX:${G.axes[0]} LY:${G.axes[1]} RX:${G.axes[2]} RY:${G.axes[3]} LT:${G.axes[4]} RT:${G.axes[5]}`;
+				} else if (ad)
+					h = '<span style="color:var(--warn)">Disconnected</span> reconnect...';
+				else h = '<span class="muted">No device</span>';
+				if (ad) h += `<br>Paired: ${esc(ad)}`;
+				if (sc) h += ' <span style="color:var(--warn)">Scanning...</span>';
+				$("gpSt").innerHTML = h;
+				$("gpScanResults").style.display = G.scanCount > 0 || sc ? "block" : "none";
+				if (!$("gpBindBody").dataset.loaded && G.bindings) {
+					renderGpBindings(G.bindings);
+					$("gpBindBody").dataset.loaded = "1";
 				}
-				$("st").innerHTML = h;
-
-				$("chipVariant").textContent = "Variant: " + (S.variant || "?");
-				$("chipCan").textContent = "CAN: " + (S.chassisOnline ? "Online" : "Offline");
-				$("chipUptime").textContent = "Up: " + Math.floor((S.uptime || 0) / 1000) + "s";
-
+			}
+			function renderRecorder() {
+				let h = `${R.enabled ? "Running" : "Stopped"} &bull; ${esc(R.count || 0)}/${esc(R.capacity || 0)} frames`;
+				h += `<br>Captured: ${esc(R.captured || 0)} Dropped: ${esc(R.dropped || 0)}`;
+				h += `<br>Last: ${esc(R.lastCaptureMs || 0)} ms`;
+				$("recSt").innerHTML = h;
+			}
+			function val(v, u) {
+				return v != null && !isNaN(v)
+					? (typeof v === "number" ? v.toFixed(1) : v) + " " + u
+					: "&mdash; " + u;
+			}
+			function renderBms() {
+				const p = S.powertrain || {},
+					tp = S.tpms || {},
+					hw = S.hardware || {};
+				$("bmsV").innerHTML = val(S.bmsVoltage, "<small>V</small>");
+				$("bmsA").textContent = val(S.bmsCurrent, "A");
+				$("bmsKW").textContent = val(S.bmsPower, "kW");
+				const soc = S.bmsSoc || 0;
+				$("bmsSoc").innerHTML = val(soc, "<small>%</small>");
+				$("bmsSocBar").style.width = Math.min(100, Math.max(0, soc || 0)) + "%";
+				$("bmsCellV").textContent =
+					`${val(S.bmsCellVoltageMax, "")} / ${val(S.bmsCellVoltageMin, "V")}`;
+				$("bmsNom").textContent =
+					`${val(S.bmsNominalRemaining, "")} / ${val(S.bmsNominalFullPack, "kWh")}`;
+				$("bmsTmin").textContent = val(S.bmsTempMin, "°C");
+				$("bmsTmax").textContent = val(S.bmsTempMax, "°C");
+				if (S.bmsPackTMin != null)
+					$("bmsThermal").textContent =
+						`Therm: ${S.bmsPackTMin || "—"} – ${S.bmsPackTMax || "—"} °C`;
+				$("pwRegen").textContent = val(S.bmsMaxRegenPower, "kW");
+				$("pwDch").textContent = val(S.bmsMaxDischargePower, "kW");
+				$("pwChg").textContent = val(S.bmsMaxDischargeCurrent, "A");
+				$("bmsUpd").textContent = S.hasBms ? "live" : "—";
+				let tpmsH = "";
+				["FL", "FR", "RL", "RR"].forEach((t, i) => {
+					const pr = S.hasTpms ? ((tp[t.toLowerCase()] || 0) / 100).toFixed(2) : "—";
+					tpmsH += `<div><div class="p">${pr}</div>${t}</div>`;
+				});
+				$("tpmsGrid").innerHTML = tpmsH;
+				let ch = "";
+				["chassis", "vehicle", "body"].forEach((b) => {
+					const st = hw["bus" + b.charAt(0).toUpperCase() + b.slice(1)] || hw[b];
+					const on = S[b + "Online"];
+					const c = st && on ? "#22c55e" : st ? "#f59e0b" : "#64748b";
+					ch += `<div class="row"><span>${b.charAt(0).toUpperCase() + b.slice(1)}</span><span style="color:${c}">${st ? (on ? "ON" : "detected") : "off"}</span></div>`;
+				});
+				$("canHealth").innerHTML = ch || "No bus data";
+				const pt = p;
+				$("ptSpeed").innerHTML = val(
+					pt.speed ? pt.speed / 100 : null,
+					"<small>km/h</small>",
+				);
+				$("ptGear").textContent = ["?", "P", "R", "N", "D"][pt.gear] || "?";
+				$("ptPedal").textContent = val(pt.pedal, "%");
+				$("ptSteer").textContent = val(pt.steer ? pt.steer / 10 : null, "°");
+			}
+			function render() {
+				const hw = S.hardware || {};
+				$("heroIp").textContent = hw.ip || "—";
+				$("heroVar").textContent = S.variant || "—";
+				$("heroUp").textContent = "up " + Math.floor((S.uptime || 0) / 1000) + "s";
+				let bg =
+					'<span class="chip live">CAN:' +
+					(S.chassisOnline ? "Online" : "Offline") +
+					"</span>";
+				bg += `<span class="chip">FSD:${S.fsd ? "ON" : "OFF"}</span>`;
+				bg += `<span class="chip">Nag:${esc(S.nagMode || "off")}</span>`;
+				const pn = ["Chill", "Normal", "Hurry", "Max", "Sloth"][S.profile] || "?";
+				bg += `<span class="chip">Prof:${pn}${S.profilePin ? "*" : ""}</span>`;
+				bg += `<span class="chip">Offset:${S.offset || 0}</span>`;
+				if (S.banShield) bg += '<span class="chip warn">BanShield</span>';
+				if (S.gtwShieldArmed) bg += '<span class="chip warn">GTW</span>';
+				bg += `<span class="chip">AP:${S.apGateOpen ? "OPEN" : "CLOSED"}</span>`;
+				$("badges").innerHTML = bg;
 				$("fsdTg").checked = !!S.fsd;
 				if ($("nagModeSel")) $("nagModeSel").value = S.nagMode || "off";
 				if ($("nagBypassTg")) $("nagBypassTg").checked = !!S.nagOrgBypass;
 				$("isaTg").checked = !!S.isaChime;
 				$("mirrorAutoTg").checked = !!S.mirrorAutoFold;
 				$("apGateTg").checked = !!S.apGateEnabled;
+				$("apGateSt").innerHTML =
+					`Gate: ${S.apGateOpen ? '<span style="color:var(--ok)">OPEN</span>' : '<span style="color:var(--accent)">CLOSED</span>'} AP:${S.apGateAp ? "ON" : "off"} Park:${S.apGatePark ? "ON" : "off"} Summon:${S.apGateSummon ? "ON" : "off"}`;
 				if ($("dasDriveTg")) {
 					$("dasDriveTg").checked = !!S.dasDriveEnabled;
-					const lim = $("dasSpeedLimitIn"),
-						cap = $("dasSpeedCapIn"),
-						lbl = $("dasSpeedCapMaxLbl");
-					if (lim && document.activeElement !== lim) lim.value = S.dasSpeedLimitKph ?? "";
-					if (cap) {
-						if (document.activeElement !== cap) cap.value = S.dasSpeedCapKph ?? "";
-						cap.max = S.dasSpeedCapMaxKph ?? 200;
+					const l = $("dasSpeedLimitIn"),
+						c = $("dasSpeedCapIn"),
+						lb = $("dasSpeedCapMaxLbl");
+					if (l && document.activeElement !== l) l.value = S.dasSpeedLimitKph ?? "";
+					if (c) {
+						if (document.activeElement !== c) c.value = S.dasSpeedCapKph ?? "";
+						c.max = S.dasSpeedCapMaxKph ?? 200;
 					}
-					if (lim) lim.max = S.dasSpeedCapKph ?? 25;
-					if (lbl) lbl.textContent = "max " + (S.dasSpeedCapMaxKph ?? 200);
+					if (l) l.max = S.dasSpeedCapKph ?? 25;
+					if (lb) lb.textContent = "max " + (S.dasSpeedCapMaxKph ?? 200);
 				}
-				$("apGateSt").innerHTML =
-					"<b>Gate:</b> " +
-					(S.apGateOpen
-						? '<span style="color:var(--ok)">OPEN</span>'
-						: '<span style="color:var(--accent)">CLOSED</span>') +
-					" &nbsp; <b>AP:</b> " +
-					(S.apGateAp ? "ON" : "off") +
-					" &nbsp; <b>Park:</b> " +
-					(S.apGatePark ? "ON" : "off") +
-					" &nbsp; <b>Summon:</b> " +
-					(S.apGateSummon ? "ON" : "off");
-
-				if (hiddenApVisible) {
+				if (hiddenAp) {
 					$("hiddenApTg").checked = !!S.enhancedAutopilot;
-					$("hiddenApSt").innerHTML =
-						"<b>Status:</b> " +
-						(S.enhancedAutopilot
-							? '<span style="color:var(--warn)">Enabled</span>'
-							: '<span style="color:var(--ok)">Disabled</span>') +
-						"<br><b>Command:</b> " +
-						(S.enhancedAutopilot ? "eap:on" : "eap:off");
+					$("hiddenApSt").innerHTML = S.enhancedAutopilot
+						? '<span style="color:var(--warn)">Enabled</span>'
+						: '<span style="color:var(--ok)">Disabled</span>';
 				}
-
-				document
-					.querySelectorAll("#hwSeg button")
-					.forEach((b) =>
-						b.classList.toggle("on", b.textContent.toLowerCase() === S.variant),
-					);
-				document.querySelectorAll("#spSeg button").forEach((b, i) => {
-					if (i < 5) b.classList.toggle("on", S.profilePin && S.profile === i);
-					if (i === 5) b.classList.toggle("on", !S.profilePin);
+				document.querySelectorAll("#spBtns button").forEach((b, i) => {
+					if (i < 4) b.classList.toggle("on", S.profilePin && S.profile === i);
+					if (i === 4) b.classList.toggle("on", !S.profilePin);
 				});
+				renderBms();
 			}
-
 			function poll() {
 				fetch("/api/status")
 					.then((r) => r.json())
 					.then((d) => {
 						S = d;
 						render();
-						// /api/status now carries ble/recorder/gamepad subsystem
-						// snapshots — no need for per-feature polls anymore.
 						if (d.ble) {
 							B = d.ble;
 							renderBle();
@@ -1356,7 +1208,6 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 						}
 					})
 					.catch(() => {});
-
 				fetch("/api/wifi/status")
 					.then((r) => r.json())
 					.then((d) => {
@@ -1365,15 +1216,18 @@ static const char DASH_HTML[] PROGMEM = R"HTML(<!doctype html>
 					})
 					.catch(() => {});
 			}
-
 			setInterval(poll, 2000);
-			ventPreview();
-			document.addEventListener("keydown", (ev) => {
-				if (ev.ctrlKey && ev.shiftKey && (ev.key === "A" || ev.key === "a")) {
-					setHiddenApVisibility(!hiddenApVisible);
+			document.addEventListener("keydown", (e) => {
+				if (e.ctrlKey && e.shiftKey && (e.key === "A" || e.key === "a")) {
+					hiddenAp = !hiddenAp;
+					$("hiddenApCard").style.display = hiddenAp ? "block" : "none";
+					if (hiddenAp) {
+						log("Hidden AP revealed");
+						toast("Advanced AP revealed");
+					}
 				}
 			});
-			appendLog("Dashboard booted");
+			log("Dashboard booted");
 			poll();
 		</script>
 	</body>

@@ -1,0 +1,13 @@
+{
+  "generated_utc": "2026-02-23T23:37:41.490563+00:00",
+  "source_lib": "/Volumes/Untitled/squashfs-root/usr/tesla/UI/lib/libQtCarVAPI.so.1.0.0",
+  "counts": {
+    "vapi_eth_tokens": 792,
+    "vapi_map_symbols": 1532,
+    "vapi_name_maps": 473,
+    "db_signals_total": 40484,
+    "db_signals_annotated_with_vapi_alias": 792,
+    "vapi_tokens_unmatched_to_db_signals": 0
+  },
+  "unmatched_tokens": []
+}

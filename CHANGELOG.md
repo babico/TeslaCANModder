@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Removed
+
+- **`firmware/lib/interface/` and `firmware/lib/transport/` legacy alias trees** —
+  these duplicate `lib/client/`, `lib/io/`, `lib/vehicle/can/`, and
+  `lib/vehicle/ble/` but use stale include paths (`interface/ble/*`,
+  `transport/can/*`, etc.) and have drifted from the canonical code. A
+  full-tree scan confirmed no non-legacy file references them, so removal
+  is safe. The 4 test files that still included the old paths
+  (`test_native_id_filter`, `test_native_recorder`,
+  `test_native_ring_buffer`, `test_esp32_can_recorder`) were updated to
+  the new `core/can/*` paths. `firmware/README.md` and `AGENTS.md` no
+  longer reference the removed trees.
+
 ## [1.5.0] — 2026-06-20
 
 ### Added

@@ -16,7 +16,7 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "transport/can/recorder.h"
+#include "core/can/recorder.h"
 
 void setUp()
 {

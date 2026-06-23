@@ -16,7 +16,7 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "transport/can/ring_buffer.h"
+#include "core/can/ring_buffer.h"
 
 void setUp()
 {

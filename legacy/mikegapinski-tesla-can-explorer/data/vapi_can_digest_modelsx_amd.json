@@ -1,0 +1,13 @@
+{
+  "generated_utc": "2026-02-24T23:28:23.533110+00:00",
+  "source_lib": "/Users/mgapinski/Downloads/2026.2.3.amd-sx/libQtCarVAPI.so.1.0.0",
+  "counts": {
+    "vapi_eth_tokens": 772,
+    "vapi_map_symbols": 1485,
+    "vapi_name_maps": 445,
+    "db_signals_total": 36504,
+    "db_signals_annotated_with_vapi_alias": 772,
+    "vapi_tokens_unmatched_to_db_signals": 0
+  },
+  "unmatched_tokens": []
+}

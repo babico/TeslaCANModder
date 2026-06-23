@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tesla CAN Explorer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-H6QTPY0Q7N"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-H6QTPY0Q7N');
+</script>
+  <body>
+    <div class="bg-orb bg-orb-a"></div>
+    <div class="bg-orb bg-orb-b"></div>
+    <div class="bg-grid"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-kicker">Reverse Engineering Portal</div>
+        <h1>Tesla CAN Explorer</h1>
+        <p class="brand-sub" id="dataset-source-label">
+          Dataset source: Model 3 firmware <code>2026.2</code>
+        </p>
+        <p class="brand-sub" id="dataset-libs-label">
+          Sources: <code>libQtCarCANData.so</code>,
+          <code>libQtCarVAPI.so</code>
+        </p>
+        <div class="sponsor-ad">
+          <span class="sponsor-label">AD</span>
+          <span class="sponsor-copy">
+            This research is open source on
+            <a
+              href="https://github.com/mikegapinski/tesla-can-explorer"
+              target="_blank"
+              rel="noopener noreferrer"
+              >GitHub</a
+            >
+            and sponsored by Tesla Android.
+            Want Android apps in your Tesla? Visit
+            <a href="https://teslaandroid.com/" target="_blank" rel="noopener noreferrer"
+              >teslaandroid.com</a
+            >
+          </span>
+        </div>
+      </div>
+      <div class="stats" id="header-stats">
+        <div class="stat">
+          <span class="stat-label">Frames</span>
+          <span class="stat-value" id="stat-frames">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Signals</span>
+          <span class="stat-value" id="stat-signals">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Enum Values</span>
+          <span class="stat-value" id="stat-values">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">VAPI Aliases</span>
+          <span class="stat-value" id="stat-vapi">-</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel panel-left">
+        <div class="panel-head">
+          <h2>Frames</h2>
+          <p id="frame-results">Loading...</p>
+        </div>
+
+        <div class="controls">
+          <label class="field">
+            <span>Data Source</span>
+            <select id="data-source"></select>
+          </label>
+
+          <label class="field">
+            <span>Global Search</span>
+            <input
+              id="global-search"
+              type="search"
+              placeholder="frame, address, signal, enum label"
+              autocomplete="off"
+            />
+          </label>
+
+          <div class="inline-fields">
+            <label class="field">
+              <span>Bus</span>
+              <select id="bus-filter">
+                <option value="">All</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Module</span>
+              <select id="module-filter">
+                <option value="">All</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="inline-fields">
+            <label class="field checkbox-field">
+              <input id="enumerated-only" type="checkbox" />
+              <span>Has Enumerated Signals</span>
+            </label>
+            <label class="field">
+              <span>Sort</span>
+              <select id="sort-mode">
+                <option value="address">Address</option>
+                <option value="name">Name</option>
+                <option value="signals">Signal Count</option>
+                <option value="enums">Enumerated Count</option>
+                <option value="vapi">VAPI Alias Count</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="frame-list" id="frame-list"></div>
+      </aside>
+
+      <section class="panel panel-right">
+        <div class="panel-head">
+          <h2 id="frame-title">Select a frame</h2>
+          <p id="frame-subtitle">
+            Browse by frame address and signal values.
+          </p>
+        </div>
+
+        <div id="frame-meta" class="chips"></div>
+
+        <div class="signal-controls">
+          <label class="field signal-search">
+            <span>Signal Search</span>
+            <input
+              id="signal-search"
+              type="search"
+              placeholder="signal name, enum map, value label"
+              autocomplete="off"
+              disabled
+            />
+          </label>
+          <label class="field">
+            <span>Rows</span>
+            <select id="signal-page-size" disabled>
+              <option value="100">100</option>
+              <option value="200" selected>200</option>
+              <option value="500">500</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="signal-pagination" id="signal-pagination"></div>
+        <div class="signal-table-wrap" id="signal-table-wrap">
+          <div class="empty-state">
+            Frame details will appear here after selection.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-line">
+        <span class="footer-chip">
+          Copyright &copy; 2026 Michał Gapiński (<a
+            href="https://gapinski.eu"
+            target="_blank"
+            rel="noopener noreferrer"
+            >gapinski.eu</a
+          >)
+        </span>
+        <span class="footer-sep">/</span>
+        <span class="footer-chip">
+          Tesla Android (<a href="https://teslaandroid.com/" target="_blank" rel="noopener noreferrer"
+            >teslaandroid.com</a
+          >)
+        </span>
+        <span class="footer-sep">,</span>
+        <span class="footer-chip">
+          <span class="x-icon" aria-hidden="true">𝕏</span>
+          <a href="https://x.com/mikegapinski" target="_blank" rel="noopener noreferrer"
+            >@mikegapinski</a
+          >,
+          <a href="https://x.com/teslaandroid" target="_blank" rel="noopener noreferrer"
+            >@teslaandroid</a
+          >
+        </span>
+      </div>
+      <div class="footer-disclaimer">
+        Independent project. Unaffiliated with and not endorsed by Tesla, Inc.
+      </div>
+    </footer>
+
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-card">
+        <h3>Indexing CAN Data</h3>
+        <p id="loading-text">Loading JSON data...</p>
+      </div>
+    </div>
+
+    <template id="signal-values-template">
+      <div class="values-wrap">
+        <table class="values-table">
+          <thead>
+            <tr>
+              <th>Value (Dec)</th>
+              <th>Value (Hex)</th>
+              <th>Label</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

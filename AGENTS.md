@@ -57,7 +57,7 @@ TeslaCANModder/
 └── scripts/                       workspace-level validation and smoke scripts
 ```
 
-The firmware tree was reorganized recently; older docs that reference `lib/infra/`, `lib/feature/`, or `lib/handler/` at the top level of `firmware/lib` are stale. The shipping equivalents now live under `lib/core/can/`, `lib/vehicle/can/feature/`, and `lib/vehicle/can/handler/` respectively.
+The firmware tree was reorganized recently; older docs that reference `lib/infra/`, `lib/feature/`, `lib/handler/`, `lib/interface/`, or `lib/transport/` at the top level of `firmware/lib` are stale. The shipping equivalents now live under `lib/core/can/`, `lib/vehicle/can/feature/`, `lib/vehicle/can/handler/`, `lib/client/`, and `lib/io/` respectively. The `lib/interface/` and `lib/transport/` legacy alias trees were removed in 2026-06-20.
 
 ## Start-here docs
 

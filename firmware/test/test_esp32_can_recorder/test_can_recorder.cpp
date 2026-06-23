@@ -23,7 +23,7 @@
 #define BOARD_ENABLE_BLE 0
 
 #include "core/types.h"
-#include "transport/can/recorder.h"
+#include "core/can/recorder.h"
 
 const int MCP_CS_PIN = 15;
 static MCP2515 *mcp = nullptr;
