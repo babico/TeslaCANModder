@@ -64,7 +64,7 @@
 		"typescript-eslint": "^8.61.1"
 	},
 	"dependencies": {
-		"@react-native/jest-preset": "^0.85.3",
+		"@react-native/jest-preset": "^0.86.0",
 		"react-native-worklets": "^0.5.2"
 	}
 }
