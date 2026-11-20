@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulation — Alertes Vitesse & Autopilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a0f;
+    --accent-teal: #00e5c8;
+    --accent-amber: #ffaa00;
+    --accent-red: #ff3b3b;
+    --accent-blue: #1a8fff;
+    --accent-orange: #ffa500;
+    --text-dim: #3a5a70;
+    --text-bright: #cceeff;
+    --D: 360px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-bright);
+    gap: 18px;
+    padding: 24px;
+  }
+  .dial-label {
+    font-family:'Orbitron',monospace;
+    font-size:9px; letter-spacing:4px; color:var(--text-dim);
+    text-transform:uppercase;
+  }
+
+  /* ── DIAL ── */
+  .dial {
+    position:relative;
+    width:var(--D); height:var(--D); border-radius:50%;
+    background: radial-gradient(ellipse at 32% 28%, #0f2030 0%, #060d14 55%, #020608 100%);
+    box-shadow:
+      0 0 0 1px rgba(0,229,200,0.13),
+      0 0 50px rgba(0,229,200,0.07),
+      inset 0 0 80px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(0,229,200,0.12);
+    overflow: hidden;
+  }
+  canvas { position:absolute; inset:0; }
+
+  /* ── OVERSPEED HALO (top, red glow) ── */
+  .speed-halo {
+    position:absolute; inset:0; border-radius:50%;
+    background: radial-gradient(ellipse 170px 90px at 50% 0%,
+      rgba(255,0,0,0.55) 0%,
+      rgba(255,0,0,0.22) 40%,
+      transparent 70%);
+    pointer-events:none;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    z-index: 30;
+  }
+  .speed-halo.active { opacity: 1; }
+
+  /* ── AUTOPILOT BADGE ── */
+  .ap-badge {
+    position:absolute; top:52px; left:50%; transform:translateX(-50%);
+    font-family:'Orbitron',monospace; font-size:7px; font-weight:700;
+    letter-spacing:3px; padding:3px 9px;
+    border-radius:3px; border:1px solid var(--accent-blue);
+    color: var(--accent-blue);
+    background: rgba(26,143,255,0.12);
+    text-transform:uppercase; z-index:20;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .ap-badge.active { opacity: 1; }
+
+  /* ── SPEED LIMIT BADGE ── */
+  .limit-badge {
+    position:absolute; top:52px; right:70px;
+    font-family:'Orbitron',monospace; font-size:9px; font-weight:700;
+    color: rgba(255,59,59,0.75);
+    background: rgba(255,59,59,0.08);
+    border: 1px solid rgba(255,59,59,0.3);
+    border-radius:50%; width:28px; height:28px;
+    display:flex; align-items:center; justify-content:center;
+    z-index:20;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .limit-badge.active { opacity: 1; }
+
+  /* ── CLOCK / TOP AREA ── */
+  .clock-area {
+    position:absolute; top:56px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:10px; z-index:20;
+  }
+  .clock-temp {
+    font-family:'Orbitron',monospace; font-size:11px; font-weight:400;
+    color:rgba(255,255,255,0.55); letter-spacing:1px;
+  }
+  .clock-time {
+    font-family:'Orbitron',monospace; font-size:18px; font-weight:700;
+    color:rgba(255,255,255,0.90); letter-spacing:2px;
+    text-shadow:0 0 14px rgba(255,255,255,0.2);
+  }
+
+  /* ── GEAR BOX (single, bottom right) ── */
+  .gear-single {
+    position:absolute; bottom:62px; right:60px; z-index:20;
+    width:34px; height:34px; border-radius:5px;
+    border:1px solid rgba(0,229,200,0.35);
+    background:rgba(4,14,22,0.85);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Orbitron',monospace; font-size:16px; font-weight:900;
+    color:#00e5c8;
+    box-shadow:0 0 10px rgba(0,229,200,0.20);
+    cursor:pointer; user-select:none;
+  }
+
+  /* ── STATUS DOTS ── */
+  .status-dots {
+    position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; z-index:20;
+  }
+  .status-dot {
+    width:6px; height:6px; border-radius:50%;
+  }
+
+  /* ── SPEED CENTER ── */
+  .center-block {
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%, -56%);
+    display:flex; flex-direction:column; align-items:center; gap:0; z-index:10;
+  }
+  .speed-value {
+    font-family:'Orbitron',monospace;
+    font-size:98px; font-weight:900; line-height:1;
+    color:#fff;
+    text-shadow:0 0 35px rgba(0,229,200,0.55), 0 0 70px rgba(0,229,200,0.15);
+    letter-spacing:-4px;
+    transition: color 0.15s, text-shadow 0.15s;
+  }
+  .speed-unit {
+    font-family:'Rajdhani',sans-serif;
+    font-size:13px; font-weight:600; letter-spacing:8px;
+    color:#00e5c8; text-transform:uppercase; margin-top:-2px;
+  }
+
+  /* ── WIDGETS ── */
+  .widget { position:absolute; display:flex; flex-direction:column; align-items:center; gap:2px; z-index:10; }
+  .w-val { font-family:'Orbitron',monospace; font-weight:700; line-height:1; }
+  .w-unit { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:600; letter-spacing:2px; }
+  .w-lbl { font-size:8px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; text-align:center; line-height:1.4; }
+  .w-range { left:40px; top:50%; transform:translateY(-50%); }
+  .w-range .w-val { font-size:26px; color:#1a8fff; text-shadow:0 0 14px rgba(26,143,255,0.5); }
+  .w-range .w-unit { color:#1a8fff; }
+  .w-temp { right:40px; top:50%; transform:translateY(-50%); }
+  .w-temp .w-val { font-size:26px; }
+  .w-soc { bottom:82px; left:50%; transform:translateX(-50%); }
+  .w-soc .w-val { font-size:23px; }
+  .sep { position:absolute; bottom:112px; left:50%; transform:translateX(-50%); width:1px; height:22px; background:linear-gradient(to bottom, transparent, rgba(58,90,112,0.45), transparent); z-index:10; }
+  .regen-wrap { position:absolute; bottom:50px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:5px; z-index:10; }
+  .regen-row { display:flex; align-items:center; gap:10px; }
+  .regen-lbl { font-size:7px; letter-spacing:4px; color:var(--text-dim); text-transform:uppercase; }
+  .regen-kw { font-family:'Orbitron',monospace; font-size:10px; font-weight:700; color:#00e5c8; min-width:40px; text-align:right; text-shadow:0 0 8px rgba(0,229,200,0.5); transition:color 0.3s; }
+  .regen-kw.zero { color:var(--text-dim); text-shadow:none; }
+  .regen-track { width:100px; height:3px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; }
+  .regen-fill { height:100%; width:0%; border-radius:2px; background:linear-gradient(to right, rgba(0,229,200,0.3), var(--accent-teal)); transition:width 0.12s ease; }
+
+  /* ── CONTROLS ── */
+  .controls { display:flex; gap:9px; flex-wrap:wrap; justify-content:center; max-width:540px; }
+  .ctrl { display:flex; flex-direction:column; align-items:center; gap:5px; background:rgba(0,229,200,0.025); border:1px solid rgba(0,229,200,0.07); border-radius:4px; padding:7px 12px; }
+  .ctrl label { font-size:8px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; }
+  .ctrl input[type=range] { -webkit-appearance:none; width:100px; height:2px; background:rgba(0,229,200,0.15); border-radius:1px; outline:none; cursor:pointer; }
+  .ctrl input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:11px; height:11px; border-radius:50%; background:#00e5c8; box-shadow:0 0 8px rgba(0,229,200,0.6); }
+  .ctrl-val { font-family:'Orbitron',monospace; font-size:10px; color:#00e5c8; }
+
+  /* Toggles */
+  .toggle-ctrl {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:rgba(0,229,200,0.025); border:1px solid rgba(0,229,200,0.07);
+    border-radius:4px; padding:7px 12px; cursor:pointer; user-select:none;
+  }
+  .toggle-ctrl label { font-size:8px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; pointer-events:none; }
+  .toggle-btn {
+    font-family:'Orbitron',monospace; font-size:9px; font-weight:700;
+    padding:4px 14px; border-radius:3px; border:1px solid rgba(0,229,200,0.2);
+    color:rgba(0,229,200,0.4); background:rgba(0,20,30,0.8); transition:all 0.2s;
+  }
+  .toggle-ctrl.on .toggle-btn { border-color:var(--accent-blue); color:var(--accent-blue); background:rgba(26,143,255,0.10); box-shadow:0 0 10px rgba(26,143,255,0.25); }
+
+  /* Simulation button */
+  .sim-section {
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .sim-btn {
+    font-family:'Orbitron',monospace; font-size:11px; font-weight:700; letter-spacing:2px;
+    padding:10px 28px; border-radius:4px;
+    background: rgba(0,229,200,0.08);
+    border: 1px solid rgba(0,229,200,0.40);
+    color: #00e5c8;
+    cursor:pointer; transition:all 0.2s;
+    text-transform:uppercase;
+  }
+  .sim-btn:hover { background:rgba(0,229,200,0.14); box-shadow:0 0 16px rgba(0,229,200,0.25); }
+  .sim-btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .sim-progress {
+    width:200px; height:2px; background:rgba(0,229,200,0.1); border-radius:1px; overflow:hidden;
+  }
+  .sim-bar {
+    height:100%; width:0%; background:#00e5c8;
+    box-shadow:0 0 8px rgba(0,229,200,0.6);
+    transition:width 0.05s linear;
+  }
+  .sim-status {
+    font-family:'Orbitron',monospace; font-size:8px; letter-spacing:2px;
+    color:var(--text-dim); min-height:12px;
+  }
+
+  /* Legend */
+  .legend {
+    display:flex; gap:14px; flex-wrap:wrap; justify-content:center;
+    font-size:8px; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase;
+    max-width:540px;
+  }
+  .legend span { display:flex; align-items:center; gap:4px; }
+  .legend .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+  .footnote { font-size:8px; letter-spacing:2px; color:var(--text-dim); opacity:0.4; }
+</style>
+</head>
+<body>
+
+<div class="dial-label">Simulation · Alertes Vitesse & Autopilot · F1–F5</div>
+
+<div class="dial" id="dial">
+  <!-- Canvases — ordre = z-order (dernier = dessus) -->
+  <canvas id="bezelCanvas"   width="360" height="360"></canvas>
+  <canvas id="limitCanvas"   width="360" height="360"></canvas><!-- F2: arc tolérance SOUS arcSpeed -->
+  <canvas id="speedCanvas"   width="360" height="360"></canvas>
+  <canvas id="battCanvas"    width="360" height="360"></canvas>
+
+  <!-- F4: Halo rouge haut écran -->
+  <div class="speed-halo" id="speedHalo"></div>
+
+  <!-- F1: Badge autopilot -->
+  <div class="ap-badge" id="apBadge">AUTOPILOT</div>
+
+  <!-- Limit badge -->
+  <div class="limit-badge" id="limitBadge">80</div>
+
+  <!-- Horloge + températures haut écran -->
+  <div class="clock-area">
+    <div class="clock-temp" id="extTemp">8°</div>
+    <div class="clock-time" id="clockDisplay">--:--</div>
+    <div class="clock-temp">27°</div>
+  </div>
+
+  <!-- Gear selector (single box, bas droite) -->
+  <div class="gear-single" id="gearDisplay">D</div>
+
+  <!-- Status dots -->
+  <div class="status-dots">
+    <div class="status-dot" style="background:#ff3b3b"></div>
+    <div class="status-dot" style="background:#ff7700"></div>
+    <div class="status-dot" style="background:#1a8fff"></div>
+  </div>
+
+  <!-- Speed -->
+  <div class="center-block">
+    <div class="speed-value" id="speedVal">0</div>
+    <div class="speed-unit">km/h</div>
+  </div>
+
+  <!-- Range left -->
+  <div class="widget w-range">
+    <div class="w-val">312</div><div class="w-unit">km</div>
+    <div class="w-lbl">AUTO-<br>NOMIE</div>
+  </div>
+
+  <div class="widget w-temp">
+    <div class="w-val" style="font-size:26px;color:#ffffff">28</div>
+    <div class="w-unit" style="color:rgba(255,255,255,0.6)">°C</div>
+    <div class="w-lbl">TEMP<br>BATT.</div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- SoC -->
+  <div class="widget w-soc">
+    <div class="w-val" id="socVal" style="font-size:23px;color:#00e5c8">84</div>
+    <div class="w-unit" style="color:#00e5c8">%</div>
+    <div class="w-lbl">BATTERIE</div>
+  </div>
+
+  <!-- Regen -->
+  <div class="regen-wrap">
+    <div class="regen-row">
+      <div class="regen-lbl">REGEN</div>
+      <div class="regen-kw zero" id="regenKw">0.0 kW</div>
+    </div>
+    <div class="regen-track"><div class="regen-fill" id="regenFill"></div></div>
+  </div>
+</div>
+
+<!-- Simulation -->
+<div class="sim-section">
+  <button class="sim-btn" id="simBtn" onclick="startSimulation()">▶ Lancer simulation (10s)</button>
+  <div class="sim-progress"><div class="sim-bar" id="simBar"></div></div>
+  <div class="sim-status" id="simStatus">20 → 100 km/h · limite 80 km/h</div>
+</div>
+
+<!-- Controls manuels -->
+<div class="controls">
+  <div class="ctrl">
+    <label>Vitesse</label>
+    <input type="range" id="sSpeed" min="0" max="130" value="0">
+    <div class="ctrl-val" id="lSpeed">0 km/h</div>
+  </div>
+  <div class="ctrl">
+    <label>Limite (km/h)</label>
+    <input type="range" id="sLimit" min="0" max="130" value="80" step="10">
+    <div class="ctrl-val" id="lLimit">80 km/h</div>
+  </div>
+  <div class="ctrl">
+    <label>SoC %</label>
+    <input type="range" id="sSoc" min="0" max="100" value="84">
+    <div class="ctrl-val" id="lSoc">84 %</div>
+  </div>
+  <div class="toggle-ctrl" id="apToggle">
+    <label>Autopilot</label>
+    <div class="toggle-btn" id="apBtn">OFF</div>
+  </div>
+</div>
+
+<!-- Légende -->
+<div class="legend">
+  <span><div class="dot" style="background:#00dd55"></div> Défaut (arc vert, chiffres blancs)</span>
+  <span><div class="dot" style="background:#1a8fff"></div> F1 Autopilot (bleu)</span>
+  <span><div class="dot" style="background:#ff3b3b;opacity:0.7"></div> F2 Arc rouge tolérance</span>
+  <span><div class="dot" style="background:#ffa500"></div> F3 Dépassement limite (orange)</span>
+  <span><div class="dot" style="background:#ff3b3b"></div> F3/F4 Dépassement tolérance (rouge + halo)</span>
+</div>
+
+<div class="footnote">MOCKUP SIMULATEUR · 360×360 · Features F1–F5 · PRD_SPEED_ALERTS.md</div>
+
+<script>
+const PI = Math.PI;
+const CX = 180, CY = 180;
+const state = { speed: 0, soc: 84, speedLimit: 80, autopilot: false, gear: 'D' };
+
+/* ── Couleurs (identiques au firmware) ── */
+const COL = {
+  green:  '#00dd55',
+  white:  '#ffffff',
+  blue:   '#1a8fff',
+  orange: '#ffa500',
+  red:    '#ff3b3b',
+  tealDim:'rgba(0,229,200,0.12)',
+  bg:     '#050a0f',
+};
+
+function speedStateColor(v) {
+  const lim = state.speedLimit;
+  if (lim > 0) {
+    const tol = lim < 100 ? 5 : Math.round(lim * 0.05);
+    if (v > lim + tol) return COL.red;
+    if (v > lim)       return COL.orange;
+  }
+  if (state.autopilot) return COL.blue;
+  return COL.green;
+}
+function speedLabelColor(v) {
+  const c = speedStateColor(v);
+  return c === COL.green ? COL.white : c;
+}
+function speedGlow(col) {
+  const glows = {
+    [COL.green]:  'rgba(0,221,85,0.55)',
+    [COL.white]:  'rgba(255,255,255,0.30)',
+    [COL.blue]:   'rgba(26,143,255,0.60)',
+    [COL.orange]: 'rgba(255,165,0,0.55)',
+    [COL.red]:    'rgba(255,59,59,0.65)',
+  };
+  return glows[col] || 'rgba(0,229,200,0.30)';
+}
+
+/* ── Dessin Bezel ── */
+function drawBezel(ctx) {
+  ctx.clearRect(0,0,360,360);
+  const sa=PI*0.75, ea=PI*2.25, rng=ea-sa;
+  for(let i=0;i<=36;i++){
+    const a=sa+(i/36)*rng, maj=i%4===0;
+    const rO=172, len=maj?18:8;
+    ctx.beginPath();
+    ctx.moveTo(CX+rO*Math.cos(a), CY+rO*Math.sin(a));
+    ctx.lineTo(CX+(rO-len)*Math.cos(a), CY+(rO-len)*Math.sin(a));
+    ctx.lineWidth=maj?2:1;
+    ctx.strokeStyle=maj?'rgba(0,229,200,0.45)':'rgba(0,229,200,0.13)';
+    ctx.stroke();
+    if(maj){
+      const spd=Math.round((i/36)*180), rL=rO-34;
+      ctx.save();
+      ctx.font='700 10px Orbitron,monospace';
+      ctx.fillStyle='rgba(0,229,200,0.38)';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(spd, CX+rL*Math.cos(a), CY+rL*Math.sin(a));
+      ctx.restore();
+    }
+  }
+}
+
+/* ── F2: Arc rouge tolérance de limite ── */
+function drawSpeedLimitArc(ctx) {
+  ctx.clearRect(0,0,360,360);
+  const lim = state.speedLimit;
+  if (lim <= 0) return;
+  const sa = PI * 0.75, arcR = PI * 1.5;
+  const tol = lim < 100 ? 5 : Math.round(lim * 0.05);
+  const limHigh = lim + tol;
+  const limClamped  = Math.min(lim,    180);
+  const highClamped = Math.min(limHigh, 180);
+  const extend = 0.026; // ~1.5° en rad ≈ 4px à r=158
+  const aStart = sa + (limClamped  / 180) * arcR - extend;
+  const aEnd   = sa + (highClamped / 180) * arcR + extend;
+  ctx.beginPath();
+  ctx.arc(CX, CY, 158, aStart, aEnd);
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = 'rgba(255,59,59,0.80)';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+}
+
+/* ── Arc de vitesse ── */
+function drawSpeedArc(ctx, speed) {
+  ctx.clearRect(0,0,360,360);
+  const sa=PI*0.75, ea=PI*2.25, arcR=ea-sa;
+  const swA=sa+(Math.min(speed,180)/180)*arcR;
+  const col = speedStateColor(speed);
+
+  // track dim
+  ctx.beginPath(); ctx.arc(CX,CY,158,sa,ea);
+  ctx.lineWidth=5; ctx.strokeStyle=COL.tealDim; ctx.lineCap='round'; ctx.stroke();
+
+  if(speed>0){
+    // glow halo
+    ctx.beginPath(); ctx.arc(CX,CY,158,sa,swA);
+    ctx.lineWidth=13; ctx.strokeStyle=speedGlow(col).replace(')', ',0.15)').replace('rgba','rgba');
+    ctx.lineCap='round'; ctx.stroke();
+    // arc principal
+    ctx.beginPath(); ctx.arc(CX,CY,158,sa,swA);
+    ctx.lineWidth=5; ctx.strokeStyle=col; ctx.lineCap='round'; ctx.stroke();
+    // dot end
+    const tx=CX+158*Math.cos(swA), ty=CY+158*Math.sin(swA);
+    ctx.beginPath(); ctx.arc(tx,ty,4,0,PI*2);
+    ctx.fillStyle=col;
+    ctx.shadowColor=col; ctx.shadowBlur=14;
+    ctx.fill(); ctx.shadowBlur=0;
+  }
+}
+
+/* ── Battery arc ── */
+function drawBattArc(ctx, soc) {
+  ctx.clearRect(0,0,360,360);
+  const sa=(PI/180)*148, ea=(PI/180)*392, arcR=ea-sa;
+  const col = soc>20?'#00dd55':'#ffaa00';
+  const swA=sa+(soc/100)*arcR;
+  ctx.beginPath(); ctx.arc(CX,CY,120,sa,ea);
+  ctx.lineWidth=4; ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineCap='round'; ctx.stroke();
+  if(soc>0){
+    ctx.beginPath(); ctx.arc(CX,CY,120,sa,swA);
+    ctx.lineWidth=3.5; ctx.strokeStyle=col; ctx.lineCap='round'; ctx.stroke();
+    const tx=CX+120*Math.cos(swA), ty=CY+120*Math.sin(swA);
+    ctx.beginPath(); ctx.arc(tx,ty,3.5,0,PI*2);
+    ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=10;
+    ctx.fill(); ctx.shadowBlur=0;
+  }
+}
+
+/* ── Render global ── */
+function render() {
+  const speed = state.speed;
+  const arcCol   = speedStateColor(speed);
+  const labelCol = speedLabelColor(speed);
+
+  drawBezel(document.getElementById('bezelCanvas').getContext('2d'));
+  drawSpeedLimitArc(document.getElementById('limitCanvas').getContext('2d'));
+  drawSpeedArc(document.getElementById('speedCanvas').getContext('2d'), speed);
+  drawBattArc(document.getElementById('battCanvas').getContext('2d'), state.soc);
+
+  // Label vitesse
+  const sv = document.getElementById('speedVal');
+  sv.textContent = speed;
+  sv.style.color = labelCol;
+  sv.style.textShadow = `0 0 35px ${speedGlow(arcCol)}, 0 0 70px ${speedGlow(arcCol)}`;
+
+  // F4: halo rouge
+  const lim = state.speedLimit;
+  let overTol = false;
+  if (lim > 0) {
+    const tol = lim < 100 ? 5 : Math.round(lim * 0.05);
+    overTol = speed > lim + tol;
+  }
+  document.getElementById('speedHalo').classList.toggle('active', overTol);
+
+  // F1: badge autopilot
+  document.getElementById('apBadge').classList.toggle('active', state.autopilot);
+
+  // Badge limite
+  const lb = document.getElementById('limitBadge');
+  lb.textContent = lim || '–';
+  lb.classList.toggle('active', lim > 0);
+
+  // Gear boxes
+  document.getElementById('gearDisplay').textContent = state.gear;
+
+  // SoC
+  const sc = state.soc>20?'#00dd55':'#ffaa00';
+  const socEl = document.getElementById('socVal');
+  socEl.textContent = state.soc;
+  socEl.style.cssText = `font-size:23px;color:${sc};text-shadow:0 0 14px ${sc}90`;
+}
+
+/* ── Bindings sliders ── */
+document.getElementById('sSpeed').addEventListener('input', e => {
+  state.speed = parseInt(e.target.value);
+  document.getElementById('lSpeed').textContent = state.speed + ' km/h';
+  render();
+});
+document.getElementById('sLimit').addEventListener('input', e => {
+  state.speedLimit = parseInt(e.target.value);
+  document.getElementById('lLimit').textContent = state.speedLimit + ' km/h';
+  render();
+});
+document.getElementById('sSoc').addEventListener('input', e => {
+  state.soc = parseInt(e.target.value);
+  document.getElementById('lSoc').textContent = state.soc + ' %';
+  render();
+});
+
+/* ── Autopilot toggle ── */
+document.getElementById('apToggle').addEventListener('click', () => {
+  state.autopilot = !state.autopilot;
+  document.getElementById('apBtn').textContent = state.autopilot ? 'ON' : 'OFF';
+  document.getElementById('apToggle').classList.toggle('on', state.autopilot);
+  render();
+});
+
+/* ── Simulation 20 → 100 km/h en 10s ── */
+let simTimer = null;
+function startSimulation() {
+  if (simTimer) { clearInterval(simTimer); simTimer = null; }
+
+  state.speedLimit = 80;
+  document.getElementById('sLimit').value = 80;
+  document.getElementById('lLimit').textContent = '80 km/h';
+
+  const START_SPEED = 20;
+  const END_SPEED   = 100;
+  const DURATION_MS = 10000;
+  const startTime   = performance.now();
+
+  const btn = document.getElementById('simBtn');
+  const bar = document.getElementById('simBar');
+  const status = document.getElementById('simStatus');
+  btn.disabled = true;
+
+  simTimer = setInterval(() => {
+    const elapsed = performance.now() - startTime;
+    const t = Math.min(1, elapsed / DURATION_MS);
+    const speed = Math.round(START_SPEED + t * (END_SPEED - START_SPEED));
+
+    state.speed = speed;
+    document.getElementById('sSpeed').value = speed;
+    document.getElementById('lSpeed').textContent = speed + ' km/h';
+    bar.style.width = (t * 100) + '%';
+
+    // Statut textuel
+    const lim = state.speedLimit;
+    const tol = lim < 100 ? 5 : Math.round(lim * 0.05);
+    if (speed <= lim)        status.textContent = `${speed} km/h · ✓ sous limite`;
+    else if (speed <= lim+tol) status.textContent = `${speed} km/h · ⚠ dépassement (+${speed-lim} km/h)`;
+    else                     status.textContent = `${speed} km/h · ✗ tolérance dépassée (+${speed-lim} km/h)`;
+
+    render();
+
+    if (t >= 1) {
+      clearInterval(simTimer); simTimer = null;
+      btn.disabled = false;
+      btn.textContent = '↺ Relancer simulation';
+    }
+  }, 16);
+}
+
+/* ── Horloge ── */
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('clockDisplay').textContent = hh + ':' + mm;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+/* ── Init ── */
+drawBezel(document.getElementById('bezelCanvas').getContext('2d'));
+render();
+</script>
+</body>
+</html>

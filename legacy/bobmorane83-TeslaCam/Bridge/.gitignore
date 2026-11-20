@@ -1,0 +1,54 @@
+# PlatformIO
+.pio/
+.platformio/
+*.o
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.zip
+
+# Build artifacts
+build/
+dist/
+*.bin
+*.elf
+*.hex
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.blf

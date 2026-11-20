@@ -96,3 +96,8 @@ The most feature-complete single-board Tesla CAN mod, adding battery monitoring 
 - **Python reference client** (`teslacan_client.py`) — A cross-platform Python client that connects via serial or WiFi and provides: full command-line interface, CSV logging of all CAN frames, real-time BMS graphing (matplotlib), automatic firmware version detection, and a REPL mode for interactive CAN exploration.
 - **SVG battery SoC ring gauge and DNS captive portal in web dashboard** — The web dashboard now features an animated SVG ring gauge showing battery SoC with color gradient (green → yellow → red), plus a DNS captive portal that intercepts all HTTP requests on the AP for a seamless phone connection experience.
 - **Connection health indicators** — The LCD and web dashboard now show per-second CAN frame rate, bus error count (TWAI error warning/bus-off states), UART bridge health (heartbeat and timeout), and WiFi client count, all with color-coded status indicators.
+
+## Upstream (2026-11-20)
+
+- `5656dbe`: motor telemetry and passive 0-100 km/h timer (v0.3.0). No frame-layout change affecting our telemetry decoders.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.

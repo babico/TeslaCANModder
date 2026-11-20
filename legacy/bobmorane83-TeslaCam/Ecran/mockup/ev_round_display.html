@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EV Round Display 360×360</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a0f;
+    --accent-teal: #00e5c8;
+    --accent-amber: #ffaa00;
+    --accent-red: #ff3b3b;
+    --accent-blue: #1a8fff;
+    --text-dim: #3a5a70;
+    --text-bright: #cceeff;
+    --D: 360px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-bright);
+    gap: 18px;
+  }
+  body::before {
+    content:''; position:fixed; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:600px; height:600px;
+    background:radial-gradient(circle, rgba(0,229,200,0.04) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .dial-label {
+    font-family:'Orbitron',monospace;
+    font-size:9px; letter-spacing:4px; color:var(--text-dim);
+    text-transform:uppercase;
+  }
+
+  /* ── DIAL ── */
+  .dial {
+    position:relative;
+    width:var(--D); height:var(--D); border-radius:50%;
+    background: radial-gradient(ellipse at 32% 28%, #0f2030 0%, #060d14 55%, #020608 100%);
+    box-shadow:
+      0 0 0 1px rgba(0,229,200,0.13),
+      0 0 50px rgba(0,229,200,0.07),
+      inset 0 0 80px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(0,229,200,0.12);
+  }
+  canvas { position:absolute; inset:0; }
+
+  /* ── GEAR SELECTOR ── */
+  .gear-row {
+    position:absolute;
+    top: 86px; left:50%; transform:translateX(-50%);
+    display:flex; gap:5px; z-index:20;
+  }
+  .gear-box {
+    width:30px; height:28px; border-radius:4px;
+    border:1px solid rgba(0,229,200,0.10);
+    background:rgba(4,14,22,0.85);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Orbitron',monospace;
+    font-size:12px; font-weight:900;
+    color:rgba(0,229,200,0.18);
+    cursor:pointer;
+    transition: all 0.18s ease;
+    backdrop-filter:blur(6px);
+    user-select:none;
+  }
+  .gear-box:hover { border-color:rgba(0,229,200,0.28); color:rgba(0,229,200,0.45); }
+
+  .gear-box.active-D {
+    background:rgba(0,229,200,0.09); border-color:var(--accent-teal); color:var(--accent-teal);
+    box-shadow: 0 0 10px rgba(0,229,200,0.25), inset 0 0 6px rgba(0,229,200,0.07);
+  }
+  .gear-box.active-R {
+    background:rgba(255,59,59,0.09); border-color:var(--accent-red); color:var(--accent-red);
+    box-shadow: 0 0 10px rgba(255,59,59,0.25), inset 0 0 6px rgba(255,59,59,0.07);
+  }
+  .gear-box.active-N {
+    background:rgba(255,170,0,0.07); border-color:var(--accent-amber); color:var(--accent-amber);
+    box-shadow: 0 0 10px rgba(255,170,0,0.20), inset 0 0 6px rgba(255,170,0,0.05);
+  }
+  .gear-box.active-P {
+    background:rgba(26,143,255,0.09); border-color:var(--accent-blue); color:var(--accent-blue);
+    box-shadow: 0 0 10px rgba(26,143,255,0.25), inset 0 0 6px rgba(26,143,255,0.07);
+  }
+
+  /* ── SPEED CENTER ── */
+  .center-block {
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%, -56%);
+    display:flex; flex-direction:column; align-items:center; gap:0;
+    z-index:10;
+  }
+  .speed-value {
+    font-family:'Orbitron',monospace;
+    font-size:98px; font-weight:900; line-height:1;
+    color:#fff;
+    text-shadow:0 0 35px rgba(0,229,200,0.55), 0 0 70px rgba(0,229,200,0.15);
+    letter-spacing:-4px;
+  }
+  .speed-unit {
+    font-family:'Rajdhani',sans-serif;
+    font-size:13px; font-weight:600; letter-spacing:8px;
+    color:var(--accent-teal); text-transform:uppercase;
+    margin-top:-2px;
+  }
+
+  /* ── WIDGETS ── */
+  .widget {
+    position:absolute;
+    display:flex; flex-direction:column; align-items:center; gap:2px; z-index:10;
+  }
+  .w-val { font-family:'Orbitron',monospace; font-weight:700; line-height:1; }
+  .w-unit { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:600; letter-spacing:2px; }
+  .w-lbl { font-size:8px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; text-align:center; line-height:1.4; }
+
+  .w-range { left:40px; top:50%; transform:translateY(-50%); }
+  .w-range .w-val { font-size:26px; color:var(--accent-blue); text-shadow:0 0 14px rgba(26,143,255,0.5); }
+  .w-range .w-unit { color:var(--accent-blue); }
+
+  .w-temp { right:40px; top:50%; transform:translateY(-50%); }
+  .w-temp .w-val { font-size:26px; }
+
+  .w-soc { bottom:82px; left:50%; transform:translateX(-50%); }
+  .w-soc .w-val { font-size:23px; }
+  .w-soc .w-unit { font-family:'Orbitron',monospace; font-size:10px; letter-spacing:2px; }
+
+  /* Sep + Regen */
+  .sep {
+    position:absolute; bottom:112px; left:50%; transform:translateX(-50%);
+    width:1px; height:22px;
+    background:linear-gradient(to bottom, transparent, rgba(58,90,112,0.45), transparent);
+    z-index:10;
+  }
+  .regen-wrap {
+    position:absolute; bottom:50px; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:5px; z-index:10;
+  }
+  .regen-row { display:flex; align-items:center; gap:10px; }
+  .regen-lbl { font-size:7px; letter-spacing:4px; color:var(--text-dim); text-transform:uppercase; }
+  .regen-kw {
+    font-family:'Orbitron',monospace; font-size:10px; font-weight:700;
+    color:var(--accent-teal); min-width:40px; text-align:right;
+    text-shadow:0 0 8px rgba(0,229,200,0.5);
+    transition:color 0.3s, text-shadow 0.3s;
+  }
+  .regen-kw.zero { color:var(--text-dim); text-shadow:none; }
+  .regen-track {
+    width:100px; height:3px;
+    background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden;
+  }
+  .regen-fill {
+    height:100%; width:0%; border-radius:2px;
+    background:linear-gradient(to right, rgba(0,229,200,0.3), var(--accent-teal));
+    box-shadow:0 0 6px rgba(0,229,200,0.4);
+    transition:width 0.12s ease, background 0.3s, box-shadow 0.3s;
+  }
+  .regen-fill.high {
+    background:linear-gradient(to right, rgba(0,229,200,0.4), #00ffee);
+    box-shadow:0 0 12px rgba(0,229,200,0.8);
+  }
+
+  /* ── CONTROLS ── */
+  .controls { display:flex; gap:9px; flex-wrap:wrap; justify-content:center; max-width:440px; }
+  .ctrl {
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    background:rgba(0,229,200,0.025); border:1px solid rgba(0,229,200,0.07);
+    border-radius:4px; padding:7px 12px;
+  }
+  .ctrl label { font-size:8px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; }
+  .ctrl input[type=range] {
+    -webkit-appearance:none; width:100px; height:2px;
+    background:rgba(0,229,200,0.15); border-radius:1px; outline:none; cursor:pointer;
+  }
+  .ctrl input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:11px; height:11px; border-radius:50%;
+    background:var(--accent-teal); box-shadow:0 0 8px rgba(0,229,200,0.6);
+  }
+  .ctrl-val { font-family:'Orbitron',monospace; font-size:10px; color:var(--accent-teal); }
+
+  .gear-ctrl {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:rgba(0,229,200,0.025); border:1px solid rgba(0,229,200,0.07);
+    border-radius:4px; padding:7px 12px;
+  }
+  .gear-ctrl label { font-size:8px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; }
+  .gear-btns { display:flex; gap:5px; }
+  .g-btn {
+    font-family:'Orbitron',monospace; font-size:11px; font-weight:700;
+    padding:4px 9px; border-radius:3px; cursor:pointer;
+    background:rgba(0,20,30,0.8); border:1px solid rgba(0,229,200,0.12);
+    color:rgba(0,229,200,0.35); transition:all 0.15s;
+  }
+  .g-btn:hover { border-color:rgba(0,229,200,0.35); color:rgba(0,229,200,0.65); }
+  .g-btn.sel { background:rgba(0,229,200,0.10); border-color:var(--accent-teal); color:var(--accent-teal); }
+
+  .footnote { font-size:8px; letter-spacing:2px; color:var(--text-dim); opacity:0.4; }
+</style>
+</head>
+<body>
+
+<div class="dial-label">EV Instrument Cluster · GC9A01 · 360×360px</div>
+
+<div class="dial" id="dial">
+  <canvas id="bezelCanvas" width="360" height="360"></canvas>
+  <canvas id="speedCanvas" width="360" height="360"></canvas>
+  <canvas id="battCanvas"  width="360" height="360"></canvas>
+
+  <!-- Gear selector — boxes -->
+  <div class="gear-row" id="gearRow">
+    <div class="gear-box" data-gear="P">P</div>
+    <div class="gear-box" data-gear="R">R</div>
+    <div class="gear-box" data-gear="N">N</div>
+    <div class="gear-box active-D" data-gear="D">D</div>
+  </div>
+
+  <!-- Speed -->
+  <div class="center-block">
+    <div class="speed-value" id="speedVal">0</div>
+    <div class="speed-unit">km/h</div>
+  </div>
+
+  <!-- Range left -->
+  <div class="widget w-range">
+    <div class="w-val" id="rangeVal">312</div>
+    <div class="w-unit">km</div>
+    <div class="w-lbl">AUTO-<br>NOMIE</div>
+  </div>
+
+  <!-- Temp right -->
+  <div class="widget w-temp">
+    <div class="w-val" id="tempVal">28</div>
+    <div class="w-unit" id="tempUnit">°C</div>
+    <div class="w-lbl">TEMP<br>BATT.</div>
+  </div>
+
+  <!-- Separator -->
+  <div class="sep"></div>
+
+  <!-- SoC bottom -->
+  <div class="widget w-soc">
+    <div class="w-val" id="socVal">84</div>
+    <div class="w-unit" id="socUnit">%</div>
+    <div class="w-lbl">BATTERIE</div>
+  </div>
+
+  <!-- Regen -->
+  <div class="regen-wrap">
+    <div class="regen-row">
+      <div class="regen-lbl">REGEN</div>
+      <div class="regen-kw zero" id="regenKw">0.0 kW</div>
+    </div>
+    <div class="regen-track"><div class="regen-fill" id="regenFill"></div></div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <div class="ctrl">
+    <label>Vitesse</label>
+    <input type="range" id="sSpeed" min="0" max="180" value="0">
+    <div class="ctrl-val" id="lSpeed">0 km/h</div>
+  </div>
+  <div class="ctrl">
+    <label>SoC %</label>
+    <input type="range" id="sSoc" min="0" max="100" value="84">
+    <div class="ctrl-val" id="lSoc">84 %</div>
+  </div>
+  <div class="ctrl">
+    <label>Autonomie</label>
+    <input type="range" id="sRange" min="0" max="500" value="312">
+    <div class="ctrl-val" id="lRange">312 km</div>
+  </div>
+  <div class="ctrl">
+    <label>Temp batt.</label>
+    <input type="range" id="sTemp" min="5" max="65" value="28">
+    <div class="ctrl-val" id="lTemp">28 °C</div>
+  </div>
+  <div class="gear-ctrl">
+    <label>Sélecteur</label>
+    <div class="gear-btns">
+      <div class="g-btn" data-g="P">P</div>
+      <div class="g-btn" data-g="R">R</div>
+      <div class="g-btn" data-g="N">N</div>
+      <div class="g-btn sel" data-g="D">D</div>
+    </div>
+  </div>
+</div>
+
+<div class="footnote">MOCKUP INTERACTIF · 360×360 · LVGL EXPORT READY</div>
+
+<script>
+const PI = Math.PI;
+const CX = 180, CY = 180;
+const state = { speed:0, soc:84, range:312, temp:28, gear:'D' };
+
+function speedColor(v) {
+  const t = v / 180;
+  if (t < 0.55) { const h = 174 - (t/0.55)*134; return `hsl(${h},100%,55%)`; }
+  const h = 40 - ((t-0.55)/0.45)*40;
+  return `hsl(${h},100%,52%)`;
+}
+function socColor(v) { return v>50?'#00e5c8':v>20?'#ffaa00':'#ff3b3b'; }
+function tempColor(v){ return v<20?'#1a8fff':v<42?'#ffaa00':'#ff3b3b'; }
+
+// ── Bezel ──
+function drawBezel(ctx) {
+  ctx.clearRect(0,0,360,360);
+  const sa=-PI*0.75, ea=PI*0.75, rng=ea-sa;
+  const minT=36;
+  for(let i=0;i<=minT;i++){
+    const a=sa+(i/minT)*rng, maj=i%4===0;
+    const rO=172, len=maj?18:8;
+    ctx.beginPath();
+    ctx.moveTo(CX+rO*Math.cos(a), CY+rO*Math.sin(a));
+    ctx.lineTo(CX+(rO-len)*Math.cos(a), CY+(rO-len)*Math.sin(a));
+    ctx.lineWidth=maj?2:1;
+    ctx.strokeStyle=maj?'rgba(0,229,200,0.45)':'rgba(0,229,200,0.13)';
+    ctx.stroke();
+    if(maj){
+      const spd=Math.round((i/minT)*180);
+      const rL=rO-34;
+      ctx.save();
+      ctx.font='700 10px Orbitron,monospace';
+      ctx.fillStyle='rgba(0,229,200,0.38)';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(spd, CX+rL*Math.cos(a), CY+rL*Math.sin(a));
+      ctx.restore();
+    }
+  }
+  ctx.beginPath(); ctx.arc(CX,CY,173,sa,ea);
+  ctx.lineWidth=0.8; ctx.strokeStyle='rgba(0,229,200,0.10)'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(CX,CY,142,0,PI*2);
+  ctx.lineWidth=0.5; ctx.strokeStyle='rgba(0,229,200,0.05)'; ctx.stroke();
+}
+
+// ── Speed arc ──
+function drawSpeedArc(ctx, speed) {
+  ctx.clearRect(0,0,360,360);
+  const sa=-PI*0.75, ea=PI*0.75, arcR=ea-sa;
+  const swA=sa+(speed/180)*arcR;
+  // track
+  ctx.beginPath(); ctx.arc(CX,CY,158,sa,ea);
+  ctx.lineWidth=5; ctx.strokeStyle='rgba(0,229,200,0.05)'; ctx.lineCap='round'; ctx.stroke();
+  if(speed>0){
+    ctx.beginPath(); ctx.arc(CX,CY,158,sa,swA);
+    ctx.lineWidth=13; ctx.strokeStyle='rgba(0,229,200,0.09)'; ctx.lineCap='round'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(CX,CY,158,sa,swA);
+    ctx.lineWidth=5; ctx.strokeStyle=speedColor(speed); ctx.lineCap='round'; ctx.stroke();
+    const tx=CX+158*Math.cos(swA), ty=CY+158*Math.sin(swA);
+    ctx.beginPath(); ctx.arc(tx,ty,4,0,PI*2);
+    ctx.fillStyle=speedColor(speed);
+    ctx.shadowColor=speedColor(speed); ctx.shadowBlur=14;
+    ctx.fill(); ctx.shadowBlur=0;
+  }
+}
+
+// ── Battery arc ──
+function drawBattArc(ctx, soc) {
+  ctx.clearRect(0,0,360,360);
+  const sa=(PI/180)*148, ea=(PI/180)*392, arcR=ea-sa;
+  const col=socColor(soc), swA=sa+(soc/100)*arcR;
+  const glowMap={'#00e5c8':'rgba(0,229,200,0.13)','#ffaa00':'rgba(255,170,0,0.13)','#ff3b3b':'rgba(255,59,59,0.13)'};
+  ctx.beginPath(); ctx.arc(CX,CY,120,sa,ea);
+  ctx.lineWidth=4; ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineCap='round'; ctx.stroke();
+  if(soc>0){
+    ctx.beginPath(); ctx.arc(CX,CY,120,sa,swA);
+    ctx.lineWidth=10; ctx.strokeStyle=glowMap[col]; ctx.lineCap='round'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(CX,CY,120,sa,swA);
+    ctx.lineWidth=3.5; ctx.strokeStyle=col; ctx.lineCap='round'; ctx.stroke();
+    const tx=CX+120*Math.cos(swA), ty=CY+120*Math.sin(swA);
+    ctx.beginPath(); ctx.arc(tx,ty,3.5,0,PI*2);
+    ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=10;
+    ctx.fill(); ctx.shadowBlur=0;
+  }
+}
+
+// ── Full render ──
+function render() {
+  drawBezel(document.getElementById('bezelCanvas').getContext('2d'));
+  drawSpeedArc(document.getElementById('speedCanvas').getContext('2d'), state.speed);
+  drawBattArc(document.getElementById('battCanvas').getContext('2d'), state.soc);
+
+  document.getElementById('speedVal').textContent = state.speed;
+  document.getElementById('socVal').textContent   = state.soc;
+  document.getElementById('rangeVal').textContent = state.range;
+  document.getElementById('tempVal').textContent  = state.temp;
+
+  const sc = socColor(state.soc);
+  document.getElementById('socVal').style.cssText  = `font-size:23px;color:${sc};text-shadow:0 0 14px ${sc}90`;
+  document.getElementById('socUnit').style.color   = sc;
+
+  const tc = tempColor(state.temp);
+  document.getElementById('tempVal').style.cssText = `font-size:26px;color:${tc};text-shadow:0 0 14px ${tc}90`;
+  document.getElementById('tempUnit').style.color  = tc;
+
+  // regen géré séparément via simulateRegen()
+
+  // Gear boxes
+  document.querySelectorAll('.gear-box').forEach(el => {
+    el.className = 'gear-box' + (el.dataset.gear===state.gear ? ' active-'+state.gear : '');
+  });
+}
+
+// ── Bind sliders ──
+[['sSpeed','lSpeed','speed','km/h'],
+ ['sSoc',  'lSoc',  'soc',  '%'  ],
+ ['sRange','lRange','range','km'  ],
+ ['sTemp', 'lTemp', 'temp', '°C' ]
+].forEach(([sid,lid,key,unit])=>{
+  document.getElementById(sid).addEventListener('input',e=>{
+    state[key]=parseInt(e.target.value);
+    document.getElementById(lid).textContent=state[key]+' '+unit;
+    render();
+  });
+});
+
+// ── Gear boxes (on dial) ──
+document.querySelectorAll('.gear-box').forEach(el=>{
+  el.addEventListener('click',()=>{ state.gear=el.dataset.gear; render(); });
+});
+
+// ── Gear buttons (control panel) ──
+document.querySelectorAll('.g-btn').forEach(el=>{
+  el.addEventListener('click',()=>{
+    state.gear=el.dataset.g;
+    document.querySelectorAll('.g-btn').forEach(b=>b.classList.remove('sel'));
+    el.classList.add('sel');
+    render();
+  });
+});
+
+// ── Simulation regen ──
+// Principe : regen active quand la vitesse décroît et qu'on est en D
+// On track la vitesse précédente pour calculer la décélération
+let prevSpeed = 0;
+let regenKw = 0;
+const MAX_REGEN_KW = 50; // kW max récupérés (ex. Tesla-like)
+
+function updateRegen() {
+  const delta = prevSpeed - state.speed; // positif = décélération
+  prevSpeed = state.speed;
+
+  let targetKw = 0;
+  if (state.gear === 'D' && state.speed > 5 && delta > 0) {
+    // Proportionnel à la décélération et à la vitesse
+    targetKw = Math.min(MAX_REGEN_KW, delta * 2.2 * (state.speed / 60));
+  }
+
+  // Lissage exponentiel pour un rendu fluide
+  regenKw = regenKw * 0.72 + targetKw * 0.28;
+  if (regenKw < 0.2) regenKw = 0;
+
+  const pct = Math.min(100, (regenKw / MAX_REGEN_KW) * 100);
+  const fill = document.getElementById('regenFill');
+  const kwEl = document.getElementById('regenKw');
+
+  fill.style.width = pct + '%';
+  fill.classList.toggle('high', pct > 60);
+
+  if (regenKw < 0.2) {
+    kwEl.textContent = '0.0 kW';
+    kwEl.classList.add('zero');
+  } else {
+    kwEl.textContent = regenKw.toFixed(1) + ' kW';
+    kwEl.classList.remove('zero');
+  }
+}
+
+// Boucle regen à 10 Hz (indépendante du render)
+setInterval(updateRegen, 100);
+render();
+setTimeout(()=>{
+  let spd=0;
+  const sl=document.getElementById('sSpeed'), lb=document.getElementById('lSpeed');
+  const iv=setInterval(()=>{
+    spd+=2; if(spd>=87){spd=87;clearInterval(iv);}
+    state.speed=spd; sl.value=spd; lb.textContent=spd+' km/h';
+    render();
+  },18);
+},300);
+</script>
+</body>
+</html>
