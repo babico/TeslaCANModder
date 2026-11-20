@@ -281,3 +281,19 @@
 [submodule "legacy/mveplus-tesla-model3-resources"]
 	path = legacy/mveplus-tesla-model3-resources
 	url = https://github.com/mveplus/tesla-model3-resources.git
+
+[submodule "legacy/jdgbv2-Tesla-drug"]
+	path = legacy/jdgbv2-Tesla-drug
+	url = https://github.com/jdgbv2/Tesla-drug
+
+[submodule "legacy/Arispex-Tesla-drug"]
+	path = legacy/Arispex-Tesla-drug
+	url = https://github.com/Arispex/Tesla-drug
+
+[submodule "legacy/cos003-tesla-drug"]
+	path = legacy/cos003-tesla-drug
+	url = https://github.com/cos003/tesla-drug
+
+[submodule "legacy/ThinkHao-Tesla-drug"]
+	path = legacy/ThinkHao-Tesla-drug
+	url = https://github.com/ThinkHao/Tesla-drug
