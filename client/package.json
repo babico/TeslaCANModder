@@ -23,7 +23,7 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"esptool-js": "^0.6.0",
-		"expo": "~54.0.33",
+		"expo": "~56.0.12",
 		"lucide-react-native": "^1.14.0",
 		"markdown-it": "^14.1.1",
 		"markdown-it-abbr": "^2.0.0",
