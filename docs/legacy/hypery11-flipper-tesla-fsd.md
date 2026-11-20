@@ -162,3 +162,10 @@ Very high relevance — this is the most feature-complete CAN modification proje
 - Contributor credits refresh across EN / zh-CN / zh-TW (`6651805`).
 
 For TeslaCANModder: Mode-C is the same organic-state-machine idea our `nag:mode:organic` already implements but driven by DAS rather than a fixed schedule — worth a future cross-read of `fsd_handler.c`. The HW4 Highland `0x39B` byte0 fallback and the TWAI bus-off recovery pattern are also relevant. Full commit table: `docs/legacy/upstream-review-2026-06-20.md`.
+
+## Upstream (2026-11-20)
+
+- v2.16-beta.6 -> v2.17-beta.6 (304 commits). Opt-in RX ID whitelist (default off), second-core web server so CAN never stalls, cross-core HTTP-CAN stream ring fix.
+- `f82d031` adds `fsd_freshness.h`: modified retransmit frames only go out when source frame is <=25 ms old. Direct candidate for our `0x370` echo and `0x3FD` rewrites.
+- `f6d41cf` suppresses nag echo during AP ABORTING/ABORTED or driver torque >=2.5 Nm. Our `nag.h` has only the manual driver bypass toggle.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.

@@ -121,3 +121,9 @@ RSSI is available from the underlying BLE host stack during this flow. Our firmw
 - Lint + gofmt cleanups in `pkg/protocol/external_impl_test.go` (`6609b57`, `e6e889b`).
 
 No BLE distance changes (the relevant code is in a different subtree). Relevant only if we ever move key material to a hardware enclave — the `Session` / `ECDHPrivateKey` interfaces are the integration points. Full commit table: `docs/legacy/upstream-review-2026-06-20.md`.
+
+## Upstream (2026-11-20)
+
+- v0.4.1 -> `0a582da` (29 commits). PIN-to-Drive CLI command, detached AES-GCM protobuf definitions, AES-GCM/response nonce-length checks, reproducible protoc toolchain.
+- Detached payload encryption and nonce validation are reference points for `lib/vehicle/ble/`, not a current dependency. PIN-to-Drive is Fleet API, not BLE.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.

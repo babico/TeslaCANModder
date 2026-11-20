@@ -62,3 +62,9 @@ Low direct relevance since our project operates at the CAN bus level, not BLE. H
   - Two-role key model (Owner vs Charging Manager) is a good security pattern
   - BLE command queuing (one connection at a time) is a useful concurrency pattern
   - Docker deployment with D-Bus passthrough for BLE is a reference for containerized vehicle tool deployment
+
+## Upstream (2026-11-20)
+
+- 2.3.0 -> 2.5.0 (297 commits). Go 1.27, dashboard status/refresh endpoints, per-vehicle connection tracking, rejected async command reporting `f9c9c3b`.
+- Async rejection reporting is a small pattern candidate for our command-dispatch acks; no direct code impact.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.

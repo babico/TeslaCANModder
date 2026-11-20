@@ -25,9 +25,11 @@
 [submodule "legacy/hypery11-flipper-tesla-fsd"]
 	path = legacy/hypery11-flipper-tesla-fsd
 	url = https://github.com/hypery11/flipper-tesla-fsd
-[submodule "legacy/linesoft2-tesla-fsd-can-mod-fork"]
-	path = legacy/linesoft2-tesla-fsd-can-mod-fork
-	url = https://github.com/linesoft2/tesla-fsd-can-mod-fork
+# Disabled 2026-11-20: upstream repo deleted (404). Files kept as a normal
+# tracked folder so the local copy survives. See docs/legacy/upstream-review-2026-11-20.md.
+#[submodule "legacy/linesoft2-tesla-fsd-can-mod-fork"]
+#	path = legacy/linesoft2-tesla-fsd-can-mod-fork
+#	url = https://github.com/linesoft2/tesla-fsd-can-mod-fork
 [submodule "legacy/tuncasoftbildik-tesla-can-mod"]
 	path = legacy/tuncasoftbildik-tesla-can-mod
 	url = https://github.com/tuncasoftbildik/tesla-can-mod
@@ -61,9 +63,11 @@
 [submodule "legacy/BluedDot-IT-TeslaCANalyzer-Controller"]
 	path = legacy/BluedDot-IT-TeslaCANalyzer-Controller
 	url = https://github.com/BluedDot-IT/TeslaCANalyzer-Controller
-[submodule "legacy/bobmorane83-TeslaCam"]
-	path = legacy/bobmorane83-TeslaCam
-	url = https://github.com/bobmorane83/TeslaCam
+# Disabled 2026-11-20: upstream repo deleted (404). Files kept as a normal
+# tracked folder so the local copy survives. See docs/legacy/upstream-review-2026-11-20.md.
+#[submodule "legacy/bobmorane83-TeslaCam"]
+#	path = legacy/bobmorane83-TeslaCam
+#	url = https://github.com/bobmorane83/TeslaCam
 [submodule "legacy/bruvv-tesla-can-explorer"]
 	path = legacy/bruvv-tesla-can-explorer
 	url = https://github.com/bruvv/tesla-can-explorer

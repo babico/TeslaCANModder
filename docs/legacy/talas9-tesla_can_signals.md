@@ -59,3 +59,8 @@ Provides comprehensive CAN signal definitions that can be used as a reference da
   - Model S has the most detailed coverage with separate bus-specific databases
   - Legacy self-test parser data could be useful for diagnostics features
   - JSON format is easy to ingest programmatically
+
+## Upstream (2026-11-20)
+
+- `c62fdf2`: separate derived HW2.5 APE research profile added. Signal database shape unchanged.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.

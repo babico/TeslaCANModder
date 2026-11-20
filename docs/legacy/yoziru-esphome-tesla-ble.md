@@ -70,3 +70,9 @@ This repo represents an alternative communication path to Tesla vehicles — BLE
 - README rewrite: quick-start, install methods, role docs (`f935126`).
 
 Net: 660 lines deleted, 486 added across 14 files. The component shed the `command_builder.h` indirection and grew inline command logic. The underlying `yoziru/tesla-ble` library 5.0.6→5.1.1 is the most relevant change for anyone re-syncing the embedded dependency. Full commit table: `docs/legacy/upstream-review-2026-06-20.md`.
+
+## Upstream (2026-11-20)
+
+- v2026.6.7 -> v2026.10.4 (90 commits). `tesla-ble` 6.x, bounded awake probes `8e8af84` (180 s probe window, 11 min repeat), sleep backoff preserved across reconnects `a3fe35b`, shared charging-power estimates `271d8f7`.
+- Bounded polling is a candidate pattern if we add persistent BLE presence detection; no direct VCSEC change for us today.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.

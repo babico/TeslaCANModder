@@ -107,3 +107,8 @@ All counters are exposed in `can` object of `sendBoot` and `sendStatus` serial o
   - Per-ID frame counting (not just total) gives more targeted visibility into feature-critical frames (0x370, 0x3FD, 0x399)
   - Separate Hz calculation with a 1-second sliding window avoids noisy single-sample fluctuation
   - The `stealthTorqueNm` vs `torqueNm` split shows the value of tracking both injected and computed torque separately
+
+## Upstream (2026-11-20)
+
+- v1.0.0-2 -> v1.0.0-4: T-2CAN WiFi monitor UI with light/dark theme (`2ebc4d2`). No CAN decode change; reusability unchanged.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.

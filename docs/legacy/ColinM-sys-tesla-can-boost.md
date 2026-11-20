@@ -76,3 +76,8 @@ Highly relevant — provides a complete Python-based CAN read/write toolkit for 
   - Dashboard server architecture (WebSocket + serial CAN reader)
   - Counter/checksum byte rotation strategy for CAN write frames
   - Rear motor power: use `0x266` (RearPower266, 11-bit signed, scale 0.5); `0x261` is 12V battery voltage, not traction power
+
+## Upstream (2026-11-20)
+
+- `185e76e`: docs-only credit/link to Tesla Mod (Flipper Zero and ESP32). No code change.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.

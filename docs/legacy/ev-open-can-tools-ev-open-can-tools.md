@@ -158,3 +158,10 @@ This is the primary upstream reference for our firmware. Key differences from ou
 - Releases: `3.0.0` stable (`67a291a`) and `3.0.1` patch (`fa4dace`).
 
 For TeslaCANModder: the MCP2515 bus-off auto-recovery pattern with exponential backoff is a direct candidate for our `core/can/` health monitor (we currently log but do not auto-recover). The TWAI/MCP2515 diagnostics JSON schema can be lifted into our `candiag` output. The ESP-IDF migration is the reference for a future framework switch. Full commit table: `docs/legacy/upstream-review-2026-06-20.md`.
+
+## Upstream (2026-11-20)
+
+- v2.5.0-beta.9 -> v3.1.1 (107 commits). HW4 nag modes, dashboard nag mode UI, LILYGO T-2CAN builds, Party CAN interface fix `447049d`.
+- `2179c92` moves HW4 AP status decode from `0x39B` byte1 high nibble to **byte0 low nibble** (`data[0] & 0x0F`); the earlier byte0 latch fallback was removed.
+- `4583224` fails HW4 nag closed: Mode C disallowed unless disabled. Compare before changing our HW4 nag gate.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.

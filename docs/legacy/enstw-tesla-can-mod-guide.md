@@ -82,3 +82,9 @@ Highly relevant as a hardware installation reference and Feather RP2040 port str
   - Listen-only mode as safe default before active TX — driver-level enforcement
   - DAS-gated nag suppression logic ported from hypery11 to RP2040 platform
   - Goal-oriented agent instructions (`AGENTS.md`) for future workspace sessions
+
+## Upstream (2026-11-20)
+
+- 4 doc commits. Vehicle firmware now 2026.20.6.1; `0x370` reported on Party CAN (X179 2/3) rather than Vehicle CAN; region unlock treated as blocked on 2026.20; BLE is diagnostics/control only, not an OTA path.
+- Bus placement claim needs listen-only validation against our `BUS_BODY_ACTIVE` lane before any routing change.
+- Full list: `docs/legacy/upstream-review-2026-11-20.md`.
