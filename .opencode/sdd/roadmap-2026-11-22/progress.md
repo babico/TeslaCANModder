@@ -46,3 +46,8 @@ Ruling: capture-gated tasks C1-06 (OTA), C1-07 (gear), C1-08 (ALC) require pulli
     - ⚠️ Bench capture of an accepted add-key remains UNVERIFIED (no hardware) — closed as environment limit, not a code defect.
     - Minor (deferred to C1-03/bench): `metadataForKey` placement matches the recorded vector but contradicts `vcsec.proto:135` (field 6 sibling vs nested f5). Real vehicle may reject; confirm at bench.
     - Minor (deferred to C1-03): byte pin uses formFactor=1 while production dispatch still passes 3.
+
+- Task C1-03: complete (commits 85d1bd8..a168d83, review clean). OWNER=2, CM=6, NFC_CARD=1; `roleValue()` aligned; production formFactor=1. Focused 21/21, full native 1049/1049.
+    - ⚠️ Bench capture of real `tesla:key:send` remains UNVERIFIED (environment), plus no ESP32-target build run — both closed as environment limits, not code defects.
+    - Minor (deferred): `roleValueFromName()` is `static` in a header (key.h:28-32) — could warn under future `-Wall/-Werror`; `static inline` is the cleanup.
+    - C1-02 residual closed here; `metadataForKey` placement still a bench follow-up.
