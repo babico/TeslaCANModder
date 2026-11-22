@@ -1,0 +1,30 @@
+[Unit]
+Description=TeslaCANModder Pi CAN bridge (listen-only)
+Documentation=file:/opt/teslacanmodder/pi/deploy/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tcmcan
+Group=tcmcan
+WorkingDirectory=/opt/teslacanmodder/pi
+Environment=NODE_ENV=production
+Environment=CAN_TRANSPORT=socketcan
+# A3 review residual: enforce loopback at deploy time, never a wildcard bind.
+# The runtime entrypoint must honour these two variables.
+Environment=TCM_BIND_HOST=127.0.0.1
+Environment=TCM_BIND_PORT=8090
+# A3 bridge reads TCM_BRIDGE_TOKEN from this root-owned, mode-0640 env file.
+EnvironmentFile=/etc/teslacanmodder/tcm-can.env
+ExecStart=/usr/bin/node /opt/teslacanmodder/pi/dist/main.js
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/teslacanmodder
+
+[Install]
+WantedBy=multi-user.target
