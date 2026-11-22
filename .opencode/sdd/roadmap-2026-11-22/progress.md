@@ -110,3 +110,10 @@ Ruling: split C1-07 into C1-07a (safety hardening that needs no capture: gate `d
 - Task C1-21: complete (commits 86d63da..a480839, review clean). Test marker updated to `hasFreshCtrl(now)`; guard/stale-marker assertions byte-identical; protocol 28 suites/539 tests green, lint clean. No firmware change.
     - Minor (deferred): exact-source-string gate locator is by design (fails loudly on reformat), disclosed in report.
     - Minor (deferred): stale firmware comment `dispatch.h:423` says "hasCtrl gate" — firmware out of scope here; fold into C1-22 cleanup.
+
+- BLE wire batch (C1-15..18) in progress — implementer raised two genuine ambiguities; rulings:
+    - Ruling Q1: recorded C1-14 amps vector `9A 02` decodes to field 35 (HvacBioweaponModeAction), contradicting SDK `setChargingAmpsAction=43` (wire tag `DA 02`). SDK proto is binding authority → use `DA 02`, correct the test comment to record the fixed vector, and log a C1-14 transcription error in the report. Cost if wrong: none — production already emits the SDK-correct tag.
+    - Ruling Q2: `test_wake_action_exact_wire` has NO recorded SDK vector; upstream says wake is VCSEC RKE, not CarServer.VehicleAction. Binding brief says flip only the 5 tests with recorded vectors → keep `buildWakeAction` on the legacy double-wrap so its test stays green; mark the test `LEGACY — no SDK vector; wake belongs to VCSEC RKE` and register C1-23 (capture-first migration). Cost if wrong: one non-SDK builder remains until C1-23.
+    - BLE wire batch complete (commit 6bbec1e, review clean): signature_data f13, Action single wrap f2, charge/stop/amps/limit/climate SDK fields, dead carserver.h deleted; 5 characterization assertions flipped; focused 21/21, native 1071/1071, ESP32 BLE build success.
+    - Minor (deferred): report RED header arithmetic (22 vs 21); now-unused COMPONENT\_\* constants disclosed.
+    - ⚠️ Real-vehicle acceptance UNVERIFIED for all changed wire fields; SDK correctness is code-level only.
