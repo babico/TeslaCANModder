@@ -21,8 +21,8 @@ namespace Tesla
 static const uint8_t DOMAIN_VEHICLE_SECURITY = 2;
 static const uint8_t DOMAIN_INFOTAINMENT = 3;
 
-// KeyFormFactor enum values from vcsec.proto
-static const uint8_t KEY_FORM_FACTOR_NFC_CARD = 3;
+// KeyFormFactor enum values from vcsec.proto (SDK: NFC_CARD=1, BLE_KEY=2)
+static const uint8_t KEY_FORM_FACTOR_NFC_CARD = 1;
 static const uint8_t KEY_FORM_FACTOR_BLE_KEY = 2;
 
 // Component enum values from universalmessage.proto
@@ -52,7 +52,7 @@ static bool encDestination(uint8_t domain, uint8_t *buf, size_t cap, size_t &len
  * with the specified role and form factor. No authentication is required for this message.
  *
  * @param pub65 Uncompressed P-256 public key (65 bytes).
- * @param role Key role (e.g. ROLE_OWNER=4, ROLE_CHARGING_MANAGER=5).
+ * @param role Key role (e.g. ROLE_OWNER=2, ROLE_CHARGING_MANAGER=6).
  * @param formFactor Key form factor (KEY_FORM_FACTOR_NFC_CARD or KEY_FORM_FACTOR_BLE_KEY).
  * @param uuid16 16-byte random UUID for request correlation.
  * @param out Output buffer for the encoded RoutableMessage.

@@ -22,6 +22,12 @@
 #include <stdint.h>
 #include <stddef.h>
 
+// key.h exposes the SDK role constants and the role-string mapping used by
+// Esp32Board::roleValue outside the BLE guard. Include it while the native
+// build flag BOARD_ENABLE_BLE=0 is still in effect so no mbedTLS/ESP32
+// headers are pulled into this translation unit.
+#include "vehicle/ble/feature/key.h"
+
 // native env sets -DBOARD_ENABLE_BLE=0; override locally so msg.h compiles.
 #undef BOARD_ENABLE_BLE
 #define BOARD_ENABLE_BLE 1
@@ -38,12 +44,29 @@
 
 using namespace Tesla;
 
-// SDK KeyFormFactor.NFC_CARD = 1 (vcsec.proto:32). Production still defines
-// KEY_FORM_FACTOR_NFC_CARD = 3; aligning that constant is C1-03 scope.
-static const uint8_t SDK_KEY_FORM_FACTOR_NFC_CARD = 1;
-
 void setUp() {}
 void tearDown() {}
+
+// ---------------------------------------------------------------------------
+// Role values and NFC form factor (SDK keys.proto / vcsec.proto)
+// ---------------------------------------------------------------------------
+
+static void test_role_value_mapping()
+{
+	// SDK keys.proto:7-15: ROLE_OWNER=2, ROLE_CHARGING_MANAGER=6.
+	// Esp32Board::roleValue() maps stored role strings through roleValueFromName().
+	TEST_ASSERT_EQUAL_UINT8(2, roleValueFromName("owner"));
+	TEST_ASSERT_EQUAL_UINT8(6, roleValueFromName("charging_manager"));
+	TEST_ASSERT_EQUAL_UINT8(2, ROLE_OWNER);
+	TEST_ASSERT_EQUAL_UINT8(6, ROLE_CHARGING_MANAGER);
+}
+
+static void test_nfc_form_factor_value()
+{
+	// SDK vcsec.proto KeyFormFactor.NFC_CARD = 1. Production dispatch passes
+	// this constant directly into buildAddKeyRequest().
+	TEST_ASSERT_EQUAL_UINT8(1, KEY_FORM_FACTOR_NFC_CARD);
+}
 
 // ---------------------------------------------------------------------------
 // Independent top-level protobuf scanner (test-only reference decoder)
@@ -204,7 +227,7 @@ static void test_add_key_tags()
 	memset(uuid, 0x03, sizeof(uuid));
 
 	size_t outLen = 0;
-	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, 4, SDK_KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), outLen));
+	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, ROLE_OWNER, KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), outLen));
 
 	TopField fields[8];
 	size_t n = scanTopFields(out, outLen, fields, 8);
@@ -223,8 +246,8 @@ static void test_add_key_tags()
 	TEST_ASSERT_EQUAL_UINT32(2, p->wire);
 	TEST_ASSERT_EQUAL_UINT32(0x52, out[p->tagOff]);
 	// UnsignedMessage{ f16 WhitelistOperation{ f5 PermissionChange{
-	//   key=PublicKey{PublicKeyRaw}, keyRole=4,
-	//   metadataForKey=KeyMetadata{formFactor=1} } } }
+	//   key=PublicKey{PublicKeyRaw}, keyRole=ROLE_OWNER=2,
+	//   metadataForKey=KeyMetadata{formFactor=KEY_FORM_FACTOR_NFC_CARD=1} } } }
 	uint8_t expUm[80];
 	size_t k = 0;
 	expUm[k++] = 0x82; expUm[k++] = 0x01; expUm[k++] = 0x4D; // f16 WhitelistOperation, len 77
@@ -233,9 +256,9 @@ static void test_add_key_tags()
 	expUm[k++] = 0x0A; expUm[k++] = 0x41;					// PublicKey.PublicKeyRaw f1, len 65
 	for (int i = 0; i < 65; i++)
 		expUm[k++] = 0x11;
-	expUm[k++] = 0x20; expUm[k++] = 0x04;					// keyRole f4
+	expUm[k++] = 0x20; expUm[k++] = 0x02;					// keyRole f4 = ROLE_OWNER (SDK keys.proto=2)
 	expUm[k++] = 0x32; expUm[k++] = 0x02; expUm[k++] = 0x08;
-	expUm[k++] = 0x01;										// metadataForKey f6, formFactor=1
+	expUm[k++] = 0x01;										// metadataForKey f6, NFC_CARD=1
 	TEST_ASSERT_EQUAL_UINT32(80, (uint32_t)k);
 	TEST_ASSERT_EQUAL_UINT32(k, (uint32_t)p->len);
 	TEST_ASSERT_EQUAL_HEX8_ARRAY(expUm, p->payload, k);
@@ -407,20 +430,19 @@ static void test_add_key_exact_wire()
 	//     -> WhitelistOperation.addKeyToWhitelistAndAddPermissions (f5)
 	//       -> PermissionChange.key (f1) = PublicKey.PublicKeyRaw (f1),
 	//          keyRole (f4), metadataForKey (f6) = KeyMetadata.keyFormFactor (f1).
-	// SDK KeyFormFactor.NFC_CARD=1 is the recorded input; the production constant
-	// KEY_FORM_FACTOR_NFC_CARD=3 and ROLE_OWNER=2 are C1-03 scope. This pin keeps
-	// the existing keyRole value 4.
+	// SDK values pinned here: ROLE_OWNER=2 (keys.proto:7-15) and
+	// KeyFormFactor.NFC_CARD=1 (vcsec.proto:32), both passed as production constants.
 	//   {0x32,0x02,0x08,0x02,                                  to_destination = Destination{VS}
 	//    0x52,0x50,                                            field 10 UnsignedMessage, len 80
 	//      0x82,0x01,0x4D,                                     UnsignedMessage.WhitelistOperation (f16), len 77
 	//        0x2A,0x4B,                                        .addKeyToWhitelistAndAddPermissions (f5), len 75
 	//          0x0A,0x43,                                      PermissionChange.key (f1), len 67
 	//            0x0A,0x41,0x11 x65,                           PublicKey.PublicKeyRaw (f1), len 65
-	//          0x20,0x04,                                      PermissionChange.keyRole (f4)
-	//          0x32,0x02,0x08,0x01,                            .metadataForKey (f6), keyFormFactor=1
+	//          0x20,0x02,                                      PermissionChange.keyRole (f4) = ROLE_OWNER
+	//          0x32,0x02,0x08,0x01,                            .metadataForKey (f6), keyFormFactor=NFC_CARD
 	//    0x9A,0x03,0x10,0x03 x16}                              uuid (f51)
 	size_t n = 0;
-	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, 4, SDK_KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), n));
+	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, ROLE_OWNER, KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), n));
 
 	uint8_t exp[105];
 	size_t k = 0;
@@ -431,8 +453,37 @@ static void test_add_key_exact_wire()
 	exp[k++] = 0x0A; exp[k++] = 0x43;									// PermissionChange.key f1, len 67
 	exp[k++] = 0x0A; exp[k++] = 0x41;									// PublicKey.PublicKeyRaw f1, len 65
 	for (int i = 0; i < 65; i++) exp[k++] = 0x11;
-	exp[k++] = 0x20; exp[k++] = 0x04;									// keyRole f4 = 4 (existing value)
-	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x01; // metadataForKey f6, formFactor=1
+	exp[k++] = 0x20; exp[k++] = 0x02;									// keyRole f4 = ROLE_OWNER (SDK=2)
+	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x01; // metadataForKey f6, NFC_CARD=1
+	exp[k++] = 0x9A; exp[k++] = 0x03; exp[k++] = 0x10;					// uuid f51
+	for (int i = 0; i < 16; i++) exp[k++] = 0x03;
+	TEST_ASSERT_EQUAL_UINT32(105, (uint32_t)k);
+	assertExactWire(exp, k, out, n);
+}
+
+static void test_add_key_charging_manager_exact_wire()
+{
+	uint8_t pub[65], uuid[16], out[256];
+	memset(pub, 0x11, sizeof(pub));
+	memset(uuid, 0x03, sizeof(uuid));
+
+	// Same SDK nesting as the owner pin; only keyRole changes to
+	// ROLE_CHARGING_MANAGER=6 (keys.proto:7-15).
+	size_t n = 0;
+	TEST_ASSERT_TRUE(
+		buildAddKeyRequest(pub, ROLE_CHARGING_MANAGER, KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), n));
+
+	uint8_t exp[105];
+	size_t k = 0;
+	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x02; // Destination{VS}
+	exp[k++] = 0x52; exp[k++] = 0x50;									// field 10 UnsignedMessage, len 80
+	exp[k++] = 0x82; exp[k++] = 0x01; exp[k++] = 0x4D;					// f16 WhitelistOperation, len 77
+	exp[k++] = 0x2A; exp[k++] = 0x4B;									// f5 addKey..., len 75
+	exp[k++] = 0x0A; exp[k++] = 0x43;									// PermissionChange.key f1, len 67
+	exp[k++] = 0x0A; exp[k++] = 0x41;									// PublicKey.PublicKeyRaw f1, len 65
+	for (int i = 0; i < 65; i++) exp[k++] = 0x11;
+	exp[k++] = 0x20; exp[k++] = 0x06;									// keyRole f4 = ROLE_CHARGING_MANAGER (SDK=6)
+	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x01; // metadataForKey f6, NFC_CARD=1
 	exp[k++] = 0x9A; exp[k++] = 0x03; exp[k++] = 0x10;					// uuid f51
 	for (int i = 0; i < 16; i++) exp[k++] = 0x03;
 	TEST_ASSERT_EQUAL_UINT32(105, (uint32_t)k);
@@ -601,6 +652,9 @@ int main()
 {
 	UNITY_BEGIN();
 
+	RUN_TEST(test_role_value_mapping);
+	RUN_TEST(test_nfc_form_factor_value);
+
 	RUN_TEST(test_session_info_request_tags);
 	RUN_TEST(test_add_key_tags);
 	RUN_TEST(test_auth_message_tags);
@@ -612,6 +666,7 @@ int main()
 	RUN_TEST(test_enc_destination_exact_wire);
 	RUN_TEST(test_session_info_request_exact_wire);
 	RUN_TEST(test_add_key_exact_wire);
+	RUN_TEST(test_add_key_charging_manager_exact_wire);
 	RUN_TEST(test_auth_message_exact_wire);
 	RUN_TEST(test_action_envelope_exact_wire);
 	RUN_TEST(test_wake_action_exact_wire);

@@ -119,12 +119,11 @@ public:
 	/**
 	 * @brief Convert a role name string to its numeric protocol value
 	 * @param role Null-terminated role string
-	 * @return Protocol role byte (ROLE_OWNER or ROLE_CHARGING_MANAGER)
+	 * @return SDK key-role byte (ROLE_OWNER=2 or ROLE_CHARGING_MANAGER=6)
 	 */
 	uint8_t roleValue(const char *role)
 	{
-		if (strcmp(role, "owner") == 0) return ROLE_OWNER;
-		return ROLE_CHARGING_MANAGER;
+		return roleValueFromName(role);
 	}
 
 	/**

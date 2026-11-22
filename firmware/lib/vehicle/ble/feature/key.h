@@ -7,20 +7,41 @@
  * @license GPL-3.0
  */
 
-#if BOARD_ENABLE_BLE
-
-#include <mbedtls/ecdsa.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/ecp.h>
 #include <stdint.h>
 #include <string.h>
 
 namespace Tesla
 {
 
-static const uint8_t ROLE_OWNER = 4;
-static const uint8_t ROLE_CHARGING_MANAGER = 5;
+// Key role enum values from SDK keys.proto:7-15 (ROLE_OWNER=2, ROLE_CHARGING_MANAGER=6).
+static const uint8_t ROLE_OWNER = 2;
+static const uint8_t ROLE_CHARGING_MANAGER = 6;
+
+/**
+ * @brief Map a stored role string to its SDK key-role byte.
+ *
+ * Kept outside BOARD_ENABLE_BLE so native tests can pin the mapping used by
+ * Esp32Board::roleValue() without ESP32 or mbedTLS headers.
+ * @param role Null-terminated role name ("owner" or "charging_manager")
+ * @return ROLE_OWNER for "owner", otherwise ROLE_CHARGING_MANAGER
+ */
+static uint8_t roleValueFromName(const char *role)
+{
+	if (strcmp(role, "owner") == 0) return ROLE_OWNER;
+	return ROLE_CHARGING_MANAGER;
+}
+
+} // namespace Tesla
+
+#if BOARD_ENABLE_BLE
+
+#include <mbedtls/ecdsa.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/ecp.h>
+
+namespace Tesla
+{
 
 /**
  * @brief Holds a P-256 ECDSA key pair (private scalar and uncompressed public point)
