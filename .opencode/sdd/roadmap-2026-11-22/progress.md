@@ -106,3 +106,7 @@ Ruling: split C1-07 into C1-07a (safety hardening that needs no capture: gate `d
     - Ruling: reviewer's Important item (live `client/src/docs/_generated-docs.ts` still advertises OTA pause via `catalog.ts:1`) is real but generated-file policy excludes it from this feature commit — register C1-22 for a separate regenerating commit, not a fix to this diff. Cost if wrong: in-app docs stay wrong until C1-22 lands.
     - Ruling: 4 `command-dispatch-coverage` failures are a genuine regression from C1-07a, not C1-06 — register C1-21; do not attribute to this task.
     - Minor (deferred): skills `can-protocol-safety` / `firmware-development` still assert txPaused → folded into C1-22.
+
+- Task C1-21: complete (commits 86d63da..a480839, review clean). Test marker updated to `hasFreshCtrl(now)`; guard/stale-marker assertions byte-identical; protocol 28 suites/539 tests green, lint clean. No firmware change.
+    - Minor (deferred): exact-source-string gate locator is by design (fails loudly on reformat), disclosed in report.
+    - Minor (deferred): stale firmware comment `dispatch.h:423` says "hasCtrl gate" — firmware out of scope here; fold into C1-22 cleanup.
