@@ -56,3 +56,5 @@ Ruling: capture-gated tasks C1-06 (OTA), C1-07 (gear), C1-08 (ALC) require pulli
     - ⚠️ Real-vehicle advert capture and on-device SHA-1 vector remain UNVERIFIED (environment), declared in report — not code defects.
     - Minor (deferred): VIN length gate 8→5 (`dispatch.h:45`) is an extra behavior change; documented and aligned with `tesla:vin` validation.
     - Minor (deferred): test-only SHA-1 is a two-vector conformance check, not a general suite.
+
+Ruling: C1-09 (35 small tools items) split into C1-09a (P3-001..010 bridge security), C1-09b (P7-001..015 session/args/replay) and C1-09c (PB-001..010 cleanup) — one implementer + one scoped review per family. Rationale: each family has its own test surface; a single 35-item diff would be unreviewable. Cost if wrong: three commits instead of one.
