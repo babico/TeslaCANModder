@@ -68,3 +68,8 @@ Ruling: C1-09 (35 small tools items) split into C1-09a (P3-001..010 bridge secur
 - Task C1-09b: complete (commits 9cb76e3..b457e30, review clean). 14 fixed + 1 legitimately skipped (P7-005 already covered by C1-09a); tools 150/150 tests, lint clean.
     - Minor (deferred): `diagnosis.js:2` boot regex misses envelopes where `"t":"boot"` is the last field — low impact, one-line lookahead fix at final review.
     - Minor (deferred): `das-drive.js:122` still uses `Number(opts.duration) || 5000`; validated upstream, use `??` for consistency.
+
+- Task C1-09c: complete (commits 4f44e09..a9ff277, review clean). 8 fixed + 2 genuine skips (PB-003/PB-008 pre-resolved). Tools 163/163 tests, lint clean. Bridge C1-09a security and C1-09b Content-Type verified untouched in review.
+    - Minor (deferred): `parseFrameId` parses digit-only bare strings as decimal (`"488"` → 488), comment overstates bare-hex behavior.
+    - Minor (deferred): variant validation also runs for portless `export` — harmless over-reach.
+    - Informational: ISO timestamps change dump textual shape (intended); `export` invoked via `node tools/bin/export.js`, no npm bin alias.
