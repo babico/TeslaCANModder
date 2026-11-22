@@ -6,7 +6,8 @@
 	"workspaces": [
 		"packages/*",
 		"client",
-		"tools"
+		"tools",
+		"pi"
 	],
 	"scripts": {
 		"audit:ci": "node scripts/npm-audit-actionable.cjs --severity=moderate",
@@ -19,12 +20,14 @@
 		"prepare": "husky",
 		"regen:firmware:compiledb": "cd firmware && .\\pio.ps1 run -e esp32_wifi_ble -t compiledb",
 		"smoke:firmware:release-matrix": "node scripts/release-matrix-smoke.mjs",
-		"test:all": "npm run validate:serial-contract && npm run build:protocol && npm run test:protocol && npm run test:client && npm run test:tools && npm run test:firmware",
+		"test:all": "npm run validate:serial-contract && npm run build:protocol && npm run test:protocol && npm run test:client && npm run test:tools && npm run test:pi && npm run test:firmware",
 		"test:client": "npm run build:protocol && npm test -w @teslacanmodder/client",
 		"test:firmware": "cd firmware && .\\pio.ps1 test -e native",
+		"test:pi": "npm test -w @teslacanmodder/pi",
 		"test:protocol": "npm test -w @teslacanmodder/protocol",
 		"test:tools": "npm test -w @teslacanmodder/tools",
 		"typecheck:client": "tsc -p client/tsconfig.json --noEmit",
+		"typecheck:pi": "tsc -p pi/tsconfig.json --noEmit",
 		"typecheck:protocol": "tsc -p packages/protocol/tsconfig.json --noEmit",
 		"validate:serial-contract": "node scripts/validate-serial-contract.mjs"
 	},

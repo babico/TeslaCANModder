@@ -1,0 +1,23 @@
+{
+	"name": "@teslacanmodder/pi",
+	"version": "1.5.0",
+	"private": true,
+	"type": "module",
+	"description": "TeslaCANModder Raspberry Pi service — SocketCAN reader, command bridge, and recorder",
+	"scripts": {
+		"test": "node --experimental-vm-modules ../node_modules/jest/bin/jest.js --config jest.config.js"
+	},
+	"devDependencies": {
+		"@jest/globals": "^29.7.0",
+		"@types/jest": "^29.5.14",
+		"jest": "^29.7.0",
+		"ts-jest": "^29.1.0",
+		"typescript": "~6.0.2"
+	},
+	"dependencies": {
+		"@teslacanmodder/protocol": "*"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}
