@@ -64,3 +64,7 @@ Ruling: C1-09 (35 small tools items) split into C1-09a (P3-001..010 bridge secur
     - Minor (deferred, P7-011): no Content-Type enforcement on POST /api/command.
     - Minor (deferred): `set-cap` hardcodes 200 instead of shared constant; no requestTimeout (inactivity timeout still active).
     - Residual (deferred, out of scope): static token over plain HTTP when `--host 0.0.0.0`; lexical-only path containment (symlink escape) — needs realpath + TLS decision.
+
+- Task C1-09b: complete (commits 9cb76e3..b457e30, review clean). 14 fixed + 1 legitimately skipped (P7-005 already covered by C1-09a); tools 150/150 tests, lint clean.
+    - Minor (deferred): `diagnosis.js:2` boot regex misses envelopes where `"t":"boot"` is the last field — low impact, one-line lookahead fix at final review.
+    - Minor (deferred): `das-drive.js:122` still uses `Number(opts.duration) || 5000`; validated upstream, use `??` for consistency.
