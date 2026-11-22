@@ -58,3 +58,9 @@ Ruling: capture-gated tasks C1-06 (OTA), C1-07 (gear), C1-08 (ALC) require pulli
     - Minor (deferred): test-only SHA-1 is a two-vector conformance check, not a general suite.
 
 Ruling: C1-09 (35 small tools items) split into C1-09a (P3-001..010 bridge security), C1-09b (P7-001..015 session/args/replay) and C1-09c (PB-001..010 cleanup) — one implementer + one scoped review per family. Rationale: each family has its own test surface; a single 35-item diff would be unreviewable. Cost if wrong: three commits instead of one.
+
+- Task C1-09a: complete (commits f6c4e52..b56a315, review clean). 10/10 P3 items fixed with regression tests; tools 13 suites/131 tests green, lint clean. Auth fails closed when token unset; shared `resolveInsideCwd()` helper; stream drain/error handling.
+    - Minor (deferred): `--allow-origin '*'` still accepted verbatim though default is restricted; report claimed otherwise.
+    - Minor (deferred, P7-011): no Content-Type enforcement on POST /api/command.
+    - Minor (deferred): `set-cap` hardcodes 200 instead of shared constant; no requestTimeout (inactivity timeout still active).
+    - Residual (deferred, out of scope): static token over plain HTTP when `--host 0.0.0.0`; lexical-only path containment (symlink escape) — needs realpath + TLS decision.
