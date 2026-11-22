@@ -416,6 +416,11 @@ static void dasTick(unsigned long now, const State &s)
 	if (!dasDriveEnabled && dasCancelCount == 0)
 		return;
 
+	// C1-07a: single injection-gate authority. DAS must respect the same
+	// freshness-checked gate as every other injection path.
+	if (!s.apGateOpen(now))
+		return;
+
 	// Dead-man: auto-cancel if no control update received within timeout
 	if (dasActive && (now - dasLastUpdateMs) > DAS_DEADMAN_MS)
 	{

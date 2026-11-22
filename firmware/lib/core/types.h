@@ -162,6 +162,10 @@ inline Features getFeatures(Variant v)
 #define CAN_TIMEOUT_MS 10000	  // 10 s without frames triggers standby
 #define CAN_REINIT_INTERVAL 5000  // Re-try MCP2515 init every 5 s in standby
 #define LED_STANDBY_INTERVAL 2000 // Slow LED blink period in standby (ms)
+// C1-07a: live gate signals (0x273 ctrl frame, DAS_STATUS AP-active) must be refreshed
+// within 1 s to keep the injection gate open. 1 s bound per docs analysis
+// (.opencode/analysis/current-state-2026-11-22/firmware.md:242).
+#define AP_GATE_FRESHNESS_MS 1000
 
 /**
  * @brief Direction for summon injection on 0x273 UI_vehicleControl
@@ -393,6 +397,7 @@ struct State
 	unsigned long summonLastMs;
 	uint8_t lastCtrl[8];
 	bool hasCtrl;
+	unsigned long lastCtrlMs; // millis() when 0x273 was last cached (freshness bound)
 	SummonDirection summonDirection;
 	SummonMode summonMode;
 
@@ -562,6 +567,8 @@ struct State
 	// AP Injection Gate
 	bool apInjectionGateEnabled; // True = gate writes until AP/Park/Summon conditions met
 	bool apGateApActive;		 // Runtime AP-active signal
+	unsigned long apGateApActiveMs; // millis() when AP-active signal was last decoded
+	unsigned long gateNowMs;		// Cached loop timestamp — gate freshness for all callers
 	bool apGateParked;			 // Runtime parked signal
 	bool apGateSummoning;		 // Runtime summon signal
 
@@ -748,7 +755,7 @@ struct State
 		: variant(HW4), fsdEnabled(false), fsdForceEnabled(false), speedProfile(1), profileOverride(false),
 		  speedOffset(0), offsetOverride(false), isaChimeSuppress(false), summonInject(false), streamEnabled(false),
 		  streamCount(0), rawCanListen(false), lastFrameMs(0), chassisOnline(false), standby(false), lastReinitMs(0),
-		  summonRemaining(0), summonLastMs(0), hasCtrl(false), summonDirection(SUMMON_FORWARD), summonMode(SUMMON_STOP),
+		  summonRemaining(0), summonLastMs(0), hasCtrl(false), lastCtrlMs(0), summonDirection(SUMMON_FORWARD), summonMode(SUMMON_STOP),
 		  hasClimate(false), hasCharge(false), hasDrive(false), bmsVoltage(0), bmsCurrent(0), bmsPower(0), bmsSoc(0),
 		  bmsTempMin(0), bmsTempMax(0), bmsWhPerKm(0), hasBms(false), bmsNominalFullPack(0), bmsNominalRemaining(0),
 		  bmsIdealRemaining(0), bmsCellVoltageMax(0), bmsCellVoltageMin(0), bmsMaxRegenPower(0),
@@ -771,7 +778,8 @@ struct State
 		  turnSignalRight(false), bsmLeftLevel(0), bsmRightLevel(0), doorFrontLeftOpen(false),
 		  doorFrontRightOpen(false), doorRearLeftOpen(false), doorRearRightOpen(false), driverDoorOpen(false),
 		  anyDoorOpen(false), frunkOpen(false), trunkOpen(false), cruiseSetSpeedKph(0), accSpeedLimitKph(0),
-		  mapSpeedLimitKph(0), maxSpeedKph(0), apInjectionGateEnabled(false), apGateApActive(false), apGateParked(true),
+		  mapSpeedLimitKph(0), maxSpeedKph(0), apInjectionGateEnabled(false), apGateApActive(false), apGateApActiveMs(0),
+		  gateNowMs(0), apGateParked(true),
 		  apGateSummoning(false), detectedHW(0), hwAutoDetected(false), variantAutoDetect(true),
 		  canClockReqMHz(BOARD_CAN_CLOCK_MHZ), canClockMHz(BOARD_CAN_CLOCK_MHZ), gtwAutopilotTier(-1),
 		  gtwAutopilotSeen(false), preconditionEnabled(false), precondLastMs(0), trackModeEnabled(false), burstBus(0),
@@ -831,13 +839,47 @@ struct State
 	}
 
 	/**
-	 * @brief Check if the AP injection gate allows transmission
-	 * @return True if gate is disabled or any gate condition is met
+	 * @brief Single injection-gate authority with bounded signal freshness
+	 * @param now Current millis() timestamp supplied by the caller
+	 * @return True only when a gate condition is currently valid
+	 * @note AP-active is a live CAN-derived signal: it may only open the gate while
+	 *       younger than AP_GATE_FRESHNESS_MS. Park/Summon legs are unchanged.
 	 */
-	bool apGateOpen() const
+	bool apGateOpen(unsigned long now) const
 	{
 		if (!apInjectionGateEnabled)
 			return true;
-		return apGateApActive || apGateParked || apGateSummoning;
+		const bool apFresh = apGateApActive && (now - apGateApActiveMs) < AP_GATE_FRESHNESS_MS;
+		return apFresh || apGateParked || apGateSummoning;
+	}
+
+	/**
+	 * @brief Gate check using the loop-cached timestamp (gateNowMs)
+	 * @return True only when a gate condition is currently valid
+	 * @note The main loop refreshes gateNowMs each iteration, so every caller
+	 *       (injection ticks, handlers, status output) shares one freshness rule
+	 *       without requiring millis() in header-only test translation units.
+	 */
+	bool apGateOpen() const
+	{
+		return apGateOpen(gateNowMs);
+	}
+
+	/** @brief Cached 0x273 frame is usable only while younger than the freshness bound */
+	bool hasFreshCtrl(unsigned long now) const
+	{
+		return hasCtrl && (now - lastCtrlMs) < AP_GATE_FRESHNESS_MS;
+	}
+
+	/**
+	 * @brief Update gear state and derive the AP-gate park condition
+	 * @param gear Decoded gear (1=Park; 0 invalid and 5 SNA fail closed)
+	 */
+	void setGearState(uint8_t gear)
+	{
+		gearState = gear;
+		// C1-07a: only gear 1 (Park) qualifies. 0 (invalid) and 5 (SNA) fail closed.
+		// Exact gear-bit ground truth is CAPTURE_FIRST (C1-07b); no decode bits changed.
+		apGateParked = (gear == 1);
 	}
 };

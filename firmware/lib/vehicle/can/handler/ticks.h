@@ -25,11 +25,12 @@
  */
 void summonTick(State &s)
 {
-	if (s.summonRemaining == 0 || !s.hasCtrl || !s.summonInject)
-		return;
-	if (!s.apGateOpen())
-		return;
 	unsigned long now = millis();
+	// C1-07a: the cached 0x273 frame and the gate's live signals are bounded by age.
+	if (s.summonRemaining == 0 || !s.hasFreshCtrl(now) || !s.summonInject)
+		return;
+	if (!s.apGateOpen(now))
+		return;
 	if (now - s.summonLastMs < 20)
 		return;
 	s.summonLastMs = now;

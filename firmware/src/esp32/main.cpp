@@ -133,6 +133,7 @@ void loop()
 	}
 
 	unsigned long now = millis();
+	state.gateNowMs = now; // C1-07a: cached clock for the single gate authority
 	state.apGateSummoning = state.summonRemaining > 0;
 
 	// Detect CAN bus silence and transition to standby
@@ -146,7 +147,8 @@ void loop()
 		state.hasDrive = false;
 		state.summonRemaining = 0;
 		state.apGateSummoning = false;
-		state.apGateParked = true;
+		// C1-07a: no force-open on CAN timeout — apGateParked keeps its last
+		// CAN-derived value and live signals expire via apGateOpen(now).
 		sendLog(F("CAN bus silent - entering standby"));
 	}
 

@@ -50,6 +50,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 	{
 		memcpy(s.lastCtrl, f.data, 8);
 		s.hasCtrl = true;
+		s.lastCtrlMs = millis(); // C1-07a: bound the cached control frame by age
 		return;
 	}
 	if (f.id == CAN_ID_CLIMATE && f.dlc >= 5)
@@ -133,6 +134,7 @@ inline void handleVehicleBus(Frame &f, State &s)
 		s.dasLaneChangeState = readDasLaneChangeState(f);
 		s.dasApState = readDASAutopilotState(f);
 		s.apGateApActive = isDASAutopilotActive(readDASAutopilotStatus(f));
+		s.apGateApActiveMs = millis(); // C1-07a: stale AP-active must not hold the gate open
 		s.dasSeen = true;
 
 		// ALC auto-confirm: inject stalk/button when lane change is prompted
@@ -386,11 +388,10 @@ inline void handleVehicleBus(Frame &f, State &s)
 	}
 	if (f.id == CAN_ID_DI_STATE && f.dlc >= 3)
 	{
-		s.gearState = decodeGearState(f.data);
+		s.setGearState(decodeGearState(f.data));
 		s.accelPedal = decodeAccelPedal(f.data);
 		s.brakePedalState = decodeBrakePedalState(f.data);
-		// Gear 1=Park, 0=Invalid, 5=Neutral treated as parked for AP gate
-		s.apGateParked = (s.gearState == 1 || s.gearState == 0 || s.gearState == 5);
+		// C1-07a: only gear 1 (Park) opens the gate; 0/5 fail closed (C1-07b capture TBD).
 		s.hasPowertrain = true;
 		return;
 	}
