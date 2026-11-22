@@ -500,56 +500,47 @@ static void test_auth_message_exact_wire()
 	size_t n = 0;
 	TEST_ASSERT_TRUE(buildAuthMessage(enc, sizeof(enc), tag, 7, DOMAIN_INFOTAINMENT, uuid, out, sizeof(out), n));
 
-	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
-	// DEFECT (reported, not fixed in this task): firmware/lib/vehicle/ble/msg.h:313
-	// writes signature_data at field 7, which SDK universal_message.proto:85 defines
-	// as from_destination; SDK universal_message.proto:94 says field 13. Inner fields
-	// are also wrong: msg.h:294-301 uses field 2 -> field 1 / tag=1, counter=2,
-	// component=3, but SDK signatures.proto:80/46/48 defines field 5 -> counter=3, tag=5.
-	// SDK-correct 57-byte vector: 32 02 08 03 | 52 08 30*8 |
-	//   6A 16 2A 14 18 07 2A 10 04*16 | 9A 03 10 03*16
-	// The pin below is the CURRENT 59-byte wire until production is fixed.
+	// SDK vector (C1-14 recorded), 57 bytes:
+	//   signature_data = field 13 (SDK universal_message.proto:94); field 7 is
+	//   from_destination. SignedData.AES_GCM_personalized_data = field 5
+	//   (SDK signatures.proto:80), counter = field 3 (:46), tag = field 5 (:48).
+	//   32 02 08 03 | 52 08 30*8 | 6A 16 2A 14 18 07 2A 10 04*16 | 9A 03 10 03*16
 	uint8_t exp[64];
 	size_t k = 0;
 	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x03;
 	exp[k++] = 0x52; exp[k++] = 0x08;
 	for (int i = 0; i < 8; i++) exp[k++] = 0x30;
-	exp[k++] = 0x3A; exp[k++] = 0x18;									// field 7 (from_destination), len 24
-	exp[k++] = 0x12; exp[k++] = 0x16;									// field 2, len 22
-	exp[k++] = 0x0A; exp[k++] = 0x10;									// tag at field 1, len 16
+	exp[k++] = 0x6A; exp[k++] = 0x16;									// signature_data f13, len 22
+	exp[k++] = 0x2A; exp[k++] = 0x14;									// AES_GCM_personalized_data f5, len 20
+	exp[k++] = 0x18; exp[k++] = 0x07;									// counter f3 = 7
+	exp[k++] = 0x2A; exp[k++] = 0x10;									// tag f5, len 16
 	for (int i = 0; i < 16; i++) exp[k++] = 0x04;
-	exp[k++] = 0x10; exp[k++] = 0x07;									// counter at field 2
-	exp[k++] = 0x18; exp[k++] = 0x03;									// component at field 3
 	exp[k++] = 0x9A; exp[k++] = 0x03; exp[k++] = 0x10;
 	for (int i = 0; i < 16; i++) exp[k++] = 0x03;
-	TEST_ASSERT_EQUAL_UINT32(59, (uint32_t)k);
+	TEST_ASSERT_EQUAL_UINT32(57, (uint32_t)k);
 	assertExactWire(exp, k, out, n);
 }
 
 static void test_action_envelope_exact_wire()
 {
-	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
-	// DEFECT (reported, not fixed): msg.h:150 and msg.h:153 both wrap at field 1,
-	// producing Action{field1:{field1:VehicleAction}}. SDK car_server.proto:16
-	// defines a single Action{field2: VehicleAction}.
-	// SDK-correct literal byte vector for this input (inner VehicleAction = 32 00), 4 bytes:
+	// SDK vector (C1-14 recorded): single wrap at field 2 per car_server.proto:16.
 	//   {0x12, 0x02, 0x32, 0x00}   Action{field2: VehicleAction{field6: empty}}
 	uint8_t inner[8], out[64];
 	Proto p(inner, sizeof(inner));
 	TEST_ASSERT_TRUE(p.fieldEmpty(6));
 	size_t n = 0;
 	TEST_ASSERT_TRUE(buildAction(p, out, sizeof(out), n));
-	const uint8_t exp[] = {0x0A, 0x04, 0x0A, 0x02, 0x32, 0x00};
+	const uint8_t exp[] = {0x12, 0x02, 0x32, 0x00};
 	assertExactWire(exp, sizeof(exp), out, n);
 }
 
 static void test_wake_action_exact_wire()
 {
-	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
-	// DEFECT (reported, not fixed): msg.h:169 uses fieldEmpty(25), but SDK
-	// car_server.proto:42 has field 25 = vehicleControlCancelSoftwareUpdateAction;
-	// there is no wake field in CarServer.VehicleAction (wake is a VCSEC RKE action).
-	// msg.h:150/153 also double-wraps at field 1 instead of SDK Action.field 2.
+	// LEGACY — no SDK vector; wake belongs to VCSEC RKE; see follow-up C1-23.
+	// C1-14 marked this CHARACTERIZATION but recorded no literal SDK byte vector:
+	// car_server.proto:42 has field 25 = vehicleControlCancelSoftwareUpdateAction and
+	// no wake field. Controller ruling C1-17: keep the pre-C1-16 double-wrap wire;
+	// do not mechanically flip to the single-wrap Action envelope without SDK evidence.
 	uint8_t out[32];
 	size_t n = 0;
 	TEST_ASSERT_TRUE(buildWakeAction(out, sizeof(out), n));
@@ -559,59 +550,51 @@ static void test_wake_action_exact_wire()
 
 static void test_charge_actions_exact_wire()
 {
-	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
-	// DEFECT (reported, not fixed): msg.h:191/213 use VehicleAction field 11; SDK
-	// car_server.proto:27 says chargingStartStopAction = 6. msg.h:189 uses field 1
-	// for start (SDK car_server.proto:186 says 2) and msg.h:211 uses field 2 for
-	// stop (SDK car_server.proto:189 says 5). Action wrapper also wrong: msg.h:150/153.
-	// SDK vectors: start 12 04 32 02 12 00 | stop 12 04 32 02 2A 00.
+	// SDK vectors (C1-14 recorded): chargingStartStopAction = 6 (car_server.proto:27),
+	// start = field 2 (:186), stop = field 5 (:189), Action single wrap at field 2.
 	uint8_t out[32];
 	size_t n = 0;
 	TEST_ASSERT_TRUE(buildChargeStartAction(out, sizeof(out), n));
-	const uint8_t expStart[] = {0x0A, 0x08, 0x0A, 0x06, 0x5A, 0x04, 0x0A, 0x02, 0x0A, 0x00};
+	const uint8_t expStart[] = {0x12, 0x04, 0x32, 0x02, 0x12, 0x00};
 	assertExactWire(expStart, sizeof(expStart), out, n);
 
 	n = 0;
 	TEST_ASSERT_TRUE(buildChargeStopAction(out, sizeof(out), n));
-	const uint8_t expStop[] = {0x0A, 0x08, 0x0A, 0x06, 0x5A, 0x04, 0x12, 0x02, 0x12, 0x00};
+	const uint8_t expStop[] = {0x12, 0x04, 0x32, 0x02, 0x2A, 0x00};
 	assertExactWire(expStop, sizeof(expStop), out, n);
 }
 
 static void test_set_amps_limit_exact_wire()
 {
-	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
-	// DEFECT (reported, not fixed): msg.h:231 uses field 13 but SDK
-	// car_server.proto:56 says setChargingAmpsAction = 43; msg.h:249 uses field 12
-	// but SDK car_server.proto:26 says chargingSetLimitAction = 5.
-	// SDK vectors: amps 12 05 9A 02 02 08 20 | limit 12 04 2A 02 08 50.
+	// SDK vectors: setChargingAmpsAction = 43 (car_server.proto:56) -> tag DA 02;
+	// chargingSetLimitAction = 5 (:26) -> tag 2A 02. Action single wrap at field 2.
+	// C1-14 recorded the amps tag as 9A 02 (field 35); that was a transcription
+	// error. Controller ruling C1-17: SDK proto is authority, corrected here to DA 02.
 	uint8_t out[32];
 	size_t n = 0;
 	TEST_ASSERT_TRUE(buildSetAmpsAction(32, out, sizeof(out), n));
-	const uint8_t expAmps[] = {0x0A, 0x06, 0x0A, 0x04, 0x6A, 0x02, 0x08, 0x20};
+	const uint8_t expAmps[] = {0x12, 0x05, 0xDA, 0x02, 0x02, 0x08, 0x20};
 	assertExactWire(expAmps, sizeof(expAmps), out, n);
 
 	n = 0;
 	TEST_ASSERT_TRUE(buildSetLimitAction(80, out, sizeof(out), n));
-	const uint8_t expLimit[] = {0x0A, 0x06, 0x0A, 0x04, 0x62, 0x02, 0x08, 0x50};
+	const uint8_t expLimit[] = {0x12, 0x04, 0x2A, 0x02, 0x08, 0x50};
 	assertExactWire(expLimit, sizeof(expLimit), out, n);
 }
 
 static void test_climate_action_exact_wire()
 {
-	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
-	// DEFECT (reported, not fixed): msg.h:267 uses field 14 but SDK
-	// car_server.proto:31 says hvacAutoAction = 10. msg.h emits only power_on;
-	// SDK HvacAutoAction has manual_override at field 2 (car_server.proto:211).
-	// SDK vectors: on 12 06 52 04 08 01 10 00 | off 12 06 52 04 08 00 10 00.
+	// SDK vectors (C1-14 recorded): hvacAutoAction = 10 (car_server.proto:31),
+	// power_on = field 1, manual_override = field 2 (:211); Action field 2 wrap.
 	uint8_t out[32];
 	size_t n = 0;
 	TEST_ASSERT_TRUE(buildClimateAction(true, out, sizeof(out), n));
-	const uint8_t expOn[] = {0x0A, 0x06, 0x0A, 0x04, 0x72, 0x02, 0x08, 0x01};
+	const uint8_t expOn[] = {0x12, 0x06, 0x52, 0x04, 0x08, 0x01, 0x10, 0x00};
 	assertExactWire(expOn, sizeof(expOn), out, n);
 
 	n = 0;
 	TEST_ASSERT_TRUE(buildClimateAction(false, out, sizeof(out), n));
-	const uint8_t expOff[] = {0x0A, 0x06, 0x0A, 0x04, 0x72, 0x02, 0x08, 0x00};
+	const uint8_t expOff[] = {0x12, 0x06, 0x52, 0x04, 0x08, 0x00, 0x10, 0x00};
 	assertExactWire(expOff, sizeof(expOff), out, n);
 }
 

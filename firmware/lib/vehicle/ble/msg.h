@@ -166,18 +166,22 @@ static bool buildSessionInfoRequest(const uint8_t *eph65, const uint8_t *challen
  */
 static bool buildAction(const Proto &vehicleAction, uint8_t *out, size_t cap, size_t &outLen)
 {
-	uint8_t vaBuf[256];
-	Proto va(vaBuf, sizeof(vaBuf));
-	va.fieldMsg(1, vehicleAction); // Action.vehicleAction = field 1
-
-	Proto rm(out, cap);
-	rm.fieldMsg(1, va);
-	outLen = rm.len;
-	return rm.ok() && va.ok();
+	// SDK car_server.proto:16 — Action{ vehicleAction (field 2) = VehicleAction }.
+	// Single wrap at field 2; the old double wrap at field 1 was not SDK-conformant.
+	Proto action(out, cap);
+	action.fieldMsg(2, vehicleAction); // Action.vehicleAction = field 2
+	outLen = action.len;
+	return action.ok();
 }
 
 /**
- * @brief Build a VehicleControlWakeupAction (empty message at field 25).
+ * @brief Build a legacy wake Action (empty message at field 25).
+ *
+ * LEGACY — no SDK vector; wake belongs to VCSEC RKE; see follow-up C1-23.
+ * car_server.proto has no wake field (field 25 is
+ * vehicleControlCancelSoftwareUpdateAction). Kept on the pre-C1-16 double-wrap
+ * wire so the characterization pin stays green pending a capture-first migration.
+ *
  * @param out Output buffer for the encoded Action.
  * @param cap Capacity of the output buffer in bytes.
  * @param outLen Set to the number of bytes written on success.
@@ -185,16 +189,23 @@ static bool buildAction(const Proto &vehicleAction, uint8_t *out, size_t cap, si
  */
 static bool buildWakeAction(uint8_t *out, size_t cap, size_t &outLen)
 {
-	uint8_t waBuf[4];
+	uint8_t waBuf[4], vaBuf[8];
 	Proto wa(waBuf, sizeof(waBuf));
-	wa.fieldEmpty(25); // vehicleControlWakeupAction = field 25
-	return buildAction(wa, out, cap, outLen);
+	wa.fieldEmpty(25); // legacy field 25; no SDK CarServer equivalent
+
+	Proto va(vaBuf, sizeof(vaBuf));
+	va.fieldMsg(1, wa); // legacy Action.vehicleAction wrapper = field 1
+
+	Proto rm(out, cap);
+	rm.fieldMsg(1, va); // legacy outer wrapper = field 1
+	outLen = rm.len;
+	return rm.ok() && va.ok() && wa.ok();
 }
 
 /**
  * @brief Build a ChargingStartStopAction to start charging.
  *
- * Encodes field 11 (chargingStartStopAction) with start (field 1) set to an empty message.
+ * Encodes chargingStartStopAction (field 6) with start (field 2) as an empty message.
  *
  * @param out Output buffer for the encoded Action.
  * @param cap Capacity of the output buffer in bytes.
@@ -203,20 +214,18 @@ static bool buildWakeAction(uint8_t *out, size_t cap, size_t &outLen)
  */
 static bool buildChargeStartAction(uint8_t *out, size_t cap, size_t &outLen)
 {
-	uint8_t startBuf[4], cssBuf[8], vaBuf[16];
-	Proto start(startBuf, sizeof(startBuf));
-	start.fieldEmpty(1); // ChargeNow (empty) at field 1
+	uint8_t cssBuf[8], vaBuf[16];
 	Proto css(cssBuf, sizeof(cssBuf));
-	css.fieldMsg(1, start); // start = field 1
+	css.fieldEmpty(2); // start = field 2 (SDK car_server.proto:186)
 	Proto va(vaBuf, sizeof(vaBuf));
-	va.fieldMsg(11, css); // chargingStartStopAction = field 11
+	va.fieldMsg(6, css); // chargingStartStopAction = field 6 (SDK car_server.proto:27)
 	return buildAction(va, out, cap, outLen);
 }
 
 /**
  * @brief Build a ChargingStartStopAction to stop charging.
  *
- * Encodes field 11 (chargingStartStopAction) with stop (field 2) set to an empty message.
+ * Encodes chargingStartStopAction (field 6) with stop (field 5) as an empty message.
  *
  * @param out Output buffer for the encoded Action.
  * @param cap Capacity of the output buffer in bytes.
@@ -225,13 +234,11 @@ static bool buildChargeStartAction(uint8_t *out, size_t cap, size_t &outLen)
  */
 static bool buildChargeStopAction(uint8_t *out, size_t cap, size_t &outLen)
 {
-	uint8_t stopBuf[4], cssBuf[8], vaBuf[16];
-	Proto stop(stopBuf, sizeof(stopBuf));
-	stop.fieldEmpty(2); // StopCharge at field 2
+	uint8_t cssBuf[8], vaBuf[16];
 	Proto css(cssBuf, sizeof(cssBuf));
-	css.fieldMsg(2, stop); // stop = field 2
+	css.fieldEmpty(5); // stop = field 5 (SDK car_server.proto:189)
 	Proto va(vaBuf, sizeof(vaBuf));
-	va.fieldMsg(11, css); // chargingStartStopAction = field 11
+	va.fieldMsg(6, css); // chargingStartStopAction = field 6 (SDK car_server.proto:27)
 	return buildAction(va, out, cap, outLen);
 }
 
@@ -249,7 +256,7 @@ static bool buildSetAmpsAction(int32_t amps, uint8_t *out, size_t cap, size_t &o
 	Proto amp(ampBuf, sizeof(ampBuf));
 	amp.fieldVarint(1, (uint64_t)(uint32_t)amps); // chargingAmps = field 1
 	Proto va(vaBuf, sizeof(vaBuf));
-	va.fieldMsg(13, amp); // chargingSetAmpsAction = field 13
+	va.fieldMsg(43, amp); // setChargingAmpsAction = field 43 (SDK car_server.proto:56)
 	return buildAction(va, out, cap, outLen);
 }
 
@@ -267,7 +274,7 @@ static bool buildSetLimitAction(int32_t pct, uint8_t *out, size_t cap, size_t &o
 	Proto lmt(lmtBuf, sizeof(lmtBuf));
 	lmt.fieldVarint(1, (uint64_t)(uint32_t)pct); // percent = field 1
 	Proto va(vaBuf, sizeof(vaBuf));
-	va.fieldMsg(12, lmt); // chargingSetLimitAction = field 12
+	va.fieldMsg(5, lmt); // chargingSetLimitAction = field 5 (SDK car_server.proto:26)
 	return buildAction(va, out, cap, outLen);
 }
 
@@ -284,8 +291,9 @@ static bool buildClimateAction(bool powerOn, uint8_t *out, size_t cap, size_t &o
 	uint8_t hvacBuf[8], vaBuf[16];
 	Proto hvac(hvacBuf, sizeof(hvacBuf));
 	hvac.fieldBool(1, powerOn); // power_on = field 1
+	hvac.fieldBool(2, false); // manual_override = field 2 (SDK car_server.proto:211)
 	Proto va(vaBuf, sizeof(vaBuf));
-	va.fieldMsg(14, hvac); // hvacAutoAction = field 14
+	va.fieldMsg(10, hvac); // hvacAutoAction = field 10 (SDK car_server.proto:31)
 	return buildAction(va, out, cap, outLen);
 }
 
@@ -293,7 +301,7 @@ static bool buildClimateAction(bool powerOn, uint8_t *out, size_t cap, size_t &o
  * @brief Build an authenticated RoutableMessage after an ECDH session is established.
  *
  * Wraps AES-GCM encrypted payload with signature data containing the authentication
- * tag, session counter, and component identifier.
+ * tag and session counter.
  *
  * @param encPayload AES-GCM ciphertext of the CarServer.Action.
  * @param encLen Length of the encrypted payload in bytes.
@@ -309,17 +317,16 @@ static bool buildClimateAction(bool powerOn, uint8_t *out, size_t cap, size_t &o
 static bool buildAuthMessage(const uint8_t *encPayload, size_t encLen, const uint8_t *gcmTag16, uint32_t counter,
 							 uint8_t domain, const uint8_t *uuid16, uint8_t *out, size_t cap, size_t &outLen)
 {
-	// AES_GCM_Personalized_Signature_Status: tag, counter, component_id
+	// AES_GCM_Personalized_Signature_Status: counter (f3), tag (f5). SDK signatures.proto:46/48.
 	uint8_t agpsBuf[32];
 	Proto agps(agpsBuf, sizeof(agpsBuf));
-	agps.fieldBytes(1, gcmTag16, 16);			 // tag = field 1
-	agps.fieldVarint(2, counter);				 // counter = field 2
-	agps.fieldVarint(3, COMPONENT_INFOTAINMENT); // component_id = field 3
+	agps.fieldVarint(3, counter); // counter = field 3
+	agps.fieldBytes(5, gcmTag16, 16); // tag = field 5
 
-	// SignedData wrapping the AES-GCM personalized data
+	// SignedData wrapping the AES-GCM personalized data (field 5, SDK signatures.proto:80)
 	uint8_t sdBuf[48];
 	Proto sd(sdBuf, sizeof(sdBuf));
-	sd.fieldMsg(2, agps); // AES_GCM_personalized_data = field 2
+	sd.fieldMsg(5, agps); // AES_GCM_personalized_data = field 5
 
 	// Encode Destination for the target domain
 	uint8_t destBuf[4];
@@ -331,7 +338,7 @@ static bool buildAuthMessage(const uint8_t *encPayload, size_t encLen, const uin
 	Proto rm(out, cap);
 	rm.fieldBytes(6, destBuf, destLen);	  // to_destination = field 6
 	rm.fieldBytes(10, encPayload, encLen); // protobuf_message_as_bytes = field 10
-	rm.fieldMsg(7, sd);					  // signature_data = field 7
+	rm.fieldMsg(13, sd);				  // signature_data = field 13 (SDK universal_message.proto:94)
 	rm.fieldBytes(51, uuid16, 16);		  // uuid = field 51
 	outLen = rm.len;
 	return rm.ok() && agps.ok() && sd.ok();
