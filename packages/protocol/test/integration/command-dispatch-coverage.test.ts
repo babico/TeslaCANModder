@@ -159,6 +159,11 @@ describe("fresh-boot commands must work without 0x273 CAN traffic", () => {
 	// gate `hasFreshCtrl(now)` (lastCtrlMs + AP_GATE_FRESHNESS_MS). The guard below
 	// still enforces the same rule: diagnostics needing no vehicle CAN traffic must
 	// be dispatched before this gate so they work without a fresh 0x273 frame.
+	//
+	// C1-19: primary guard is now the native test test_native_cmd_freshness
+	// (firmware/test/test_native_cmd_freshness/test_cmd_freshness.cpp), which really
+	// calls executeCommand with hasCtrl=false and asserts log/platform/recorder JSON.
+	// The source-order assertions below are kept as a secondary check.
 	const hasFreshCtrlIndex = dispatchSource.indexOf("if (!s.hasFreshCtrl(now))");
 
 	it("locates the hasFreshCtrl early return in dispatch.h", () => {

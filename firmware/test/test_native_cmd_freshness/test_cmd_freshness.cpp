@@ -1,6 +1,6 @@
 /**
  * @file firmware/test/test_native_cmd_freshness/test_cmd_freshness.cpp
- * @brief C1-07a: one-shot vehicle commands require a fresh 0x273 control frame
+ * @brief C1-07a/C1-19: fresh 0x273 gate for one-shot cmds; fresh-boot diagnostics bypass it
  * @author Tesla CAN Mod Contributors
  * @license GPL-3.0
  */
@@ -168,10 +168,66 @@ void test_one_shot_cmd_allowed_when_ctrl_fresh()
 	TEST_ASSERT_NOT_NULL(strstr(capturedOutput.c_str(), "\"t\":\"ack\""));
 }
 
+// C1-19: fresh-boot diagnostics must dispatch through the real executeCommand
+// path with zero CAN state (hasCtrl=false). They sit above the single
+// hasFreshCtrl(now) gate because they need no cached 0x273 frame. These tests
+// assert emitted JSON, not source order.
+/** @brief log dumps its ring as JSON with no cached 0x273 frame */
+void test_fresh_boot_log_emits_json_without_ctrl()
+{
+	State s = {};
+	TEST_ASSERT_FALSE(s.hasCtrl);
+
+	executeCommand("log", s, fake_millis);
+
+	TEST_ASSERT_NOT_NULL(strstr(capturedOutput.c_str(), "\"t\":\"log\""));
+	TEST_ASSERT_NULL(strstr(capturedOutput.c_str(), "Waiting for 0x273"));
+}
+
+/** @brief platform identity query emits JSON with no cached 0x273 frame */
+void test_fresh_boot_platform_emits_json_without_ctrl()
+{
+	State s = {};
+	TEST_ASSERT_FALSE(s.hasCtrl);
+
+	executeCommand("platform", s, fake_millis);
+
+	TEST_ASSERT_NOT_NULL(strstr(capturedOutput.c_str(), "\"t\":\"platform\""));
+	TEST_ASSERT_NULL(strstr(capturedOutput.c_str(), "Waiting for 0x273"));
+}
+
+/** @brief recorder:status emits JSON with no cached 0x273 frame */
+void test_fresh_boot_recorder_status_emits_json_without_ctrl()
+{
+	State s = {};
+	TEST_ASSERT_FALSE(s.hasCtrl);
+
+	executeCommand("recorder:status", s, fake_millis);
+
+	TEST_ASSERT_NOT_NULL(strstr(capturedOutput.c_str(), "\"t\":\"recorder\""));
+	TEST_ASSERT_NULL(strstr(capturedOutput.c_str(), "Waiting for 0x273"));
+}
+
+/** @brief Contrast: a gated vehicle command still errors with no CAN state */
+void test_gated_cmd_errors_without_ctrl()
+{
+	State s = {};
+	TEST_ASSERT_FALSE(s.hasCtrl);
+
+	executeCommand("lock", s, fake_millis);
+
+	TEST_ASSERT_EQUAL(0, stub_send_count);
+	TEST_ASSERT_NOT_NULL(strstr(capturedOutput.c_str(), "Waiting for 0x273"));
+}
+
 int main(int, char **)
 {
 	UNITY_BEGIN();
 	RUN_TEST(test_one_shot_cmd_rejected_when_ctrl_stale);
 	RUN_TEST(test_one_shot_cmd_allowed_when_ctrl_fresh);
+	RUN_TEST(test_fresh_boot_log_emits_json_without_ctrl);
+	RUN_TEST(test_fresh_boot_platform_emits_json_without_ctrl);
+	RUN_TEST(test_fresh_boot_recorder_status_emits_json_without_ctrl);
+	RUN_TEST(test_gated_cmd_errors_without_ctrl);
 	return UNITY_END();
 }
