@@ -234,14 +234,6 @@ Reads real-time battery management system data from the CAN bus. The dashboard d
 bms   # Query current BMS telemetry snapshot
 ```
 
-## OTA Safety Check
-
-Automatically pauses all CAN frame injection when an over-the-air (OTA) update is detected on the vehicle. Monitors CAN ID 0x318 (GTW_carState) for OTA status flags.
-
-- TX is paused automatically when OTA is detected
-- TX resumes when OTA completes
-- No manual intervention needed — fully automatic
-
 ## Auto Hardware Detection
 
 Reads CAN ID 0x398 (GTW_carConfig) to automatically detect whether the vehicle is HW3 or HW4. This eliminates the need to manually set the variant.
@@ -509,7 +501,6 @@ turn:off      # Cancel
 Suppresses rear seatbelt warnings by periodically injecting CAN ID 0x3F3 (VCRIGHT_seatbeltStatus) with all 3 rear seats reported as buckled.
 
 - Injects `data[0] = 0x07` (bits 2:0 = all buckled) every 500ms
-- Automatically pauses during OTA updates
 - Setting persisted to NVS
 
 ```bash
@@ -801,7 +792,6 @@ Controls vehicle power states via CAN ID 0x273.
 | Preconditioning        | ✅        | ✅         | ❌           |
 | Track Mode             | ✅        | ✅         | ❌           |
 | BMS Telemetry          | ✅        | ✅         | ❌           |
-| OTA Safety             | ✅        | ✅         | ❌           |
 | Auto HW Detect         | ✅        | ✅         | ❌           |
 | Summon                 | ✅        | ✅         | ❌           |
 | Vehicle Commands       | ✅        | ✅         | ❌           |

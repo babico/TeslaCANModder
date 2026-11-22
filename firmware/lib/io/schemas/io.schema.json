@@ -1153,8 +1153,6 @@
 				"mirrorAutoFold": { "type": "boolean" },
 				"canSim": { "type": "boolean" },
 				"hasPowertrain": { "type": "boolean" },
-				"otaInProgress": { "type": "boolean" },
-				"txPaused": { "type": "boolean" },
 				"apGateEnabled": { "type": "boolean" },
 				"apGateAp": { "type": "boolean" },
 				"apGatePark": { "type": "boolean" },
@@ -1215,8 +1213,6 @@
 				"mirrorAutoFold",
 				"canSim",
 				"hasPowertrain",
-				"otaInProgress",
-				"txPaused",
 				"apGateEnabled",
 				"apGateAp",
 				"apGatePark",
@@ -1526,8 +1522,6 @@
 				"offset": { "$ref": "#/$defs/StatusOffset" },
 				"precondition": { "$ref": "#/$defs/Bool01" },
 				"trackMode": { "$ref": "#/$defs/Bool01" },
-				"otaInProgress": { "$ref": "#/$defs/Bool01" },
-				"txPaused": { "$ref": "#/$defs/Bool01" },
 				"detectedHW": { "type": "integer" },
 				"variantAutoDetect": { "$ref": "#/$defs/Bool01" },
 				"gtwAutopilotTier": { "type": "integer" },
@@ -1547,8 +1541,6 @@
 				"offset",
 				"precondition",
 				"trackMode",
-				"otaInProgress",
-				"txPaused",
 				"detectedHW",
 				"variantAutoDetect",
 				"gtwAutopilotTier",
@@ -1567,9 +1559,7 @@
 				"profile": { "$ref": "#/$defs/StatusProfile" },
 				"offset": { "$ref": "#/$defs/StatusOffset" },
 				"precondition": { "$ref": "#/$defs/Bool01" },
-				"trackMode": { "$ref": "#/$defs/Bool01" },
-				"otaInProgress": { "$ref": "#/$defs/Bool01" },
-				"txPaused": { "$ref": "#/$defs/Bool01" }
+				"trackMode": { "$ref": "#/$defs/Bool01" }
 			},
 			"required": [
 				"fsd",
@@ -1579,9 +1569,7 @@
 				"profile",
 				"offset",
 				"precondition",
-				"trackMode",
-				"otaInProgress",
-				"txPaused"
+				"trackMode"
 			],
 			"additionalProperties": false
 		},

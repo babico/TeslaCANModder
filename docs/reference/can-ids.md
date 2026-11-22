@@ -11,7 +11,7 @@ flowchart TB
         B2["Bus 2: Body<br/>pins 2-3"]
     end
     B0 -->|0x3FD, 0x39B, 0x370, 0x229, 0x249| ChassisIDs["DAS / EPAS / FSD<br/>Autopilot, steering"]
-    B1 -->|0x132, 0x292, 0x398, 0x312, 0x33A| VehicleIDs["BMS / Gateway / OTA<br/>Drive, battery, vehicle config"]
+    B1 -->|0x132, 0x292, 0x398, 0x312, 0x33A| VehicleIDs["BMS / Gateway<br/>Drive, battery, vehicle config"]
     B2 -->|0x258, 0x259, 0x3C2, 0x3F5, 0x3B3| BodyIDs["Doors / VCSEC / Lights<br/>Body controllers, climate"]
     classDef bus fill:#1e3a5f,stroke:#4a7fb5,color:#fff
     class B0,B1,B2 bus
@@ -22,7 +22,7 @@ flowchart TB
 | Bus | Pins  | Name         | Purpose                            |
 | --- | ----- | ------------ | ---------------------------------- |
 | 0   | 13-14 | Chassis / AP | Autopilot, DAS, EPAS, FSD control  |
-| 1   | 9-10  | Vehicle      | Drive, BMS, body controllers, OTA  |
+| 1   | 9-10  | Vehicle      | Drive, BMS, body controllers       |
 | 2   | 2-3   | Body         | VCLEFT, VCRIGHT, VCFRONT, lighting |
 
 ## CAN ID Table
@@ -109,7 +109,7 @@ flowchart TB
 | Hex   | Dec | Symbol                       | Signal                     | Bus | Direction | Notes                       |
 | ----- | --- | ---------------------------- | -------------------------- | --- | --------- | --------------------------- |
 | 0x398 | 920 | `CAN_ID_GTW_CAR_CFG`         | GTW_carConfig              | 1   | RX        | HW auto-detect, region code |
-| 0x318 | 792 | `CAN_ID_GTW_CAR_STATE`       | GTW_carState               | 1   | RX        | OTA detection               |
+| 0x318 | 792 | `CAN_ID_GTW_CAR_STATE`       | GTW_carState               | 1   | RX        | Raw ID; identity unresolved |
 | 0x102 | 258 | `CAN_ID_VCLEFT_DOOR_STATUS`  | VCLEFT doors               | 1   | RX        | Door/latch status           |
 | 0x103 | 259 | `CAN_ID_VCRIGHT_DOOR_STATUS` | VCRIGHT doors              | 1   | RX        | Trunk/latch status          |
 | 0x2E1 | 737 | `CAN_ID_VCFRONT_STATUS`      | VCFRONT status             | 1   | RX        | Frunk, any-door             |

@@ -47,7 +47,6 @@ If a feature does not toggle, verify:
 
 - Board firmware variant supports it.
 - Required transport is active (usually WiFi or BLE).
-- You are not in OTA pause state.
 
 ## MQTT
 

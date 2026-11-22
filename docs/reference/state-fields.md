@@ -185,12 +185,10 @@ unified command interface (`nag:mode:<name>`).
 | `anyDoorOpen`        | bool  | —      | Any door open                                        |
 | `brakePedalState`    | uint8 | 0x118  | Brake pedal state (0=off, 1=applied, 2=hard applied) |
 
-## OTA & Hardware Detection
+## Hardware Detection
 
 | Field               | Type  | Default | Description                      |
 | ------------------- | ----- | ------- | -------------------------------- |
-| `otaInProgress`     | bool  | false   | Tesla OTA detected (0x318)       |
-| `txPaused`          | bool  | false   | All TX paused during OTA         |
 | `detectedHW`        | uint8 | 0       | Auto-detected HW (0/2/3)         |
 | `variantAutoDetect` | bool  | true    | Auto-switch variant on detection |
 | `canClockReqMHz`    | uint8 | 8       | Requested MCP2515 crystal (MHz)  |

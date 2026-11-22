@@ -72,7 +72,7 @@ The ESP32 supports up to three CAN buses on a shared SPI fabric. All three lanes
 | 786    | 0x312 | BMS_thermalStatus (cell temps)                         | Vehicle | HW3, HW4 |
 | 787    | 0x313 | UI_trackModeSettings                                   | Vehicle | HW3, HW4 |
 | 789    | 0x315 | REAR_INV_TEMPS                                         | Vehicle | HW3, HW4 |
-| 792    | 0x318 | GTW_carState (OTA detection)                           | Vehicle | HW3, HW4 |
+| 792    | 0x318 | GTW_carState (raw ID; identity unresolved)             | Vehicle | HW3, HW4 |
 | 817    | 0x331 | DAS_autopilotConfig                                    | Vehicle | HW3, HW4 |
 | 818    | 0x332 | BMS_minMax                                             | Vehicle | HW3, HW4 |
 | 819    | 0x333 | Charge control                                         | Vehicle | HW3, HW4 |
@@ -196,10 +196,6 @@ CAN ID 0x313 — UI_trackModeSettings injected on the Vehicle bus:
 - `data[0]` bits 1:0 = `0x01` to enable Track Mode
 - Sent as a 20-frame burst at 20ms intervals
 
-## OTA Detection
-
-CAN ID 0x318 — GTW_carState is monitored for OTA update status. When an OTA is detected, all CAN TX injection is automatically paused until the update completes.
-
 ## Auto Hardware Detection
 
 CAN ID 0x398 — GTW_carConfig is read at boot to automatically detect whether the vehicle uses HW3 or HW4. Falls back to the manually configured variant if this frame is not received.
@@ -263,7 +259,6 @@ The dispatch system routes frames based on CAN ID and configured variant:
 2. **RX from the Vehicle bus:** IDs 627, 0x082, 0x132, 0x292, 0x312, 0x313, 0x318, 0x33A, 0x370, 0x392, 0x398, 0x39B, 0x7FF → cached/decoded/intercepted
 3. **TX to the Vehicle bus:** Vehicle commands, preconditioning, track mode, nag killer echo
 4. **Streaming:** All received frames optionally forwarded to serial/BLE as JSON
-5. **OTA Guard:** TX automatically paused when 0x318 indicates OTA in progress
 
 ## Testing CAN Communication
 

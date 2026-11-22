@@ -68,9 +68,9 @@ These were intentionally removed or left unrestricted:
 | Wildcard CORS               | WiFi password is the access gate                 |
 | Serial bridge binds 0.0.0.0 | Owner may access from phone on same network      |
 
-## OTA Safety
+## Vehicle Software Updates
 
-The only automatic safety gate is **OTA detection**. When a Tesla over-the-air update is detected on CAN ID 0x318, all CAN TX is paused (`txPaused = true`) to prevent bricking the vehicle during a firmware update. This protects the board itself, not user freedom.
+There is no automatic CAN TX pause during a Tesla software update. The identity of CAN ID `0x318` is unresolved across vehicle model/era (see cross-cutting C14), and no capture exists to implement a decode safely. Disable injection features manually before an update; do not rely on the board to suppress TX.
 
 ## Runtime Safety Controls
 

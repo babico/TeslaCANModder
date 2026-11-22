@@ -130,13 +130,6 @@ flowchart TB
 - Requires a build with both `_chassis` and `_vehicle`
 - Sends a 20-frame burst — check that vehicle is in a compatible state (Park or Drive)
 
-## OTA Paused TX
-
-- If commands stop working during an OTA update, this is expected
-- The board auto-detects OTA from CAN 0x318 and pauses all TX
-- TX resumes automatically when OTA completes
-- Dashboard shows "OTA in progress" status
-
 ## Board Stops After Car Sleep
 
 - Board enters **standby** when CAN goes silent

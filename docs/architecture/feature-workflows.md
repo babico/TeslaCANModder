@@ -52,19 +52,6 @@ flowchart LR
 | Read-Only     | Decode frame → update state (no send)                            | 1 (Vehicle) |
 | Config-Only   | Update state + persist (no CAN interaction)                      | —           |
 
-### Transmission Safety
-
-`txPaused` gates **all** transmission paths when OTA update is detected:
-
-| Layer                   | Effect                                            |
-| ----------------------- | ------------------------------------------------- |
-| HW4/HW3/Legacy handlers | Pass frames through unmodified (no FSD injection) |
-| `startBurst()`          | Refuses to start new burst                        |
-| `burstTick()`           | Cancels active burst (`burstRemaining = 0`)       |
-| `summonTick()`          | Cancels summon (`summonRemaining = 0`)            |
-| `preconditionTick()`    | Returns immediately                               |
-| `nagShouldEcho()`       | Returns false                                     |
-
 ### Burst Architecture (`vehicle/can/burst.h`)
 
 Non-blocking frame repeater. `startBurst(s, f, bus, count, delayMs)` stores a
@@ -198,7 +185,7 @@ modify the torque bytes, and echo the frame back:
 ```
 CAN Path:
   Bus 1 → CAN_ID_EPAS_TORQUE (0x370)
-    ├─ Gate: !txPaused && nagShouldEcho(s, mode)
+    ├─ Gate: nagShouldEcho(s, mode)
     ├─ Clone frame → apply strategy-specific torque
     ├─ Counter in byte[1] low nibble incremented
     ├─ byte[7] = nagChecksum(f.data)
@@ -411,7 +398,7 @@ Command: "summon:forward|reverse|stop"
 
 CAN Path (summonTick, called from main loop):
   Every 20ms while summonRemaining > 0:
-    ├─ Gate: hasCtrl && summonInject && !txPaused
+    ├─ Gate: hasCtrl && summonInject
     ├─ Build frame from s.lastCtrl (CAN_ID_UI_VEHICLE_CTRL)
     ├─ setSummonActive(f, true)    → bit 4
     ├─ setSummonDirection(f, dir)  → bit 5
@@ -440,7 +427,6 @@ Command: "precondition:on|off"
 
 CAN Path (preconditionTick, called from main loop):
   Every 500ms while preconditionEnabled:
-    ├─ Gate: !txPaused
     ├─ Build frame: CAN_ID_PRECONDITION (0x082), data[0]=0x05
     └─ driverSend(f, BUS_VEHICLE)
 
@@ -589,7 +575,6 @@ Command: "drivemode:off|chill|standard|performance"
 
 CAN Path (driveModeTick, called from main loop):
   Every 50ms while driveModeOverride > 0:
-    ├─ Gate: !txPaused
     ├─ Build frame: CAN_ID_DRIVE_CONFIG (0x334)
     ├─ data[1] = driveModeOverride
     ├─ byte[7] = driveChecksum(f.data, 8)
@@ -1105,7 +1090,7 @@ Command: "drive:speed:N" / "drive:cap:N"
 
 CAN Path (dasTick, called from main loop):
   Every 20ms while dasDriveEnabled:
-    ├─ Gate: !txPaused && dasDriveEnabled
+    ├─ Gate: dasDriveEnabled
     ├─ Bus 0:
     │   ├─ 0x2B9 @ 25 Hz — DAS_control (longitudinal ACC, signed speed)
     │   ├─ 0x488 @ 50 Hz — DAS_steeringControl (Motorola mixed-endian angle)
@@ -1137,22 +1122,6 @@ Command: "tlssc:on|off"
 CAN Path (when ON):
   Spoofs DAS_autopilotConfig (0x331) on Bus 0 to report SELF_DRIVING tier,
   restoring Tesla Licensed Self-Steering Capability.
-```
-
----
-
-## 53. OTA Safety (Read-Only, Auto-Pause)
-
-```
-No command (automatic)
-
-CAN Path:
-  Bus 1 → CAN_ID_GTW_CAR_STATE (0x318)
-    ├─ byte[6] bits[1:0] = GTW_updateInProgress
-    ├─ If becomes true:  s.otaInProgress=true, s.txPaused=true
-    └─ If becomes false: s.otaInProgress=false, s.txPaused=false
-
-Effect: txPaused gates ALL transmission (see Transmission Safety table above).
 ```
 
 ---
@@ -1213,7 +1182,6 @@ Effect: txPaused gates ALL transmission (see Transmission Safety table above).
 | 50  | single-shot       | none                           | ✅    | ✅   | —          | —        | —     |
 | 51  | das drive         | features().dasDrive            | ✅    | ✅   | —          | —        | 0     |
 | 52  | tlssc             | none                           | ✅    | ✅   | —          | —        | 0     |
-| 53  | ota safety        | none (automatic)               | —     | —    | —          | —        | 1     |
 
 ---
 
