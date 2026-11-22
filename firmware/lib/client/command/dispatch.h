@@ -420,7 +420,7 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 	}
 
 	// Fresh-boot diagnostics: these need no vehicle CAN traffic, so they must
-	// be dispatched before the 0x273 hasCtrl gate below.
+	// be dispatched before the single 0x273 freshness gate (hasFreshCtrl()) below.
 	// Log ring dump: emit last N log entries as a JSON array
 	if (strcmp(cmd, "log") == 0)
 	{

@@ -136,7 +136,10 @@ Common patterns:
 
 ## Safety rules
 
-- `txPaused` gates ALL transmission paths when OTA update is detected.
+- No OTA TX guard exists. `CAN_ID_GTW_CAR_STATE` (`0x318`) is a documented ID only;
+  do not add `otaInProgress` / `txPaused` claims or a global TX kill switch (C1-06 CAPTURE_FIRST).
+- One-shot commands use the single `s.hasFreshCtrl(now)` freshness gate; continuous injection
+  uses `s.apGateOpen()` plus per-feature toggles.
 - Every direct `frame.data[...]` read has a matching DLC guard before access.
 - Every direct `frame.data[...]` write has a matching DLC guard before mutation.
 - Existing checksum logic must be recalculated when a changed byte requires it.

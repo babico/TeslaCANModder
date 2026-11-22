@@ -77,14 +77,22 @@ All buses are opt-in via build flags. DAS injection only works when Chassis CAN 
 
 ## Transmission safety
 
-`txPaused` gates ALL transmission paths when OTA update is detected:
+There is **no OTA TX guard**. `CAN_ID_GTW_CAR_STATE` (`0x318`) is defined in
+`firmware/lib/vehicle/can/ids.h` as a documented ID for capture-first research only;
+no handler pauses TX and no `otaInProgress` / `txPaused` state field exists (C1-06).
+Do not reintroduce claims that OTA automatically pauses transmission.
 
-- HW4/HW3/Legacy handlers pass frames through unmodified (no FSD injection)
-- `startBurst()` refuses to start new burst
-- `burstTick()` cancels active burst (`burstRemaining = 0`)
-- `summonTick()` cancels summon (`summonRemaining = 0`)
-- `preconditionTick()` returns immediately
-- `nagKillerShouldEcho()` returns false
+Actual gating today:
+
+- One-shot vehicle commands use the single freshness gate `s.hasFreshCtrl(now)`
+  (`lastCtrlMs + AP_GATE_FRESHNESS_MS`); a stale `0x273` must not template injections.
+  Fresh-boot diagnostics are dispatched before that gate.
+- Continuous injection features use the runtime AP injection gate (`s.apGateOpen()`,
+  `apgate:on`) plus their own variant/toggle checks. One-shot commands intentionally
+  skip the AP gate.
+- `startBurst()` / `burstTick()` / `summonTick()` / `preconditionTick()` and the nag
+  echo path each keep their own DLC, variant and freshness guards. There is no global
+  OTA kill switch to rely on.
 
 ## Feature categories
 

@@ -58,6 +58,32 @@ function walkTs(dir: string, out: string[]): string[] {
 	return out;
 }
 
+/**
+ * The generated in-app docs bundle mirrors docs/, including the read-only
+ * legacy research docs. Those legacy entries stay excluded here exactly as
+ * they do in walkDocs() above; only shipped/canonical docs are claim targets.
+ */
+function bundledDocEntries(): Array<{ label: string; text: string }> {
+	const bundlePath = path.join(repoRoot, "client", "src", "docs", "_generated-docs.ts");
+	const text: string = fs.readFileSync(bundlePath, "utf-8");
+	const entryRe = /^\t\{ path: "([^"]+)", content: `([\s\S]*?)` \},$/gm;
+	const entries: Array<{ label: string; text: string }> = [];
+	let match: RegExpExecArray | null;
+	while ((match = entryRe.exec(text)) !== null) {
+		if (match[1].startsWith("legacy/")) continue;
+		entries.push({
+			label: `client/src/docs/_generated-docs.ts (${match[1]})`,
+			text: match[2],
+		});
+	}
+	if (entries.length === 0) {
+		throw new Error(
+			"No bundled docs found - generator format changed or bundle not regenerated?",
+		);
+	}
+	return entries;
+}
+
 const FORBIDDEN_CLAIMS: ReadonlyArray<{ label: string; re: RegExp }> = [
 	{ label: "otaInProgress state field", re: /\botaInProgress\b/ },
 	{ label: "txPaused state field", re: /\btxPaused\b/ },
@@ -80,11 +106,14 @@ function forbiddenClaimsFound(text: string): string[] {
 	return FORBIDDEN_CLAIMS.filter(({ re }) => re.test(text)).map(({ label }) => label);
 }
 
+const bundledEntries = bundledDocEntries();
+
 const claimTargets: Array<{ label: string; text: string }> = [
 	...walkDocs(path.join(repoRoot, "docs"), []).map((file) => ({
 		label: path.relative(repoRoot, file),
 		text: fs.readFileSync(file, "utf-8"),
 	})),
+	...bundledEntries,
 	{
 		label: "firmware/lib/io/schemas/io.schema.json",
 		text: fs.readFileSync(
@@ -100,6 +129,14 @@ describe("OTA TX guard claim removal (C1-06)", () => {
 			expect(forbiddenClaimsFound(target.text)).toEqual([]);
 		});
 	}
+
+	it("scans the generated in-app docs bundle with legacy docs excluded", () => {
+		expect(bundledEntries.length).toBeGreaterThan(0);
+		expect(bundledEntries.some((entry) => entry.label.includes("reference/commands.md"))).toBe(
+			true,
+		);
+		expect(bundledEntries.every((entry) => !entry.label.includes("legacy/"))).toBe(true);
+	});
 
 	it("protocol source advertises no OTA state fields", () => {
 		const offenders: string[] = [];
