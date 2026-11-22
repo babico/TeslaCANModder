@@ -117,3 +117,7 @@ Ruling: split C1-07 into C1-07a (safety hardening that needs no capture: gate `d
     - BLE wire batch complete (commit 6bbec1e, review clean): signature_data f13, Action single wrap f2, charge/stop/amps/limit/climate SDK fields, dead carserver.h deleted; 5 characterization assertions flipped; focused 21/21, native 1071/1071, ESP32 BLE build success.
     - Minor (deferred): report RED header arithmetic (22 vs 21); now-unused COMPONENT\_\* constants disclosed.
     - ⚠️ Real-vehicle acceptance UNVERIFIED for all changed wire fields; SDK correctness is code-level only.
+
+- Task C1-22: complete (commits 4a1be7b..b5f2b7f, review clean). Generated bundle in own commit (7c19de9); skills, dispatch comment, claim test + minimal lint ignores in b5f2b7f. Reviewer parsed 144 bundle entries: 0 canonical OTA claims; legacy exclusions real. Protocol 575, client 305, lint clean.
+    - ⚠️ Commit-1 isolation rests on commit message/report (combined diff only) — low risk, no code impact.
+    - Minor (deferred): lint-config edits outside brief's literal commit-2 scope but necessary and disclosed.
