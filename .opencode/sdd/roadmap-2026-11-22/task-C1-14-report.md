@@ -44,7 +44,7 @@ Baseline (pre-change): 7/7 passed.
 RED run — expectations written from SDK proto vectors (`cd firmware; .\pio.ps1 test -e native -f test_native_ble_proto`):
 
 ```
-19 test cases: 5 failed, 13 succeeded in 00:00:01.112
+18 test cases: 5 failed, 13 succeeded in 00:00:01.112
 test_auth_message_exact_wire:   Expected 57 Was 59
 test_wake_action_exact_wire:    Expected 9  Was 7
 test_charge_actions_exact_wire: Expected 6  Was 10
@@ -135,3 +135,81 @@ and are pinned GREEN with SDK-correct bytes.
 Recommendation: follow-up task to fix the above production field numbers, then flip the
 `DEFECT` assertions in this suite to the SDK vectors already recorded in the comments.
 This task deliberately did not change wire behavior.
+
+## Round 1 fix (reviewer findings)
+
+Controller ruling applied: the 7 exact-wire tests that pin the current defective bytes
+are a **characterization baseline** (production fixes out of scope for this task).
+
+What changed:
+
+1. Added the marker `// CHARACTERIZATION — current defective wire; flip to SDK vector with
+the production fix.` to all 7 defective tests: `test_add_key_exact_wire`,
+   `test_auth_message_exact_wire`, `test_action_envelope_exact_wire`,
+   `test_wake_action_exact_wire`, `test_charge_actions_exact_wire`,
+   `test_set_amps_limit_exact_wire`, `test_climate_action_exact_wire`.
+   The 4 SDK-correct pins (`test_enc_destination_exact_wire`,
+   `test_session_info_request_exact_wire`, `test_vcsec_rke_exact_wire`,
+   `test_vcsec_closure_exact_wire`) are intentionally unmarked.
+2. Added literal SDK-correct byte arrays as comments where they were missing:
+    - `test_action_envelope_exact_wire`: `{0x12, 0x02, 0x32, 0x00}` — single
+      `Action{field 2: VehicleAction{field 6: empty}}` per `car_server.proto:16`
+      (current pin is `{0x0A,0x04,0x0A,0x02,0x32,0x00}`).
+    - `test_add_key_exact_wire`: full 105-byte vector derived from `vcsec.proto`
+      (UnsignedMessage.WhitelistOperation field 16 at `:230`,
+      WhitelistOperation.addKeyToWhitelistAndAddPermissions field 5 at `:127`,
+      PermissionChange.key/PublicKey wrapping at `:105`, keyRole field 4 at `:107`,
+      metadataForKey field 6 at `:135`, SDK NFC_CARD=1 at `:32`).
+      Refinement to the original concern: the add-key message is not placed directly
+      at UnsignedMessage field 5 — it is field 16 (WhitelistOperation) -> field 5.
+      Comment also notes SDK `ROLE_OWNER=2` (`keys.proto:11`) vs 4 used by msg.h.
+3. Corrected the report RED-line typo from `19 test cases` to `18 test cases`.
+4. No production code changed; no assertions flipped.
+
+Covering tests: `test_native_ble_proto` (18 tests, all passing).
+
+Exact command run (from repo root):
+
+```
+cd firmware; .\pio.ps1 test -e native -f test_native_ble_proto
+```
+
+Output (verbatim):
+
+```
+Verbosity level can be increased via `-v, -vv, or -vvv` option
+Collected 85 tests
+
+Processing test_native_ble_proto in native environment
+--------------------------------------------------------------------------------
+Building...
+Testing...
+test\test_native_ble_proto\test_ble_proto.cpp:602: test_session_info_request_tags	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:603: test_add_key_tags	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:604: test_auth_message_tags	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:605: test_parse_session_info_uses_field_15	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:606: test_parse_session_info_skips_other_fields	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:607: test_parse_session_info_rejects_old_field_10	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:608: test_session_info_fields_round_trip_via_field_15	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:610: test_enc_destination_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:611: test_session_info_request_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:612: test_add_key_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:613: test_auth_message_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:614: test_action_envelope_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:615: test_wake_action_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:616: test_charge_actions_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:617: test_set_amps_limit_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:618: test_climate_action_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:619: test_vcsec_rke_exact_wire	[PASSED]
+test\test_native_ble_proto\test_ble_proto.cpp:620: test_vcsec_closure_exact_wire	[PASSED]
+----------- native:test_native_ble_proto [PASSED] Took 1.75 seconds -----------
+
+=================================== SUMMARY ===================================
+Environment    Test                   Status    Duration
+-------------  ---------------------  --------  ------------
+native         test_native_ble_proto  PASSED    00:00:01.752
+================= 18 test cases: 18 succeeded in 00:00:01.752 =================
+```
+
+Concerns unchanged from the original report; all production wire defects remain
+reported and unfixed by design.

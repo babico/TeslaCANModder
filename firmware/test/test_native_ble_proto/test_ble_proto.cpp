@@ -397,14 +397,28 @@ static void test_add_key_exact_wire()
 	memset(pub, 0x11, sizeof(pub));
 	memset(uuid, 0x03, sizeof(uuid));
 
+	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
 	// DEFECT (reported, not fixed): msg.h:78 writes the add-key message at
-	// UnsignedMessage field 2, but SDK vcsec.proto:229 defines field 2 = RKEAction;
-	// correct field is addKeyToWhitelistAndAddPermissions = 5 (vcsec.proto:127).
+	// UnsignedMessage field 2, but SDK vcsec.proto:228 defines field 2 = RKEAction;
+	// correct path is UnsignedMessage.WhitelistOperation (field 16, vcsec.proto:230)
+	// -> WhitelistOperation.addKeyToWhitelistAndAddPermissions (field 5, vcsec.proto:127).
 	// Inner PermissionChange is also wrong: msg.h:69-71 uses raw key bytes at field 1
 	// (SDK vcsec.proto:105 wraps PublicKey{PublicKeyRaw=1}), role at field 2 (SDK
 	// vcsec.proto:107 says keyRole = 4), and form_factor at field 5 (SDK puts it in
 	// KeyMetadata at vcsec.proto:135 metadataForKey = 6). KEY_FORM_FACTOR_NFC_CARD
 	// constant is 3 at msg.h:25 but SDK vcsec.proto:32 says 1.
+	//
+	// SDK-correct literal byte vector for these same inputs (pub=0x11*65, role=4,
+	// NFC_CARD=1 per SDK, uuid=0x03*16), 105 bytes, C-array form:
+	//   {0x32,0x02,0x08,0x02,                                  to_destination = Destination{VS}
+	//    0x52,0x50,                                            field 10 UnsignedMessage, len 80
+	//      0x82,0x01,0x4D,                                     UnsignedMessage.WhitelistOperation (f16), len 77
+	//        0x2A,0x4B,                                        .addKeyToWhitelistAndAddPermissions (f5), len 75
+	//          0x0A,0x43,                                      PermissionChange.key (f1), len 67
+	//            0x0A,0x41,0x11 x65,                           PublicKey.PublicKeyRaw (f1), len 65
+	//          0x20,0x04,                                      PermissionChange.keyRole (f4); SDK ROLE_OWNER=2
+	//          0x32,0x02,0x08,0x01,                            .metadataForKey (f6), KeyMetadata.keyFormFactor=1
+	//    0x9A,0x03,0x10,0x03 x16}                              uuid (f51)
 	size_t n = 0;
 	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, 4, KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), n));
 
@@ -433,6 +447,7 @@ static void test_auth_message_exact_wire()
 	size_t n = 0;
 	TEST_ASSERT_TRUE(buildAuthMessage(enc, sizeof(enc), tag, 7, DOMAIN_INFOTAINMENT, uuid, out, sizeof(out), n));
 
+	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
 	// DEFECT (reported, not fixed in this task): firmware/lib/vehicle/ble/msg.h:313
 	// writes signature_data at field 7, which SDK universal_message.proto:85 defines
 	// as from_destination; SDK universal_message.proto:94 says field 13. Inner fields
@@ -460,9 +475,12 @@ static void test_auth_message_exact_wire()
 
 static void test_action_envelope_exact_wire()
 {
+	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
 	// DEFECT (reported, not fixed): msg.h:150 and msg.h:153 both wrap at field 1,
 	// producing Action{field1:{field1:VehicleAction}}. SDK car_server.proto:16
 	// defines a single Action{field2: VehicleAction}.
+	// SDK-correct literal byte vector for this input (inner VehicleAction = 32 00), 4 bytes:
+	//   {0x12, 0x02, 0x32, 0x00}   Action{field2: VehicleAction{field6: empty}}
 	uint8_t inner[8], out[64];
 	Proto p(inner, sizeof(inner));
 	TEST_ASSERT_TRUE(p.fieldEmpty(6));
@@ -474,6 +492,7 @@ static void test_action_envelope_exact_wire()
 
 static void test_wake_action_exact_wire()
 {
+	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
 	// DEFECT (reported, not fixed): msg.h:169 uses fieldEmpty(25), but SDK
 	// car_server.proto:42 has field 25 = vehicleControlCancelSoftwareUpdateAction;
 	// there is no wake field in CarServer.VehicleAction (wake is a VCSEC RKE action).
@@ -487,6 +506,7 @@ static void test_wake_action_exact_wire()
 
 static void test_charge_actions_exact_wire()
 {
+	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
 	// DEFECT (reported, not fixed): msg.h:191/213 use VehicleAction field 11; SDK
 	// car_server.proto:27 says chargingStartStopAction = 6. msg.h:189 uses field 1
 	// for start (SDK car_server.proto:186 says 2) and msg.h:211 uses field 2 for
@@ -506,6 +526,7 @@ static void test_charge_actions_exact_wire()
 
 static void test_set_amps_limit_exact_wire()
 {
+	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
 	// DEFECT (reported, not fixed): msg.h:231 uses field 13 but SDK
 	// car_server.proto:56 says setChargingAmpsAction = 43; msg.h:249 uses field 12
 	// but SDK car_server.proto:26 says chargingSetLimitAction = 5.
@@ -524,6 +545,7 @@ static void test_set_amps_limit_exact_wire()
 
 static void test_climate_action_exact_wire()
 {
+	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
 	// DEFECT (reported, not fixed): msg.h:267 uses field 14 but SDK
 	// car_server.proto:31 says hvacAutoAction = 10. msg.h emits only power_on;
 	// SDK HvacAutoAction has manual_override at field 2 (car_server.proto:211).
