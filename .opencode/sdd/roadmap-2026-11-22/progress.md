@@ -128,3 +128,9 @@ Ruling: split C1-07 into C1-07a (safety hardening that needs no capture: gate `d
 ## Phase 1 closure
 
 All executable tasks DONE. Parked until capture/DBC/bench (cannot be completed in this environment): C1-07b (gear/pedal bit ground truth), C1-12 (0x334 pedal field), C1-23 (wake → VCSEC RKE). These are explicitly listed as open in the plan with their required capture.
+
+## Final whole-branch review (52 commits, base 91fc067)
+
+Ruling: reviewer promoted three deferred items into Issues — accept promotion. They are load-bearing for this phase's honesty goal (client sends UNSUPPORTED commands) or use the same SDK-authority rule already applied to amps (metadataForKey placement). One fix wave for the complete findings list; no per-finding fixers.
+
+Ruling: pre-existing `buildStalkFrame` bus-routing concern (0x249 on BUS_VEHICLE) stays a bench follow-up — shape/CRC are corpus-backed but routing needs physical capture; no code change here. Cost if wrong: ALC injection may be on the wrong bus, already flagged pre-existing.
