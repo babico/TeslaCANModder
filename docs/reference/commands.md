@@ -1,4 +1,4 @@
-﻿---
+---
 title: Command Reference
 title_tr: Komut Referansı
 description: Complete list of serial, BLE, and WiFi commands
@@ -60,6 +60,12 @@ flowchart LR
     classDef transport fill:#1e3a5f,stroke:#4a7fb5,color:#fff
     class Serial,WiFi,BLE transport
 ```
+
+## Unsupported commands
+
+Rows marked **UNSUPPORTED** are advertised for wire compatibility only. They have no
+firmware dispatcher branch and return `{"t":"error","msg":"Unknown command"}`. Do not
+build new UI on them.
 
 ## System Commands
 
@@ -166,10 +172,10 @@ Status payload includes:
 | ---------------- | ---------------------------------- |
 | `lhd:on`         | Left-hand drive mode               |
 | `lhd:off`        | Right-hand drive mode              |
-| `apfirst:on`     | Enable AP-First injection gate     |
-| `apfirst:off`    | Disable AP-First gate              |
-| `lanegraph:on`   | Enable lane graph visualization    |
-| `lanegraph:off`  | Disable lane graph visualization   |
+| `ap-first:on`    | Enable AP-First injection gate     |
+| `ap-first:off`   | Disable AP-First gate              |
+| `lane-graph:on`  | Enable lane graph visualization    |
+| `lane-graph:off` | Disable lane graph visualization   |
 | `assist-dev:on`  | Enable developer mode              |
 | `assist-dev:off` | Disable developer mode             |
 | `assist-nav:on`  | Enable drive-on-navigation assist  |
@@ -209,22 +215,22 @@ plus its 16 buttons into bound serial commands. Pairing, button bindings
 (tap + hold) and per-axis tuning all persist to NVS namespaces `tcm_gpad`
 / `tcm_gbnd`. See [vehicle features](./vehicle-features.md#gamepad-input-ble-hid).
 
-| Command                                | Description                                               |
-| -------------------------------------- | --------------------------------------------------------- |
-| `gamepad:scan`                         | Start a 6-second BLE HID scan                             |
-| `gamepad:rescan`                       | Alias for `gamepad:scan`                                  |
-| `gamepad:pair:<addr>`                  | Pair with the scanned MAC address (`AA:BB:CC:DD:EE:FF`)   |
-| `gamepad:unpair`                       | Forget the paired device                                  |
-| `gamepad:on`                           | Enable gamepad input (saved to NVS)                       |
-| `gamepad:off`                          | Disable gamepad input (saved to NVS)                      |
-| `gamepad:status`                       | Emit a JSON status (battery, RSSI, axes, mode)            |
-| `gamepad:cancel`                       | Send a one-shot DAS cancel burst                          |
-| `das:arm`                              | Arm DAS safety gate before injection (pre-drive check)    |
-| `das:disarm`                           | Disarm DAS safety gate and block all injection            |
-| `das:status`                           | Query DAS gate status and open-condition                  |
-| `gamepad:bind:<n>:<cmd>`               | Bind tap of button `n` (0..15) to a serial command        |
-| `gamepad:hold:<n>:<cmd>`               | Bind ≥500 ms long-press of button `n` to a serial command |
-| `gamepad:axis:<n>:<dz\|expo\|inv>:<v>` | Per-axis tuning, axes 0..5                                |
+| Command                                | Description                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| `gamepad:scan`                         | Start a 6-second BLE HID scan                                            |
+| `gamepad:rescan`                       | Alias for `gamepad:scan`                                                 |
+| `gamepad:pair:<addr>`                  | Pair with the scanned MAC address (`AA:BB:CC:DD:EE:FF`)                  |
+| `gamepad:unpair`                       | Forget the paired device                                                 |
+| `gamepad:on`                           | Enable gamepad input (saved to NVS)                                      |
+| `gamepad:off`                          | Disable gamepad input (saved to NVS)                                     |
+| `gamepad:status`                       | Emit a JSON status (battery, RSSI, axes, mode)                           |
+| `gamepad:cancel`                       | Send a one-shot DAS cancel burst                                         |
+| `das:arm`                              | **UNSUPPORTED** - Arm DAS safety gate before injection (pre-drive check) |
+| `das:disarm`                           | **UNSUPPORTED** - Disarm DAS safety gate and block all injection         |
+| `das:status`                           | **UNSUPPORTED** - Query DAS gate status and open-condition               |
+| `gamepad:bind:<n>:<cmd>`               | Bind tap of button `n` (0..15) to a serial command                       |
+| `gamepad:hold:<n>:<cmd>`               | Bind ≥500 ms long-press of button `n` to a serial command                |
+| `gamepad:axis:<n>:<dz\|expo\|inv>:<v>` | Per-axis tuning, axes 0..5                                               |
 
 Status payload (`gamepad` field) includes:
 
@@ -820,55 +826,55 @@ Returns timestamped debug events useful for diagnostics.
 
 ## Button Remapping
 
-| Command                        | Description                                      |
-| ------------------------------ | ------------------------------------------------ |
-| `btnmap:lamp:short:trunk`      | Map lamp button short press to trunk action      |
-| `btnmap:lamp:long:sentry`      | Map lamp button long press to sentry action      |
-| `btnmap:lamp:double:horn`      | Map lamp button double press to horn action      |
-| `btnmap:parking:short:fold`    | Map parking button short press to mirror fold    |
-| `btnmap:parking:long:hazard`   | Map parking button long press to hazard action   |
-| `btnmap:parking:double:recirc` | Map parking button double press to recirc action |
-| `btnmap:query`                 | Query current button mappings                    |
-| `btnmap:reset`                 | Reset all button mappings to defaults            |
+| Command                        | Description                                                        |
+| ------------------------------ | ------------------------------------------------------------------ |
+| `btnmap:lamp:short:trunk`      | **UNSUPPORTED** - Map lamp button short press to trunk action      |
+| `btnmap:lamp:long:sentry`      | **UNSUPPORTED** - Map lamp button long press to sentry action      |
+| `btnmap:lamp:double:horn`      | **UNSUPPORTED** - Map lamp button double press to horn action      |
+| `btnmap:parking:short:fold`    | **UNSUPPORTED** - Map parking button short press to mirror fold    |
+| `btnmap:parking:long:hazard`   | **UNSUPPORTED** - Map parking button long press to hazard action   |
+| `btnmap:parking:double:recirc` | **UNSUPPORTED** - Map parking button double press to recirc action |
+| `btnmap:query`                 | **UNSUPPORTED** - Query current button mappings                    |
+| `btnmap:reset`                 | **UNSUPPORTED** - Reset all button mappings to defaults            |
 
 Button names: `lamp`, `parking`. Press types: `short`, `long`, `double`. Actions: `none`, `trunk`, `frunk`, `sentry`, `horn`, `fold`, `hazard`, `recirc`.
 
 ## Speed Camera Alert
 
-| Command          | Description                            |
-| ---------------- | -------------------------------------- |
-| `speedalert:on`  | Enable speed camera alert BLE service  |
-| `speedalert:off` | Disable speed camera alert BLE service |
+| Command          | Description                                              |
+| ---------------- | -------------------------------------------------------- |
+| `speedalert:on`  | **UNSUPPORTED** - Enable speed camera alert BLE service  |
+| `speedalert:off` | **UNSUPPORTED** - Disable speed camera alert BLE service |
 
 ## GVRET TCP Gateway
 
-| Command         | Description                                   |
-| --------------- | --------------------------------------------- |
-| `gvret:on`      | Enable GVRET TCP server (SavvyCAN compatible) |
-| `gvret:off`     | Disable GVRET TCP server                      |
-| `gvret:port:23` | Set GVRET TCP port (1–65535)                  |
+| Command         | Description                                                     |
+| --------------- | --------------------------------------------------------------- |
+| `gvret:on`      | **UNSUPPORTED** - Enable GVRET TCP server (SavvyCAN compatible) |
+| `gvret:off`     | **UNSUPPORTED** - Disable GVRET TCP server                      |
+| `gvret:port:23` | **UNSUPPORTED** - Set GVRET TCP port (1–65535)                  |
 
 ## ESP-NOW
 
-| Command            | Description                           |
-| ------------------ | ------------------------------------- |
-| `espnow:on`        | Enable ESP-NOW multi-device broadcast |
-| `espnow:off`       | Disable ESP-NOW broadcast             |
-| `espnow:channel:1` | Set ESP-NOW WiFi channel (1–13)       |
+| Command            | Description                                             |
+| ------------------ | ------------------------------------------------------- |
+| `espnow:on`        | **UNSUPPORTED** - Enable ESP-NOW multi-device broadcast |
+| `espnow:off`       | **UNSUPPORTED** - Disable ESP-NOW broadcast             |
+| `espnow:channel:1` | **UNSUPPORTED** - Set ESP-NOW WiFi channel (1–13)       |
 
 ## ScanMyTesla BT Bridge
 
-| Command   | Description                             |
-| --------- | --------------------------------------- |
-| `smt:on`  | Enable ScanMyTesla Bluetooth SPP bridge |
-| `smt:off` | Disable ScanMyTesla Bluetooth bridge    |
+| Command   | Description                                               |
+| --------- | --------------------------------------------------------- |
+| `smt:on`  | **UNSUPPORTED** - Enable ScanMyTesla Bluetooth SPP bridge |
+| `smt:off` | **UNSUPPORTED** - Disable ScanMyTesla Bluetooth bridge    |
 
 ## ELM327 Emulation
 
-| Command      | Description                        |
-| ------------ | ---------------------------------- |
-| `elm327:on`  | Enable ELM327 AT command emulation |
-| `elm327:off` | Disable ELM327 emulation           |
+| Command      | Description                                          |
+| ------------ | ---------------------------------------------------- |
+| `elm327:on`  | **UNSUPPORTED** - Enable ELM327 AT command emulation |
+| `elm327:off` | **UNSUPPORTED** - Disable ELM327 emulation           |
 
 ## Tesla BLE Key Protocol
 
@@ -893,30 +899,30 @@ Distinct from the high-level VCSEC control below.
 
 ## Tesla BLE Vehicle Control
 
-| Command           | Description                              |
-| ----------------- | ---------------------------------------- |
-| `teslable:on`     | Enable Tesla BLE vehicle control (VCSEC) |
-| `teslable:off`    | Disable Tesla BLE control                |
-| `teslable:auth`   | Authenticate with vehicle via BLE        |
-| `teslable:forget` | Forget BLE vehicle pairing               |
+| Command           | Description                                                |
+| ----------------- | ---------------------------------------------------------- |
+| `teslable:on`     | **UNSUPPORTED** - Enable Tesla BLE vehicle control (VCSEC) |
+| `teslable:off`    | **UNSUPPORTED** - Disable Tesla BLE control                |
+| `teslable:auth`   | **UNSUPPORTED** - Authenticate with vehicle via BLE        |
+| `teslable:forget` | **UNSUPPORTED** - Forget BLE vehicle pairing               |
 
 ## Home Assistant / ESPHome
 
-| Command            | Description                           |
-| ------------------ | ------------------------------------- |
-| `ha:on`            | Enable Home Assistant integration     |
-| `ha:off`           | Disable Home Assistant integration    |
-| `ha:discovery`     | Trigger MQTT auto-discovery for HA    |
-| `ha:interval:<ms>` | Set reporting interval (500–60000 ms) |
+| Command            | Description                                             |
+| ------------------ | ------------------------------------------------------- |
+| `ha:on`            | **UNSUPPORTED** - Enable Home Assistant integration     |
+| `ha:off`           | **UNSUPPORTED** - Disable Home Assistant integration    |
+| `ha:discovery`     | **UNSUPPORTED** - Trigger MQTT auto-discovery for HA    |
+| `ha:interval:<ms>` | **UNSUPPORTED** - Set reporting interval (500–60000 ms) |
 
 ## Encrypted BLE Multi-Device
 
-| Command             | Description                      |
-| ------------------- | -------------------------------- |
-| `bleencrypt:on`     | Enable AES-256-GCM encrypted BLE |
-| `bleencrypt:off`    | Disable encrypted BLE            |
-| `bleencrypt:pair`   | Start BLE pairing mode           |
-| `bleencrypt:unpair` | Remove all paired devices        |
+| Command             | Description                                        |
+| ------------------- | -------------------------------------------------- |
+| `bleencrypt:on`     | **UNSUPPORTED** - Enable AES-256-GCM encrypted BLE |
+| `bleencrypt:off`    | **UNSUPPORTED** - Disable encrypted BLE            |
+| `bleencrypt:pair`   | **UNSUPPORTED** - Start BLE pairing mode           |
+| `bleencrypt:unpair` | **UNSUPPORTED** - Remove all paired devices        |
 
 ## BLE Key Distance
 

@@ -419,6 +419,109 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
+	// Fresh-boot diagnostics: these need no vehicle CAN traffic, so they must
+	// be dispatched before the 0x273 hasCtrl gate below.
+	// Log ring dump: emit last N log entries as a JSON array
+	if (strcmp(cmd, "log") == 0)
+	{
+		uint16_t count = logRingCount();
+		JsonLineBuilder line = jsonLine();
+		line.str("t", "log").num("count", count).raw(F(",\"entries\":["));
+		for (uint16_t i = 0; i < count; i++)
+		{
+			if (i > 0)
+				printStr(F(","));
+			const LogEntry *e = logRingGet(i);
+			if (!e)
+				break;
+			printStr(F("{\"ms\":"));
+			printNum(e->timestamp);
+			printStr(F(",\"m\":\""));
+			printStr(e->msg);
+			printStr(F("\"}"));
+		}
+		line.raw(F("]")).end();
+		return;
+	}
+
+	// Vehicle platform identity query (hardware gen, software version, FSD protocol)
+	if (strcmp(cmd, "platform") == 0)
+	{
+		auto platformRoot = [&](JsonLineBuilder &out)
+		{
+			out.num("model", s.platformModel)
+				.num("hwGen", s.platformHwGen)
+				.num("swYear", s.platformSwYear)
+				.num("swWeek", s.platformSwWeek)
+				.num("swRelease", s.platformSwRelease)
+				.num("fsdProto", s.platformFsdProto)
+				.num("swCompat", s.platformSwCompat)
+				.boolean("resolved", s.platformResolved);
+		};
+
+		extern bool mcpAvailable[];
+		auto canHealthObject = [&](JsonLineBuilder::JsonObjectBuilder &obj)
+		{
+			for (uint8_t i = 0; i < BUS_MAX; i++)
+			{
+				char busKey[8];
+				busKey[0] = 'b';
+				busKey[1] = 'u';
+				busKey[2] = 's';
+				busKey[3] = (char)('0' + i);
+				busKey[4] = '\0';
+
+				obj.object(busKey, [&](JsonLineBuilder::JsonObjectBuilder &bus)
+						   { bus.boolean("on", busActive(i)).boolean("det", mcpAvailable[i]); });
+			}
+		};
+
+		jsonLine().str("t", "platform").merge(platformRoot).mergeObject("canHealth", canHealthObject).end();
+		return;
+	}
+
+	// CAN Recorder: recorder:on, recorder:off, recorder:clear, recorder:status
+	if (strncmp(cmd, "recorder:", 9) == 0)
+	{
+		const char *sub = cmd + 9;
+		if (strcmp(sub, "on") == 0)
+		{
+			canRecorderStart(true);
+			sendAck(cmd);
+			sendLog(F("Recorder ON"));
+			return;
+		}
+		if (strcmp(sub, "off") == 0)
+		{
+			canRecorderStop();
+			sendAck(cmd);
+			sendLog(F("Recorder OFF"));
+			return;
+		}
+		if (strcmp(sub, "clear") == 0)
+		{
+			canRecorderReset();
+			sendAck(cmd);
+			sendLog(F("Recorder cleared"));
+			return;
+		}
+		if (strcmp(sub, "status") == 0)
+		{
+			jsonLine()
+				.str("t", "recorder")
+				.boolean("enabled", canRecorderEnabled())
+				.num("count", (int)canRecorderCount())
+				.num("capacity", (int)canRecorderCapacity())
+				.num("captured", (unsigned long)canRecorderCapturedTotal())
+				.num("dropped", (unsigned long)canRecorderDroppedTotal())
+				.num("lastCaptureMs", (unsigned long)canRecorderLastCaptureMs())
+				.end();
+			return;
+		}
+		sendError(F("Unknown recorder sub-command"));
+		return;
+	}
+
 	// Commands below require the 0x273 control frame to be present
 	if (!s.hasCtrl)
 	{
@@ -675,29 +778,6 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Log ring dump: emit last N log entries as a JSON array
-	if (strcmp(cmd, "log") == 0)
-	{
-		uint16_t count = logRingCount();
-		JsonLineBuilder line = jsonLine();
-		line.str("t", "log").num("count", count).raw(F(",\"entries\":["));
-		for (uint16_t i = 0; i < count; i++)
-		{
-			if (i > 0)
-				printStr(F(","));
-			const LogEntry *e = logRingGet(i);
-			if (!e)
-				break;
-			printStr(F("{\"ms\":"));
-			printNum(e->timestamp);
-			printStr(F(",\"m\":\""));
-			printStr(e->msg);
-			printStr(F("\"}"));
-		}
-		line.raw(F("]")).end();
-		return;
-	}
-
 	// Turn signals: turn:left3, turn:right3, turn:hazard, turn:off
 	if (executeTurnSignalCmd(cmd, s))
 	{
@@ -831,80 +911,6 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 			.end();
 		return;
 	}
-
-	// Vehicle platform identity query (hardware gen, software version, FSD protocol)
-	if (strcmp(cmd, "platform") == 0)
-	{
-		auto platformRoot = [&](JsonLineBuilder &out)
-		{
-			out.num("model", s.platformModel)
-				.num("hwGen", s.platformHwGen)
-				.num("swYear", s.platformSwYear)
-				.num("swWeek", s.platformSwWeek)
-				.num("swRelease", s.platformSwRelease)
-				.num("fsdProto", s.platformFsdProto)
-				.num("swCompat", s.platformSwCompat)
-				.boolean("resolved", s.platformResolved);
-		};
-
-		extern bool mcpAvailable[];
-		auto canHealthObject = [&](JsonLineBuilder::JsonObjectBuilder &obj)
-		{
-			for (uint8_t i = 0; i < BUS_MAX; i++)
-			{
-				char busKey[8];
-				busKey[0] = 'b';
-				busKey[1] = 'u';
-				busKey[2] = 's';
-				busKey[3] = (char)('0' + i);
-				busKey[4] = '\0';
-
-				obj.object(busKey, [&](JsonLineBuilder::JsonObjectBuilder &bus)
-						   { bus.boolean("on", busActive(i)).boolean("det", mcpAvailable[i]); });
-			}
-		};
-
-		jsonLine().str("t", "platform").merge(platformRoot).mergeObject("canHealth", canHealthObject).end();
-		return;
-	}
-
-	// CAN Recorder: recorder:on, recorder:off, recorder:clear, recorder:status
-	if (strncmp(cmd, "recorder:", 9) == 0) {
-		const char *sub = cmd + 9;
-		if (strcmp(sub, "on") == 0) {
-			canRecorderStart(true);
-			sendAck(cmd);
-			sendLog(F("Recorder ON"));
-			return;
-		}
-		if (strcmp(sub, "off") == 0) {
-			canRecorderStop();
-			sendAck(cmd);
-			sendLog(F("Recorder OFF"));
-			return;
-		}
-		if (strcmp(sub, "clear") == 0) {
-			canRecorderReset();
-			sendAck(cmd);
-			sendLog(F("Recorder cleared"));
-			return;
-		}
-		if (strcmp(sub, "status") == 0) {
-			jsonLine()
-				.str("t", "recorder")
-				.boolean("enabled", canRecorderEnabled())
-				.num("count", (int)canRecorderCount())
-				.num("capacity", (int)canRecorderCapacity())
-				.num("captured", (unsigned long)canRecorderCapturedTotal())
-				.num("dropped", (unsigned long)canRecorderDroppedTotal())
-				.num("lastCaptureMs", (unsigned long)canRecorderLastCaptureMs())
-				.end();
-			return;
-		}
-		sendError(F("Unknown recorder sub-command"));
-		return;
-	}
-
 
 #if BOARD_ENABLE_BLE
 	// BLE radio control: ble:on, ble:off, ble:name:<n>, ble:status

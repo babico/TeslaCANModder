@@ -217,10 +217,10 @@ const FIRMWARE_WIRE_COMMANDS: string[] = [
 	"eap:off",
 	"lhd:on",
 	"lhd:off",
-	"apfirst:on",
-	"apfirst:off",
-	"lanegraph:on",
-	"lanegraph:off",
+	"ap-first:on",
+	"ap-first:off",
+	"lane-graph:on",
+	"lane-graph:off",
 	"assist-dev:on",
 	"assist-dev:off",
 	"assist-nav:on",
@@ -705,7 +705,7 @@ describe("Cross-check: docs ↔ protocol ↔ firmware", () => {
 			if (dc.endsWith(":N")) return false;
 			if (/[A-Z]/.test(dc) && !dc.includes("MHz")) return false;
 			// Driver assist toggles and Tesla BLE key commands are valid
-			if (/^(lhd|apfirst|lanegraph|assist-(dev|nav|hof|tel)):/.test(dc)) return false;
+			if (/^(lhd|ap-first|lane-graph|assist-(dev|nav|hof|tel)):/.test(dc)) return false;
 			if (/^(tesla:key|tesla:vin|tesla:wake|tesla:charge|tesla:climate)/.test(dc))
 				return false;
 			// Range entries like "seat:fl:0" – "seat:fl:3" — check base

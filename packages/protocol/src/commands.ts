@@ -188,8 +188,9 @@ export const commands = {
 
 	// Driver Assist toggles
 	lhd: (on: boolean) => (on ? "lhd:on" : "lhd:off"),
-	apFirstToggle: (on: boolean) => (on ? "apfirst:on" : "apfirst:off"),
-	laneGraph: (on: boolean) => (on ? "lanegraph:on" : "lanegraph:off"),
+	// Alias to the canonical firmware spellings accepted by dispatch.h.
+	apFirstToggle: (on: boolean) => (on ? "ap-first:on" : "ap-first:off"),
+	laneGraph: (on: boolean) => (on ? "lane-graph:on" : "lane-graph:off"),
 	assistDev: (on: boolean) => (on ? "assist-dev:on" : "assist-dev:off"),
 	assistNav: (on: boolean) => (on ? "assist-nav:on" : "assist-nav:off"),
 	assistHof: (on: boolean) => (on ? "assist-hof:on" : "assist-hof:off"),
@@ -562,16 +563,16 @@ export function lhdOff(): Command {
 	return { cmd: "lhd:off" };
 }
 export function apFirstOn(): Command {
-	return { cmd: "apfirst:on" };
+	return { cmd: "ap-first:on" };
 }
 export function apFirstOff(): Command {
-	return { cmd: "apfirst:off" };
+	return { cmd: "ap-first:off" };
 }
 export function laneGraphOn(): Command {
-	return { cmd: "lanegraph:on" };
+	return { cmd: "lane-graph:on" };
 }
 export function laneGraphOff(): Command {
-	return { cmd: "lanegraph:off" };
+	return { cmd: "lane-graph:off" };
 }
 export function assistDevOn(): Command {
 	return { cmd: "assist-dev:on" };
