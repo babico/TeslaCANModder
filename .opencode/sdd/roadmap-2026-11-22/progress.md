@@ -73,3 +73,9 @@ Ruling: C1-09 (35 small tools items) split into C1-09a (P3-001..010 bridge secur
     - Minor (deferred): `parseFrameId` parses digit-only bare strings as decimal (`"488"` → 488), comment overstates bare-hex behavior.
     - Minor (deferred): variant validation also runs for portless `export` — harmless over-reach.
     - Informational: ISO timestamps change dump textual shape (intended); `export` invoked via `node tools/bin/export.js`, no npm bin alias.
+
+- Task C1-10: complete (commits 13cb1c6..ca75ebd, review clean). Decision table covers all command families; aliases applied in builders + cross-check whitelist + docs; `log`/`platform`/`recorder:*` relocated above `!s.hasCtrl` as pure move; real Jest grep guard added; docs marked UNSUPPORTED. Protocol 501, client 305, native 1053, lint clean.
+    - Ruling: reviewer's Important item (fresh-boot test is a source-order proxy, not a compiled `executeCommand` test) is accepted for this phase because no native dispatch harness exists; add C1-19 to build one. Cost if wrong: a new early return could slip past the proxy — mitigated by the grep guard and can-review checklist.
+    - Minor (deferred): grep guard skips templated/bare commands not in its allowlist; "dispatched" detection too broad (`strcmp` anywhere under firmware).
+    - Minor (deferred): report arithmetic 11 vs 10 families, 36 vs 35 markers; generated in-app docs bundle stale (policy excludes it); `KEEP` category should be relabeled IMPLEMENT-already-present.
+    - Out of scope (deferred): client `ConnectionSection.tsx` still emits raw `gvret:*` / `espnow:*` that now hit UNSUPPORTED.
