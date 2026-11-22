@@ -35,27 +35,41 @@ inline uint8_t readDasLaneChangeState(const Frame &f)
 }
 
 /**
- * @brief Build a Model 3/Y stalk injection frame (0x249 SCCM_leftStalk).
+ * @brief Build a Model 3/Y SCCM left-stalk injection frame (0x249).
  *
- * CRC-8 protected 3-byte frame. Turn signal stalk positions in byte[1] bits[7:6]:
- * 0=OFF, 1=UP_1 (right), 2=UP_2, 3=DOWN_1 (left).
+ * Frame shape re-derived from the uhi22-tesla-crc 0x249 capture corpus
+ * (870 accepted 4-byte frames; docs/legacy/uhi22-tesla-crc.md §2/§7/§8):
+ *   data[0]      = CRC-8/OPENSAFETY over {data[1] & 0xF0, data[2], data[3], 0x00}
+ *                  XOR MAGIC_0x249[data[1] & 0x0F]
+ *   data[1][3:0] = alive counter (excluded from the CRC input window)
+ *   data[1][7:4] = 0 (idle high-beam / wash-wipe)
+ *   data[2][3:0] = turn-stalk enum: 0x08 = full left (DOWN), 0x04 = full right (UP)
+ *   data[3]      = 0x00 (0x00 in every captured frame)
+ *
+ * The old builder emitted DLC 3 with stalk bits in byte[1] bits[7:6] and left
+ * the counter nibble INSIDE the CRC window — that shape fits 0/870 corpus frames.
+ * Stalk enum values follow the community DBC / in-flight rewriter cross-reference
+ * (docs/legacy/canhackers-jupiter.md §7, docs/legacy/joshwardell-model3dbc.md §10);
+ * real-vehicle acceptance of the injected frame remains UNVERIFIED.
  *
  * @param f Output frame to populate.
- * @param turnLeft True for left lane change (DOWN_1), false for right (UP_1).
+ * @param turnLeft True for left lane change (full-down), false for right (full-up).
  */
 static uint8_t _alcStalkCounter = 0;
 
 inline void buildStalkFrame(Frame &f, bool turnLeft)
 {
 	f.id = CAN_ID_DI_STEER;
-	f.dlc = 3;
+	f.dlc = 4;
 	_alcStalkCounter = (_alcStalkCounter + 1) & 0x0F;
 
-	uint8_t stalkBits = turnLeft ? 0xC0 : 0x40;		   // DOWN_1=left, UP_1=right in bits[7:6]
-	f.data[1] = stalkBits | (_alcStalkCounter & 0x0F); // Stalk position | alive counter in bits[3:0]
-	f.data[2] = 0x00;								   // No wiper/wash activity
+	f.data[1] = _alcStalkCounter;	// idle high nibble; low nibble = alive counter
+	f.data[2] = turnLeft ? 0x08 : 0x04; // turn-stalk enum, low nibble only
+	f.data[3] = 0x00;					// tail byte: 0x00 in every captured frame
 
-	f.data[0] = teslaCrc8(&f.data[1], 2, _alcStalkCounter, MAGIC_0x249); // CRC-8 over bytes[1..2]
+	// Counter nibble is masked out of the CRC input window (capture-derived rule).
+	uint8_t payload[3] = {static_cast<uint8_t>(f.data[1] & 0xF0), f.data[2], f.data[3]};
+	f.data[0] = teslaCrc8(payload, 3, _alcStalkCounter, MAGIC_0x249);
 }
 
 /**
