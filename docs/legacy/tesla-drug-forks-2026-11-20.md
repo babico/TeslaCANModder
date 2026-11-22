@@ -5,7 +5,7 @@ Research-only inventory for `babico/TeslaCANModder` `legacy/`. **Do not run agai
 - Search: GitHub repository search `Tesla-drug fork:true` (pages 1–2, up to 100 results per page).
 - Results indexed: **152** accessible public repositories (a search-time snapshot; not a complete audit of all GitHub forks).
 - Original: [zeratulhx/Tesla-drug](https://github.com/zeratulhx/Tesla-drug) returned HTTP 404 on 2026-11-20. A 404 does not establish whether it was deleted or made private.
-- Strategy: keep the full source list below; pin **four observed distinct Git commit snapshots** as read-only submodules, avoiding 150+ redundant submodule checkouts and excessive CI churn.
+- Strategy (updated 2026-11-20): the full source list below is retained, and **139 repositories are pinned as read-only submodules** under `legacy/<owner>-<repo>`. The four originally pinned reference snapshots are listed in the table below. The remaining 13 entries are catalog-only: 3 returned HTTP 404 on clone and 10 are empty repositories with no cloneable commit. CI checks out with `submodules: false`, so the extra gitlinks do not clone on every run.
 - GitHub reported repository size is not proof of content equality. Not every entry below was independently byte-compared. Additional revisions may exist.
 - The ZIP/certificate/key material in forks is untrusted and has **not** been executed or validated. Review licenses and provenance before redistribution or use.
 
@@ -22,7 +22,7 @@ The four commits were verified from their respective `main` branch metadata; the
 
 ## All discovered repository links
 
-The following is an inventory, **not** 152 separately vendored source checkouts. The four pinned source entries are marked `pinned`.
+The following is the source inventory. Entries marked `pinned` are the four originally selected reference snapshots; most other reachable entries were subsequently added as submodules as well. Entries with size `0` are empty repositories and remain catalog-only.
 
 | # | Repository | GitHub size (KiB) | Pin |
 | ---: | --- | ---: | :---: |
