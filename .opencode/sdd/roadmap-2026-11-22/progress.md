@@ -33,3 +33,11 @@ Ruling: capture-gated tasks C1-06 (OTA), C1-07 (gear), C1-08 (ALC) require pulli
 - Task C1-01: complete (commits 7223b54..583fcc7, review clean). 5 tags 6/10/14/15/51 pinned by independent byte decoder; 7/7 focused + 1035/1035 native green. Staging verified via `git show --stat`: only `msg.h` + new test file.
     - Ruling: reviewer's Important item `signature_data` field 7 vs SDK 13 is real but explicitly out of scope (brief lists exactly five tags) — register as C1-15 follow-up in the next task batch; do not reopen C1-01. Cost if wrong: one extra small task later.
     - Ruling: Minor test-scanner bounds issue is test-only with fixed vectors; register in intake, no fix loop. Cost if wrong: obscure failure if a future malformed vector is added.
+
+- Task C1-14: fix round 1/5 started (reviewer Approved with 2 Important + 1 Minor; commits 46955fa..5fc7952).
+    - Ruling: 7 exact-wire tests pin CURRENT DEFECTIVE bytes, not SDK vectors. Keep as explicitly labeled characterization baseline (controller acknowledges); follow-up production-fix tasks must flip those assertions to the recorded SDK vectors in the SAME commit. Cost if wrong: a correct production fix temporarily turns 7 tests red — intended signal.
+    - Fix dispatched: add literal SDK vectors for add-key/Action envelope comments; label the 7 characterization tests; correct report count typo. No production change.
+    - Minor (deferred): dead `feature/vcsec.h` included in test TU; revisit when that header is removed.
+- Task C1-14: complete (commits 46955fa..5fc7952, fix 3ed48a5, scoped re-review clean). 18/18 focused + 1046/1046 native green; zero production churn. 7 defective-byte tests carry CHARACTERIZATION markers; SDK vectors recorded for the two previously missing cases. Reviewer confirmed all findings addressed, no new breakage.
+    - New plan tasks C1-15..C1-18 added from the five wire defects found here; each must flip its matching CHARACTERIZATION assertion in the same commit as the production fix.
+    - Ruling: AddKey SDK path is UnsignedMessage field 16 → WhitelistOperation field 5 (implementer refinement, :612 vector) — C1-02 brief must carry this exact nesting.
