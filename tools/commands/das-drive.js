@@ -150,9 +150,15 @@ export async function runDasDrive(session, opts, out) {
 		const duration = Number(opts.duration) || 5000;
 		out.section(`Soaking ${duration} ms — measuring DAS frame cadence`);
 
-		// We need raw CAN frames to see the IDs we emit.
+		// We need raw CAN frames to see the IDs we emit. Without the ack the
+		// soak would only measure silence and could look like a false pass.
 		session.send("can:raw:on");
-		await session.waitForAck("can:raw:on", timeoutMs);
+		const rawAck = await session.waitForAck("can:raw:on", timeoutMs);
+		if (!rawAck) {
+			out.fail("can:raw:on", "No ack — refusing to soak without raw CAN mode");
+			session.send("can:raw:off");
+			return;
+		}
 		session.send("stream:on");
 
 		const counts = { control: 0, steer: 0, eac: 0 };

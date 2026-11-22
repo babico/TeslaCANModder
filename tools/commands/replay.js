@@ -23,20 +23,12 @@ export async function runReplay(session, opts, out, _C) {
 	out.info(`File: ${inputPath}`);
 	out.info(`Speed: ${replaySpeed}x`);
 
-	const lines = [];
+	const rawLines = [];
 	const rl = createInterface({ input: createReadStream(inputPath), crlfDelay: Infinity });
-	for await (const line of rl) {
-		const trimmed = line.trim();
-		if (!trimmed || trimmed.startsWith("timestamp,")) continue; // skip CSV header
-		try {
-			const obj = JSON.parse(trimmed);
-			if (isReplayFrameLike(obj)) {
-				lines.push(obj);
-			}
-		} catch {
-			// skip non-JSON lines
-		}
-	}
+	for await (const line of rl) rawLines.push(line);
+	const { frames: lines, skipped } = parseReplayLines(rawLines.join("\n"));
+
+	out.info(`Skipped: ${skipped}`);
 
 	if (lines.length === 0) {
 		out.fail("No frames found in file");
@@ -67,7 +59,32 @@ export async function runReplay(session, opts, out, _C) {
 		}
 	}
 
-	out.pass(`Replayed ${sent} frames at ${replaySpeed}x speed`);
+	out.pass(`Replayed ${sent} frames at ${replaySpeed}x speed; skipped: ${skipped}`);
+}
+
+/**
+ * Split recorded text into replayable frames and count every non-empty line
+ * that could not be used (CSV headers, malformed JSON, wrong shape).
+ */
+export function parseReplayLines(text) {
+	const frames = [];
+	let skipped = 0;
+	for (const raw of String(text).split(/\r?\n/)) {
+		const trimmed = raw.trim();
+		if (!trimmed) continue;
+		if (trimmed.startsWith("timestamp,")) {
+			skipped += 1;
+			continue;
+		}
+		try {
+			const obj = JSON.parse(trimmed);
+			if (isReplayFrameLike(obj)) frames.push(obj);
+			else skipped += 1;
+		} catch {
+			skipped += 1;
+		}
+	}
+	return { frames, skipped };
 }
 
 function isReplayFrameLike(value) {

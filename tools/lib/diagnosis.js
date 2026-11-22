@@ -1,10 +1,13 @@
 /** Diagnosis engine — builds a health matrix and produces a human-readable verdict. */
 
+/** Match a standalone boot envelope, not `"t":"boot"` embedded in arbitrary text. */
+const BOOT_ENVELOPE_RE = /^\s*\{.*"t"\s*:\s*"boot"(?:\s*,|\s*\}).*\}\s*$/;
+
 export function buildMatrix(messages, variantRequested) {
 	const parsed = messages.filter((m) => m.msg);
 	const bootSeen =
 		parsed.some((m) => m.msg.t === "boot") ||
-		messages.some((m) => m.raw.includes('"t":"boot"'));
+		messages.some((m) => BOOT_ENVELOPE_RE.test(m.raw ?? ""));
 	const pongSeen = parsed.some((m) => m.msg.t === "pong");
 	const statuses = parsed.filter((m) => m.msg.t === "status");
 	const latest = statuses.length ? statuses[statuses.length - 1].msg : null;

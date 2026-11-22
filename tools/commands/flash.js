@@ -10,7 +10,7 @@ import { promisify } from "node:util";
 import { openSerial, BoardSession } from "../lib/session.js";
 
 const execFileAsync = promisify(execFile);
-const FLASH_BAUD = "460800";
+const DEFAULT_FLASH_BAUD = 460800;
 
 function firstExisting(paths) {
 	return paths.find((candidate) => candidate && fs.existsSync(candidate)) ?? null;
@@ -107,7 +107,7 @@ function buildEsptoolInvocation(tooling) {
 	};
 }
 
-async function runEsptool(invocation, port, args) {
+async function runEsptool(invocation, port, args, baud) {
 	return execFileAsync(
 		invocation.command,
 		[
@@ -117,7 +117,7 @@ async function runEsptool(invocation, port, args) {
 			"--port",
 			port,
 			"--baud",
-			FLASH_BAUD,
+			String(baud),
 			"--before",
 			"default_reset",
 			...args,
@@ -127,6 +127,7 @@ async function runEsptool(invocation, port, args) {
 }
 
 export async function runFlash(opts, out, C) {
+	const flashBaud = opts.flashBaud ?? DEFAULT_FLASH_BAUD;
 	if (!opts.flashHex) {
 		console.error(`${C.red}ERROR${C.reset}: --hex <path> is required for flash command`);
 		process.exit(1);
@@ -154,30 +155,40 @@ export async function runFlash(opts, out, C) {
 	out.info(`Firmware image: ${path.resolve(opts.flashHex)}`);
 	out.info(`Flash layout: ${flashPlan.label}`);
 	out.info(`Port: ${opts.port}`);
-	out.info(`Flash baud: ${FLASH_BAUD}`);
+	out.info(`Flash baud: ${flashBaud}`);
 	if (opts.eraseChip) out.info("Chip erase: enabled - flash will be fully erased before write");
 	out.info(`Using esptool: ${invocation.display}`);
 
 	try {
 		if (opts.eraseChip) {
 			out.info("Erasing flash...");
-			await runEsptool(invocation, opts.port, ["--after", "no_reset", "erase_flash"]);
+			await runEsptool(
+				invocation,
+				opts.port,
+				["--after", "no_reset", "erase_flash"],
+				flashBaud,
+			);
 		}
 
 		out.info("Writing firmware...");
-		const { stdout, stderr } = await runEsptool(invocation, opts.port, [
-			"--after",
-			"hard_reset",
-			"write_flash",
-			"-z",
-			"--flash_mode",
-			"keep",
-			"--flash_freq",
-			"keep",
-			"--flash_size",
-			"keep",
-			...flattenSegments(flashPlan.segments),
-		]);
+		const { stdout, stderr } = await runEsptool(
+			invocation,
+			opts.port,
+			[
+				"--after",
+				"hard_reset",
+				"write_flash",
+				"-z",
+				"--flash_mode",
+				"keep",
+				"--flash_freq",
+				"keep",
+				"--flash_size",
+				"keep",
+				...flattenSegments(flashPlan.segments),
+			],
+			flashBaud,
+		);
 
 		out.pass("Firmware flashed successfully");
 		if (stderr?.trim()) process.stderr.write(`\n${C.dim}${stderr}${C.reset}\n`);

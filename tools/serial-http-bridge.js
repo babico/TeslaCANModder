@@ -162,10 +162,30 @@ function normalizeEntry(entry) {
 	if (!entry) {
 		return null;
 	}
+	if (entry.type === "parse-error") {
+		return {
+			t: "parse-error",
+			raw: entry.raw ?? "",
+			error: entry.error ?? "invalid JSON",
+		};
+	}
 	if (entry.msg) {
 		return entry.msg;
 	}
 	return { t: "text", raw: entry.raw ?? "" };
+}
+
+function isJsonContentType(req) {
+	const value = headerValue(req, "content-type");
+	if (typeof value !== "string") return false;
+	const mediaType = value.split(";", 1)[0].trim().toLowerCase();
+	return mediaType === "application/json";
+}
+
+/** Close a server that was started before a later boot step failed. */
+export async function closeBridgeServer(server) {
+	if (!server || !server.listening) return;
+	await new Promise((resolve) => server.close(() => resolve()));
 }
 
 export function createBridgeServer({ session, serial = {}, options = {} }) {
@@ -231,6 +251,14 @@ export function createBridgeServer({ session, serial = {}, options = {} }) {
 					return;
 				}
 
+				if (!isJsonContentType(req)) {
+					sendJson(res, 415, {
+						ok: false,
+						error: "Content-Type must be application/json",
+					});
+					return;
+				}
+
 				const raw = await readBody(req, MAX_BODY_BYTES);
 				let cmd = "";
 
@@ -286,17 +314,24 @@ export function createBridgeServer({ session, serial = {}, options = {} }) {
 
 async function main() {
 	const options = parseBridgeArgs(process.argv);
-	const serial = await openSerial(options.port, options.baud);
-	const session = new BoardSession(serial, options.timeoutMs);
-	const server = createBridgeServer({ session, serial, options });
+	let server = null;
+	let session = null;
+	try {
+		const serial = await openSerial(options.port, options.baud);
+		session = new BoardSession(serial, options.timeoutMs);
+		server = createBridgeServer({ session, serial, options });
 
-	server.listen(options.listen, options.host, () => {
-		console.log(`[bridge] listening on http://${options.host}:${options.listen}`);
-		console.log(`[bridge] serial ${options.port} @ ${options.baud}`);
-		console.log(
-			options.token ? "[bridge] token auth enabled" : "[bridge] WARNING: no token set",
-		);
-	});
+		server.listen(options.listen, options.host, () => {
+			console.log(`[bridge] listening on http://${options.host}:${options.listen}`);
+			console.log(`[bridge] serial ${options.port} @ ${options.baud}`);
+			console.log(
+				options.token ? "[bridge] token auth enabled" : "[bridge] WARNING: no token set",
+			);
+		});
+	} catch (error) {
+		await closeBridgeServer(server);
+		throw error;
+	}
 
 	const shutdown = () => {
 		try {

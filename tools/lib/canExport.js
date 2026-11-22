@@ -214,9 +214,13 @@ function escapeDbcString(str) {
 	return String(str).replace(/"/g, '\\"');
 }
 
-/** Wrap a CSV field in quotes if it contains commas, quotes, or newlines. */
-function csvField(val) {
-	const s = String(val ?? "");
+/**
+ * Neutralize spreadsheet formulas and quote CSV fields containing
+ * commas, quotes or newlines.
+ */
+export function csvField(val) {
+	let s = String(val ?? "");
+	if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
 	if (s.includes(",") || s.includes('"') || s.includes("\n")) {
 		return `"${s.replace(/"/g, '""')}"`;
 	}

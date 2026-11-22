@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { BoardSession } from "../lib/session.js";
+import { BoardSession, openSerialWith } from "../lib/session.js";
 import { EventEmitter } from "node:events";
 
 /** Create a fake serial port (EventEmitter with write/close). */
@@ -130,5 +130,57 @@ describe("BoardSession", () => {
 
 		expect(sp.write).toHaveBeenCalledWith('{"cmd":"ping"}\n', expect.any(Function));
 		expect(onWriteError).toHaveBeenCalledWith(expect.any(Error));
+	});
+
+	it("close() also closes the readline interface", () => {
+		sp.isOpen = true;
+		const closeRl = jest.spyOn(session._rl, "close");
+
+		session.close();
+
+		expect(closeRl).toHaveBeenCalled();
+		expect(sp.close).toHaveBeenCalled();
+	});
+
+	it("send refuses to silently drop a command when the port is not writable", () => {
+		sp.writable = false;
+
+		expect(() => session.send("ping")).toThrow(/not writable/i);
+		expect(sp.write).not.toHaveBeenCalled();
+	});
+
+	it("records parse error detail on malformed JSON lines", () => {
+		feedLine("{invalid json}");
+
+		expect(session.messages()[0].type).toBe("parse-error");
+		expect(session.messages()[0].error).toEqual(expect.any(String));
+	});
+});
+
+describe("openSerialWith", () => {
+	it("uses autoOpen:false and the open() callback, never a constructor callback", async () => {
+		const ctor = jest.fn(function (options) {
+			this.options = options;
+			this.open = jest.fn((cb) => cb(null));
+		});
+
+		const sp = await openSerialWith(ctor, "COM3", 9600);
+
+		expect(ctor).toHaveBeenCalledWith({
+			path: "COM3",
+			baudRate: 9600,
+			autoOpen: false,
+		});
+		expect(ctor.mock.calls[0]).toHaveLength(1);
+		expect(sp.open).toHaveBeenCalled();
+		expect(sp.options.path).toBe("COM3");
+	});
+
+	it("rejects when open() reports an error", async () => {
+		const ctor = jest.fn(function () {
+			this.open = jest.fn((cb) => cb(new Error("port busy")));
+		});
+
+		await expect(openSerialWith(ctor, "COM3", 9600)).rejects.toThrow("port busy");
 	});
 });

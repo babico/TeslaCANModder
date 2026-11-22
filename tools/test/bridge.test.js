@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import {
 	BRIDGE_HELP,
 	MAX_BODY_BYTES,
+	closeBridgeServer,
 	createBridgeServer,
 	parseBridgeArgs,
 } from "../serial-http-bridge.js";
@@ -150,5 +151,73 @@ describe("bridge request limits", () => {
 		await startBridge(makeSession());
 		expect(server.timeout).toBe(30000);
 		expect(server.headersTimeout).toBe(5000);
+	});
+});
+
+describe("bridge request validation", () => {
+	it("rejects command POST without application/json Content-Type (415)", async () => {
+		const session = makeSession();
+		const base = await startBridge(session);
+
+		const res = await fetch(`${base}/api/command`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "text/plain",
+				Authorization: `Bearer ${TOKEN}`,
+			},
+			body: JSON.stringify({ cmd: "status" }),
+		});
+
+		expect(res.status).toBe(415);
+		expect(session.send).not.toHaveBeenCalled();
+	});
+
+	it("accepts application/json with a charset parameter", async () => {
+		const session = makeSession();
+		const base = await startBridge(session);
+
+		const res = await fetch(`${base}/api/command`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json; charset=utf-8",
+				Authorization: `Bearer ${TOKEN}`,
+			},
+			body: JSON.stringify({ cmd: "status" }),
+		});
+
+		expect(res.status).toBe(200);
+		expect(session.send).toHaveBeenCalledWith("status");
+	});
+
+	it("returns parse-error entries with error detail instead of empty text", async () => {
+		const session = makeSession();
+		session.waitFor.mockResolvedValueOnce({
+			raw: '{"t":',
+			msg: null,
+			type: "parse-error",
+			error: "Unexpected end of JSON input",
+		});
+		const base = await startBridge(session);
+
+		const res = await fetch(`${base}/api/command`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${TOKEN}`,
+			},
+			body: JSON.stringify({ cmd: "status" }),
+		});
+		const body = await res.json();
+
+		expect(body.t).toBe("parse-error");
+		expect(body.raw).toBe('{"t":');
+		expect(body.error).toEqual(expect.any(String));
+	});
+
+	it("closes a partially started server on boot failure", async () => {
+		const close = jest.fn((cb) => cb());
+		await closeBridgeServer({ close, listening: true });
+
+		expect(close).toHaveBeenCalledTimes(1);
 	});
 });

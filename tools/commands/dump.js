@@ -3,6 +3,7 @@
 import { createWriteStream } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { ts } from "../lib/output.js";
+import { csvField } from "../lib/canExport.js";
 import { resolveInsideCwd } from "../lib/paths.js";
 import { endStream, writeWithDrain } from "../lib/streams.js";
 
@@ -46,10 +47,8 @@ export async function runDump(session, opts, out) {
 
 		if (dumpFormat === "csv") {
 			const hex = `0x${Number(m.id).toString(16).toUpperCase().padStart(3, "0")}`;
-			await writeWithDrain(
-				stream,
-				`${now},${m.id},${hex},${m.dir},${m.dlc},${m.d || ""},${m.bus ?? 0},${m.seq ?? ""}\n`,
-			);
+			const cells = [now, m.id, hex, m.dir, m.dlc, m.d ?? "", m.bus ?? 0, m.seq ?? ""];
+			await writeWithDrain(stream, `${cells.map(csvField).join(",")}\n`);
 		} else {
 			await writeWithDrain(
 				stream,

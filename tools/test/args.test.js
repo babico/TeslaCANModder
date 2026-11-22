@@ -115,4 +115,29 @@ describe("resolveOptions", () => {
 		expect(opts.driveCtxMinSamples).toBe(10);
 		expect(opts.driveCtxExpectFull).toBe(true);
 	});
+
+	it("rejects invalid or out-of-range numeric flags", () => {
+		expect(() => resolveOptions({ _: [], baud: "abc" })).toThrow(/--baud/);
+		expect(() => resolveOptions({ _: [], timeout: "0" })).toThrow(/--timeout/);
+		expect(() => resolveOptions({ _: [], speed: "-2" })).toThrow(/--speed/);
+		expect(() => resolveOptions({ _: [], duration: "1.5" })).toThrow(/--duration/);
+		expect(() => resolveOptions({ _: [], "flash-baud": "fast" })).toThrow(/--flash-baud/);
+	});
+
+	it("maps --flash-baud and keeps the default", () => {
+		expect(resolveOptions({ _: [] }).flashBaud).toBe(460800);
+		expect(resolveOptions({ _: [], "flash-baud": "921600" }).flashBaud).toBe(921600);
+	});
+
+	it("gives --drive-duration precedence over shared --duration", () => {
+		const opts = resolveOptions({ _: [], duration: "5000", "drive-duration": "7000" });
+		expect(opts.watchDurMs).toBe(5000);
+		expect(opts.duration).toBe(5000);
+		expect(opts.driveCtxDurMs).toBe(7000);
+	});
+
+	it("falls back to shared --duration for drive-context when no explicit flag is given", () => {
+		const opts = resolveOptions({ _: [], duration: "5000" });
+		expect(opts.driveCtxDurMs).toBe(5000);
+	});
 });

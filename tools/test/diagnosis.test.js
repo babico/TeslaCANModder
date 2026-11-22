@@ -26,6 +26,16 @@ describe("buildMatrix", () => {
 		expect(m.bootSeen).toBe(true);
 	});
 
+	it("does not treat boot text embedded in a noisy line as a boot message", () => {
+		const entry = {
+			raw: 'log: {"t":"boot","variant":"hw4"} trailing',
+			msg: null,
+			type: "parse-error",
+		};
+		const m = buildMatrix([entry, msg("pong")], null);
+		expect(m.bootSeen).toBe(false);
+	});
+
 	it("counts frames", () => {
 		const messages = [
 			msg("boot"),

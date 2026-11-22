@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -67,6 +68,51 @@ describe("path traversal refusal", () => {
 	});
 });
 
+describe("dump CSV safety", () => {
+	it("neutralizes formula-like cells in CSV output", async () => {
+		const tempDir = fs.mkdtempSync(path.join(process.cwd(), "tcm-dump-"));
+		const outPath = path.join(tempDir, "frames.csv");
+		const out = makeOut();
+		const session = makeSession();
+		let call = 0;
+		session.waitFor = jest.fn(async () => {
+			call += 1;
+			if (call === 1) {
+				return {
+					msg: {
+						t: "frame",
+						id: 1,
+						dir: "=cmd|'/c calc'!A1",
+						dlc: 8,
+						d: "@SUM(1+1)",
+						bus: 0,
+						seq: 1,
+					},
+				};
+			}
+			return null;
+		});
+
+		try {
+			await runDump(
+				session,
+				{ dumpFile: outPath, dumpFormat: "csv", watchDurMs: 10, timeoutMs: 10 },
+				out,
+			);
+
+			const csv = fs.readFileSync(outPath, "utf8");
+			expect(csv).toContain("'=cmd");
+			expect(csv).toContain("'@SUM");
+			const dataLine = csv.split("\n")[1];
+			for (const cell of dataLine.split(",")) {
+				expect(cell).not.toMatch(/^[=+\-@\t\r]/);
+			}
+		} finally {
+			fs.rmSync(tempDir, { recursive: true, force: true });
+		}
+	});
+});
+
 describe("das-drive speed cap", () => {
 	it("derives the cap ceiling from status but never exceeds 200", () => {
 		expect(resolveSpeedCapMax(undefined)).toBe(200);
@@ -102,6 +148,22 @@ describe("das-drive speed cap", () => {
 		await runDasDrive(session, { action: "set-speed", kph: 100, timeoutMs: 50 }, out);
 
 		expect(out.fail).toHaveBeenCalledWith("set-speed", expect.stringContaining("1..80"));
+	});
+
+	it("soak hard-fails when can:raw:on is not acknowledged", async () => {
+		const out = makeOut();
+		const session = makeSession({
+			t: "status",
+			dasDriveEnabled: false,
+			dasSpeedCapKph: 50,
+			dasSpeedCapMaxKph: 200,
+		});
+		session.waitForAck = jest.fn(async () => null);
+
+		await runDasDrive(session, { action: "soak", duration: 10, timeoutMs: 10 }, out);
+
+		expect(out.fail).toHaveBeenCalledWith("can:raw:on", expect.any(String));
+		expect(session.send).not.toHaveBeenCalledWith("stream:on");
 	});
 });
 

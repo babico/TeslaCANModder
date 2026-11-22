@@ -69,7 +69,6 @@ export async function runSmoke(session, opts, out) {
 	else out.warn("No filtered frames", "expected when bench-testing without CAN bus");
 
 	session.send("stream:off");
-	await delay(300);
 
 	out.section("Raw CAN stream");
 	session.send("can:raw:on");
@@ -78,17 +77,27 @@ export async function runSmoke(session, opts, out) {
 	if (rawAck) {
 		out.pass("can:raw:on acknowledged — raw mode supported");
 		session.send("stream:on");
-		await delay(timeoutMs);
+		// Wait for actual frames rather than assuming a fixed sleep is long enough.
+		const rawFrames = [];
+		const rawDeadline = Date.now() + Math.max(timeoutMs, 50);
+		while (rawFrames.length < 5 && Date.now() < rawDeadline) {
+			const frame = await session.waitForType(
+				"frame",
+				Math.max(20, rawDeadline - Date.now()),
+			);
+			if (!frame) break;
+			rawFrames.push(frame);
+		}
 		session.send("stream:off");
-		const rawFrames = session.drainType("frame");
+		const queued = session.drainType("frame");
+		const allRawFrames = [...rawFrames, ...queued];
 		tagPhase(session, "raw");
-		rawFrames.forEach((m) => {
+		allRawFrames.forEach((m) => {
 			m._phase = "raw";
 		});
-		if (rawFrames.length > 0) out.pass(`${rawFrames.length} raw CAN frames seen`);
+		if (allRawFrames.length > 0) out.pass(`${allRawFrames.length} raw CAN frames seen`);
 		else out.warn("No raw frames", "check physical CAN bus connection");
 		session.send("can:raw:off");
-		await delay(300);
 	} else {
 		out.info("can:raw:on not acknowledged — raw mode not available");
 	}

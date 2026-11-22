@@ -2,15 +2,22 @@
 
 import { createInterface } from "node:readline";
 
+/**
+ * Open a port with `autoOpen:false` so the callback is attached via `open()`.
+ * A constructor callback may fire synchronously and hit the `sp` temporal
+ * dead zone; going through `open()` keeps the reference initialized first.
+ */
+export function openSerialWith(SerialPort, port, baud) {
+	const sp = new SerialPort({ path: port, baudRate: baud, autoOpen: false });
+	return new Promise((resolve, reject) => {
+		sp.open((err) => (err ? reject(err) : resolve(sp)));
+	});
+}
+
 export async function openSerial(port, baud) {
 	try {
 		const { SerialPort } = await import("serialport");
-		return await new Promise((resolve, reject) => {
-			const sp = new SerialPort({ path: port, baudRate: baud }, (err) => {
-				if (err) reject(err);
-				else resolve(sp);
-			});
-		});
+		return await openSerialWith(SerialPort, port, baud);
 	} catch (err) {
 		if (err.code === "ERR_MODULE_NOT_FOUND" || err.code === "MODULE_NOT_FOUND") {
 			throw new Error(
@@ -30,8 +37,8 @@ export class BoardSession {
 		this._waiters = [];
 		this._allMessages = [];
 
-		const rl = createInterface({ input: sp, crlfDelay: Infinity });
-		rl.on("line", (raw) => this._onRawLine(raw));
+		this._rl = createInterface({ input: sp, crlfDelay: Infinity });
+		this._rl.on("line", (raw) => this._onRawLine(raw));
 	}
 
 	_onRawLine(rawLine) {
@@ -40,6 +47,7 @@ export class BoardSession {
 
 		let msg = null;
 		let type = "text";
+		let parseError = null;
 
 		const start = line.indexOf("{");
 		const end = line.lastIndexOf("}");
@@ -47,12 +55,14 @@ export class BoardSession {
 			try {
 				msg = JSON.parse(line.slice(start, end + 1));
 				type = msg.t || "unknown";
-			} catch {
+			} catch (error) {
 				type = "parse-error";
+				parseError = error instanceof Error ? error.message : String(error);
 			}
 		}
 
 		const entry = { raw: line, msg, type };
+		if (parseError) entry.error = parseError;
 		this._allMessages.push(entry);
 		this._dispatch(entry);
 	}
@@ -113,7 +123,9 @@ export class BoardSession {
 	 * @param {{raw?: boolean}} [opts] Send `command` verbatim when `raw:true`.
 	 */
 	send(command, opts = {}) {
-		if (this._sp.writable === false) return;
+		if (this._sp.writable === false) {
+			throw new Error("Serial port is not writable; command dropped");
+		}
 		let line;
 		if (opts.raw) {
 			line = command;
@@ -137,6 +149,7 @@ export class BoardSession {
 	}
 
 	close() {
+		this._rl?.close();
 		if (this._sp.isOpen) this._sp.close();
 	}
 }
