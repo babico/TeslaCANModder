@@ -164,7 +164,9 @@ export function verifyGateArtifact(
 export function isGateOpen(artifact: RtGateArtifact, key: string): boolean {
 	if (!verifyGateArtifact(artifact, key)) return false;
 	if (!artifact.verdict?.pass) return false;
-	return decideRtGate(artifact.measurements).verdict.pass;
+	const measurements = artifact.measurements;
+	if (!measurements || typeof measurements !== "object") return false;
+	return decideRtGate(measurements).verdict.pass;
 }
 
 /** cyclictest args: mlockall, FIFO priority and an isolated-core-friendly interval. */

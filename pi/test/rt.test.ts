@@ -172,6 +172,14 @@ describe("gate open for TX", () => {
 		expect(
 			isGateOpen({ ...lying, signature: signPayload(lying, "test-key", "k") }, "test-key"),
 		).toBe(false);
+
+		// A signed artifact missing measurements must fail closed, not throw.
+		const brokenBody = {
+			...payload(),
+			measurements: undefined,
+		} as unknown as RtGateArtifactPayload;
+		const broken = { ...brokenBody, signature: signPayload(brokenBody, "test-key", "k") };
+		expect(isGateOpen(broken, "test-key")).toBe(false);
 	});
 });
 
