@@ -32,23 +32,20 @@ static void controlPedalMode(PedalMode mode, const uint8_t *lastDrive, State &s)
 	f.dlc = 8;
 	memcpy(f.data, lastDrive, 8);
 
-	// Pedal mode lives in byte[0] bits 2:0 (mask 0x07). Drive-mode override
-	// occupies bits 6:5 (mask 0x60) on the same 0x334 frame; keep them separate
-	// so either feature can be toggled without clobbering the other.
 	uint8_t value = 0;
 	switch (mode)
 	{
 	case PEDAL_CHILL:
-		value = 0x01;
+		value = 0x20;
 		break;
 	case PEDAL_SPORT:
-		value = 0x02;
+		value = 0x40;
 		break;
 	case PEDAL_STANDARD:
 		value = 0x00;
 		break;
 	}
-	f.data[0] = (f.data[0] & ~0x07) | value;  // bits 2:0 encode pedal mode
+	f.data[0] = (f.data[0] & ~0x60) | value;  // bits 5-6 encode pedal mode
 	f.data[7] = driveChecksum(f.data, 8);      // recalculate trailing checksum
 
 	startBurst(s, f, BUS_VEHICLE, 30, 20);
