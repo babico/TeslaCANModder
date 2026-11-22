@@ -51,3 +51,8 @@ Ruling: capture-gated tasks C1-06 (OTA), C1-07 (gear), C1-08 (ALC) require pulli
     - ⚠️ Bench capture of real `tesla:key:send` remains UNVERIFIED (environment), plus no ESP32-target build run — both closed as environment limits, not code defects.
     - Minor (deferred): `roleValueFromName()` is `static` in a header (key.h:28-32) — could warn under future `-Wall/-Werror`; `static inline` is the cleanup.
     - C1-02 residual closed here; `metadataForKey` placement still a bench follow-up.
+
+- Task C1-04: complete (commits 9f3bec9..6a8bf74, review clean). Local Name `S+sha1(VIN)[:8]+C` with mbedTLS on device + injected Sha1Fn for native tests; two literal VIN vectors independently verified by reviewer with Python hashlib. Focused 4/4, native 1053/1053, `esp32_ble_chassis_8mhz` build success, lint clean.
+    - ⚠️ Real-vehicle advert capture and on-device SHA-1 vector remain UNVERIFIED (environment), declared in report — not code defects.
+    - Minor (deferred): VIN length gate 8→5 (`dispatch.h:45`) is an extra behavior change; documented and aligned with `tesla:vin` validation.
+    - Minor (deferred): test-only SHA-1 is a two-vector conformance check, not a general suite.
