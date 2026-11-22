@@ -522,8 +522,11 @@ void executeCommand(const char *cmd, State &s, unsigned long now)
 		return;
 	}
 
-	// Commands below require the 0x273 control frame to be present
-	if (!s.hasCtrl)
+	// Commands below require a FRESH 0x273 control frame. C1-07a: reuse the
+	// single freshness rule from State (lastCtrlMs + AP_GATE_FRESHNESS_MS);
+	// a once-captured, arbitrarily old frame must not template new injections.
+	// No apGateOpen() check here — one-shot user commands keep their semantics.
+	if (!s.hasFreshCtrl(now))
 	{
 		sendError(F("Waiting for 0x273 frame"));
 		return;

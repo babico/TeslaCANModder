@@ -160,3 +160,86 @@ Checklist signed: **yes**. All frame-shape items marked N/A per controller rulin
 5. **DAS cancel burst is suppressed while the gate is closed.** `dasTick`'s new gate check sits before the 5-frame cancel sequencing. Normal `drive:off` happens with the gate open; if the gate closes first (e.g. stale AP signal), no cancel frames are emitted. This is the literal acceptance requirement ("gate closed → 0 sends") but worth a controller safety review.
 6. **`gateNowMs` is refreshed in `loop()` only.** No injection runs when `driverReady == false` or in the early-return standby branch, so a stale cached clock cannot authorize a send. Status emitted during `setup()` uses zeroed timestamps and reads fresh by construction.
 7. **Unsigned-time math**: `(now - timestamp)` wraps correctly across `millis()` rollover; a timestamp in the future relative to `now` fails closed.
+
+## 8. Round 1/5 review fix — one-shot command 0x273 freshness
+
+Finding (Important, verbatim): `hasFreshCtrl` enforced only in `summonTick`. `dispatch.h:526` still gated one-shot vehicle commands on boolean `!s.hasCtrl`; `lastCtrlMs` was recorded but never bounded that consumer.
+
+Controller ruling: wire the existing freshness rule into the one-shot guard; add a focused native test; do NOT add `apGateOpen()` to one-shot commands; keep other C1-07a behavior unchanged.
+
+### 8.1 What changed
+
+- `firmware/lib/client/command/dispatch.h` (~line 525): one-shot guard is now `if (!s.hasFreshCtrl(now))` instead of `if (!s.hasCtrl)`. Uses the `executeCommand(cmd, s, now)` timestamp and the same `State::hasFreshCtrl()` → `lastCtrlMs` + `AP_GATE_FRESHNESS_MS` rule already used by `summonTick`; no second freshness constant or rule added. Error text (`Waiting for 0x273 frame`) and control flow are unchanged. **No `apGateOpen()` check added** — one-shot user command semantics preserved; `das:arm` remains UNSUPPORTED.
+- `firmware/test/test_native_cmd_freshness/test_cmd_freshness.cpp` (new suite): includes the real `client/command/dispatch.h` with native stubs; two covering tests (names below).
+- `firmware/test/support/Arduino.h` (new): empty native stand-in for the Arduino framework header, needed only because `dispatch.h` → `messages.h` → `output.h` → `state.h` → `features.h` includes `<Arduino.h>`. Declares no `ARDUINO` macro, so `core/forward.h` still supplies the native `F()` shim.
+
+Concern #4 in §7 is now **resolved** by this round; all other C1-07a behavior unchanged.
+
+### 8.2 Covering tests
+
+- `test_one_shot_cmd_rejected_when_ctrl_stale` — `hasCtrl=true`, `lastCtrlMs=1`, `now=AP_GATE_FRESHNESS_MS+2`, command `lock`: asserts `stub_send_count == 0`, `s.burstRemaining == 0`, error envelope contains `Waiting for 0x273 frame`.
+- `test_one_shot_cmd_allowed_when_ctrl_fresh` — `lastCtrlMs=AP_GATE_FRESHNESS_MS-50`, `now=AP_GATE_FRESHNESS_MS-10`, same command: asserts `s.burstRemaining == 30` and an `ack` envelope (unchanged behavior).
+
+RED check: with the guard temporarily reverted to `if (!s.hasCtrl)`, focused run reported `test_one_shot_cmd_rejected_when_ctrl_stale: Expected 0 Was 30 [FAILED]`; fresh test still passed. Guard restored before final runs.
+
+### 8.3 Exact commands and output
+
+```
+cd firmware
+.\pio.ps1 test -e native -f test_native_cmd_freshness
+```
+
+Output (RED, guard reverted):
+
+```
+test_one_shot_cmd_rejected_when_ctrl_stale: Expected 0 Was 30 [FAILED]
+test_one_shot_cmd_allowed_when_ctrl_fresh [PASSED]
+============= 3 test cases: 1 failed, 1 succeeded in 00:00:01.505 =============
+```
+
+Output (GREEN, final guard):
+
+```
+test_one_shot_cmd_rejected_when_ctrl_stale [PASSED]
+test_one_shot_cmd_allowed_when_ctrl_fresh  [PASSED]
+================== 2 test cases: 2 succeeded in 00:00:01.506 =================
+```
+
+```
+.\pio.ps1 test -e native -f test_native_ap_gate -f test_native_cmd_freshness -f test_native_serial_common
+```
+
+```
+native  test_native_ap_gate        PASSED  00:00:00.824
+native  test_native_cmd_freshness  PASSED  00:00:01.457
+native  test_native_serial_common  PASSED  00:00:01.095
+================= 36 test cases: 36 succeeded in 00:00:03.377 =================
+```
+
+```
+.\pio.ps1 test -e native
+```
+
+```
+=============== 1071 test cases: 1071 succeeded in 00:01:05.000 ===============
+```
+
+(All 90 suites PASSED, including the new `test_native_cmd_freshness`.)
+
+```
+.\pio.ps1 run -e esp32_chassis_8mhz
+```
+
+```
+RAM:   [==        ]  16.5% (used 53924 bytes from 327680 bytes)
+Flash: [===       ]  26.2% (used 343597 bytes from 1310720 bytes)
+========================= [SUCCESS] Took 5.26 seconds =========================
+```
+
+`git diff --check` on the changed files: no whitespace errors.
+
+### 8.4 Scope / residual
+
+- No frame ID, byte, bit, DLC, checksum, mux, bus route, or command-surface change in this round; can-review frame-shape items remain N/A.
+- One-shot commands now fail closed if the 0x273 cache is older than 1 s — a user-visible behavior change explicitly required by the brief. No `apGateOpen()` was added there per controller ruling.
+- The native `Arduino.h` stub is test-support-only; firmware still builds with the real Arduino framework.
