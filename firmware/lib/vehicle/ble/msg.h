@@ -87,9 +87,9 @@ static bool buildAddKeyRequest(const uint8_t *pub65, uint8_t role, uint8_t formF
 
 	// Assemble outer RoutableMessage
 	Proto rm(out, cap);
-	rm.fieldBytes(2, destBuf, destLen); // to_destination = field 2
-	rm.fieldMsg(5, um);					// protobuf_message_as_bytes = field 5
-	rm.fieldBytes(14, uuid16, 16);		// uuid = field 14
+	rm.fieldBytes(6, destBuf, destLen); // to_destination = field 6
+	rm.fieldMsg(10, um);					// protobuf_message_as_bytes = field 10
+	rm.fieldBytes(51, uuid16, 16);		// uuid = field 51
 	outLen = rm.len;
 	return rm.ok();
 }
@@ -126,11 +126,11 @@ static bool buildSessionInfoRequest(const uint8_t *eph65, const uint8_t *challen
 	if (!encDestination(domain, destBuf, sizeof(destBuf), destLen))
 		return false;
 
-	// Assemble outer RoutableMessage (session_info_request = field 6)
+	// Assemble outer RoutableMessage (session_info_request = field 14)
 	Proto rm(out, cap);
-	rm.fieldBytes(2, destBuf, destLen); // to_destination = field 2
-	rm.fieldMsg(6, sir);				// session_info_request = field 6
-	rm.fieldBytes(14, uuid16, 16);		// uuid = field 14
+	rm.fieldBytes(6, destBuf, destLen); // to_destination = field 6
+	rm.fieldMsg(14, sir);				// session_info_request = field 14
+	rm.fieldBytes(51, uuid16, 16);		// uuid = field 51
 	outLen = rm.len;
 	return rm.ok();
 }
@@ -308,10 +308,10 @@ static bool buildAuthMessage(const uint8_t *encPayload, size_t encLen, const uin
 
 	// Assemble outer RoutableMessage
 	Proto rm(out, cap);
-	rm.fieldBytes(2, destBuf, destLen);	  // to_destination = field 2
-	rm.fieldBytes(5, encPayload, encLen); // protobuf_message_as_bytes = field 5
+	rm.fieldBytes(6, destBuf, destLen);	  // to_destination = field 6
+	rm.fieldBytes(10, encPayload, encLen); // protobuf_message_as_bytes = field 10
 	rm.fieldMsg(7, sd);					  // signature_data = field 7
-	rm.fieldBytes(14, uuid16, 16);		  // uuid = field 14
+	rm.fieldBytes(51, uuid16, 16);		  // uuid = field 51
 	outLen = rm.len;
 	return rm.ok() && agps.ok() && sd.ok();
 }
@@ -319,7 +319,7 @@ static bool buildAuthMessage(const uint8_t *encPayload, size_t encLen, const uin
 /**
  * @brief Parse session_info bytes from a received RoutableMessage.
  *
- * Walks the top-level protobuf fields looking for field 10 (session_info) which is
+ * Walks the top-level protobuf fields looking for field 15 (session_info) which is
  * a length-delimited payload within the RoutableMessage.
  *
  * @param buf Raw RoutableMessage bytes.
@@ -361,9 +361,9 @@ static const uint8_t *parseSessionInfo(const uint8_t *buf, size_t bufLen, size_t
 					break;
 				shift += 7;
 			}
-			if (field == 10)
+			if (field == 15)
 			{
-				// session_info = field 10
+				// session_info = field 15
 				siLen = (size_t)len;
 				return buf + i;
 			}
