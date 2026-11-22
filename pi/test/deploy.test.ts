@@ -26,12 +26,28 @@ function locationBody(source: string, header: RegExp): string {
 	return open >= 0 && close > open ? source.slice(open + 1, close) : "";
 }
 
-/** Any token that would expose a listening service beyond loopback. */
+/** Any token that would expose a listening service beyond loopback; IPv6 loopback is safe. */
 function wildcardBinds(text: string): string[] {
-	return text.match(/(?:0\.0\.0\.0|\[::\]|::|\*\s*:\s*\d+)/g) ?? [];
+	return text.match(/(?:0\.0\.0\.0|\[::\]|::(?!1\b)|\*\s*:\s*\d+)/g) ?? [];
 }
 
 describe("Pi deployment portal", () => {
+	it("is a sites-enabled snippet and documents the matching install path", () => {
+		// Debian/Raspberry Pi OS include sites-enabled inside the distro http{} block.
+		// A standalone worker_processes/events/http wrapper would be illegal here.
+		expect(nginx).not.toMatch(/^\s*worker_processes\b/m);
+		expect(nginx).not.toMatch(/^\s*events\s*\{/m);
+		expect(nginx).not.toMatch(/^\s*http\s*\{/m);
+		for (const directive of ["map", "upstream", "server"]) {
+			expect(nginx).toMatch(new RegExp(`^${directive}\\s`, "m"));
+		}
+		expect((nginx.match(/\{/g) ?? []).length).toBe((nginx.match(/\}/g) ?? []).length);
+
+		expect(readme).toMatch(/\/etc\/nginx\/sites-available\/tcm-portal/);
+		expect(readme).toMatch(/\/etc\/nginx\/sites-enabled\/tcm-portal/);
+		expect(readme).not.toMatch(/>\s*\/etc\/nginx\/nginx\.conf/);
+	});
+
 	it("defines two distinct loopback upstreams", () => {
 		// Closing brace sits on its own line; envsubst placeholders contain `}`.
 		const blocks = [
@@ -56,7 +72,7 @@ describe("Pi deployment portal", () => {
 		expect(tcm).toMatch(/proxy_pass\s+http:\/\/tcm_can\//);
 		expect(tcm).not.toMatch(/proxy_pass\s+http:\/\/sentry_usb/);
 		expect(nginx).toMatch(/location\s+=\s+\/tcm\s*\{[\s\S]*?return\s+301\s+\/tcm\/;/);
-		expect(nginx).not.toMatch(/\broot\s+/);
+		expect(nginx).not.toMatch(/\b(?:root|alias)\s+/);
 	});
 
 	it("proxies HTTP and WebSocket headers on /tcm", () => {
@@ -91,6 +107,10 @@ describe("Pi deployment portal", () => {
 		for (const fixture of bad) {
 			expect(wildcardBinds(fixture).length).toBeGreaterThan(0);
 		}
+
+		// IPv6 loopback is not a wildcard bind and must not trip the detector.
+		expect(wildcardBinds("server [::1]:8090;")).toEqual([]);
+		expect(wildcardBinds("server ::1;")).toEqual([]);
 	});
 
 	it("documents rendering, UNVERIFIED Sentry port, and systemctl checks", () => {

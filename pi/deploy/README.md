@@ -58,7 +58,10 @@ Run these on the Pi as root, from a checkout at `/opt/teslacanmodder`.
     chmod 0640 /etc/teslacanmodder/tcm-can.env
     ```
 
-4. Render and install the portal config. Use the real Sentry USB loopback port:
+4. Render and install the portal snippet. Use the real Sentry USB loopback port. This file is a
+   sites-enabled snippet: the distro's main nginx config already supplies `worker_processes`,
+   `events{}`, and `http{}`, so this snippet contains only `map`, `upstream`, and `server`
+   directives. Do not overwrite the distro's main nginx config.
 
     ```bash
     export SENTRY_USB_PORT='<UNVERIFIED: actual Sentry USB local port>'
