@@ -41,3 +41,8 @@ Ruling: capture-gated tasks C1-06 (OTA), C1-07 (gear), C1-08 (ALC) require pulli
 - Task C1-14: complete (commits 46955fa..5fc7952, fix 3ed48a5, scoped re-review clean). 18/18 focused + 1046/1046 native green; zero production churn. 7 defective-byte tests carry CHARACTERIZATION markers; SDK vectors recorded for the two previously missing cases. Reviewer confirmed all findings addressed, no new breakage.
     - New plan tasks C1-15..C1-18 added from the five wire defects found here; each must flip its matching CHARACTERIZATION assertion in the same commit as the production fix.
     - Ruling: AddKey SDK path is UnsignedMessage field 16 → WhitelistOperation field 5 (implementer refinement, :612 vector) — C1-02 brief must carry this exact nesting.
+
+- Task C1-02: complete (commits c2f6eda..0767463, review clean). Nested 16→5→PermissionChange{key=1, role=4} encoded; add-key CHARACTERIZATION assertion flipped to the 105-byte SDK vector in the same commit; other characterization tests untouched. Focused 18/18, full native 1046/1046.
+    - ⚠️ Bench capture of an accepted add-key remains UNVERIFIED (no hardware) — closed as environment limit, not a code defect.
+    - Minor (deferred to C1-03/bench): `metadataForKey` placement matches the recorded vector but contradicts `vcsec.proto:135` (field 6 sibling vs nested f5). Real vehicle may reject; confirm at bench.
+    - Minor (deferred to C1-03): byte pin uses formFactor=1 while production dispatch still passes 3.
