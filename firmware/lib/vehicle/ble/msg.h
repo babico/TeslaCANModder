@@ -63,19 +63,40 @@ static bool encDestination(uint8_t domain, uint8_t *buf, size_t cap, size_t &len
 static bool buildAddKeyRequest(const uint8_t *pub65, uint8_t role, uint8_t formFactor, const uint8_t *uuid16,
 							   uint8_t *out, size_t cap, size_t &outLen)
 {
-	// Encode AddKeyToWhitelistAndAddPermissions inner message
-	uint8_t addKeyBuf[80];
-	Proto addKey(addKeyBuf, sizeof(addKeyBuf));
-	addKey.fieldBytes(1, pub65, 65);   // .key = field 1
-	addKey.fieldVarint(2, role);	   // .role = field 2
-	addKey.fieldVarint(5, formFactor); // .form_factor = field 5
-	if (!addKey.ok())
+	// PublicKey{ PublicKeyRaw(field 1) = pub65 } — SDK vcsec.proto:43-45.
+	uint8_t publicKeyBuf[80];
+	Proto publicKey(publicKeyBuf, sizeof(publicKeyBuf));
+	publicKey.fieldBytes(1, pub65, 65);
+	if (!publicKey.ok())
 		return false;
 
-	// Wrap in UnsignedMessage (addKeyToWhitelistAndAddPermissions = field 2)
-	uint8_t umBuf[96];
+	// KeyMetadata{ keyFormFactor(field 1) } — SDK vcsec.proto:35-37.
+	uint8_t keyMetaBuf[8];
+	Proto keyMeta(keyMetaBuf, sizeof(keyMetaBuf));
+	keyMeta.fieldVarint(1, formFactor);
+	if (!keyMeta.ok())
+		return false;
+
+	// PermissionChange{ key(field 1), keyRole(field 4), metadataForKey(field 6) }.
+	uint8_t permissionBuf[96];
+	Proto permission(permissionBuf, sizeof(permissionBuf));
+	permission.fieldMsg(1, publicKey); // key = field 1
+	permission.fieldVarint(4, role);   // keyRole = field 4
+	permission.fieldMsg(6, keyMeta);   // metadataForKey = field 6
+	if (!permission.ok())
+		return false;
+
+	// WhitelistOperation.addKeyToWhitelistAndAddPermissions = field 5.
+	uint8_t whitelistBuf[112];
+	Proto whitelist(whitelistBuf, sizeof(whitelistBuf));
+	whitelist.fieldMsg(5, permission);
+	if (!whitelist.ok())
+		return false;
+
+	// UnsignedMessage.WhitelistOperation = field 16.
+	uint8_t umBuf[128];
 	Proto um(umBuf, sizeof(umBuf));
-	um.fieldMsg(2, addKey);
+	um.fieldMsg(16, whitelist);
 	if (!um.ok())
 		return false;
 

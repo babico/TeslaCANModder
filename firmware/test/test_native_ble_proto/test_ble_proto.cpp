@@ -38,6 +38,10 @@
 
 using namespace Tesla;
 
+// SDK KeyFormFactor.NFC_CARD = 1 (vcsec.proto:32). Production still defines
+// KEY_FORM_FACTOR_NFC_CARD = 3; aligning that constant is C1-03 scope.
+static const uint8_t SDK_KEY_FORM_FACTOR_NFC_CARD = 1;
+
 void setUp() {}
 void tearDown() {}
 
@@ -200,7 +204,7 @@ static void test_add_key_tags()
 	memset(uuid, 0x03, sizeof(uuid));
 
 	size_t outLen = 0;
-	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, 4, KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), outLen));
+	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, 4, SDK_KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), outLen));
 
 	TopField fields[8];
 	size_t n = scanTopFields(out, outLen, fields, 8);
@@ -218,20 +222,21 @@ static void test_add_key_tags()
 	TEST_ASSERT_NOT_NULL(p);
 	TEST_ASSERT_EQUAL_UINT32(2, p->wire);
 	TEST_ASSERT_EQUAL_UINT32(0x52, out[p->tagOff]);
-	// UnsignedMessage{ field 2 = AddKey{ key, role=4, form_factor=3 } }
-	uint8_t expUm[73];
+	// UnsignedMessage{ f16 WhitelistOperation{ f5 PermissionChange{
+	//   key=PublicKey{PublicKeyRaw}, keyRole=4,
+	//   metadataForKey=KeyMetadata{formFactor=1} } } }
+	uint8_t expUm[80];
 	size_t k = 0;
-	expUm[k++] = 0x12; // addKeyToWhitelistAndAddPermissions = field 2, wire 2
-	expUm[k++] = 0x47; // AddKey len = 71
-	expUm[k++] = 0x0A; // key = field 1
-	expUm[k++] = 0x41; // len 65
+	expUm[k++] = 0x82; expUm[k++] = 0x01; expUm[k++] = 0x4D; // f16 WhitelistOperation, len 77
+	expUm[k++] = 0x2A; expUm[k++] = 0x4B;					// f5 addKey..., len 75
+	expUm[k++] = 0x0A; expUm[k++] = 0x43;					// PermissionChange.key f1, len 67
+	expUm[k++] = 0x0A; expUm[k++] = 0x41;					// PublicKey.PublicKeyRaw f1, len 65
 	for (int i = 0; i < 65; i++)
 		expUm[k++] = 0x11;
-	expUm[k++] = 0x10; // role = field 2, wire 0
-	expUm[k++] = 0x04; // ROLE_OWNER
-	expUm[k++] = 0x28; // form_factor = field 5, wire 0
-	expUm[k++] = 0x03; // KEY_FORM_FACTOR_NFC_CARD
-	TEST_ASSERT_EQUAL_UINT32(73, (uint32_t)k);
+	expUm[k++] = 0x20; expUm[k++] = 0x04;					// keyRole f4
+	expUm[k++] = 0x32; expUm[k++] = 0x02; expUm[k++] = 0x08;
+	expUm[k++] = 0x01;										// metadataForKey f6, formFactor=1
+	TEST_ASSERT_EQUAL_UINT32(80, (uint32_t)k);
 	TEST_ASSERT_EQUAL_UINT32(k, (uint32_t)p->len);
 	TEST_ASSERT_EQUAL_HEX8_ARRAY(expUm, p->payload, k);
 
@@ -397,43 +402,40 @@ static void test_add_key_exact_wire()
 	memset(pub, 0x11, sizeof(pub));
 	memset(uuid, 0x03, sizeof(uuid));
 
-	// CHARACTERIZATION — current defective wire; flip to SDK vector with the production fix.
-	// DEFECT (reported, not fixed): msg.h:78 writes the add-key message at
-	// UnsignedMessage field 2, but SDK vcsec.proto:228 defines field 2 = RKEAction;
-	// correct path is UnsignedMessage.WhitelistOperation (field 16, vcsec.proto:230)
-	// -> WhitelistOperation.addKeyToWhitelistAndAddPermissions (field 5, vcsec.proto:127).
-	// Inner PermissionChange is also wrong: msg.h:69-71 uses raw key bytes at field 1
-	// (SDK vcsec.proto:105 wraps PublicKey{PublicKeyRaw=1}), role at field 2 (SDK
-	// vcsec.proto:107 says keyRole = 4), and form_factor at field 5 (SDK puts it in
-	// KeyMetadata at vcsec.proto:135 metadataForKey = 6). KEY_FORM_FACTOR_NFC_CARD
-	// constant is 3 at msg.h:25 but SDK vcsec.proto:32 says 1.
-	//
-	// SDK-correct literal byte vector for these same inputs (pub=0x11*65, role=4,
-	// NFC_CARD=1 per SDK, uuid=0x03*16), 105 bytes, C-array form:
+	// SDK vector (vcsec.proto, read-only):
+	//   UnsignedMessage.WhitelistOperation (f16)
+	//     -> WhitelistOperation.addKeyToWhitelistAndAddPermissions (f5)
+	//       -> PermissionChange.key (f1) = PublicKey.PublicKeyRaw (f1),
+	//          keyRole (f4), metadataForKey (f6) = KeyMetadata.keyFormFactor (f1).
+	// SDK KeyFormFactor.NFC_CARD=1 is the recorded input; the production constant
+	// KEY_FORM_FACTOR_NFC_CARD=3 and ROLE_OWNER=2 are C1-03 scope. This pin keeps
+	// the existing keyRole value 4.
 	//   {0x32,0x02,0x08,0x02,                                  to_destination = Destination{VS}
 	//    0x52,0x50,                                            field 10 UnsignedMessage, len 80
 	//      0x82,0x01,0x4D,                                     UnsignedMessage.WhitelistOperation (f16), len 77
 	//        0x2A,0x4B,                                        .addKeyToWhitelistAndAddPermissions (f5), len 75
 	//          0x0A,0x43,                                      PermissionChange.key (f1), len 67
 	//            0x0A,0x41,0x11 x65,                           PublicKey.PublicKeyRaw (f1), len 65
-	//          0x20,0x04,                                      PermissionChange.keyRole (f4); SDK ROLE_OWNER=2
-	//          0x32,0x02,0x08,0x01,                            .metadataForKey (f6), KeyMetadata.keyFormFactor=1
+	//          0x20,0x04,                                      PermissionChange.keyRole (f4)
+	//          0x32,0x02,0x08,0x01,                            .metadataForKey (f6), keyFormFactor=1
 	//    0x9A,0x03,0x10,0x03 x16}                              uuid (f51)
 	size_t n = 0;
-	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, 4, KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), n));
+	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, 4, SDK_KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), n));
 
-	uint8_t exp[98];
+	uint8_t exp[105];
 	size_t k = 0;
 	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x02; // Destination{VS}
-	exp[k++] = 0x52; exp[k++] = 0x49;									// field 10 UnsignedMessage, len 73
-	exp[k++] = 0x12; exp[k++] = 0x47;									// AddKey, len 71
-	exp[k++] = 0x0A; exp[k++] = 0x41;									// key bytes, len 65
+	exp[k++] = 0x52; exp[k++] = 0x50;									// field 10 UnsignedMessage, len 80
+	exp[k++] = 0x82; exp[k++] = 0x01; exp[k++] = 0x4D;					// f16 WhitelistOperation, len 77
+	exp[k++] = 0x2A; exp[k++] = 0x4B;									// f5 addKey..., len 75
+	exp[k++] = 0x0A; exp[k++] = 0x43;									// PermissionChange.key f1, len 67
+	exp[k++] = 0x0A; exp[k++] = 0x41;									// PublicKey.PublicKeyRaw f1, len 65
 	for (int i = 0; i < 65; i++) exp[k++] = 0x11;
-	exp[k++] = 0x10; exp[k++] = 0x04;									// role = 4
-	exp[k++] = 0x28; exp[k++] = 0x03;									// form_factor = 3
-	exp[k++] = 0x9A; exp[k++] = 0x03; exp[k++] = 0x10;					// uuid
+	exp[k++] = 0x20; exp[k++] = 0x04;									// keyRole f4 = 4 (existing value)
+	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x01; // metadataForKey f6, formFactor=1
+	exp[k++] = 0x9A; exp[k++] = 0x03; exp[k++] = 0x10;					// uuid f51
 	for (int i = 0; i < 16; i++) exp[k++] = 0x03;
-	TEST_ASSERT_EQUAL_UINT32(98, (uint32_t)k);
+	TEST_ASSERT_EQUAL_UINT32(105, (uint32_t)k);
 	assertExactWire(exp, k, out, n);
 }
 
