@@ -92,3 +92,12 @@ Ruling: batch C1-05, C1-11, C1-12, C1-13 into one implementer + one scoped revie
 - Task C1-08: complete (commits 907f7cf..462dffd, review clean). `buildStalkFrame` now DLC-4 with corpus-derived `MAGIC_0x249` (engine untouched), counter at data[1] low nibble, stalk enum at data[2] low nibble. 40 literal vectors in native CI; reviewer independently verified 7 diverse vectors + 870/870 corpus replay. esp32 chassis build green.
     - ⚠️ Real-vehicle acceptance UNVERIFIED; left/right enum mapping (0x08/0x04) disputed across legacy docs — mandatory bench before hardware ship.
     - Minor (deferred): report header cites pre-doc commit 28f029e; native CI pins 40/870 vectors (full corpus offline only).
+
+Ruling: split C1-07 into C1-07a (safety hardening that needs no capture: gate `dasTick` on `apGateOpen()`, fail closed on gear 0/5, remove CAN-timeout force-open, bounded freshness) and C1-07b (capture-first ground truth for gear/pedal semantics). Rationale: fail-closed behavior is conservative and testable now; the exact gear-bit mapping still needs a real capture. Cost if wrong: C1-07b may later refine which values count as Park, but fail-closed stays safe.
+
+- Task C1-07a: fix round 1/5 started (reviewer Approved with Important finding; commits e866da4..cbcab7e).
+    - Ruling: requirement 4 explicitly names `hasCtrl` freshness, so the reviewer's Important item (dispatch.h:526 still gates one-shot commands on a bare `hasCtrl`) is plan-mandated, not deferrable. Fix: wire `hasFreshCtrl(now)` into that dispatch guard with a stale-timestamp test. Do NOT add `apGateOpen()` to one-shot commands without a separate decision — that changes user-facing command semantics. Cost if wrong: one-shot commands could be blocked more than intended until C1-07b settles the policy.
+    - Fix round 1/5 complete (commit 73d25aa, scoped re-review clean): `!s.hasFreshCtrl(now)` guard, stale test RED `Expected 0 Was 30`→GREEN; focused 38/38, native 1071/1071, ESP32 build success. Arduino.h shim confirmed native-only.
+    - Task C1-07a: complete (commits e866da4..73d25aa, review clean).
+    - Minor (deferred): report RED block arithmetic and focused-count wording inconsistent (documentation only).
+    - Residual (deferred): `apGateParked` default true pre-existing; cancel burst suppressed while gate closed; 1 s bound from repo analysis not vehicle capture; exact gear mapping → C1-07b.
