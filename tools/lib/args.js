@@ -1,5 +1,12 @@
 /** Argument parser — extracts CLI flags into a typed options object. */
 
+export const SUPPORTED_VARIANTS = ["hw3", "hw4", "legacy", "auto"];
+
+/** True only for a variant the firmware accepts via `variant:<name>`. */
+export function isValidVariant(value) {
+	return typeof value === "string" && SUPPORTED_VARIANTS.includes(value);
+}
+
 export function parseArgs(argv) {
 	const result = { _: [] };
 	for (let i = 0; i < argv.length; i++) {

@@ -64,11 +64,14 @@ describe("createOutput", () => {
 });
 
 describe("ts", () => {
-	it("returns a time string", () => {
+	it("returns a locale-independent ISO-8601 UTC timestamp", () => {
+		const before = Date.now();
 		const result = ts();
-		// toTimeString().slice(0,12) format varies by locale — just verify it's a non-empty string
-		expect(typeof result).toBe("string");
-		expect(result.length).toBeGreaterThan(0);
-		expect(result).toMatch(/\d{2}:\d{2}:\d{2}/);
+		const after = Date.now();
+
+		expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+		const parsed = Date.parse(result);
+		expect(parsed).toBeGreaterThanOrEqual(before - 1000);
+		expect(parsed).toBeLessThanOrEqual(after + 1000);
 	});
 });

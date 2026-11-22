@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import fs from "node:fs";
 import path from "node:path";
 
-import { parseReplayLines, runReplay } from "../commands/replay.js";
+import { isReplayFrameLike, parseReplayLines, runReplay } from "../commands/replay.js";
 
 function makeOut() {
 	return {
@@ -35,6 +35,22 @@ describe("parseReplayLines", () => {
 		expect(frames).toHaveLength(1);
 		expect(frames[0].id).toBe(69);
 		expect(skipped).toBe(3);
+	});
+});
+
+describe("isReplayFrameLike", () => {
+	it("accepts frames with numeric id and optional string data / numeric bus", () => {
+		expect(isReplayFrameLike({ id: 1021, data: "0102", bus: 0 })).toBe(true);
+		expect(isReplayFrameLike({ id: 69 })).toBe(true);
+	});
+
+	it("rejects non-objects, missing/non-numeric ids and mistyped fields", () => {
+		expect(isReplayFrameLike(null)).toBe(false);
+		expect(isReplayFrameLike("frame")).toBe(false);
+		expect(isReplayFrameLike({})).toBe(false);
+		expect(isReplayFrameLike({ id: "69" })).toBe(false);
+		expect(isReplayFrameLike({ id: 69, data: 12 })).toBe(false);
+		expect(isReplayFrameLike({ id: 69, bus: "0" })).toBe(false);
 	});
 });
 

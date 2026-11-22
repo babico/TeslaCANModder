@@ -52,6 +52,51 @@ describe("bridge defaults and help", () => {
 		expect(BRIDGE_HELP).toContain("--host 127.0.0.1");
 		expect(BRIDGE_HELP).toContain("--token");
 	});
+
+	it("parses every bridge flag through the shared argument parser", () => {
+		const opts = parseBridgeArgs([
+			"node",
+			"bridge",
+			"--port",
+			"COM7",
+			"--baud",
+			"921600",
+			"--listen",
+			"9090",
+			"--host",
+			"127.0.0.2",
+			"--timeout",
+			"5000",
+			"--token",
+			"explicit-token",
+			"--allow-origin",
+			"none",
+		]);
+
+		expect(opts).toMatchObject({
+			port: "COM7",
+			baud: 921600,
+			listen: 9090,
+			host: "127.0.0.2",
+			timeoutMs: 5000,
+			token: "explicit-token",
+			allowOrigin: null,
+		});
+	});
+
+	it("derives the default CORS origin from host and listen", () => {
+		const opts = parseBridgeArgs([
+			"node",
+			"bridge",
+			"--port",
+			"COM4",
+			"--host",
+			"127.0.0.2",
+			"--listen",
+			"9090",
+		]);
+		expect(opts.allowOrigin).toBe("http://127.0.0.2:9090");
+	});
 });
 
 describe("bridge authentication", () => {

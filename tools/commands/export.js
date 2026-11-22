@@ -6,13 +6,12 @@
  *   node tools/debug.js export --input <file.json> --format dbc|csv|json [--output <out>]
  *
  * Or run standalone:
- *   node tools/commands/export.js --input mcu2.json --format dbc
+ *   node tools/bin/export.js --input mcu2.json --format dbc
  */
 
 import { accessSync, constants, readFileSync, statSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { toDbcString, toCsvString, toSummaryJson } from "../lib/canExport.js";
-import { parseArgs } from "../lib/args.js";
 
 const FORMATS = ["dbc", "csv", "json"];
 const MAX_INPUT_BYTES = 25 * 1024 * 1024;
@@ -115,28 +114,4 @@ export async function runExport(opts, out) {
 	}
 
 	return 0;
-}
-
-// ── Standalone entry point ────────────────────────────────────────────────────
-if (process.argv[1] && process.argv[1].endsWith("export.js")) {
-	const args = parseArgs(process.argv.slice(2));
-
-	// Minimal output shim so we don't need full createOutput
-	const out = {
-		section: (t) => console.error(`\n${t}`),
-		info: (m) => console.error(`  ${m}`),
-		pass: (m) => console.error(`  ✓ ${m}`),
-		fail: (m) => {
-			console.error(`  ✗ ${m}`);
-		},
-	};
-
-	const opts = {
-		input: args.input ?? args.i ?? null,
-		format: args.format ?? args.f ?? "json",
-		output: args.output ?? args.o ?? null,
-		overwrite: Boolean(args.overwrite),
-	};
-
-	runExport(opts, out).then((code) => process.exit(code ?? 0));
 }

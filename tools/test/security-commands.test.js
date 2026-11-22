@@ -6,7 +6,7 @@ import path from "node:path";
 import { runDump } from "../commands/dump.js";
 import { runReplay } from "../commands/replay.js";
 import { runDriveContext } from "../commands/drive-context.js";
-import { resolveSpeedCapMax, runDasDrive } from "../commands/das-drive.js";
+import { parseFrameId, resolveSpeedCapMax, runDasDrive } from "../commands/das-drive.js";
 import { getPlatformIoHomes } from "../commands/flash.js";
 
 function makeOut() {
@@ -164,6 +164,73 @@ describe("das-drive speed cap", () => {
 
 		expect(out.fail).toHaveBeenCalledWith("can:raw:on", expect.any(String));
 		expect(session.send).not.toHaveBeenCalledWith("stream:on");
+	});
+});
+
+describe("das-drive frame id parsing", () => {
+	it("passes numeric ids through unchanged", () => {
+		expect(parseFrameId(697)).toBe(697);
+		expect(parseFrameId(0)).toBe(0);
+	});
+
+	it("parses prefixed and bare hex strings", () => {
+		expect(parseFrameId("0x2B9")).toBe(697);
+		expect(parseFrameId("2b9")).toBe(697);
+	});
+
+	it("parses decimal strings as decimal, not hex", () => {
+		expect(parseFrameId("697")).toBe(697);
+		expect(parseFrameId("69")).toBe(69);
+	});
+
+	it("returns NaN for unusable values", () => {
+		expect(parseFrameId(undefined)).toBeNaN();
+		expect(parseFrameId(null)).toBeNaN();
+		expect(parseFrameId(true)).toBeNaN();
+		expect(parseFrameId("")).toBeNaN();
+	});
+});
+
+describe("das-drive soak with drive disabled", () => {
+	const statusMsg = {
+		t: "status",
+		dasDriveEnabled: false,
+		dasSpeedCapKph: 50,
+		dasSpeedCapMaxKph: 200,
+	};
+
+	function soakSession(frameCount) {
+		const session = makeSession(statusMsg);
+		const original = session.waitForType;
+		let frames = 0;
+		session.waitForType = jest.fn(async (type, ...rest) => {
+			if (type === "frame") {
+				if (frames < frameCount) {
+					frames += 1;
+					return { msg: { t: "frame", id: 0x2b9 } };
+				}
+				return null;
+			}
+			return original(type, ...rest);
+		});
+		return session;
+	}
+
+	it("treats a short cancel burst as silence", async () => {
+		const out = makeOut();
+		await runDasDrive(soakSession(5), { action: "soak", duration: 10, timeoutMs: 10 }, out);
+		expect(out.pass).toHaveBeenCalledWith(
+			"Drive disabled and no DAS frames seen on bus (expected)",
+		);
+	});
+
+	it("warns when frames keep flowing above the noise threshold", async () => {
+		const out = makeOut();
+		await runDasDrive(soakSession(15), { action: "soak", duration: 10, timeoutMs: 10 }, out);
+		expect(out.warn).toHaveBeenCalledWith(
+			"soak",
+			"Drive was disabled but frames are still flowing",
+		);
 	});
 });
 

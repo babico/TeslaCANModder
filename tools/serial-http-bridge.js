@@ -20,6 +20,7 @@ import http from "node:http";
 import { timingSafeEqual } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
+import { parseArgs } from "./lib/args.js";
 import { openSerial, BoardSession } from "./lib/session.js";
 
 export const MAX_BODY_BYTES = 1024 * 1024;
@@ -40,63 +41,29 @@ function printHelpAndExit(code) {
 }
 
 export function parseBridgeArgs(argv) {
+	// Flag tokenization lives in the shared parser; only bridge defaults and
+	// post-processing (token env fallback, CORS origin) stay local.
+	const args = parseArgs(argv.slice(2));
+
+	let allowOrigin;
+	if (args["allow-origin"] === "none") allowOrigin = null;
+	else if (args["allow-origin"] !== undefined) allowOrigin = String(args["allow-origin"]);
+
 	const out = {
-		port: "",
-		baud: 115200,
-		listen: 8080,
-		host: "127.0.0.1",
-		timeoutMs: 3000,
-		token: process.env.TCM_BRIDGE_TOKEN || "",
-		allowOrigin: undefined,
+		port: typeof args.port === "string" ? args.port : "",
+		baud: typeof args.baud === "string" ? Number(args.baud) || 115200 : 115200,
+		listen: typeof args.listen === "string" ? Number(args.listen) || 8080 : 8080,
+		host: typeof args.host === "string" ? args.host : "127.0.0.1",
+		timeoutMs: typeof args.timeout === "string" ? Number(args.timeout) || 3000 : 3000,
+		token:
+			(typeof args.token === "string" ? args.token : "") ||
+			process.env.TCM_BRIDGE_TOKEN ||
+			"",
+		allowOrigin,
 	};
 
-	for (let i = 2; i < argv.length; i += 1) {
-		const token = argv[i];
-		const next = argv[i + 1];
-
-		if (token === "--port" && next) {
-			out.port = next;
-			i += 1;
-			continue;
-		}
-		if (token === "--baud" && next) {
-			out.baud = Number(next) || out.baud;
-			i += 1;
-			continue;
-		}
-		if (token === "--listen" && next) {
-			out.listen = Number(next) || out.listen;
-			i += 1;
-			continue;
-		}
-		if (token === "--host" && next) {
-			out.host = next;
-			i += 1;
-			continue;
-		}
-		if (token === "--timeout" && next) {
-			out.timeoutMs = Number(next) || out.timeoutMs;
-			i += 1;
-			continue;
-		}
-		if (token === "--token" && next) {
-			out.token = next;
-			i += 1;
-			continue;
-		}
-		if (token === "--allow-origin" && next) {
-			out.allowOrigin = next === "none" ? null : next;
-			i += 1;
-			continue;
-		}
-		if (token === "--help" || token === "-h") {
-			printHelpAndExit(0);
-		}
-	}
-
-	if (!out.port) {
-		printHelpAndExit(1);
-	}
+	if (args.help || args.h) printHelpAndExit(0);
+	if (!out.port) printHelpAndExit(1);
 	if (out.allowOrigin === undefined) {
 		out.allowOrigin = `http://${out.host}:${out.listen}`;
 	}

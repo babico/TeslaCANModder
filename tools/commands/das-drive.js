@@ -20,6 +20,9 @@
 const DAS_CONTROL_ID = 0x2b9; // 25 Hz longitudinal
 const DAS_STEER_ID = 0x488; // 50 Hz lateral
 const APS_EAC_ID = 0x27d; // 10 Hz EPAS allow
+// A drive that is off may still have a short cancel burst in flight. Below this
+// count over the soak window, frames are treated as silence rather than leakage.
+const OFF_SOAK_NOISE_FRAME_MAX = 10;
 
 const ACTIONS = new Set(["status", "soak", "set-cap", "set-speed", "toggle"]);
 export const HARD_SPEED_CAP_MAX = 200;
@@ -29,6 +32,22 @@ export function resolveSpeedCapMax(statusCapMax) {
 	return Number.isFinite(statusCapMax) && statusCapMax > 0
 		? Math.min(Math.floor(statusCapMax), HARD_SPEED_CAP_MAX)
 		: HARD_SPEED_CAP_MAX;
+}
+
+/**
+ * Normalize a streamed CAN id to a number. Firmware emits numeric ids, but a
+ * serial bridge may forward them as strings. `0x`-prefixed and bare hex strings
+ * are hex; digit-only strings are decimal — `parseInt(x, 16)` would misread
+ * "69" as 105, so the two forms must be told apart explicitly.
+ */
+export function parseFrameId(value) {
+	if (typeof value === "number") return Number.isFinite(value) ? value : Number.NaN;
+	if (typeof value !== "string") return Number.NaN;
+	const text = value.trim();
+	if (/^[-+]?0x[\da-f]+$/i.test(text)) return Number.parseInt(text, 16);
+	if (/^[-+]?\d+$/.test(text)) return Number(text);
+	const hex = Number.parseInt(text, 16);
+	return Number.isFinite(hex) ? hex : Number.NaN;
 }
 
 /** Pull the latest /api/status-shape fields from a `status` message. */
@@ -166,9 +185,7 @@ export async function runDasDrive(session, opts, out) {
 		while (Date.now() < deadline) {
 			const f = await session.waitForType("frame", Math.max(50, deadline - Date.now()));
 			if (!f) continue;
-			// Frame messages carry the CAN id — accept either decimal or hex string.
-			const idRaw = f.msg.id ?? f.msg.canId;
-			const id = typeof idRaw === "string" ? parseInt(idRaw, 16) || Number(idRaw) : idRaw;
+			const id = parseFrameId(f.msg.id ?? f.msg.canId);
 			if (id === DAS_CONTROL_ID) counts.control++;
 			else if (id === DAS_STEER_ID) counts.steer++;
 			else if (id === APS_EAC_ID) counts.eac++;
@@ -192,7 +209,7 @@ export async function runDasDrive(session, opts, out) {
 			Math.abs(ctrlHz - 25) < 5 && Math.abs(steerHz - 50) < 10 && Math.abs(eacHz - 10) < 2;
 		if (!before.enabled) {
 			// Drive was off — frames should be ~0 unless cancel burst is in progress.
-			if (counts.control + counts.steer + counts.eac < 10) {
+			if (counts.control + counts.steer + counts.eac < OFF_SOAK_NOISE_FRAME_MAX) {
 				out.pass("Drive disabled and no DAS frames seen on bus (expected)");
 			} else {
 				out.warn("soak", "Drive was disabled but frames are still flowing");

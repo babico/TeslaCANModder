@@ -58,5 +58,5 @@ export function createOutput(C) {
 }
 
 export function ts() {
-	return new Date().toTimeString().slice(0, 12);
+	return new Date().toISOString();
 }

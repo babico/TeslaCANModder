@@ -87,7 +87,7 @@ export function parseReplayLines(text) {
 	return { frames, skipped };
 }
 
-function isReplayFrameLike(value) {
+export function isReplayFrameLike(value) {
 	if (!value || typeof value !== "object") return false;
 	if (typeof value.id !== "number") return false;
 	if (value.data !== undefined && typeof value.data !== "string") return false;

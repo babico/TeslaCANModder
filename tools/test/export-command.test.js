@@ -1,8 +1,12 @@
 import { describe, it, expect } from "@jest/globals";
-import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { runExport } from "../commands/export.js";
+
+const EXPORT_BIN = fileURLToPath(new URL("../bin/export.js", import.meta.url));
 
 function makeOut() {
 	return {
@@ -103,5 +107,23 @@ describe("runExport", () => {
 		);
 		expect(second).toBe(0);
 		expect(readFileSync(outputPath, "utf8")).toContain("frame_id_dec,frame_id_hex");
+	});
+});
+
+describe("standalone export entry", () => {
+	it("runs tools/bin/export.js as a standalone script", () => {
+		const dir = mkdtempSync(path.join(tmpdir(), "tcm-export-bin-"));
+		const inputPath = writeDataset(dir);
+		try {
+			const stdout = execFileSync(
+				process.execPath,
+				[EXPORT_BIN, "--input", inputPath, "--format", "json"],
+				{ encoding: "utf8" },
+			);
+			expect(stdout).toContain("DI_systemStatus");
+			expect(stdout).toContain('"counts"');
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
 	});
 });

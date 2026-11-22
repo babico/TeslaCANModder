@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { parseArgs, resolveOptions } from "../lib/args.js";
+import { isValidVariant, parseArgs, resolveOptions } from "../lib/args.js";
 
 describe("parseArgs", () => {
 	it("parses --key value pairs", () => {
@@ -139,5 +139,19 @@ describe("resolveOptions", () => {
 	it("falls back to shared --duration for drive-context when no explicit flag is given", () => {
 		const opts = resolveOptions({ _: [], duration: "5000" });
 		expect(opts.driveCtxDurMs).toBe(5000);
+	});
+});
+
+describe("isValidVariant", () => {
+	it("accepts the four documented variants", () => {
+		for (const value of ["hw3", "hw4", "legacy", "auto"]) {
+			expect(isValidVariant(value)).toBe(true);
+		}
+	});
+
+	it("rejects unknown, empty and non-string variants", () => {
+		for (const value of ["HW4", "hw5", "", null, undefined, true]) {
+			expect(isValidVariant(value)).toBe(false);
+		}
 	});
 });

@@ -6,7 +6,7 @@
  */
 
 import { setTimeout as delay } from "node:timers/promises";
-import { parseArgs, resolveOptions } from "./lib/args.js";
+import { isValidVariant, parseArgs, resolveOptions, SUPPORTED_VARIANTS } from "./lib/args.js";
 import { createColors, createOutput } from "./lib/output.js";
 import { openSerial, BoardSession } from "./lib/session.js";
 import { buildMatrix, diagnose } from "./lib/diagnosis.js";
@@ -40,9 +40,9 @@ const PORTLESS_COMMANDS = new Set(["export"]);
 const COMMANDS = [...Object.keys(SESSION_COMMAND_HANDLERS), "flash", ...PORTLESS_COMMANDS];
 
 function printUsage() {
-	console.error("Usage: node tools/debug.js <command> --port COM3 [options]");
-	console.error(`Commands: ${COMMANDS.join(" | ")}`);
-	console.error("Note: export does not require --port");
+	console.log("Usage: node tools/debug.js <command> --port COM3 [options]");
+	console.log(`Commands: ${COMMANDS.join(" | ")}`);
+	console.log("Note: export does not require --port");
 }
 
 function buildExportOptions(args) {
@@ -59,6 +59,13 @@ async function run() {
 	const opts = resolveOptions(args);
 	const C = createColors(opts.noColor);
 	const out = createOutput(C);
+
+	if (opts.variant && !isValidVariant(opts.variant)) {
+		console.error(
+			`ERROR: unknown variant "${opts.variant}". Valid: ${SUPPORTED_VARIANTS.join("|")}`,
+		);
+		return 1;
+	}
 
 	if (!COMMANDS.includes(opts.command)) {
 		console.error(`Unknown command "${opts.command}".`);
