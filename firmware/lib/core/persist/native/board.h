@@ -76,6 +76,10 @@ inline bool loadSettings(State &s)
 	s.bleDistanceFactor = prefs.getFloat(PKEY_BLE_DIST_FACTOR, 2.0f);
 	s.bleDistanceCalOffset = prefs.getFloat(PKEY_BLE_DIST_OFFSET, 0.0f);
 	s.bleDistanceCalibrated = prefs.getUChar(PKEY_BLE_DIST_CAL, 0);
+	s.regionSpoofCode = prefs.getUChar(PKEY_REGION_SPOOF, 0);
+	s.alcAutoConfirmEnabled = prefs.getUChar(PKEY_ALC, 0);
+	s.apFirstEnabled = prefs.getUChar(PKEY_AP_FIRST, 0);
+	s.rawCanListen = prefs.getUChar(PKEY_RAW_CAN, 0);
 	prefs.end();
 	return true;
 }
@@ -135,5 +139,9 @@ inline void saveSettings(const State &s)
 	prefs.putFloat(PKEY_BLE_DIST_FACTOR, s.bleDistanceFactor);
 	prefs.putFloat(PKEY_BLE_DIST_OFFSET, s.bleDistanceCalOffset);
 	prefs.putUChar(PKEY_BLE_DIST_CAL, s.bleDistanceCalibrated ? 1 : 0);
+	prefs.putUChar(PKEY_REGION_SPOOF, s.regionSpoofCode);
+	prefs.putUChar(PKEY_ALC, s.alcAutoConfirmEnabled ? 1 : 0);
+	prefs.putUChar(PKEY_AP_FIRST, s.apFirstEnabled ? 1 : 0);
+	prefs.putUChar(PKEY_RAW_CAN, s.rawCanListen ? 1 : 0);
 	prefs.end();
 }

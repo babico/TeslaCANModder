@@ -441,41 +441,6 @@
 			"transports": ["serial", "ble", "wifi"]
 		},
 		{
-			"cmd": "mqtt:on",
-			"description": "Enable MQTT bridge.",
-			"kind": "command",
-			"feature": "mqttBridge",
-			"transports": ["serial", "ble", "wifi"]
-		},
-		{
-			"cmd": "mqtt:off",
-			"description": "Disable MQTT bridge.",
-			"kind": "command",
-			"feature": "mqttBridge",
-			"transports": ["serial", "ble", "wifi"]
-		},
-		{
-			"cmd": "mqtt:broker:<host>",
-			"description": "Set MQTT broker hostname or IP.",
-			"kind": "command",
-			"feature": "mqttBridge",
-			"transports": ["serial", "ble", "wifi"]
-		},
-		{
-			"cmd": "mqtt:port:<port>",
-			"description": "Set MQTT broker port (e.g. mqtt:port:1883).",
-			"kind": "command",
-			"feature": "mqttBridge",
-			"transports": ["serial", "ble", "wifi"]
-		},
-		{
-			"cmd": "mqtt:interval:<ms>",
-			"description": "Set MQTT publish interval in ms (e.g. mqtt:interval:1000).",
-			"kind": "command",
-			"feature": "mqttBridge",
-			"transports": ["serial", "ble", "wifi"]
-		},
-		{
 			"cmd": "raw:on",
 			"description": "Enable raw CAN frame listen mode.",
 			"kind": "command",
@@ -801,20 +766,6 @@
 			"id": "mirrorControl",
 			"title": "Mirrors",
 			"kind": "command"
-		},
-		{
-			"id": "mqttBridge",
-			"title": "MQTT Bridge",
-			"kind": "command",
-			"commands": [
-				"mqtt:on",
-				"mqtt:off",
-				"mqtt:broker:<host>",
-				"mqtt:port:<port>",
-				"mqtt:interval:<ms>"
-			],
-			"outputTags": ["boot", "status"],
-			"statePaths": ["firmware.mqtt", "firmware.mqttConnected"]
 		},
 		{
 			"id": "nagControl",

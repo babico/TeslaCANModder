@@ -28,6 +28,7 @@ static bool executeCanRawCmd(const char *cmd, State &s)
 		if (!parseBoolCmd(cmd + 8, s.rawCanListen, s.rawCanListen))
 			return false;
 		applyFilters(s); // reapply hardware filters to reflect new raw mode state
+		saveSettings(s); // raw mode is a persisted setting (PKEY_RAW_CAN)
 		return true;
 	}
 	return false;

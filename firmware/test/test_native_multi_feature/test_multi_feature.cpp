@@ -30,6 +30,10 @@ void applyFilters(State &) {}
 #include "feature/body/mirror.h"
 #include "feature/misc/can_raw.h"
 #include "feature/misc/stream.h"
+#include "feature/drive/pedal.h"
+#include "feature/drive/drive_mode.h"
+
+void driverSend(const Frame &, uint8_t) {}
 
 void setUp() {}
 void tearDown() {}
@@ -94,6 +98,32 @@ void test_handlers_do_not_steal_each_others_commands()
 	TEST_ASSERT_FALSE(s.streamEnabled);
 }
 
+/**
+ * @brief 0x334 pedal mode and drive mode override must use separate byte-0 fields.
+ *
+ * Pedal mode lives in bits 2:0 (mask 0x07); drive mode override lives in
+ * bits 6:5 (mask 0x60). Whichever feature writes last must preserve the other's
+ * field. Both builders start from the cached lastDrive payload.
+ */
+void test_pedal_and_drive_mode_bitfields_do_not_collide()
+{
+	State s = allEnabledState();
+
+	// Pedal write first, then drive-mode rebuild from that frame.
+	TEST_ASSERT_TRUE(executePedalCmd("pedal:chill", s));
+	uint8_t withPedal[8];
+	memcpy(withPedal, s.burstFrame.data, 8);
+	Frame f = buildDriveModeFrame(DRIVE_MODE_PERFORMANCE, withPedal);
+	TEST_ASSERT_EQUAL_UINT8(0x01, f.data[0] & 0x07);
+	TEST_ASSERT_EQUAL_UINT8(0x40, f.data[0] & 0x60);
+
+	// Reverse order: pedal write must preserve the drive-mode field.
+	memcpy(s.lastDrive, f.data, 8);
+	TEST_ASSERT_TRUE(executePedalCmd("pedal:sport", s));
+	TEST_ASSERT_EQUAL_UINT8(0x02, s.burstFrame.data[0] & 0x07);
+	TEST_ASSERT_EQUAL_UINT8(0x40, s.burstFrame.data[0] & 0x60);
+}
+
 int main(int, char **)
 {
 	UNITY_BEGIN();
@@ -101,6 +131,7 @@ int main(int, char **)
 	RUN_TEST(test_multiple_state_features_active_simultaneously);
 	RUN_TEST(test_disabling_one_feature_leaves_others_intact);
 	RUN_TEST(test_handlers_do_not_steal_each_others_commands);
+	RUN_TEST(test_pedal_and_drive_mode_bitfields_do_not_collide);
 	return UNITY_END();
 }
 

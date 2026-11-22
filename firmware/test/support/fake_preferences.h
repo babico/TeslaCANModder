@@ -107,11 +107,77 @@ class Preferences
 	}
 
 	/**
+	 * @brief Store an unsigned 32-bit float value (bit pattern in the scalar store)
+	 * @param key NVS key name
+	 * @param val Value to store
+	 */
+	void putFloat(const char *key, float val)
+	{
+		uint32_t bits = 0;
+		memcpy(&bits, &val, sizeof(bits));
+		_store()[fullKey(key)] = (uint64_t)bits;
+	}
+
+	/**
+	 * @brief Retrieve a float value stored by putFloat
+	 * @param key NVS key name
+	 * @param def Default value if key is absent
+	 * @return Stored value or def
+	 */
+	float getFloat(const char *key, float def = 0.0f)
+	{
+		auto &s = _store();
+		auto it = s.find(fullKey(key));
+		if (it == s.end())
+			return def;
+		uint32_t bits = (uint32_t)it->second;
+		float val = 0.0f;
+		memcpy(&val, &bits, sizeof(val));
+		return val;
+	}
+
+	/**
+	 * @brief Store a null-terminated string value
+	 * @param key NVS key name
+	 * @param val Value to store
+	 */
+	void putString(const char *key, const char *val)
+	{
+		_strings()[fullKey(key)] = val ? val : "";
+	}
+
+	/**
+	 * @brief Retrieve a string value into a caller-provided buffer
+	 * @param key NVS key name
+	 * @param out Destination buffer
+	 * @param len Buffer capacity in bytes
+	 * @return Number of bytes written (excluding terminator)
+	 */
+	size_t getString(const char *key, char *out, size_t len)
+	{
+		auto &s = _strings();
+		auto it = s.find(fullKey(key));
+		if (it == s.end() || len == 0)
+		{
+			if (len > 0)
+				out[0] = '\0';
+			return 0;
+		}
+		size_t n = it->second.size();
+		if (n >= len)
+			n = len - 1;
+		memcpy(out, it->second.c_str(), n);
+		out[n] = '\0';
+		return n;
+	}
+
+	/**
 	 * @brief Reset the entire in-memory store (call between tests)
 	 */
 	static void clearAll()
 	{
 		_store().clear();
+		_strings().clear();
 	}
 
   private:
@@ -134,6 +200,16 @@ class Preferences
 	static std::map<std::string, uint64_t> &_store()
 	{
 		static std::map<std::string, uint64_t> store;
+		return store;
+	}
+
+	/**
+	 * @brief Access the singleton static string store shared across all Preferences instances
+	 * @return Reference to the global key-value map for string values
+	 */
+	static std::map<std::string, std::string> &_strings()
+	{
+		static std::map<std::string, std::string> store;
 		return store;
 	}
 };

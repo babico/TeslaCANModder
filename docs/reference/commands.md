@@ -737,22 +737,14 @@ Decoded from CAN ID 0x392 (GTW firmware version), multiplexed:
 - Mux 0: year, release, minor
 - Mux 1: build number
 
-## MQTT Telemetry Bridge
+## MQTT Bridge (configuration only — not implemented)
 
-| Command              | Description                                                       |
-| -------------------- | ----------------------------------------------------------------- |
-| `mqtt:on`            | Enable MQTT telemetry publishing                                  |
-| `mqtt:off`           | Disable MQTT telemetry publishing                                 |
-| `mqtt:broker:<host>` | Set MQTT broker hostname/IP (1–63 chars)                          |
-| `mqtt:port:N`        | Set MQTT broker port (N=1..65535, default 1883)                   |
-| `mqtt:interval:N`    | Set publish interval in milliseconds (N=100..60000, default 2000) |
-
-Publishes JSON telemetry snapshots to the configured MQTT broker at the specified interval. Requires WiFi. Settings are persisted to NVS.
-
-Status payload includes:
-
-- `mqtt` — MQTT bridge enabled (0=off, 1=on)
-- `mqttConnected` — Currently connected to broker (0=no, 1=yes)
+The firmware accepts `mqtt:on`, `mqtt:off`, `mqtt:broker:<host>`, `mqtt:port:N`, and
+`mqtt:interval:N` and persists those values to NVS, but **there is no publish loop and no
+broker connection**. `mqttShouldPublish()` has no caller in the shipping firmware and
+`mqttConnected` is never set, so no telemetry is published. Do not build new UI on MQTT
+telemetry. The `mqtt` / `mqttConnected` status fields report the stored toggle and a
+constant `0` respectively.
 
 ## Vehicle Config Query
 

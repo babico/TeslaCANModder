@@ -12,7 +12,7 @@
 #define NVS_KEY_MAGIC "magic"
 #define NVS_KEY_VERSION "ver"
 #define NVS_SETTINGS_MAGIC 0xCA
-#define NVS_SETTINGS_VERSION 0x0E
+#define NVS_SETTINGS_VERSION 0x0F
 
 // ── Feature toggle keys ───────────────────────────────────────────────────
 #define PKEY_VARIANT "variant"
@@ -56,3 +56,9 @@
 #define PKEY_BLE_DIST_FACTOR "bleDistF"
 #define PKEY_BLE_DIST_OFFSET "bleDistO"
 #define PKEY_BLE_DIST_CAL "bleDistC"
+
+// ── Additional persisted toggles ──────────────────────────────────────────
+#define PKEY_REGION_SPOOF "rgnS"
+#define PKEY_ALC "alc"
+#define PKEY_AP_FIRST "apF"
+#define PKEY_RAW_CAN "rawC"
