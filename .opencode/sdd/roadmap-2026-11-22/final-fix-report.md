@@ -92,7 +92,7 @@ Commands run from repo root unless noted.
 
 | Command                                               | Result                                                                                                           |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `cd firmware && .\pio.ps1 test -e native`             | `1076 test cases: 1076 succeeded in 00:01:07.693`; all 87 suites PASSED (incl. `test_native_ble_proto`)          |
+| `cd firmware && .\pio.ps1 test -e native`             | `1076 test cases: 1076 succeeded in 00:01:07.693`; all 84 suites PASSED (incl. `test_native_ble_proto`)          |
 | `npm test -w @teslacanmodder/protocol -- --runInBand` | Test Suites 28 passed/28; Tests 580 passed/580                                                                   |
 | `npm test -w @teslacanmodder/tools -- --runInBand`    | Test Suites 15 passed/15; Tests 164 passed/164                                                                   |
 | `npm run test:client`                                 | Test Suites 45 passed/45; Tests 305 passed/305                                                                   |
