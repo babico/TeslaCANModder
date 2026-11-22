@@ -121,3 +121,10 @@ Ruling: split C1-07 into C1-07a (safety hardening that needs no capture: gate `d
 - Task C1-22: complete (commits 4a1be7b..b5f2b7f, review clean). Generated bundle in own commit (7c19de9); skills, dispatch comment, claim test + minimal lint ignores in b5f2b7f. Reviewer parsed 144 bundle entries: 0 canonical OTA claims; legacy exclusions real. Protocol 575, client 305, lint clean.
     - ⚠️ Commit-1 isolation rests on commit message/report (combined diff only) — low risk, no code impact.
     - Minor (deferred): lint-config edits outside brief's literal commit-2 scope but necessary and disclosed.
+
+- Task C1-19: complete (commits bb5db63..2b7d7af, review clean). Real `executeCommand` with `hasCtrl=false` asserts JSON for log/platform/recorder:status + gate-error absence; contrast test proves `lock` still rejected; TS ordering assertion kept secondary; production untouched. Native 1075/1075, protocol 575/575, lint clean.
+    - Minor (deferred): assertions are substring tokens, not full JSON parse (disclosed in report).
+
+## Phase 1 closure
+
+All executable tasks DONE. Parked until capture/DBC/bench (cannot be completed in this environment): C1-07b (gear/pedal bit ground truth), C1-12 (0x334 pedal field), C1-23 (wake → VCSEC RKE). These are explicitly listed as open in the plan with their required capture.
