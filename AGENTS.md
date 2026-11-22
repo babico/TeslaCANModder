@@ -239,6 +239,10 @@ All MCP servers are **disabled by default** to save context. Enable in `opencode
 
 Environment variables: `GITHUB_TOKEN` required for GitHub MCP.
 
+## Planning, analysis and report artifacts
+
+Never create new files under `docs/superpowers/`. That directory holds only pre-existing historical artifacts; do not add to it. Store new plans, designs, analysis and reports in `.opencode/plans/`, `.opencode/analysis/` or `.opencode/reports/`, and put durable rules in this file (`AGENTS.md`). Skills stay in `.opencode/skills/`.
+
 ## What to do before claiming a task is done
 
 1. Build or compile the affected area (typecheck client/protocol, `pio run` for firmware).
