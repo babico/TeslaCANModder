@@ -82,6 +82,49 @@ Run these on the Pi as root, from a checkout at `/opt/teslacanmodder`.
 
 Sentry USB's own unit is managed by its installer — do not edit its files from this repo.
 
+## Sentry data, Studio, and Drive
+
+### Read-only `drive-data.json` consumer
+
+`pi/src/sentry/connector.ts` reads Sentry USB's `drive-data.json` for best-effort clip↔drive
+correlation. It is a plain JSON consumer: no Sentry code copied or mirrored (Sentry USB is
+PolyForm Noncommercial 1.0), no writes to Sentry storage, no CAN TX.
+
+- **File path is UNVERIFIED.** This repo does not know where Sentry USB writes the file. The caller
+  must supply the real path; no default is guessed. Confirm it on the Pi before wiring it up.
+- **Schema is UNVERIFIED.** No field names are invented. `correlateClipsToDrives()` returns no links
+  until the caller supplies both join keys (`driveIdKey`, `clipDriveKey`) from the real schema.
+  Unknown shapes produce no links and never throw.
+- Missing files and malformed JSON degrade to `{ status: "missing" | "invalid", available: false,
+data: null, reason }` instead of throwing, so a partially provisioned Pi still boots.
+
+```ts
+import { readDriveData, correlateClipsToDrives } from "./sentry/connector.js";
+
+const load = readDriveData("<UNVERIFIED: path to drive-data.json on Sentry USB storage>");
+if (load.available) {
+    const links = correlateClipsToDrives(load.data, {
+        driveIdKey: "<UNVERIFIED: real drive-id field>",
+        clipDriveKey: "<UNVERIFIED: real clip-to-drive field>",
+    });
+}
+```
+
+### Sentry Studio / Sentry Drive are separate apps
+
+Sentry Studio and Sentry Drive are MIT-licensed tools used as-is, launched as their own
+processes/services on demand. They are **not** bundled into `tcm-can`, not copied into this repo,
+and share no state or port with our service or with Sentry USB's own unit. Give each its own
+systemd unit or launch command per its own documentation; do not fold them into
+`tcm-can.service`.
+
+### 2026.20 dashcam encryption
+
+On 2026.20 AMD cars, Sentry USB cannot read dashcam footage while **"Encrypt Dashcam Recordings"**
+is enabled. Turn that vehicle setting OFF before relying on Sentry USB — and therefore before
+expecting any clip↔drive correlation from `drive-data.json`. This is a vendor warning recorded from
+Sentry USB's own documentation; it is UNVERIFIED on hardware here.
+
 ## Verification
 
 ```bash
