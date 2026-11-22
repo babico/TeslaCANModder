@@ -88,3 +88,7 @@ Ruling: batch C1-05, C1-11, C1-12, C1-13 into one implementer + one scoped revie
     - Batch closed: C1-05 STALE (fieldEmpty correct for Void oneofs; new C1-20 added for real BLE compile break), C1-11 done, C1-13 done by removal, C1-12 CAPTURE_FIRST.
     - Minor (deferred): restored `pedal.h:47` comment says bits 5-6; DBC says bits 5|2 (verbatim pre-bd34329 text).
     - Out of scope (deferred): client MQTT UI/commands still present after C1-13 removed the firmware claim.
+
+- Task C1-08: complete (commits 907f7cf..462dffd, review clean). `buildStalkFrame` now DLC-4 with corpus-derived `MAGIC_0x249` (engine untouched), counter at data[1] low nibble, stalk enum at data[2] low nibble. 40 literal vectors in native CI; reviewer independently verified 7 diverse vectors + 870/870 corpus replay. esp32 chassis build green.
+    - ⚠️ Real-vehicle acceptance UNVERIFIED; left/right enum mapping (0x08/0x04) disputed across legacy docs — mandatory bench before hardware ship.
+    - Minor (deferred): report header cites pre-doc commit 28f029e; native CI pins 40/870 vectors (full corpus offline only).
