@@ -33,7 +33,7 @@
 
 ## Phase A — Service skeleton (no Pi hardware required)
 
-### Task A1 — `pi/` workspace scaffold
+### Task A1 — `pi/` workspace scaffold — DONE (01641d8)
 
 **Files:**
 
@@ -50,7 +50,7 @@
 - [ ] **Step 4: Run test + `npm run typecheck:pi`** — expect PASS.
 - [ ] **Step 5: Commit** — `feat(pi): add Pi service workspace scaffold`.
 
-### Task A2 — SocketCAN reader with vcan tests
+### Task A2 — SocketCAN reader with vcan tests — DONE (9e60626; real SocketCAN binding deferred to B2)
 
 **Files:**
 
@@ -68,7 +68,7 @@
 - [ ] **Step 4: Run focused test + full `npm run test:all`** — expect PASS.
 - [ ] **Step 5: Commit** — `feat(pi): SocketCAN reader with vcan tests`.
 
-### Task A3 — Command bridge
+### Task A3 — Command bridge — DONE (5d7bc72)
 
 **Files:**
 
@@ -86,7 +86,7 @@
 - [ ] **Step 4: Run `npm test -w @teslacanmodder/pi` + `npm run lint:all` — PASS.**
 - [ ] **Step 5: Commit** — `feat(pi): authenticated command bridge`.
 
-### Task A4 — Recorder and provenance
+### Task A4 — Recorder and provenance — DONE (5e01484)
 
 **Files:**
 
@@ -105,7 +105,7 @@
 
 ## Phase B — Deployment
 
-### Task B1 — nginx portal + systemd units
+### Task B1 — nginx portal + systemd units — DONE (67b7ef1)
 
 **Files:**
 
@@ -123,7 +123,7 @@
 - [ ] **Step 4: GREEN; document `systemctl status` checks.**
 - [ ] **Step 5: Commit** — `feat(pi): nginx portal and systemd units`.
 
-### Task B2 — Wiring guide + listen-only bring-up
+### Task B2 — Wiring guide + listen-only bring-up — DONE (d581e67)
 
 **Files:**
 
@@ -138,7 +138,7 @@
 - [ ] Cite both guides in the doc (read-only, no code copied); note the forum thread was 403 and unused.
 - [ ] Regenerate in-app docs bundle in a separate commit; commit guide first.
 
-### Task B3 — RT measurement gate
+### Task B3 — RT measurement gate — DONE (5eda9f8)
 
 **Files:**
 
@@ -155,7 +155,7 @@
 
 ## Phase C — Gated TX (only after B3 artifact)
 
-### Task C1 — Linux TX backend + can-review
+### Task C1 — Linux TX backend + can-review — DONE (3a80a95; DISABLED, bench release blocker)
 
 **Files:**
 
@@ -169,7 +169,7 @@
 - [ ] **Step 3: Walk `docs/checklists/can-review-checklist.md` in the report** with one-line answers; any CAN mutation needs a listen-only capture reference.
 - [ ] **Step 4: GREEN native/vcan tests + lint; commit.**
 
-### Task C2 — Sentry integration smoke
+### Task C2 — Sentry integration smoke — DONE (83ef83a)
 
 **Files:**
 
