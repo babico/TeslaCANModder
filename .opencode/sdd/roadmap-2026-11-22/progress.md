@@ -101,3 +101,8 @@ Ruling: split C1-07 into C1-07a (safety hardening that needs no capture: gate `d
     - Task C1-07a: complete (commits e866da4..73d25aa, review clean).
     - Minor (deferred): report RED block arithmetic and focused-count wording inconsistent (documentation only).
     - Residual (deferred): `apGateParked` default true pre-existing; cancel burst suppressed while gate closed; 1 s bound from repo analysis not vehicle capture; exact gear mapping → C1-07b.
+
+- Task C1-06: complete (commits 6552f2a..23484b5, review clean). OTA guard claims removed from 8 canonical docs + io.schema.json (properties + required); raw `CAN_ID_GTW_CAR_STATE` kept; contract test RED 9→GREEN 38/38; CAPTURE_FIRST rationale with both disputed evidence sides in report.
+    - Ruling: reviewer's Important item (live `client/src/docs/_generated-docs.ts` still advertises OTA pause via `catalog.ts:1`) is real but generated-file policy excludes it from this feature commit — register C1-22 for a separate regenerating commit, not a fix to this diff. Cost if wrong: in-app docs stay wrong until C1-22 lands.
+    - Ruling: 4 `command-dispatch-coverage` failures are a genuine regression from C1-07a, not C1-06 — register C1-21; do not attribute to this task.
+    - Minor (deferred): skills `can-protocol-safety` / `firmware-development` still assert txPaused → folded into C1-22.
