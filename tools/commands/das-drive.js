@@ -22,6 +22,14 @@ const DAS_STEER_ID = 0x488; // 50 Hz lateral
 const APS_EAC_ID = 0x27d; // 10 Hz EPAS allow
 
 const ACTIONS = new Set(["status", "soak", "set-cap", "set-speed", "toggle"]);
+export const HARD_SPEED_CAP_MAX = 200;
+
+/** Runtime ceiling for --kph: board-reported capMax, clamped to 200. */
+export function resolveSpeedCapMax(statusCapMax) {
+	return Number.isFinite(statusCapMax) && statusCapMax > 0
+		? Math.min(Math.floor(statusCapMax), HARD_SPEED_CAP_MAX)
+		: HARD_SPEED_CAP_MAX;
+}
 
 /** Pull the latest /api/status-shape fields from a `status` message. */
 function pickDrive(msg) {
@@ -101,9 +109,10 @@ export async function runDasDrive(session, opts, out) {
 
 	// ── set-speed: mutate the user limit (firmware clamps to current cap) ───
 	if (action === "set-speed") {
+		const capMax = resolveSpeedCapMax(before.capMax);
 		const kph = Number(opts.kph);
-		if (!Number.isFinite(kph) || kph < 1) {
-			out.fail("set-speed", "--kph must be a positive integer");
+		if (!Number.isFinite(kph) || kph < 1 || kph > capMax) {
+			out.fail("set-speed", `--kph must be an integer 1..${capMax}`);
 			return;
 		}
 		out.section(`Setting user speed limit → ${kph} kph`);

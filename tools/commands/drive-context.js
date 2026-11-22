@@ -8,7 +8,8 @@
  */
 
 import { writeFileSync } from "node:fs";
-import path from "node:path";
+
+import { resolveInsideCwd } from "../lib/paths.js";
 
 export const DRIVE_CONTEXT_NUMERIC_FIELDS = [
 	"bsmLeftLevel",
@@ -245,6 +246,13 @@ export async function runDriveContext(session, opts, out) {
 	const expectFull = Boolean(opts.driveCtxExpectFull);
 	const minSamples = Number(opts.driveCtxMinSamples) || 1;
 
+	const abs = outputPath ? resolveInsideCwd(outputPath) : null;
+	const noteAbs = noteOutputPath ? resolveInsideCwd(noteOutputPath) : null;
+	if ((outputPath && !abs) || (noteOutputPath && !noteAbs)) {
+		out.fail("Invalid --output path");
+		return;
+	}
+
 	out.section("Drive Context Evidence Capture");
 	out.info(`duration=${durationMs}ms`);
 	out.info(`minSamples=${minSamples}`);
@@ -366,15 +374,13 @@ export async function runDriveContext(session, opts, out) {
 		);
 	}
 
-	if (outputPath) {
-		const abs = path.resolve(outputPath);
+	if (abs) {
 		writeFileSync(abs, JSON.stringify(report, null, 2), "utf8");
 		out.pass("Report written", abs);
 
 		const noteLine = buildRoadmapEvidenceNote(report, abs);
 		out.info(`roadmap-note: ${noteLine}`);
-		if (noteOutputPath) {
-			const noteAbs = path.resolve(noteOutputPath);
+		if (noteAbs) {
 			writeFileSync(noteAbs, `${noteLine}\n`, "utf8");
 			out.pass("Roadmap note written", noteAbs);
 		}

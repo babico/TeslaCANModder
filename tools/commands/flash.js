@@ -16,12 +16,9 @@ function firstExisting(paths) {
 	return paths.find((candidate) => candidate && fs.existsSync(candidate)) ?? null;
 }
 
-function getPlatformIoHomes() {
-	const candidates = [
-		process.env.PLATFORMIO_CORE_DIR,
-		path.join(os.homedir(), ".platformio"),
-	].filter(Boolean);
-	return [...new Set(candidates)];
+/** Only the user's default PlatformIO core is trusted for tooling lookups. */
+export function getPlatformIoHomes() {
+	return [path.join(os.homedir(), ".platformio")];
 }
 
 function resolvePlatformIoTooling() {

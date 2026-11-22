@@ -22,9 +22,10 @@ export async function openSerial(port, baud) {
 }
 
 export class BoardSession {
-	constructor(sp, timeoutMs = 3000) {
+	constructor(sp, timeoutMs = 3000, onWriteError = null) {
 		this._sp = sp;
 		this._defaultTimeout = timeoutMs;
+		this._onWriteError = onWriteError;
 		this._queue = [];
 		this._waiters = [];
 		this._allMessages = [];
@@ -121,7 +122,14 @@ export class BoardSession {
 		} else {
 			line = JSON.stringify({ cmd: command });
 		}
-		this._sp.write(`${line}\n`);
+		this._sp.write(`${line}\n`, (error) => {
+			if (!error) return;
+			if (typeof this._onWriteError === "function") {
+				this._onWriteError(error);
+			} else {
+				console.error(`[session] serial write failed: ${error.message}`);
+			}
+		});
 	}
 
 	messages() {

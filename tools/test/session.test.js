@@ -108,16 +108,27 @@ describe("BoardSession", () => {
 
 	it("send wraps plain command names in JSON-RPC", () => {
 		session.send("ping");
-		expect(sp.write).toHaveBeenCalledWith('{"cmd":"ping"}\n');
+		expect(sp.write).toHaveBeenCalledWith('{"cmd":"ping"}\n', expect.any(Function));
 	});
 
 	it("send passes through JSON envelopes unchanged", () => {
 		session.send('{"cmd":"fsd:on"}');
-		expect(sp.write).toHaveBeenCalledWith('{"cmd":"fsd:on"}\n');
+		expect(sp.write).toHaveBeenCalledWith('{"cmd":"fsd:on"}\n', expect.any(Function));
 	});
 
 	it("send with {raw:true} writes bytes verbatim", () => {
 		session.send("not-json-payload", { raw: true });
-		expect(sp.write).toHaveBeenCalledWith("not-json-payload\n");
+		expect(sp.write).toHaveBeenCalledWith("not-json-payload\n", expect.any(Function));
+	});
+
+	it("send passes a write callback and reports serial errors", () => {
+		const onWriteError = jest.fn();
+		const monitored = new BoardSession(sp, 3000, onWriteError);
+		sp.write.mockImplementationOnce((_data, cb) => cb(new Error("port gone")));
+
+		monitored.send("ping");
+
+		expect(sp.write).toHaveBeenCalledWith('{"cmd":"ping"}\n', expect.any(Function));
+		expect(onWriteError).toHaveBeenCalledWith(expect.any(Error));
 	});
 });

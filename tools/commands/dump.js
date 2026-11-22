@@ -1,28 +1,30 @@
 /** dump command — Record CAN frames to file (JSONL or CSV). */
 
 import { createWriteStream } from "node:fs";
-import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { ts } from "../lib/output.js";
+import { resolveInsideCwd } from "../lib/paths.js";
+import { endStream, writeWithDrain } from "../lib/streams.js";
 
 export async function runDump(session, opts, out) {
 	const { watchDurMs, dumpFile, dumpFormat, timeoutMs, watchRaw } = opts;
 	const outputName = dumpFile || `dump-${Date.now()}.${dumpFormat === "csv" ? "csv" : "jsonl"}`;
 
-	if (!isSafePathInput(outputName)) {
+	const outputPath = resolveInsideCwd(outputName);
+	if (!outputPath) {
 		out.fail("Invalid --output path");
 		return;
 	}
-
-	const outputPath = resolve(outputName);
 
 	out.section("CAN Frame Dump");
 	out.info(`Duration: ${watchDurMs}ms`);
 	out.info(`Output: ${outputPath} (${dumpFormat})`);
 
 	const stream = createWriteStream(outputPath);
+	const streamErrors = [];
+	stream.on("error", (error) => streamErrors.push(error));
 	if (dumpFormat === "csv") {
-		stream.write("timestamp,id,id_hex,dir,dlc,data,bus,seq\n");
+		await writeWithDrain(stream, "timestamp,id,id_hex,dir,dlc,data,bus,seq\n");
 	}
 
 	if (watchRaw) {
@@ -44,11 +46,13 @@ export async function runDump(session, opts, out) {
 
 		if (dumpFormat === "csv") {
 			const hex = `0x${Number(m.id).toString(16).toUpperCase().padStart(3, "0")}`;
-			stream.write(
+			await writeWithDrain(
+				stream,
 				`${now},${m.id},${hex},${m.dir},${m.dlc},${m.d || ""},${m.bus ?? 0},${m.seq ?? ""}\n`,
 			);
 		} else {
-			stream.write(
+			await writeWithDrain(
+				stream,
 				JSON.stringify({
 					ts: now,
 					id: m.id,
@@ -68,10 +72,6 @@ export async function runDump(session, opts, out) {
 		await delay(200);
 	}
 
-	stream.end();
+	await endStream(stream, streamErrors);
 	out.pass(`Dumped ${frameCount} frames to ${outputPath}`);
-}
-
-function isSafePathInput(value) {
-	return typeof value === "string" && value.length > 0 && !value.includes("\0");
 }

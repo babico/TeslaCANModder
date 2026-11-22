@@ -1,9 +1,9 @@
 /** replay command — Replay recorded CAN frames from a JSONL file. */
 
 import { createReadStream } from "node:fs";
-import { resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { setTimeout as delay } from "node:timers/promises";
+import { resolveInsideCwd } from "../lib/paths.js";
 
 export async function runReplay(session, opts, out, _C) {
 	const { replayFile, replaySpeed } = opts;
@@ -13,12 +13,11 @@ export async function runReplay(session, opts, out, _C) {
 		process.exit(1);
 	}
 
-	if (!isSafePathInput(replayFile)) {
+	const inputPath = resolveInsideCwd(replayFile);
+	if (!inputPath) {
 		out.fail("Invalid --input path");
 		return;
 	}
-
-	const inputPath = resolve(replayFile);
 
 	out.section("CAN Frame Replay");
 	out.info(`File: ${inputPath}`);
@@ -69,10 +68,6 @@ export async function runReplay(session, opts, out, _C) {
 	}
 
 	out.pass(`Replayed ${sent} frames at ${replaySpeed}x speed`);
-}
-
-function isSafePathInput(value) {
-	return typeof value === "string" && value.length > 0 && !value.includes("\0");
 }
 
 function isReplayFrameLike(value) {

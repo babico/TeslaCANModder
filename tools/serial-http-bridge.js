@@ -2,27 +2,52 @@
 /**
  * Serial HTTP Bridge
  *
- * Exposes ESP32 serial commands as REST endpoints for Expo Go clients.
+ * Exposes ESP32 serial commands as REST endpoints for local tooling.
+ * Loopback-only by default. Every serial-touching endpoint requires a bearer
+ * token supplied via `--token` or `TCM_BRIDGE_TOKEN`.
  *
  * Usage:
- *   node tools/serial-http-bridge.js --port COM4 --baud 115200 --listen 8080
+ *   node tools/serial-http-bridge.js --port COM4 --baud 115200 --listen 8080 \
+ *     --token my-secret
  *
  * Endpoints:
- *   GET  /health
- *   GET  /api/status
- *   POST /api/command { "cmd": "status" }
+ *   GET  /health          (public liveness probe)
+ *   GET  /api/status      (bearer token required)
+ *   POST /api/command     (bearer token required) { "cmd": "status" }
  */
 
 import http from "node:http";
+import { timingSafeEqual } from "node:crypto";
+import { pathToFileURL } from "node:url";
+
 import { openSerial, BoardSession } from "./lib/session.js";
 
-function parseArgs(argv) {
+export const MAX_BODY_BYTES = 1024 * 1024;
+const SERVER_TIMEOUT_MS = 30000;
+const HEADERS_TIMEOUT_MS = 5000;
+
+export const BRIDGE_HELP = [
+	"Usage: node tools/serial-http-bridge.js --port COM4 [--baud 115200] [--listen 8080]",
+	"       [--host 127.0.0.1] [--timeout 3000] --token <secret>",
+	"",
+	"Token: --token <secret> or TCM_BRIDGE_TOKEN env var (required for /api/*).",
+	"CORS:  --allow-origin <origin> or 'none' (default: http://<host>:<listen>).",
+].join("\n");
+
+function printHelpAndExit(code) {
+	console.log(BRIDGE_HELP);
+	process.exit(code);
+}
+
+export function parseBridgeArgs(argv) {
 	const out = {
 		port: "",
 		baud: 115200,
 		listen: 8080,
-		host: "0.0.0.0",
+		host: "127.0.0.1",
 		timeoutMs: 3000,
+		token: process.env.TCM_BRIDGE_TOKEN || "",
+		allowOrigin: undefined,
 	};
 
 	for (let i = 2; i < argv.length; i += 1) {
@@ -54,6 +79,16 @@ function parseArgs(argv) {
 			i += 1;
 			continue;
 		}
+		if (token === "--token" && next) {
+			out.token = next;
+			i += 1;
+			continue;
+		}
+		if (token === "--allow-origin" && next) {
+			out.allowOrigin = next === "none" ? null : next;
+			i += 1;
+			continue;
+		}
 		if (token === "--help" || token === "-h") {
 			printHelpAndExit(0);
 		}
@@ -62,35 +97,65 @@ function parseArgs(argv) {
 	if (!out.port) {
 		printHelpAndExit(1);
 	}
+	if (out.allowOrigin === undefined) {
+		out.allowOrigin = `http://${out.host}:${out.listen}`;
+	}
 
 	return out;
 }
 
-function printHelpAndExit(code) {
-	console.log(
-		"Usage: node tools/serial-http-bridge.js --port COM4 [--baud 115200] [--listen 8080] [--host 127.0.0.1] [--timeout 3000]",
-	);
-	process.exit(code);
-}
-
-function json(res, status, body) {
-	const payload = JSON.stringify(body);
-	res.writeHead(status, {
+function json(res, status, body, allowOrigin) {
+	const headers = {
 		"Content-Type": "application/json; charset=utf-8",
 		"Cache-Control": "no-store",
-		"Access-Control-Allow-Origin": "*",
-		"Access-Control-Allow-Headers": "Content-Type",
-		"Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-	});
-	res.end(payload);
+	};
+	if (allowOrigin) {
+		headers["Access-Control-Allow-Origin"] = allowOrigin;
+		headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
+		headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS";
+	}
+	res.writeHead(status, headers);
+	res.end(JSON.stringify(body));
 }
 
-async function readBody(req) {
+async function readBody(req, maxBytes) {
 	const chunks = [];
+	let size = 0;
+	let tooLarge = false;
+
 	for await (const chunk of req) {
-		chunks.push(Buffer.from(chunk));
+		const buffer = Buffer.from(chunk);
+		size += buffer.length;
+		if (size > maxBytes) {
+			tooLarge = true;
+			continue; // drain the rest without retaining it
+		}
+		chunks.push(buffer);
+	}
+
+	if (tooLarge) {
+		const error = new Error("request body too large");
+		error.statusCode = 413;
+		throw error;
 	}
 	return Buffer.concat(chunks).toString("utf8");
+}
+
+function headerValue(req, name) {
+	const value = req.headers[name];
+	return Array.isArray(value) ? value[0] : value;
+}
+
+function isAuthorized(req, token) {
+	if (!token || typeof token !== "string") return false;
+	const header = headerValue(req, "authorization") || "";
+	const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+	if (!match) return false;
+
+	const provided = Buffer.from(match[1]);
+	const expected = Buffer.from(token);
+	if (provided.length !== expected.length) return false;
+	return timingSafeEqual(provided, expected);
 }
 
 function normalizeEntry(entry) {
@@ -103,61 +168,82 @@ function normalizeEntry(entry) {
 	return { t: "text", raw: entry.raw ?? "" };
 }
 
-async function main() {
-	const options = parseArgs(process.argv);
-	const serial = await openSerial(options.port, options.baud);
-	const session = new BoardSession(serial, options.timeoutMs);
+export function createBridgeServer({ session, serial = {}, options = {} }) {
+	const {
+		token = process.env.TCM_BRIDGE_TOKEN || "",
+		host = "127.0.0.1",
+		listen = 8080,
+		timeoutMs = 3000,
+		allowOrigin = `http://${host}:${listen}`,
+		port = "",
+		baud = 115200,
+	} = options;
+
+	const sendJson = (res, status, body) => json(res, status, body, allowOrigin);
+	const rejectUnauthorized = (res) => {
+		res.setHeader("WWW-Authenticate", "Bearer");
+		sendJson(res, 401, { ok: false, error: "unauthorized" });
+	};
 
 	const server = http.createServer(async (req, res) => {
 		try {
 			if (req.method === "OPTIONS") {
-				json(res, 200, { ok: true });
+				sendJson(res, 200, { ok: true });
 				return;
 			}
 
 			const url = req.url || "/";
 
 			if (req.method === "GET" && url === "/health") {
-				json(res, 200, {
+				sendJson(res, 200, {
 					ok: true,
 					mode: "serial-http-bridge",
-					port: options.port,
-					baud: options.baud,
-					listen: options.listen,
-					timeoutMs: options.timeoutMs,
+					port,
+					baud,
+					listen,
+					timeoutMs,
 					serialOpen: Boolean(serial.isOpen),
 				});
 				return;
 			}
 
 			if (req.method === "GET" && url === "/api/status") {
+				if (!isAuthorized(req, token)) {
+					rejectUnauthorized(res);
+					return;
+				}
 				session.send("status");
 				const entry = await session.waitFor(
 					(item) => item.msg?.t === "status" || item.msg?.t === "boot",
-					options.timeoutMs,
+					timeoutMs,
 				);
 				if (!entry) {
-					json(res, 504, { ok: false, error: "status timeout" });
+					sendJson(res, 504, { ok: false, error: "status timeout" });
 					return;
 				}
-				json(res, 200, normalizeEntry(entry));
+				sendJson(res, 200, normalizeEntry(entry));
 				return;
 			}
 
 			if (req.method === "POST" && url === "/api/command") {
-				const raw = await readBody(req);
+				if (!isAuthorized(req, token)) {
+					rejectUnauthorized(res);
+					return;
+				}
+
+				const raw = await readBody(req, MAX_BODY_BYTES);
 				let cmd = "";
 
 				try {
 					const parsed = JSON.parse(raw || "{}");
 					cmd = typeof parsed.cmd === "string" ? parsed.cmd.trim() : "";
 				} catch {
-					json(res, 400, { ok: false, error: "invalid JSON body" });
+					sendJson(res, 400, { ok: false, error: "invalid JSON body" });
 					return;
 				}
 
 				if (!cmd) {
-					json(res, 400, { ok: false, error: "missing cmd" });
+					sendJson(res, 400, { ok: false, error: "missing cmd" });
 					return;
 				}
 
@@ -172,29 +258,44 @@ async function main() {
 						return ackCmd === cmd;
 					}
 					return false;
-				}, options.timeoutMs);
+				}, timeoutMs);
 
 				if (!entry) {
-					json(res, 504, { ok: false, error: "command timeout", cmd });
+					sendJson(res, 504, { ok: false, error: "command timeout", cmd });
 					return;
 				}
 
 				const payload = normalizeEntry(entry);
 				const ok = payload && payload.t !== "err";
-				json(res, ok ? 200 : 400, payload ?? { ok: false, error: "empty response" });
+				sendJson(res, ok ? 200 : 400, payload ?? { ok: false, error: "empty response" });
 				return;
 			}
 
-			json(res, 404, { ok: false, error: "not found" });
+			sendJson(res, 404, { ok: false, error: "not found" });
 		} catch (error) {
+			const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
 			const message = error instanceof Error ? error.message : "unknown error";
-			json(res, 500, { ok: false, error: message });
+			sendJson(res, statusCode, { ok: false, error: message });
 		}
 	});
+
+	server.timeout = SERVER_TIMEOUT_MS;
+	server.headersTimeout = HEADERS_TIMEOUT_MS;
+	return server;
+}
+
+async function main() {
+	const options = parseBridgeArgs(process.argv);
+	const serial = await openSerial(options.port, options.baud);
+	const session = new BoardSession(serial, options.timeoutMs);
+	const server = createBridgeServer({ session, serial, options });
 
 	server.listen(options.listen, options.host, () => {
 		console.log(`[bridge] listening on http://${options.host}:${options.listen}`);
 		console.log(`[bridge] serial ${options.port} @ ${options.baud}`);
+		console.log(
+			options.token ? "[bridge] token auth enabled" : "[bridge] WARNING: no token set",
+		);
 	});
 
 	const shutdown = () => {
@@ -215,8 +316,11 @@ async function main() {
 	process.on("SIGTERM", shutdown);
 }
 
-main().catch((error) => {
-	const message = error instanceof Error ? error.message : String(error);
-	console.error(`[bridge] failed: ${message}`);
-	process.exit(1);
-});
+const invokedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
+if (invokedDirectly) {
+	main().catch((error) => {
+		const message = error instanceof Error ? error.message : String(error);
+		console.error(`[bridge] failed: ${message}`);
+		process.exit(1);
+	});
+}
