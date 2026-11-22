@@ -155,23 +155,27 @@ describe("command dispatch coverage (repo grep guard)", () => {
 });
 
 describe("fresh-boot commands must work without 0x273 CAN traffic", () => {
-	const hasCtrlIndex = dispatchSource.indexOf("if (!s.hasCtrl)");
+	// C1-07a replaced the bare `hasCtrl` early return with the single freshness
+	// gate `hasFreshCtrl(now)` (lastCtrlMs + AP_GATE_FRESHNESS_MS). The guard below
+	// still enforces the same rule: diagnostics needing no vehicle CAN traffic must
+	// be dispatched before this gate so they work without a fresh 0x273 frame.
+	const hasFreshCtrlIndex = dispatchSource.indexOf("if (!s.hasFreshCtrl(now))");
 
-	it("locates the hasCtrl early return in dispatch.h", () => {
-		expect(hasCtrlIndex).toBeGreaterThan(-1);
+	it("locates the hasFreshCtrl early return in dispatch.h", () => {
+		expect(hasFreshCtrlIndex).toBeGreaterThan(-1);
 	});
 
 	it.each([
 		['strcmp(cmd, "log")', "log"],
 		['strcmp(cmd, "platform")', "platform"],
 		['strncmp(cmd, "recorder:",', "recorder:*"],
-	])("dispatches %s before the hasCtrl gate", (marker, label) => {
+	])("dispatches %s before the hasFreshCtrl gate", (marker, label) => {
 		const index = dispatchSource.indexOf(marker);
 		expect({ label, branchFound: index > -1 }).toEqual({ label, branchFound: true });
 		if (index > -1) {
-			expect({ label, beforeHasCtrl: index < hasCtrlIndex }).toEqual({
+			expect({ label, beforeFreshCtrlGate: index < hasFreshCtrlIndex }).toEqual({
 				label,
-				beforeHasCtrl: true,
+				beforeFreshCtrlGate: true,
 			});
 		}
 	});
