@@ -20,6 +20,12 @@ export interface PiServerOptions {
 	 * authenticated command bridge here.
 	 */
 	fallback?: RequestListener;
+	/**
+	 * A3 authenticated command bridge. Mounted after `/health` and before the
+	 * generic fallback, so `/status`, `/api/status`, and `POST /api/command`
+	 * are owned by the bridge while the public health probe stays unchanged.
+	 */
+	bridge?: RequestListener;
 }
 
 /** Resolve `CAN_TRANSPORT`; anything other than `vcan` falls back to `socketcan`. */
@@ -30,12 +36,17 @@ export function getCanTransport(env: NodeJS.ProcessEnv = process.env): CanTransp
 /** Minimal health endpoint. A3 mounts the authenticated bridge via `options.fallback`. */
 export function createPiServer(options: PiServerOptions = {}): Server {
 	const transport = options.transport ?? getCanTransport();
-	const fallback = options.fallback;
+	const { bridge, fallback } = options;
 
-	return createServer((request: IncomingMessage, response: ServerResponse) => {
+	const server = createServer((request: IncomingMessage, response: ServerResponse) => {
 		if (request.method === "GET" && request.url === "/health") {
 			response.writeHead(200, { "content-type": "application/json" });
 			response.end(JSON.stringify({ ok: true, transport }));
+			return;
+		}
+
+		if (bridge) {
+			bridge(request, response);
 			return;
 		}
 
@@ -47,4 +58,9 @@ export function createPiServer(options: PiServerOptions = {}): Server {
 		response.writeHead(404, { "content-type": "application/json" });
 		response.end(JSON.stringify({ error: "not found" }));
 	});
+
+	// Hardened defaults from the serial-HTTP bridge: slowloris / idle-socket guard.
+	server.timeout = 30_000;
+	server.headersTimeout = 5_000;
+	return server;
 }
