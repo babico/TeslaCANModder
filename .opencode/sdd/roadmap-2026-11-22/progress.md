@@ -79,3 +79,12 @@ Ruling: C1-09 (35 small tools items) split into C1-09a (P3-001..010 bridge secur
     - Minor (deferred): grep guard skips templated/bare commands not in its allowlist; "dispatched" detection too broad (`strcmp` anywhere under firmware).
     - Minor (deferred): report arithmetic 11 vs 10 families, 36 vs 35 markers; generated in-app docs bundle stale (policy excludes it); `KEEP` category should be relabeled IMPLEMENT-already-present.
     - Out of scope (deferred): client `ConnectionSection.tsx` still emits raw `gvret:*` / `espnow:*` that now hit UNSUPPORTED.
+
+Ruling: batch C1-05, C1-11, C1-12, C1-13 into one implementer + one scoped review. Each is a small firmware fix with its own native test but no cross-task interface; separate commits would add four review seats for four near-identical shapes. Cost if wrong: one reviewer must check four small hunks instead of one.
+
+- Firmware batch: fix round 1/5 started (reviewer Needs fixes; commits 8c9faba..bd34329).
+    - Ruling: reviewer's Important finding on C1-12 is load-bearing — bits 2:0 have no DBC evidence, while the repo's own DBC note puts `pedalMap` at byte0 bits 5|2 (owned by drive mode). Shipping the reassignment would likely break pedal mode on hardware. Fix: REVERT C1-12 production change and its new assertion; keep C1-11/C1-13. C1-12 returns to CAPTURE_FIRST (needs DBC + bench) — mark in report, do not silently drop. Cost if wrong: internal collision remains as before, a pre-existing documented risk.
+    - Fix round 1/5 complete (commit 6bf4801, scoped re-review clean): C1-12 reverted, C1-11/C1-13 untouched; multi_feature 4/4, pedal 7/7, native 1058/1058.
+    - Batch closed: C1-05 STALE (fieldEmpty correct for Void oneofs; new C1-20 added for real BLE compile break), C1-11 done, C1-13 done by removal, C1-12 CAPTURE_FIRST.
+    - Minor (deferred): restored `pedal.h:47` comment says bits 5-6; DBC says bits 5|2 (verbatim pre-bd34329 text).
+    - Out of scope (deferred): client MQTT UI/commands still present after C1-13 removed the firmware claim.
