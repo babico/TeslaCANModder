@@ -33,6 +33,16 @@ export function getCanTransport(env: NodeJS.ProcessEnv = process.env): CanTransp
 	return env.CAN_TRANSPORT === "vcan" ? "vcan" : "socketcan";
 }
 
+/**
+ * Hard feature flag for the gated CAN TX backend (`pi/src/can/tx.ts`).
+ * Default is OFF: only the literal string `1` enables it, and even then the
+ * backend stays inert until B3's signed RT gate artifact verifies. Consumed by
+ * `createGatedTx()`; no TX path is mounted by this HTTP server itself.
+ */
+export function isCanTxEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+	return env.PI_CAN_TX === "1";
+}
+
 /** Minimal health endpoint. A3 mounts the authenticated bridge via `options.fallback`. */
 export function createPiServer(options: PiServerOptions = {}): Server {
 	const transport = options.transport ?? getCanTransport();
