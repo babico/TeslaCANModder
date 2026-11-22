@@ -1,0 +1,239 @@
+# Raspberry Pi portability spike — FIRMWARE subsystem
+
+Read-only code spike. No files, index, HEAD, or branch modified. No builds run. No physical Pi present.
+
+## 0. Method and evidence key
+
+- `CODE-READ` — claim derived from source under `firmware/` at the cited `file:line`.
+- `UNVERIFIED` — claim about Linux/RPi runtime, library availability, measured latency, or effort. No build, no hardware, no benchmark was performed.
+
+Line numbers refer to the repository as read on 2026-11-22.
+
+## 1. Inventory: ESP32/Arduino-only dependencies
+
+### 1.1 Include-level dependency map
+
+All rows `CODE-READ`.
+
+| Dependency                                                                                      | Where                                                                                                                                                                                                                                                                                                  | Notes                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<Arduino.h>`                                                                                   | `firmware/src/esp32/main.cpp:8`; `lib/io/serial/usb/esp32/common.h:13` (IntelliSense only), `board.h:10`; `lib/client/command/features.h:10`; `lib/client/common/api_fwd.h:14`; `lib/io/ble/esp32/config.h:10`                                                                                         | Core framework. Native tests supply an empty `test/support/Arduino.h`.                                                                                                                                    |
+| `<Preferences.h>`                                                                               | `lib/core/persist/nvs.h:10`, `native.h:10`, `esp32/board.h:10`, `native/board.h:10`; `lib/io/wifi/esp32/state.h:13`, `board.h:13`; `lib/io/ble/esp32/config.h:11`, `tesla_board.h:12`; `lib/client/gamepad/state.h:13`; `lib/client/common/api_fwd.h:17`; `lib/vehicle/can/feature/das/das_drive.h:15` | ESP32 NVS. Native shim = in-memory `std::map`.                                                                                                                                                            |
+| `<WiFi.h>` / `<WebServer.h>`                                                                    | `lib/io/wifi/esp32/state.h:10-11`, `board.h:10-11`; `lib/client/common/api_fwd.h:15-16`                                                                                                                                                                                                                | ESP32-only network stack.                                                                                                                                                                                 |
+| `<ArduinoJson.h>`                                                                               | `lib/io/wifi/esp32/state.h:12`, `board.h:12`; `lib/client/common/api_fwd.h:16`                                                                                                                                                                                                                         | Arduino JSON v7.0.0 per `platformio.ini:106`.                                                                                                                                                             |
+| `<SPI.h>` + `<mcp2515.h>`                                                                       | `lib/core/driver/esp32/board.h:10-11`                                                                                                                                                                                                                                                                  | MCP2515 over shared SPI, 3 chip-selects.                                                                                                                                                                  |
+| `<pgmspace.h>` + `PROGMEM`                                                                      | `lib/client/dashboard/dashboard.h:3-5`; generated by `scripts/embed_html.py:35`                                                                                                                                                                                                                        | Flash-resident HTML string.                                                                                                                                                                               |
+| `<NimBLEDevice.h>`                                                                              | `lib/io/ble/esp32/board.h:10`                                                                                                                                                                                                                                                                          | BLE peripheral/central stack, ESP32 controller.                                                                                                                                                           |
+| mbedTLS (`ecdh`, `entropy`, `ctr_drbg`, `gcm`, `md`, `ecp`, `ecdsa`, `sha1`)                    | `lib/vehicle/ble/feature/session.h:25-30`, `key.h:38-41`, `handler/dispatch.h:16`                                                                                                                                                                                                                      | Tesla BLE key/session crypto. ESP-IDF supplies the config (`MBEDTLS_CONFIG_FILE` seen in `compile_commands.json`, generated artifact — `CODE-READ` of build output, not source).                          |
+| `IRAM_ATTR`                                                                                     | `lib/core/driver/esp32/board.h:43-45`                                                                                                                                                                                                                                                                  | Three MCP2515 INT ISRs must live in IRAM.                                                                                                                                                                 |
+| `portDISABLE_INTERRUPTS` / `portENABLE_INTERRUPTS`                                              | `lib/core/driver/common.h:177-180`, `:194-197`                                                                                                                                                                                                                                                         | FreeRTOS critical sections for TX-fail / bus-off counters.                                                                                                                                                |
+| `attachInterrupt`, `digitalPinToInterrupt`, `pinMode`, `digitalWrite`, `millis`, `delay`, `F()` | `lib/core/driver/esp32/board.h:43-45,73-74`; `src/esp32/main.cpp:33-34,131,135,158,171,211,217`; `lib/core/forward.h:12-19`                                                                                                                                                                            | Arduino core HAL. No RTOS task creation anywhere in shipping `lib/` — grep for `xTaskCreate`, `esp_timer`, `hw_timer`, `esp_now`, `EEPROM`, `LittleFS`, `SPIFFS` returned zero source hits (`CODE-READ`). |
+
+### 1.2 Build flags and environments
+
+`CODE-READ` from `firmware/platformio.ini`.
+
+- `[env:native]` at `:69-86`: `platform = native`, `-std=c++17`, `-Itest/support`, all three `BUS_*_ACTIVE=1`, `BOARD_CAN_CLOCK_MHZ=8`, `BOARD_ENABLE_WIFI=0`, `BOARD_ENABLE_BLE=0`, `lib_deps = throwtheswitch/Unity@2.6.0`, `lib_ldf_mode = off`, `build_src_filter = -<*>`, `test_filter = test_native_*`.
+- `[esp32_base]` at `:94-112`: `espressif32` / `esp32dev` / `arduino`; libs `arduino-mcp2515 v1.3.1`, `ArduinoJson 7.0.0`, `Preferences`, `WiFi`, `WebServer`; `build_src_filter = +<esp32/main.cpp>`.
+- Add-ons: clock `:115-119`; WiFi (embed HTML pre-script) `:122-126`; BLE (`h2zero/NimBLE-Arduino@1.4.0`) `:128-130`; buses `:133-146`.
+- 8 MHz env matrix spans `:153-246` (serial / WiFi / BLE / WiFi+BLE, chassis + vehicle + body); 16 MHz variants `:379-428`; passive no-chassis logger variants `:437-495`.
+- Hardware test envs `:503-571`: CAN driver, CAN loopback, CAN recorder, NVS persist, WiFi API, LED GPIO — all require physical ESP32 + MCP2515.
+- Pin map: `lib/core/config/esp32/board.h:12-32` — LED GPIO2; chassis CS15/INT34; vehicle CS27/INT35; body CS26/INT33; SPI SCK18/MISO19/MOSI23. WiFi AP defaults and REST port 80 at `:38-52`.
+
+### 1.3 What `native` already stubs
+
+`CODE-READ`. The seam is more complete than a typical "unit test shim" — it is effectively a partial platform abstraction.
+
+- `test/support/Arduino.h:1-11` — empty header; deliberately does not define `ARDUINO` so `core/forward.h:14-19` supplies the `F()`/`__FlashStringHelper` shim.
+- `test/support/Preferences.h:10` → `test/support/fake_preferences.h:21-215` — in-memory `Preferences` with `put/getUChar`, `put/getBool`, `put/getUShort`, `put/getFloat`, `put/getString`, `clearAll`.
+- `test/support/fake_mcp2515.h:15-150` — `can_frame`, `SPIClass` no-op `SPI`, fake `MCP2515` with RX queue, TX log, `MCP_*MHZ` / `CAN_500KBPS` constants.
+- `test/support/stubs.h:29-66` — recording `driverSend`, no-op `sendLog` (both overloads), `saveSettings`, `resetHandlerLogFlags`, `applyFilters`.
+- `lib/core/persist/native.h:23-131` — mirrors ESP32 `nvs.h` key set and defaults against the fake store.
+- `test/support/helpers.h:18-24` — frame builder. `millis()` is supplied per-test (e.g. `test/test_native_wifi/test_wifi.cpp:24-27`).
+- Native tests exist for nearly every pure-logic area, including `test_native_das_drive`, `test_native_can_recorder`, `test_native_nag_*`, `test_native_wifi`, `test_native_mqtt`, `test_native_ble_proto`, `test_native_bluetooth` (`CODE-READ` of tree).
+- Important caveat: `test/test_native_ble_proto/test_ble_proto.cpp:25-33` explicitly avoids mbedTLS/ESP32 headers by overriding `BOARD_ENABLE_BLE` after including only `key.h`. BLE crypto is **not** exercised natively (`CODE-READ`).
+- `src/main.cpp:1` is only `int main() { return 0; }` — the native env has no event loop, no `setup()`/`loop()` driver (`CODE-READ`). An RPi runtime must supply one.
+
+## 2. Subsystem port classification
+
+`DIRECT` = pure C++ compiles and is exercised by `native`; `STUB-NEEDED` = logic portable once a concrete backend replaces the native fake; `REDESIGN` = hardware/radio/stack-bound, cannot be a drop-in replacement.
+
+### 2.1 CAN driver — STUB-NEEDED (physical layer REDESIGN)
+
+- `CODE-READ` — `lib/core/driver/common.h:20-32` (bitrate), `:39-65` (8/16/20 MHz fallback), `:73-101` (MCP2515 acceptance filters), `:227-238` (`driverSend`), `:204-220` (bus-off auto-recovery). This is plain C++ over a narrow `MCP2515` interface.
+- `CODE-READ` — native already compiles it via `fake_mcp2515.h` + `stubs.h`; `test_native_driver`, `test_native_can_recorder`, `test_native_id_filter`, `test_native_can_health` cover behaviour.
+- `CODE-READ` — ESP32-only shell: `lib/core/driver/esp32/board.h:36-55` (ISRs, `mcpBus[]`, `mcpAvailable[]`), `:66-100` (`driverInit`), `:108-127` (`driverRead`), `:133-146` (`driverReinit`).
+- `CODE-READ` — frame routing/variant mutation (`lib/vehicle/can/handler/`, `lib/vehicle/can/feature/`) is hardware-agnostic and already runs in `native` (20+ `test_native_*` suites).
+- Exact stubs needed on Linux: `driverInit()`/`driverRead()`/`driverSend()`/`driverReinit()`/`driverSetBusFilters()`/`driverSetSingleShot()`/`driverPollBusErrors()` (`lib/core/forward.h:42-80`, `common.h:111-260`), `millis()`, and a replacement for `IRAM_ATTR`/`portDISABLE_INTERRUPTS` critical sections.
+
+### 2.2 Persistence — STUB-NEEDED
+
+- `CODE-READ` — `lib/core/persist/nvs.h:14-158` and `native.h:23-131` are the same ~40-key schema (`keys.h`) expressed through `Preferences`.
+- Exact stub: file-backed `Preferences` implementing `begin(ns, readOnly)`, `end()`, `clear()`, `putUChar/getUChar`, `putUShort/getUShort`, `putString/getString`, `putBool/getBool`. `fake_preferences.h:21-215` is the working contract. For Linux this becomes a JSON file or key-value store; NVS namespaces (`tcm_das`, `tcm_gpad`, `tcm_gbnd`, `tcm_nag`) must be preserved.
+
+### 2.3 Log / ring / recorder — DIRECT
+
+- `CODE-READ` — `lib/core/log/ring.h:10-139` (256 entries × 64 bytes, `logRingPush`, `logRingReadSince`) has no platform includes.
+- `CODE-READ` — `lib/core/can/ring_buffer.h:12-146` (256-entry lock-free frame ring, per-consumer `RingConsumer`, gap detection) has no platform includes.
+- `CODE-READ` — `lib/core/can/recorder.h:12-199` (256-frame ring, `captured`/`dropped` counters) depends only on `core/types.h`.
+- `CODE-READ` — native suites `test_native_log`, `test_native_ring_buffer`, `test_native_recorder` exist. Only wiring differs: capture is called from `lib/vehicle/can/handler/dispatch.h:29` on every RX.
+
+### 2.4 REST API — STUB-NEEDED
+
+- `CODE-READ` — routes registered in `lib/client/api/init.h:54-146` (`/`, `/api/ping`, `/api/auth/verify`, `/api/auth/key`, `/api/status`, `/api/command` POST, `/api/disable`, `/api/log`, `/api/recorder/download` CSV). Handlers in `lib/client/api/routes.h:264-395`.
+- `CODE-READ` — hard ties: `WebServer server(WIFI_REST_PORT)` at `lib/io/wifi/esp32/state.h:64`; `server.send(...)` at `lib/client/api/routes.h:264,273,395`; `String` and `IPAddress` at `state.h:72-77`; `api_fwd.h:14-20` pulls Arduino/WebServer/ArduinoJson/Preferences.
+- Exact stubs/backend: an HTTP server type exposing `on(path, method, handler)`, `send(code, contentType, body)`, `arg()`, `hasArg()`, `collectHeaders()`; a JSON library; `String`→`std::string`; `IPAddress`→local address. `test_native_wifi` only tests a locally rebuilt state-JSON string (`test/test_native_wifi/test_wifi.cpp:30-55`), not the real `WebServer` path (`CODE-READ`).
+
+### 2.5 BLE — REDESIGN
+
+- `CODE-READ` — NimBLE-Arduino at `lib/io/ble/esp32/board.h:10`; ESP32 board config at `lib/io/ble/esp32/config.h:10-11`; BLE serial bridge under `lib/io/serial/bluetooth/esp32/`; Tesla key/session crypto in `lib/vehicle/ble/feature/{key,session}.h` with mbedTLS; BLE HID gamepad scan/pair/axes under `lib/client/gamepad/`.
+- `CODE-READ` — radio lifecycle is ESP-IDF NimBLE with ESP32 BT controller; there is no portable transport interface behind it. `test_native_ble_proto` deliberately excludes the crypto path (`test_ble_proto.cpp:25-33`).
+- `UNVERIFIED` — BlueZ + system mbedTLS/openssl could eventually replace this, but key persistence, GATT service shape, HID central role, and the crypto glue would need rewriting. No estimate here is build-backed.
+
+### 2.6 DAS drive — DIRECT (input path REDESIGN)
+
+- `CODE-READ` — `lib/vehicle/can/feature/das/das_drive.h:127-235` builds 0x2B9/0x488/0x27D frames; `:355-403` safety clamps; `:414-503` `dasTick` scheduling. All pure C++ plus `Preferences` for NVS.
+- `CODE-READ` — native suite `test_native_das_drive` exists; `lib/client/gamepad/axis_math.h` and `drive.h:21-55` are pure math (axes→steer/brake/accel).
+- `CODE-READ` — the live input source is BLE HID: `lib/client/gamepad/drive.h:13-55` is guarded by `#if BOARD_ENABLE_BLE`. Gamepad transport is the REDESIGN piece, not DAS logic.
+- `CODE-READ` — `Preferences` at `das_drive.h:15,92,243-274` needs the §2.2 stub.
+
+### 2.7 Dashboard — STUB-NEEDED
+
+- `CODE-READ` — `lib/client/dashboard/dashboard.h:1-5` is a generated `PROGMEM` raw string (~1235 lines of HTML/CSS/JS), emitted by `scripts/embed_html.py:35`.
+- `CODE-READ` — client JS calls `/api/command`, `/api/status`, `/api/wifi/*`, `/api/recorder/download` (`dashboard.h:783-790,898-935,1006-1026,1187-1219`) and polls at 2000 ms (`dashboard.h:1219`). No firmware-side templating.
+- Exact stub: a `pgmspace.h` no-op defining `PROGMEM` as empty, or serve `dashboard.html` as a static file. Content is unchanged.
+
+### 2.8 Classification summary
+
+| Subsystem                     | Class       | Decisive reason                                                                 |
+| ----------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| CAN driver (logic)            | STUB-NEEDED | Native fake MCP2515 + `driverSend` stub already prove the seam (`CODE-READ`)    |
+| CAN driver (physical SPI/INT) | REDESIGN    | IRAM ISRs, 3 CS/INT pins, SPI HAL (`driver/esp32/board.h:36-100`) (`CODE-READ`) |
+| Persistence                   | STUB-NEEDED | Identical schema in `nvs.h` and `native.h` (`CODE-READ`)                        |
+| Log / ring / recorder         | DIRECT      | Zero platform includes, native tests exist (`CODE-READ`)                        |
+| REST API                      | STUB-NEEDED | `WebServer`/`String`/`IPAddress` only at handler boundary (`CODE-READ`)         |
+| BLE (radio, key, gamepad HID) | REDESIGN    | NimBLE + ESP32 controller + mbedTLS, no native coverage (`CODE-READ`)           |
+| DAS drive                     | DIRECT      | Pure frame math + timing; native test exists (`CODE-READ`)                      |
+| Dashboard                     | STUB-NEEDED | Static `PROGMEM` string, no firmware logic (`CODE-READ`)                        |
+
+Count for the seven requested subsystems (counting physical CAN driver within "CAN driver" as its dominant class): **DIRECT 2 — STUB-NEEDED 4 — REDESIGN 1** (`CODE-READ`).
+
+## 3. Real-time constraints
+
+### 3.1 Exact TX timing extracted from code
+
+All `CODE-READ`.
+
+| Signal                         | Period / value                                                     | Source                                                                |
+| ------------------------------ | ------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| DAS steering 0x488             | 20 ms / 50 Hz                                                      | `lib/vehicle/can/feature/das/das_drive.h:46`, emitted `:452-478`      |
+| DAS control 0x2B9              | 40 ms / 25 Hz                                                      | `das_drive.h:45`, emitted `:481-502`                                  |
+| DAS EAC 0x27D                  | 10 Hz / 100 ms                                                     | `das_drive.h:47`, emitted `:435-449`                                  |
+| DAS dead-man                   | 150 ms without `dasSetControl()` → auto-cancel                     | `das_drive.h:58`, checked `:425-429`                                  |
+| DAS cancel burst               | 5 frames, decremented once per 0x2B9 tick                          | `das_drive.h:48,100-104,499-500`                                      |
+| Steering rate limit            | 5° per 20 ms frame (EPS faults at 12)                              | `das_drive.h:60,375-383`                                              |
+| 0x370 nag echo                 | Triggered on **every received 0x370 frame**, no independent timer  | `lib/vehicle/can/handler/bus/vehicle.h:323-347`                       |
+| Natural nag slot               | 150–350 ms (`150 + xorshift % 201`)                                | `lib/vehicle/can/feature/fsd/nag.h:374-381`                           |
+| Organic nag pauses             | 500 / 1000 / 1500 / 2000 ms state-machine windows                  | `nag.h:73-78`                                                         |
+| Organic grip excursion         | every 125–225 frames                                               | `nag.h:272` (comment)                                                 |
+| Recorder ring                  | 256 frames; capture on **every** RX; overflow increments `dropped` | `lib/core/can/recorder.h:12,144-174`; `handler/dispatch.h:29`         |
+| Frame ring                     | 256 entries, per-consumer gap detection                            | `lib/core/can/ring_buffer.h:12,51-60,105-118`                         |
+| AP gate freshness              | 1000 ms for cached 0x273 and AP-active state                       | `lib/core/types.h:168,852,869-871`                                    |
+| Summon burst                   | 20 ms between frames                                               | `lib/vehicle/can/handler/ticks.h:34`                                  |
+| Precondition keepalive         | 500 ms                                                             | `ticks.h:66`                                                          |
+| Drive-mode injection           | 50 ms                                                              | `lib/vehicle/can/feature/drive/drive_mode.h:14,127`                   |
+| Bus-error poll / TX-fail reset | 250 ms                                                             | `src/esp32/main.cpp:191-199`                                          |
+| Status live stream             | 250 ms                                                             | `lib/client/command/dispatch.h:56` (and `docs/reference/commands.md`) |
+| Dashboard poll                 | 2000 ms                                                            | `lib/client/dashboard/dashboard.h:1219`                               |
+
+### 3.2 Loop architecture
+
+- `CODE-READ` — `src/esp32/main.cpp:119-218`: one cooperative `loop()`. Order per iteration: `serialTick` → `wifiTick` → standby/normal branch → feature ticks (`summonTick`, `preconditionTick`, `burstTick`, `driveModeTick_dispatch`, `seatbeltEmulationTick`, `canSimTick`) → error poll → `while (driverRead(...))` draining all RX frames with `ringPush`/`sendFrame`/`handleMessage` → LED.
+- `CODE-READ` — all schedules use `millis()` deltas with `>=` checks; there is no hardware timer ISR driving TX, and no `xTaskCreate` in shipping `lib/`.
+- `CODE-READ` — ISR work is limited to setting `mcpFrameReady[]` (`driver/esp32/board.h:43-45`); critical sections protect only two counters (`driver/common.h:177-180,194-197`).
+- Consequence (`CODE-READ`): the tightest de facto deadline is the 20 ms steering frame, and the 150 ms dead-man plus 1000 ms gate freshness bound how late a tick may arrive before safety state changes.
+
+### 3.3 What Linux/RPi would need
+
+All `UNVERIFIED` — design requirements inferred from the timings above, not measured.
+
+- **20 ms steering cadence**: a normal Linux process cannot guarantee this under load. Options: RT-PREEMPT kernel (`CONFIG_PREEMPT_RT`), `SCHED_FIFO` with `mlockall`, `isolcpus`/`nohz_full` dedicated core, and `clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME)` rather than relative sleeps. Without RT, jitter of tens of ms breaks the 5°/frame rate-limit assumption.
+- **0x370 echo**: frame-triggered, so it inherits CAN RX latency. SocketCAN receive must be low-jitter; any user-space proxy between socket and mutation adds direct latency to the echo.
+- **150 ms dead-man / 1000 ms gate freshness**: must be monitored by a watchdog that survives scheduler stalls. `SCHED_FIFO` thread or kernel-side timestamp needed; a Python/Node bridge would not be acceptable for this path.
+- **SPI/INT path**: if MCP2515 stays, need GPIO interrupt + `spidev` with low-latency handling; Linux GPIO IRQ latency is not deterministic enough without PREEMPT_RT. Alternative: native SocketCAN adapters (MPC251x/SLCAN) move framing into the kernel, but then `driverInit`/`driverRead`/`driverSend` become a port, not a stub.
+- **Kernel module**: `UNVERIFIED` whether required. Likely unnecessary if PREEMPT_RT + isolated core + `SCHED_FIFO` meets 20 ms; necessary if sub-millisecond jitter on the 0x370 echo is a hard safety requirement.
+- **No physical Pi or builds** → none of the above is confirmed.
+
+## 4. Smallest safe hybrid split
+
+`CODE-READ` for existence of boundaries; `UNVERIFIED` for which placement is operationally best.
+
+**Keep on ESP32** (anything with sub-100 ms deadlines or a radio):
+
+- MCP2515 ISR/driver, all three bus lanes, filter programming, bus-off recovery (`lib/core/driver/`).
+- Variant handlers, frame mutation, nag echo, AP gate, DAS injection, burst/summon/precondition ticks (`lib/vehicle/can/`).
+- Recorder capture and frame ring push (`handler/dispatch.h:29`).
+- BLE radio, Tesla key/session, BLE HID gamepad (`lib/io/ble/`, `lib/vehicle/ble/`, `lib/client/gamepad/`).
+- Transport firmware: `src/esp32/main.cpp` unchanged.
+
+**Move to RPi**:
+
+- REST API serving + dashboard hosting (`lib/client/api/`, `lib/client/dashboard/`) — offloads HTTP, CSV download, auth key storage.
+- Log aggregation, recorder archive/CSV export, status cache, multi-device aggregation, long-term telemetry.
+- Command origin: RPi issues commands; ESP32 remains the only writer to the CAN bus.
+
+**Existing interface boundary (already implemented, `CODE-READ`)**:
+
+- Primary: serial JSON-RPC over USB CDC — `{"cmd":"<name>"}\n` parsed by `lib/io/serial/usb/esp32/common.h:588-650` (`extractCmd`, `handleChar`, rejects non-JSON with `rpc: expected json object`). Responses are single-line JSON with `t` field (`:519-521`, `docs/reference/commands.md`). `tools/lib/session.js` already wraps plain names (docs `commands.md`).
+- Secondary: HTTP `POST /api/command` on the ESP32 (`lib/client/api/init.h:87`), so an RPi service can speak either USB serial or HTTP to the same dispatcher.
+- **Do not use MQTT**: `docs/reference/commands.md` marks it configuration-only — `mqttShouldPublish()` has no caller and `mqttConnected` is never set (`CODE-READ` of docs; note the docs file is a repo doc, not source).
+- The native stub layer (`lib/core/forward.h:25-80` + `test/support/stubs.h:29-66`) already demonstrates the exact function-level seam (`driverSend`, `sendLog`, `saveSettings`, `applyFilters`) — extend that pattern for a Linux target rather than inventing a new one.
+
+## 5. Effort estimate and top risks
+
+### 5.1 Effort (`UNVERIFIED` — estimates only, no builds or hardware validation)
+
+| Work item                                                                 | Estimate |
+| ------------------------------------------------------------------------- | -------- |
+| Hybrid only: RPi REST/dashboard/telemetry service + serial or HTTP bridge | 16–28 h  |
+| Persistence file backend + build scaffold (`BOARD_TARGET_LINUX`)          | 6–10 h   |
+| Full firmware on RPi with SocketCAN, excluding BLE                        | 48–80 h  |
+| Full firmware including BlueZ + Tesla key/session crypto reimplementation | 80–140 h |
+| RT tuning + bench validation on real Pi                                   | 8–16 h   |
+
+### 5.2 Top risks (`UNVERIFIED` unless noted)
+
+1. **Timing** — 20 ms steering frames, 150 ms dead-man, and the frame-triggered 0x370 echo are safe on the current single cooperative loop with ISRs (`CODE-READ`). Mainline Linux cannot guarantee equivalent jitter; PREEMPT_RT + core isolation changes deployment and validation assumptions.
+2. **BLE** — NimBLE/ESP32 controller plus mbedTLS session code has no native compile path (`CODE-READ` at `test_native_ble_proto/test_ble_proto.cpp:25-33`). Reimplementation is the largest single cost and cannot be stubbed away.
+3. **Hardware/driver** — three MCP2515 lanes on shared SPI with GPIO INTs at CS15/27/26, INT34/35/33 (`CODE-READ` at `config/esp32/board.h:16-32`). Pi HAT availability, SPI latency, and 3-bus wiring are `UNVERIFIED` here.
+4. **Safety boundary** — if any injection moves off the ESP32, AP gate freshness (1000 ms) and dead-man (150 ms) must remain enforced on the device that owns the bus, not on the RPi.
+5. **Scope drift** — the generous native stub set makes a full port look cheaper than it is: `src/main.cpp:1` has no runtime, and WiFi/BLE hardware tests are explicitly physical-ESP32-only (`platformio.ini:503-571`).
+
+## 6. UNVERIFIED register
+
+- No PlatformIO `native` or `esp32_*` build was run; compile success of any proposed Linux target is unconfirmed.
+- No Raspberry Pi, HAT, MCP2515 board, or vehicle was available; no latency, jitter, SPI, or CAN measurement exists.
+- Availability/version suitability of Linux HTTP/JSON libraries, BlueZ APIs, and PREEMPT_RT kernel on the target Pi is assumed, not checked.
+- Whether a kernel module is needed for the 0x370 echo deadline is undecided.
+- All effort numbers in §5.1 are estimates.
+- `compile_commands.json` and `.pio/` were read only as generated artifacts (`CODE-READ` of build output); they do not prove a clean rebuild would succeed.
+
+## 7. Files read
+
+`firmware/platformio.ini`; `firmware/src/main.cpp`; `firmware/src/esp32/main.cpp`;
+`firmware/lib/core/{platform.h,forward.h,types.h}`; `firmware/lib/core/can/{bus.h,ring_buffer.h,recorder.h}`;
+`firmware/lib/core/config/esp32/board.h`; `firmware/lib/core/driver/{common.h,esp32/board.h}`;
+`firmware/lib/core/log/ring.h`; `firmware/lib/core/persist/{nvs.h,native.h}`;
+`firmware/lib/io/serial/usb/esp32/common.h`; `firmware/lib/io/wifi/esp32/{board.h,state.h}`;
+`firmware/lib/io/ble/esp32/board.h`; `firmware/lib/client/common/api_fwd.h`;
+`firmware/lib/client/dashboard/{dashboard.h,dashboard.html}`;
+`firmware/lib/client/api/{init.h,routes.h,auth.h}`; `firmware/lib/client/gamepad/drive.h`;
+`firmware/lib/vehicle/can/{burst.h}`; `firmware/lib/vehicle/can/handler/{ticks.h,bus/vehicle.h}`;
+`firmware/lib/vehicle/can/feature/das/das_drive.h`; `firmware/lib/vehicle/can/feature/fsd/nag.h`;
+`firmware/lib/vehicle/can/feature/drive/drive_mode.h`;
+`firmware/lib/vehicle/ble/{feature/session.h,feature/key.h,handler/dispatch.h}` (include lines);
+`firmware/test/support/{Arduino.h,Preferences.h,fake_preferences.h,fake_mcp2515.h,stubs.h,helpers.h}`;
+`firmware/test/test_native_wifi/test_wifi.cpp`; `firmware/test/test_native_bluetooth/test_bluetooth.cpp`;
+`firmware/test/test_native_ble_proto/test_ble_proto.cpp`;
+`firmware/scripts/embed_html.py` (include line only);
+`docs/reference/commands.md`, `docs/reference/can-protocol.md` (context only, loaded automatically).
