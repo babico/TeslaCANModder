@@ -102,7 +102,10 @@ shift MISO and INT. UNVERIFIED.
 
 Values below follow the 38-3D guide's SPI0 mapping. Physical pin numbers are for
 a standard 40-pin Pi header; confirm against `pinout.xyz` for your board.
-UNVERIFIED.
+**VCC input range:** `hardware-setup.md` feeds module VCC at 5 V, and many common
+modules have a 5 V→3.3 V regulator that will not start from 3.3 V at VCC — verify
+the module's regulator/silkscreen and confirm it powers from 3.3 V before
+applying this Pi-safe wiring. UNVERIFIED.
 
 | MCP2515 module pin | Pi signal | GPIO | Physical pin | Notes                                       |
 | ------------------ | --------- | ---- | ------------ | ------------------------------------------- |
@@ -114,18 +117,23 @@ UNVERIFIED.
 | CS                 | SPI0 CE0  | 8    | 24           | Chip select for bus 0                       |
 | INT                | GPIO      | 25   | 22           | Interrupt for bus 0                         |
 
-Extra buses reuse SCK/MOSI/MISO and need a **unique CS and INT each**:
+Extra buses reuse SCK/MOSI/MISO and need a **unique CS and INT each**. Stock
+Raspberry Pi overlays are `mcp2515-can0`, `mcp2515-can1`, and `mcp2515-can2`,
+each hard-bound to a fixed SPI0 chip-select (CE0/CE1/CE2). They are **not** a
+generic `mcp2515-canN` template, and substituting an arbitrary GPIO for CS is
+not possible without a `cs=` parameter or a custom device-tree fragment whose
+syntax varies by kernel.
 
-| Bus | CS proposal                 | INT proposal     | X179 pair |
-| --- | --------------------------- | ---------------- | --------- |
-| 0   | GPIO 8 (CE0, pin 24)        | GPIO 25 (pin 22) | 13 / 14   |
-| 1   | GPIO 7 (CE1, pin 26)        | GPIO 24 (pin 18) | 9 / 10    |
-| 2   | Free GPIO (e.g. 16, pin 36) | GPIO 17 (pin 11) | 2 / 3     |
+| Bus | Stock overlay               | CS (fixed by stock overlay) | INT proposal     | X179 pair | Status                                                              |
+| --- | --------------------------- | --------------------------- | ---------------- | --------- | ------------------------------------------------------------------- |
+| 0   | `mcp2515-can0`              | CE0 = GPIO 8 (pin 24)       | GPIO 25 (pin 22) | 13 / 14   | Baseline from 38-3D guide; UNVERIFIED                               |
+| 1   | `mcp2515-can1`              | CE1 = GPIO 7 (pin 26)       | GPIO 24 (pin 18) | 9 / 10    | Use distinct `interrupt=24`; UNVERIFIED                             |
+| 2   | `mcp2515-can2` (if present) | CE2 = GPIO 18 (pin 12)      | GPIO 17 (pin 11) | 2 / 3     | **DO NOT USE** until CS/INT + overlay are verified on target kernel |
 
-These CS/INT choices for buses 1 and 2 are a **proposal, not a verified
-mapping**. Confirm each GPIO is unused by other overlays/HATs and that your
-kernel's `mcp2515` overlay accepts the corresponding `cs=`/`interrupt=`
-parameters. UNVERIFIED.
+Bus 2 is deliberately left as a procedure, not a working example: confirm the
+overlay exists in `/boot/overlays/` for your kernel, confirm CE2 is not claimed
+by another overlay/HAT, and verify the actual `cs=`/custom-DT mechanism before
+wiring it. Do not assume the example GPIOs above work. UNVERIFIED.
 
 ## Device-tree and overlay configuration
 
@@ -136,21 +144,33 @@ parameters. UNVERIFIED.
 
     ```ini
     dtparam=spi=on
-    dtoverlay=mcp2515-can0,oscillator=<module crystal Hz>,interrupt=25
     dtoverlay=spi-bcm2835
-    # Only on older kernels (e.g. 4.19.x), per the tolgakarakurt guide:
+
+    # bus 0 -> can0 (X179 13/14): stock mcp2515-can0 binds to CE0, so no cs= needed
+    dtoverlay=mcp2515-can0,oscillator=<module crystal Hz>,interrupt=25
+
+    # bus 1 -> can1 (X179 9/10): stock mcp2515-can1 binds to CE1, no cs= needed
+    # dtoverlay=mcp2515-can1,oscillator=<module crystal Hz>,interrupt=24
+
+    # bus 2 -> can2 (X179 2/3): DO NOT ENABLE until CS/INT + overlay are verified
+    # dtoverlay=mcp2515-can2,oscillator=<module crystal Hz>,interrupt=17
+
+    # Only on old 4.19-era kernels (per tolgakarakurt); omit on current kernels:
     # dtoverlay=spi-dma
     ```
 
     - Replace `<module crystal Hz>` with the **actual crystal on the module**:
       `16000000` in the 38-3D guide, `8000000` in the tolgakarakurt guide. A wrong
       value produces no frames or bad bit timing. UNVERIFIED.
-    - `spi-dma` was needed on the old 4.19 kernel in the guide; do not assume it
-      is required or even valid on a newer kernel. UNVERIFIED.
+    - `spi-dma`: the tolgakarakurt guide ran kernel 4.19.42-v7+, where it was a
+      workaround. Do not assume it is required, accepted, or even available on a
+      current kernel — omit it unless that kernel era is confirmed. UNVERIFIED.
 
-3. For additional buses, repeat the `dtoverlay=mcp2515-canN,...` pattern with
-   distinct `interrupt=` and `cs=` values from the table above; verify overlay
-   parameter names against your kernel's `/boot/overlays/README`. UNVERIFIED.
+3. Buses 1 and 2 are optional and use the **concrete lines above**, not a
+   substituted `mcp2515-canN` template: bus 1 is the stock CE1 overlay with
+   `interrupt=24`; bus 2 stays commented out until its CS/INT and overlay are
+   verified on the target kernel (a `cs=` parameter or custom DT fragment may be
+   required). Keep every enabled bus RX-only/listen-only. UNVERIFIED.
 4. Reboot: `sudo reboot`.
 
 ## Verify enumeration
