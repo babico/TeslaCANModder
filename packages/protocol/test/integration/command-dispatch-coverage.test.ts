@@ -154,6 +154,115 @@ describe("command dispatch coverage (repo grep guard)", () => {
 	});
 });
 
+describe("canonical docs must not contain stale alias wire tokens in prose", () => {
+	// C1-10 aliased the old `apfirst:*` / `lanegraph:*` spellings to the firmware
+	// names `ap-first:*` / `lane-graph:*`. docCommandRows() only scans table first
+	// columns, so a stale alias left in prose would escape that guard. Scan prose
+	// backtick tokens across canonical docs (generated bundle is not a source).
+	const DEPRECATED_ALIASES = ["apfirst", "lanegraph"];
+	const CANONICAL_DOC_DIRS = ["docs", "docs/guides", "docs/reference", "docs/architecture"];
+
+	function canonicalDocs(): string[] {
+		const files: string[] = [];
+		for (const rel of CANONICAL_DOC_DIRS) {
+			const dir = path.join(repoRoot, rel);
+			if (!fs.existsSync(dir)) continue;
+			for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+				const full = path.join(dir, entry.name);
+				if (entry.isFile() && entry.name.endsWith(".md")) files.push(full);
+			}
+		}
+		return files;
+	}
+
+	function staleProseAliases(): string[] {
+		const offenders: string[] = [];
+		for (const file of canonicalDocs()) {
+			const rel = path.relative(repoRoot, file).replace(/\\/g, "/");
+			fs.readFileSync(file, "utf-8")
+				.split(/\r?\n/)
+				.forEach((line: string, index: number) => {
+					if (line.trimStart().startsWith("|")) return; // table rows handled by docCommandRows()
+					for (const token of line.match(/`[^`]+`/g) ?? []) {
+						const value = token.slice(1, -1);
+						if (
+							DEPRECATED_ALIASES.some((alias) => new RegExp(`^${alias}:`).test(value))
+						) {
+							offenders.push(`${value} (${rel}:${index + 1})`);
+						}
+					}
+				});
+		}
+		return offenders;
+	}
+
+	it("finds canonical docs to scan", () => {
+		expect(canonicalDocs().length).toBeGreaterThan(0);
+	});
+
+	it("no deprecated alias wire token remains in canonical prose", () => {
+		expect(staleProseAliases()).toEqual([]);
+	});
+});
+
+describe("client must not emit UNSUPPORTED wire commands", () => {
+	// UNSUPPORTED rows in commands.md have no firmware dispatcher branch and the
+	// device answers `Unknown command`. The client must never put them on the wire.
+	const unsupportedPrefixes = Array.from(
+		new Set(
+			docCommandRows()
+				.filter((row) => /UNSUPPORTED/i.test(row.description))
+				.map((row) => row.command.split(":")[0]),
+		),
+	);
+
+	function clientSourceFiles(dir: string, out: string[] = []): string[] {
+		if (!fs.existsSync(dir)) return out;
+		for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+			const full = path.join(dir, entry.name);
+			if (entry.isDirectory()) {
+				if (entry.name !== "docs") clientSourceFiles(full, out); // generated prose bundle
+			} else if (/\.(ts|tsx|js|mjs)$/.test(entry.name)) {
+				out.push(full);
+			}
+		}
+		return out;
+	}
+
+	it("derives UNSUPPORTED prefixes from commands.md", () => {
+		expect(unsupportedPrefixes.length).toBeGreaterThan(0);
+	});
+
+	it("no client source string literal starts with an UNSUPPORTED prefix", () => {
+		const offenders: string[] = [];
+		const re = new RegExp(`["'\`](?:${unsupportedPrefixes.join("|")}):`, "g");
+		for (const file of clientSourceFiles(path.join(repoRoot, "client", "src"))) {
+			const rel = path.relative(repoRoot, file).replace(/\\/g, "/");
+			const src = fs.readFileSync(file, "utf-8");
+			src.split(/\r?\n/).forEach((line: string, index: number) => {
+				if (re.test(line)) offenders.push(`${rel}:${index + 1}`);
+				re.lastIndex = 0;
+			});
+		}
+		expect(offenders).toEqual([]);
+	});
+});
+
+describe("AP-active gate uses one time base in the DAS-status handler", () => {
+	// The 0x39B handler stamps apGateApActiveMs and evaluates the ALC gate in the
+	// same breath. Both must use the handler-local `now`; mixing in the loop-cached
+	// gateNowMs can read the gate closed via unsigned underflow.
+	const vehicleHandler: string = fs.readFileSync(
+		path.join(repoRoot, "firmware", "lib", "vehicle", "can", "handler", "bus", "vehicle.h"),
+		"utf-8",
+	);
+
+	it("stamps apGateApActiveMs and checks apGateOpen from the same `now`", () => {
+		expect(vehicleHandler).toContain("s.apGateApActiveMs = now;");
+		expect(vehicleHandler).toContain("s.apGateOpen(now)");
+	});
+});
+
 describe("fresh-boot commands must work without 0x273 CAN traffic", () => {
 	// C1-07a replaced the bare `hasCtrl` early return with the single freshness
 	// gate `hasFreshCtrl(now)` (lastCtrlMs + AP_GATE_FRESHNESS_MS). The guard below

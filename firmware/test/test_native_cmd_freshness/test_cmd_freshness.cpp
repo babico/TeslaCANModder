@@ -34,21 +34,21 @@
  class FakeSerial
  {
    public:
- 	void print(const char *s) { capturedOutput += s; }
- 	void print(const __FlashStringHelper *s) { capturedOutput += reinterpret_cast<const char *>(s); }
- 	void print(long n)
- 	{
- 		char buf[32];
- 		snprintf(buf, sizeof(buf), "%ld", n);
- 		capturedOutput += buf;
- 	}
- 	void print(uint8_t b, int base)
- 	{
- 		char buf[8];
- 		snprintf(buf, sizeof(buf), base == HEX ? "%X" : "%u", b);
- 		capturedOutput += buf;
- 	}
- 	void println() { capturedOutput += "\n"; }
+	void print(const char *s) { capturedOutput += s; }
+	void print(const __FlashStringHelper *s) { capturedOutput += reinterpret_cast<const char *>(s); }
+	void print(long n)
+	{
+		char buf[32];
+		snprintf(buf, sizeof(buf), "%ld", n);
+		capturedOutput += buf;
+	}
+	void print(uint8_t b, int base)
+	{
+		char buf[8];
+		snprintf(buf, sizeof(buf), base == HEX ? "%X" : "%u", b);
+		capturedOutput += buf;
+	}
+	void println() { capturedOutput += "\n"; }
  };
  static FakeSerial Serial;
 
@@ -60,8 +60,8 @@
  static uint8_t stub_send_count = 0;
  void driverSend(const Frame &f, uint8_t bus)
  {
- 	if (stub_send_count < 16)
- 		stub_sends[stub_send_count++] = {f, bus};
+	if (stub_send_count < 16)
+		stub_sends[stub_send_count++] = {f, bus};
  }
  void driverSetBusFilters(uint8_t, const uint32_t *, uint8_t) {}
  void driverSetClockMHz(uint8_t) {}

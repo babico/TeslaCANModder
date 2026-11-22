@@ -106,7 +106,7 @@ Current experimental or sensitive toggles include:
 
 - `assist-dev:on|off` to expose developer-facing UI behavior.
 - `assist-hof:on|off` to disable hands-on requirements in supported paths.
-- `assist-nav:on|off` and `lanegraph:on|off` to alter driver-assist UI/runtime behavior.
+- `assist-nav:on|off` and `lane-graph:on|off` to alter driver-assist UI/runtime behavior.
 - `assist-tel:on|off` to suppress trip telemetry reporting bits.
 - `eap:on|off` for the hidden Enhanced Autopilot capability bit.
 - `ecer79:on|off` for EU restriction bypass behavior.

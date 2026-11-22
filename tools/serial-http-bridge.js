@@ -33,6 +33,7 @@ export const BRIDGE_HELP = [
 	"",
 	"Token: --token <secret> or TCM_BRIDGE_TOKEN env var (required for /api/*).",
 	"CORS:  --allow-origin <origin> or 'none' (default: http://<host>:<listen>).",
+	"       Wildcard '*' is rejected — name an explicit origin.",
 ].join("\n");
 
 function printHelpAndExit(code) {
@@ -45,6 +46,9 @@ export function parseBridgeArgs(argv) {
 	// post-processing (token env fallback, CORS origin) stay local.
 	const args = parseArgs(argv.slice(2));
 
+	if (args["allow-origin"] === "*") {
+		throw new Error("wildcard CORS origin is not allowed; use an explicit origin or 'none'");
+	}
 	let allowOrigin;
 	if (args["allow-origin"] === "none") allowOrigin = null;
 	else if (args["allow-origin"] !== undefined) allowOrigin = String(args["allow-origin"]);

@@ -246,19 +246,19 @@ static void test_add_key_tags()
 	TEST_ASSERT_EQUAL_UINT32(2, p->wire);
 	TEST_ASSERT_EQUAL_UINT32(0x52, out[p->tagOff]);
 	// UnsignedMessage{ f16 WhitelistOperation{ f5 PermissionChange{
-	//   key=PublicKey{PublicKeyRaw}, keyRole=ROLE_OWNER=2,
-	//   metadataForKey=KeyMetadata{formFactor=KEY_FORM_FACTOR_NFC_CARD=1} } } }
+	//   key=PublicKey{PublicKeyRaw}, keyRole=ROLE_OWNER=2 },
+	//   f6 metadataForKey=KeyMetadata{formFactor=NFC_CARD=1} } }
 	uint8_t expUm[80];
 	size_t k = 0;
 	expUm[k++] = 0x82; expUm[k++] = 0x01; expUm[k++] = 0x4D; // f16 WhitelistOperation, len 77
-	expUm[k++] = 0x2A; expUm[k++] = 0x4B;					// f5 addKey..., len 75
+	expUm[k++] = 0x2A; expUm[k++] = 0x47;					// f5 addKey..., len 71
 	expUm[k++] = 0x0A; expUm[k++] = 0x43;					// PermissionChange.key f1, len 67
 	expUm[k++] = 0x0A; expUm[k++] = 0x41;					// PublicKey.PublicKeyRaw f1, len 65
 	for (int i = 0; i < 65; i++)
 		expUm[k++] = 0x11;
 	expUm[k++] = 0x20; expUm[k++] = 0x02;					// keyRole f4 = ROLE_OWNER (SDK keys.proto=2)
 	expUm[k++] = 0x32; expUm[k++] = 0x02; expUm[k++] = 0x08;
-	expUm[k++] = 0x01;										// metadataForKey f6, NFC_CARD=1
+	expUm[k++] = 0x01;										// f6 metadataForKey, NFC_CARD=1 (sibling of f5)
 	TEST_ASSERT_EQUAL_UINT32(80, (uint32_t)k);
 	TEST_ASSERT_EQUAL_UINT32(k, (uint32_t)p->len);
 	TEST_ASSERT_EQUAL_HEX8_ARRAY(expUm, p->payload, k);
@@ -372,6 +372,55 @@ static void test_session_info_fields_round_trip_via_field_15()
 }
 
 // ---------------------------------------------------------------------------
+// SDK-authority placement: metadataForKey is field 6 of WhitelistOperation,
+// a SIBLING of addKeyToWhitelistAndAddPermissions (f5), NOT a child of
+// PermissionChange (SDK vcsec.proto:104-108,121-136). A flat byte pin alone
+// cannot distinguish the two nestings — the byte order is identical and only
+// the f5 length byte differs — so parse each message level independently.
+// ---------------------------------------------------------------------------
+
+static void test_add_key_metadata_is_whitelist_sibling_of_f5()
+{
+	uint8_t pub[65], uuid[16], out[256];
+	memset(pub, 0x11, sizeof(pub));
+	memset(uuid, 0x03, sizeof(uuid));
+
+	size_t outLen = 0;
+	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, ROLE_OWNER, KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), outLen));
+
+	TopField top[8];
+	size_t nTop = scanTopFields(out, outLen, top, 8);
+	const TopField *um = findField(top, nTop, 10);
+	TEST_ASSERT_NOT_NULL(um);
+
+	TopField umFields[8];
+	size_t nUm = scanTopFields(um->payload, um->len, umFields, 8);
+	const TopField *wl = findField(umFields, nUm, 16);
+	TEST_ASSERT_NOT_NULL(wl);
+
+	TopField wlFields[8];
+	size_t nWl = scanTopFields(wl->payload, wl->len, wlFields, 8);
+	const TopField *f5 = findField(wlFields, nWl, 5);
+	const TopField *f6 = findField(wlFields, nWl, 6);
+	TEST_ASSERT_NOT_NULL(f5); // addKeyToWhitelistAndAddPermissions
+	TEST_ASSERT_NOT_NULL(f6); // metadataForKey MUST be here, beside f5
+
+	// PermissionChange contains key (f1) and keyRole (f4) only — no f6 child.
+	TopField pcFields[8];
+	size_t nPc = scanTopFields(f5->payload, f5->len, pcFields, 8);
+	TEST_ASSERT_NOT_NULL(findField(pcFields, nPc, 1));
+	TEST_ASSERT_NOT_NULL(findField(pcFields, nPc, 4));
+	TEST_ASSERT_NULL(findField(pcFields, nPc, 6));
+
+	// f6 payload = KeyMetadata{ keyFormFactor(f1) = NFC_CARD=1 }.
+	TopField metaFields[4];
+	size_t nMeta = scanTopFields(f6->payload, f6->len, metaFields, 4);
+	const TopField *fff = findField(metaFields, nMeta, 1);
+	TEST_ASSERT_NOT_NULL(fff);
+	TEST_ASSERT_EQUAL_UINT32(1, (uint32_t)fff->varint);
+}
+
+// ---------------------------------------------------------------------------
 // Exact-wire helpers and SDK vector pins for every BLE builder
 // ---------------------------------------------------------------------------
 
@@ -428,18 +477,20 @@ static void test_add_key_exact_wire()
 	// SDK vector (vcsec.proto, read-only):
 	//   UnsignedMessage.WhitelistOperation (f16)
 	//     -> WhitelistOperation.addKeyToWhitelistAndAddPermissions (f5)
-	//       -> PermissionChange.key (f1) = PublicKey.PublicKeyRaw (f1),
-	//          keyRole (f4), metadataForKey (f6) = KeyMetadata.keyFormFactor (f1).
+	//          -> PermissionChange.key (f1) = PublicKey.PublicKeyRaw (f1),
+	//             keyRole (f4)
+	//     -> WhitelistOperation.metadataForKey (f6) = KeyMetadata.keyFormFactor (f1)
+	//        (SIBLING of f5 per vcsec.proto:121-136, NOT a child of PermissionChange)
 	// SDK values pinned here: ROLE_OWNER=2 (keys.proto:7-15) and
 	// KeyFormFactor.NFC_CARD=1 (vcsec.proto:32), both passed as production constants.
 	//   {0x32,0x02,0x08,0x02,                                  to_destination = Destination{VS}
 	//    0x52,0x50,                                            field 10 UnsignedMessage, len 80
 	//      0x82,0x01,0x4D,                                     UnsignedMessage.WhitelistOperation (f16), len 77
-	//        0x2A,0x4B,                                        .addKeyToWhitelistAndAddPermissions (f5), len 75
+	//        0x2A,0x47,                                        .addKeyToWhitelistAndAddPermissions (f5), len 71
 	//          0x0A,0x43,                                      PermissionChange.key (f1), len 67
 	//            0x0A,0x41,0x11 x65,                           PublicKey.PublicKeyRaw (f1), len 65
 	//          0x20,0x02,                                      PermissionChange.keyRole (f4) = ROLE_OWNER
-	//          0x32,0x02,0x08,0x01,                            .metadataForKey (f6), keyFormFactor=NFC_CARD
+	//        0x32,0x02,0x08,0x01,                              .metadataForKey (f6), keyFormFactor=NFC_CARD
 	//    0x9A,0x03,0x10,0x03 x16}                              uuid (f51)
 	size_t n = 0;
 	TEST_ASSERT_TRUE(buildAddKeyRequest(pub, ROLE_OWNER, KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), n));
@@ -449,12 +500,12 @@ static void test_add_key_exact_wire()
 	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x02; // Destination{VS}
 	exp[k++] = 0x52; exp[k++] = 0x50;									// field 10 UnsignedMessage, len 80
 	exp[k++] = 0x82; exp[k++] = 0x01; exp[k++] = 0x4D;					// f16 WhitelistOperation, len 77
-	exp[k++] = 0x2A; exp[k++] = 0x4B;									// f5 addKey..., len 75
+	exp[k++] = 0x2A; exp[k++] = 0x47;									// f5 addKey..., len 71
 	exp[k++] = 0x0A; exp[k++] = 0x43;									// PermissionChange.key f1, len 67
 	exp[k++] = 0x0A; exp[k++] = 0x41;									// PublicKey.PublicKeyRaw f1, len 65
 	for (int i = 0; i < 65; i++) exp[k++] = 0x11;
 	exp[k++] = 0x20; exp[k++] = 0x02;									// keyRole f4 = ROLE_OWNER (SDK=2)
-	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x01; // metadataForKey f6, NFC_CARD=1
+	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x01; // f6 metadataForKey (sibling of f5), NFC_CARD=1
 	exp[k++] = 0x9A; exp[k++] = 0x03; exp[k++] = 0x10;					// uuid f51
 	for (int i = 0; i < 16; i++) exp[k++] = 0x03;
 	TEST_ASSERT_EQUAL_UINT32(105, (uint32_t)k);
@@ -467,8 +518,8 @@ static void test_add_key_charging_manager_exact_wire()
 	memset(pub, 0x11, sizeof(pub));
 	memset(uuid, 0x03, sizeof(uuid));
 
-	// Same SDK nesting as the owner pin; only keyRole changes to
-	// ROLE_CHARGING_MANAGER=6 (keys.proto:7-15).
+	// Same SDK nesting as the owner pin (metadataForKey f6 is a sibling of f5);
+	// only keyRole changes to ROLE_CHARGING_MANAGER=6 (keys.proto:7-15).
 	size_t n = 0;
 	TEST_ASSERT_TRUE(
 		buildAddKeyRequest(pub, ROLE_CHARGING_MANAGER, KEY_FORM_FACTOR_NFC_CARD, uuid, out, sizeof(out), n));
@@ -478,12 +529,12 @@ static void test_add_key_charging_manager_exact_wire()
 	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x02; // Destination{VS}
 	exp[k++] = 0x52; exp[k++] = 0x50;									// field 10 UnsignedMessage, len 80
 	exp[k++] = 0x82; exp[k++] = 0x01; exp[k++] = 0x4D;					// f16 WhitelistOperation, len 77
-	exp[k++] = 0x2A; exp[k++] = 0x4B;									// f5 addKey..., len 75
+	exp[k++] = 0x2A; exp[k++] = 0x47;									// f5 addKey..., len 71
 	exp[k++] = 0x0A; exp[k++] = 0x43;									// PermissionChange.key f1, len 67
 	exp[k++] = 0x0A; exp[k++] = 0x41;									// PublicKey.PublicKeyRaw f1, len 65
 	for (int i = 0; i < 65; i++) exp[k++] = 0x11;
 	exp[k++] = 0x20; exp[k++] = 0x06;									// keyRole f4 = ROLE_CHARGING_MANAGER (SDK=6)
-	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x01; // metadataForKey f6, NFC_CARD=1
+	exp[k++] = 0x32; exp[k++] = 0x02; exp[k++] = 0x08; exp[k++] = 0x01; // f6 metadataForKey (sibling of f5), NFC_CARD=1
 	exp[k++] = 0x9A; exp[k++] = 0x03; exp[k++] = 0x10;					// uuid f51
 	for (int i = 0; i < 16; i++) exp[k++] = 0x03;
 	TEST_ASSERT_EQUAL_UINT32(105, (uint32_t)k);
@@ -650,6 +701,7 @@ int main()
 	RUN_TEST(test_session_info_request_exact_wire);
 	RUN_TEST(test_add_key_exact_wire);
 	RUN_TEST(test_add_key_charging_manager_exact_wire);
+	RUN_TEST(test_add_key_metadata_is_whitelist_sibling_of_f5);
 	RUN_TEST(test_auth_message_exact_wire);
 	RUN_TEST(test_action_envelope_exact_wire);
 	RUN_TEST(test_wake_action_exact_wire);

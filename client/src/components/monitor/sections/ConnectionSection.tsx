@@ -182,9 +182,6 @@ function ConnectionsSettingsPanel(props: MonitorScreenProps) {
 	const [mqttBroker, setMqttBroker] = useState("broker.hivemq.com");
 	const [mqttPort, setMqttPort] = useState("1883");
 	const [mqttInterval, setMqttInterval] = useState("1000");
-	const [haInterval, setHaInterval] = useState("1500");
-	const [espNowChannel, setEspNowChannel] = useState("1");
-	const [gvretPort, setGvretPort] = useState("23");
 
 	const run = async (command: string) => {
 		setBusyCommand(command);
@@ -206,17 +203,12 @@ function ConnectionsSettingsPanel(props: MonitorScreenProps) {
 		<View style={styles.section}>
 			<Text style={styles.title}>Integration Settings</Text>
 			<Text style={styles.subtitle}>
-				MQTT, Tesla BLE, Home Assistant, ESP-NOW, GVRET, ScanMyTesla, ELM327
+				MQTT configuration — documented as config-only, no telemetry publish loop in
+				firmware
 			</Text>
 
 			<View style={styles.metaRow}>
 				<StatusPill label="MQTT" value={readStatusField(props, "mqttConnected")} />
-				<StatusPill label="Tesla BLE" value={readStatusField(props, "teslaBleConnected")} />
-				<StatusPill label="HA" value={readStatusField(props, "haConnected")} />
-				<StatusPill label="ESP-NOW" value={readStatusField(props, "espNowPeers")} />
-				<StatusPill label="GVRET" value={readStatusField(props, "gvretClients")} />
-				<StatusPill label="SMT" value={readStatusField(props, "scanMyTesla")} />
-				<StatusPill label="ELM327" value={readStatusField(props, "elm327")} />
 			</View>
 
 			<View style={styles.settingsGrid}>
@@ -284,180 +276,6 @@ function ConnectionsSettingsPanel(props: MonitorScreenProps) {
 							variant="secondary"
 							onPress={() => void run(`mqtt:interval:${mqttInterval.trim()}`)}
 							disabled={isBusy || !mqttInterval.trim()}
-							compact
-						/>
-					</View>
-				</View>
-
-				<View style={styles.card}>
-					<Text style={styles.label}>Tesla BLE (VCSEC)</Text>
-					<View style={styles.buttonRowWrap}>
-						<ActionButton
-							title="On"
-							onPress={() => void run("teslable:on")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="Off"
-							variant="secondary"
-							onPress={() => void run("teslable:off")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="Auth"
-							variant="secondary"
-							onPress={() => void run("teslable:auth")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="Forget"
-							variant="secondary"
-							onPress={() => void run("teslable:forget")}
-							disabled={isBusy}
-							compact
-						/>
-					</View>
-				</View>
-
-				<View style={styles.card}>
-					<Text style={styles.label}>Home Assistant</Text>
-					<View style={styles.buttonRowWrap}>
-						<ActionButton
-							title="On"
-							onPress={() => void run("ha:on")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="Off"
-							variant="secondary"
-							onPress={() => void run("ha:off")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="Discovery"
-							variant="secondary"
-							onPress={() => void run("ha:discovery")}
-							disabled={isBusy}
-							compact
-						/>
-						<TextInput
-							style={styles.inputInline}
-							value={haInterval}
-							onChangeText={setHaInterval}
-							placeholder="Interval ms"
-							placeholderTextColor={colors.dashMuted}
-							keyboardType="numeric"
-						/>
-						<ActionButton
-							title="Set Interval"
-							variant="secondary"
-							onPress={() => void run(`ha:interval:${haInterval.trim()}`)}
-							disabled={isBusy || !haInterval.trim()}
-							compact
-						/>
-					</View>
-				</View>
-
-				<View style={styles.card}>
-					<Text style={styles.label}>ESP-NOW</Text>
-					<View style={styles.buttonRowWrap}>
-						<ActionButton
-							title="On"
-							onPress={() => void run("espnow:on")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="Off"
-							variant="secondary"
-							onPress={() => void run("espnow:off")}
-							disabled={isBusy}
-							compact
-						/>
-						<TextInput
-							style={styles.inputInline}
-							value={espNowChannel}
-							onChangeText={setEspNowChannel}
-							placeholder="Channel"
-							placeholderTextColor={colors.dashMuted}
-							keyboardType="numeric"
-						/>
-						<ActionButton
-							title="Set Channel"
-							variant="secondary"
-							onPress={() => void run(`espnow:channel:${espNowChannel.trim()}`)}
-							disabled={isBusy || !espNowChannel.trim()}
-							compact
-						/>
-					</View>
-				</View>
-
-				<View style={styles.card}>
-					<Text style={styles.label}>GVRET</Text>
-					<View style={styles.buttonRowWrap}>
-						<ActionButton
-							title="On"
-							onPress={() => void run("gvret:on")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="Off"
-							variant="secondary"
-							onPress={() => void run("gvret:off")}
-							disabled={isBusy}
-							compact
-						/>
-						<TextInput
-							style={styles.inputInline}
-							value={gvretPort}
-							onChangeText={setGvretPort}
-							placeholder="Port"
-							placeholderTextColor={colors.dashMuted}
-							keyboardType="numeric"
-						/>
-						<ActionButton
-							title="Set Port"
-							variant="secondary"
-							onPress={() => void run(`gvret:port:${gvretPort.trim()}`)}
-							disabled={isBusy || !gvretPort.trim()}
-							compact
-						/>
-					</View>
-				</View>
-
-				<View style={styles.card}>
-					<Text style={styles.label}>ScanMyTesla & ELM327</Text>
-					<View style={styles.buttonRowWrap}>
-						<ActionButton
-							title="SMT On"
-							onPress={() => void run("smt:on")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="SMT Off"
-							variant="secondary"
-							onPress={() => void run("smt:off")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="ELM On"
-							onPress={() => void run("elm327:on")}
-							disabled={isBusy}
-							compact
-						/>
-						<ActionButton
-							title="ELM Off"
-							variant="secondary"
-							onPress={() => void run("elm327:off")}
-							disabled={isBusy}
 							compact
 						/>
 					</View>

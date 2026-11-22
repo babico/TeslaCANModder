@@ -84,6 +84,12 @@ describe("bridge defaults and help", () => {
 		});
 	});
 
+	it("rejects a wildcard CORS origin instead of emitting it verbatim", () => {
+		expect(() =>
+			parseBridgeArgs(["node", "bridge", "--port", "COM4", "--allow-origin", "*"]),
+		).toThrow(/wildcard/i);
+	});
+
 	it("derives the default CORS origin from host and listen", () => {
 		const opts = parseBridgeArgs([
 			"node",

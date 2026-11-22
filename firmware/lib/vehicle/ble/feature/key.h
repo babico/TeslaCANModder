@@ -25,7 +25,7 @@ static const uint8_t ROLE_CHARGING_MANAGER = 6;
  * @param role Null-terminated role name ("owner" or "charging_manager")
  * @return ROLE_OWNER for "owner", otherwise ROLE_CHARGING_MANAGER
  */
-static uint8_t roleValueFromName(const char *role)
+static inline uint8_t roleValueFromName(const char *role)
 {
 	if (strcmp(role, "owner") == 0) return ROLE_OWNER;
 	return ROLE_CHARGING_MANAGER;

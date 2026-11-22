@@ -25,10 +25,6 @@ static const uint8_t DOMAIN_INFOTAINMENT = 3;
 static const uint8_t KEY_FORM_FACTOR_NFC_CARD = 1;
 static const uint8_t KEY_FORM_FACTOR_BLE_KEY = 2;
 
-// Component enum values from universalmessage.proto
-static const uint8_t COMPONENT_INFOTAINMENT = 3;
-static const uint8_t COMPONENT_VEHICLE_SECURITY = 2;
-
 /**
  * @brief Encode a Destination message containing a single domain field.
  * @param domain Domain identifier (DOMAIN_VEHICLE_SECURITY or DOMAIN_INFOTAINMENT).
@@ -77,19 +73,22 @@ static bool buildAddKeyRequest(const uint8_t *pub65, uint8_t role, uint8_t formF
 	if (!keyMeta.ok())
 		return false;
 
-	// PermissionChange{ key(field 1), keyRole(field 4), metadataForKey(field 6) }.
+	// PermissionChange{ key(field 1), keyRole(field 4) } — SDK vcsec.proto:104-108.
+	// metadataForKey is NOT a field of PermissionChange.
 	uint8_t permissionBuf[96];
 	Proto permission(permissionBuf, sizeof(permissionBuf));
 	permission.fieldMsg(1, publicKey); // key = field 1
 	permission.fieldVarint(4, role);   // keyRole = field 4
-	permission.fieldMsg(6, keyMeta);   // metadataForKey = field 6
 	if (!permission.ok())
 		return false;
 
-	// WhitelistOperation.addKeyToWhitelistAndAddPermissions = field 5.
+	// WhitelistOperation{ addKeyToWhitelistAndAddPermissions(field 5),
+	// metadataForKey(field 6) } — SDK vcsec.proto:121-136. metadataForKey is a
+	// SIBLING of f5, not a child of PermissionChange.
 	uint8_t whitelistBuf[112];
 	Proto whitelist(whitelistBuf, sizeof(whitelistBuf));
 	whitelist.fieldMsg(5, permission);
+	whitelist.fieldMsg(6, keyMeta); // metadataForKey = field 6 (sibling of f5)
 	if (!whitelist.ok())
 		return false;
 

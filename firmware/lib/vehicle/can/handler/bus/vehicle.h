@@ -130,16 +130,18 @@ inline void handleVehicleBus(Frame &f, State &s)
 
 	if (f.id == CAN_ID_DAS_STATUS && f.dlc >= 6)
 	{
+		// One time base for the AP-active stamp and the ALC gate check below:
+		// mixing millis() with the loop-cached gateNowMs can read closed via underflow.
+		unsigned long now = millis();
 		s.dasHandsOnState = readDasHandsOnState(f);
 		s.dasLaneChangeState = readDasLaneChangeState(f);
 		s.dasApState = readDASAutopilotState(f);
 		s.apGateApActive = isDASAutopilotActive(readDASAutopilotStatus(f));
-		s.apGateApActiveMs = millis(); // C1-07a: stale AP-active must not hold the gate open
+		s.apGateApActiveMs = now; // C1-07a: stale AP-active must not hold the gate open
 		s.dasSeen = true;
 
 		// ALC auto-confirm: inject stalk/button when lane change is prompted
-		unsigned long now = millis();
-		if (alcShouldConfirm(s, now) && s.apGateOpen())
+		if (alcShouldConfirm(s, now) && s.apGateOpen(now))
 		{
 			int8_t dir = alcDirectionFromTurnSignal(s);
 			if (dir != 0)

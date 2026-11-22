@@ -184,7 +184,7 @@ Multiplexed FSD control frame. The firmware modifies different bitfields dependi
 
 - Bit 19: Nag / hands-on restriction path — cleared when nag suppression is active.
 - Bit 20: ECE R79 restriction bit — cleared by `ecer79:on` for EU vehicles.
-- Bit 45: Lane graph visualization — set by `lanegraph:on`.
+- Bit 45: Lane graph visualization — set by `lane-graph:on`.
 - Bit 46: Enhanced Autopilot / hidden AP bit — set by `eap:on`.
 - Bit 47: Summon / nag companion unlock bit — set when nag suppression is active.
 

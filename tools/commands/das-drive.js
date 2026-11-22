@@ -166,7 +166,8 @@ export async function runDasDrive(session, opts, out) {
 
 	// ── soak: enable raw stream + count DAS-frame cadence on the wire ────────
 	if (action === "soak") {
-		const duration = Number(opts.duration) || 5000;
+		const requested = Number(opts.duration);
+		const duration = Number.isFinite(requested) && requested > 0 ? requested : 5000;
 		out.section(`Soaking ${duration} ms — measuring DAS frame cadence`);
 
 		// We need raw CAN frames to see the IDs we emit. Without the ack the
