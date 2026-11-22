@@ -94,11 +94,12 @@ public:
 
 	/**
 	 * @brief Scan for and connect to a Tesla vehicle advertising the Tesla BLE service
-	 * @param vinSuffix Optional VIN suffix filter (last 8 chars); nullptr to accept any Tesla
+	 * @param localName Optional advertisement Local Name filter
+	 *        ("S" + sha1(VIN)[:8] + "C"); nullptr to accept any Tesla
 	 * @param scanSec Maximum scan duration in seconds
 	 * @return True if a matching device was found and connection established
 	 */
-	bool connect(const char *vinSuffix = nullptr, uint32_t scanSec = 8)
+	bool connect(const char *localName = nullptr, uint32_t scanSec = 8)
 	{
 		if (_pClient && _pClient->isConnected()) return true;
 
@@ -113,10 +114,10 @@ public:
 		for (int i = 0; i < results.getCount(); i++) {
 			NimBLEAdvertisedDevice dev = results.getDevice(i);
 			if (!dev.isAdvertisingService(NimBLEUUID(TESLA_SVC_UUID))) continue;
-			if (vinSuffix && strlen(vinSuffix) > 0) {
+			if (localName && strlen(localName) > 0) {
 				String name = dev.getName().c_str();
-				if (name.length() < strlen(vinSuffix)) continue;
-				if (!name.endsWith(vinSuffix)) continue;
+				if (name.length() < strlen(localName)) continue;
+				if (!name.endsWith(localName)) continue;
 			}
 			_addr = dev.getAddress();
 			target = &dev;

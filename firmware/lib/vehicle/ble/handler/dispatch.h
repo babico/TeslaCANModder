@@ -11,7 +11,9 @@
 
 #include "vehicle/ble/feature/key.h"
 #include "vehicle/ble/feature/session.h"
+#include "vehicle/ble/local_name.h"
 #include "vehicle/ble/msg.h"
+#include <mbedtls/sha1.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -20,8 +22,14 @@
 namespace Tesla
 {
 
+/** @brief mbedTLS-backed SHA-1 provider for the BLE Local Name derivation. */
+static bool sha1Device(const uint8_t *data, size_t len, uint8_t digest[20])
+{
+	return mbedtls_sha1_ret(data, len, digest) == 0;
+}
+
 /**
- * @brief Connect to a Tesla vehicle over BLE using the last 8 characters of the stored VIN as a suffix filter.
+ * @brief Connect to a Tesla vehicle over BLE using its observed advertisement Local Name as the scan filter.
  * @param board Platform adapter providing VIN storage and logging.
  * @param client BLE transport used for scanning and connecting.
  * @return True if the connection was established successfully.
@@ -30,20 +38,23 @@ template <typename Board, typename Transport> static bool connectToVehicle(Board
 {
 	char vin[18] = {};
 	board.loadVin(vin, sizeof(vin));
-
-	const char *suffix = nullptr;
-	char sfxBuf[9] = {};
 	size_t vinLen = strlen(vin);
-	if (vinLen >= 8)
+
+	char localName[11] = {};
+	const char *filter = nullptr;
+	if (vinLen >= 5)
 	{
-		// Use the last 8 characters of the VIN as the BLE advertisement suffix filter
-		memcpy(sfxBuf, vin + vinLen - 8, 8);
-		sfxBuf[8] = '\0';
-		suffix = sfxBuf;
+		// Observed advert name: "S" + sha1(VIN)[:8] uppercase hex + "C".
+		if (!teslaLocalName(vin, vinLen, localName, &sha1Device))
+		{
+			board.err("Tesla: VIN hash failed");
+			return false;
+		}
+		filter = localName;
 	}
 
 	board.log("Tesla: scanning for vehicle...");
-	if (!client.connect(suffix, 10))
+	if (!client.connect(filter, 10))
 	{
 		board.err("Tesla: vehicle not found via BLE");
 		return false;
