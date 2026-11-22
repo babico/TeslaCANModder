@@ -55,12 +55,32 @@ Untrusted ZIP/cert/key material from the Tesla-drug forks; parking and occupancy
 
 ## Hardware capacity question
 
-CI builds `esp32_chassis_8mhz` with flash ≤ 1,100,000 B (~84% of 1.31 MB) and RAM ≤ 300,000 B (~92% of 320 KB); the size check is the red job. Two tracks were requested and should run in parallel as **spikes**, not as blockers for correctness work:
+CI builds `esp32_chassis_8mhz` with flash ≤ 1,100,000 B (~84% of 1.31 MB) and RAM ≤ 300,000 B (~92% of 320 KB); the size check is the red job. Three tracks run in parallel as **spikes**, not as blockers for correctness work. SoC data below is the maintainer's Turkey/Nov-2026 market snapshot — prices and board configurations must be re-checked at purchase time.
 
-1. **ESP32-S3 port** — more flash/RAM, native TWAI, but new board, new PlatformIO env, driver and test matrix work.
-2. **Multi-ESP32 cluster** — several boards with distributed command/CAN roles and a manager (e.g. ESP-NOW control plane + per-bus workers). Higher system complexity: addressing, command routing, failure handling, version skew, and safety gating across nodes.
+### SoC role map for a heterogeneous cluster
 
-Both need measured flash/RAM numbers and a written interface before any shipping decision. Do not migrate on "it feels tight" alone — first profile the current build and make the size check honest for all 30+ envs (old todo P4-009/P4-010/P8-002).
+| SoC                      | Relevant specs                                                                                    | Proposed role                                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| ESP32 (classic, current) | 2×240 MHz Xtensa, 520 KB SRAM, 4 MB flash, Classic BT + BLE 4.2                                   | Keep as CAN bus worker (MCP2515 SPI) and legacy transport; proven firmware base                  |
+| ESP32-S3 N16R8           | 2×240 MHz, 512 KB SRAM, 16 MB flash + 8 MB PSRAM, BLE 5, USB                                      | Coordinator / cache / key material / WiFi-heavy dashboard; natural successor to the classic main |
+| ESP32-C3                 | 160 MHz RISC-V, 400 KB SRAM, 4 MB flash, BLE 5, ~₺177                                             | Cheap dedicated sniffer or single-bus worker — good for scaling node count                       |
+| ESP32-C6                 | 160 MHz RISC-V, 512 KB SRAM, 4–8 MB flash, WiFi 6 **2.4 GHz only**, BLE 5.3, Zigbee/Thread/Matter | Home-Assistant/Matter bridge node if HA work resumes; do not buy for 5 GHz                       |
+| ESP32-C5                 | 240 MHz RISC-V, 384 KB SRAM, 4–8 MB flash, WiFi 6 **2.4/5 GHz**, BLE 5, ~₺977                     | Only if a 5 GHz network or dual-band AP is a hard requirement; expensive                         |
+| ESP32-P4                 | 2×400 MHz RISC-V, 768 KB SRAM + PSRAM, no WiFi/BT, display/camera                                 | Local HMI/display node only — needs a separate radio node                                        |
+| ESP32-H2                 | 96 MHz, no WiFi, BLE 5.3, Zigbee/Thread                                                           | Low-power sensor/mesh node; not a CAN candidate                                                  |
+
+Recommended lab configuration: **S3 N16R8 as coordinator** (16 MB flash + 8 MB PSRAM removes the current size pressure), classic ESP32/C3 as per-bus CAN workers, C6 only if Matter/HA is in scope. C5 and P4 stay out until a concrete 5 GHz or display requirement exists.
+
+### Raspberry Pi track (new)
+
+The maintainer wants the code also evaluated on Raspberry Pi. Two very different jobs must not be conflated:
+
+1. **Pi as supervisor (low risk, high value).** `packages/protocol`, `tools/` and the Expo web client already run on Linux. A Pi can host the web UI, MQTT broker, capture/log database, OTA staging and fleet/cluster management while ESP32 nodes do real-time CAN I/O. Native firmware tests already compile on the host, which supports this split.
+2. **Pi as CAN firmware replacement (high risk).** GPIO/SPI MCP2515 or native CAN overlays exist, and Linux gives far more RAM/CPU, but Linux scheduling is not deterministic enough for 100 Hz `0x370` echo and 25/50 Hz DAS injection without RT-PREEMPT. Boot time, SD-card wear and power consumption are additional costs. Do not port the shipping CAN loop first; spike it and keep the safety gate on a single authority.
+
+**Cluster safety rule:** regardless of node count, AP/park/OTP-style injection gates must have exactly one owner. Distributed gating is not acceptable.
+
+All three tracks need measured flash/RAM numbers, a written inter-node interface and a failure matrix before any shipping decision. Do not migrate on "it feels tight" alone — first profile the current build and make the size check honest for all 30+ envs (old todo P4-009/P4-010/P8-002).
 
 ## Web UI state
 

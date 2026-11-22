@@ -239,6 +239,10 @@ All MCP servers are **disabled by default** to save context. Enable in `opencode
 
 Environment variables: `GITHUB_TOKEN` required for GitHub MCP.
 
+## Git workflow
+
+Standing user instruction (2026-11-22): **commit and push completed work without asking**. Do not stop for per-commit or per-push approval on this repo. Still keep `main` clean: work on a feature branch and land through a PR; never force-push, reset shared history, or merge without an explicit request. Do not sweep unrelated pre-existing working-tree changes into a commit.
+
 ## Planning, analysis and report artifacts
 
 Never create new files under `docs/superpowers/`. That directory holds only pre-existing historical artifacts; do not add to it. Store new plans, designs, analysis and reports in `.opencode/plans/`, `.opencode/analysis/` or `.opencode/reports/`, and put durable rules in this file (`AGENTS.md`). Skills stay in `.opencode/skills/`.
