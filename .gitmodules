@@ -702,3 +702,33 @@
 [submodule "legacy/zxerqw-Tesla-drug"]
 	path = legacy/zxerqw-Tesla-drug
 	url = https://github.com/zxerqw/Tesla-drug.git
+[submodule "legacy/cker321-Tesla-drug"]
+	path = legacy/cker321-Tesla-drug
+	url = https://github.com/cker321/Tesla-drug.git
+[submodule "legacy/flytam-Tesla-drug"]
+	path = legacy/flytam-Tesla-drug
+	url = https://github.com/flytam/Tesla-drug.git
+[submodule "legacy/FZ997616100-Tesla-drug"]
+	path = legacy/FZ997616100-Tesla-drug
+	url = https://github.com/FZ997616100/Tesla-drug.git
+[submodule "legacy/gba3455-Tesla-drug"]
+	path = legacy/gba3455-Tesla-drug
+	url = https://github.com/gba3455/Tesla-drug.git
+[submodule "legacy/kyriewxcode-Tesla-drug"]
+	path = legacy/kyriewxcode-Tesla-drug
+	url = https://github.com/kyriewxcode/Tesla-drug.git
+[submodule "legacy/lenfien-Tesla-drug"]
+	path = legacy/lenfien-Tesla-drug
+	url = https://github.com/lenfien/Tesla-drug.git
+[submodule "legacy/pizigao-Tesla-drug"]
+	path = legacy/pizigao-Tesla-drug
+	url = https://github.com/pizigao/Tesla-drug.git
+[submodule "legacy/tulaoda-tesla-drug"]
+	path = legacy/tulaoda-tesla-drug
+	url = https://github.com/tulaoda/tesla-drug.git
+[submodule "legacy/xisungod-Tesla-drug"]
+	path = legacy/xisungod-Tesla-drug
+	url = https://github.com/xisungod/Tesla-drug.git
+[submodule "legacy/yangbb84-Tesla-drug"]
+	path = legacy/yangbb84-Tesla-drug
+	url = https://github.com/yangbb84/Tesla-drug.git
