@@ -191,6 +191,10 @@
 - [ ] Update `.opencode/reports/rpi-spike/ADR-2026-11-22.md` with measured results (or state that hardware verification is still UNVERIFIED).
 - [ ] Mark capture-gated items openly; run final whole-branch review.
 
+## Plan status — 2026-11-23: DONE (all implementation tasks; hardware verification outstanding)
+
+Tasks A1–A4, B1–B3, C1–C2 complete; final fix wave closed (runtime entrypoint + candump transport). CAN TX remains disabled, no gate artifact exists, no hardware claims verified. Parked: clean-candump-exit reconnect (Medium), plus the three minors in the ledger. See `.opencode/sdd/unified-pi-implementation-plan/progress.md`.
+
 ## Definition of done for a phase
 
 1. Every task has a passing test or a measured report.

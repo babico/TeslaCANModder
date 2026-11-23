@@ -62,3 +62,15 @@ Ruling: no separate git worktree — current branch is already isolated. Cost if
 
 - Task C2: complete (commits 3a80a95..83ef83a, review clean). Read-only tolerant `drive-data.json` connector with bounded walk, graceful missing/invalid degradation, fixture tests, Studio/Drive + encryption docs. 79/79 Pi tests, lint clean. Real path/schema UNVERIFIED; no production caller yet.
     - Minor (deferred): self-link guard (`clip === drive`) not present.
+
+## Final whole-branch review (base 9926af3, head 5da646f)
+
+Ruling: reviewer's two Important findings are accepted and will be FIXED, not re-scoped — the maintainer explicitly asked for the whole stack on the Pi, so "libraries + runbook only" would contradict the directive. Add a runtime entrypoint (`pi/src/main.ts` + emit build) and a real SocketCAN read transport (candump-backed gateway with injected process spawn), keep gated TX unmounted. Cost if wrong: more unmounted code without hardware verification; all hardware claims stay UNVERIFIED.
+
+Ruling: nginx not machine-validated is an acceptable UNVERIFIED deferral (no nginx binary here; structural test + runbook). Cost if wrong: runtime config error discovered on first Pi boot.
+
+One fix wave with the complete findings list; no per-finding fixers.
+
+- Final fix wave complete (commits 9a08256 + dc555b5, scoped re-review clean): all 2 Important + 9 minors ADDRESSED. Runtime entrypoint (`pi/src/main.ts`, emit build, 5 composition tests) and candump-backed SocketCAN transport (7 fake-process tests) shipped; TX remains unmounted, no artifact. Pi 102/102, typecheck/build/lint clean.
+    - Ruling: reviewer's new Medium finding (clean `candump` child exit is not reconnectable — `candump.ts:104-112,156` + `socketcan.ts:212`) is PARKED, not fixed in a second wave (skill rule). It fails closed by stopping frame flow, not by injecting; systemd will show a healthy process with a dead stream. Cost if wrong: Pi service silently stops seeing CAN after interface removal/restart until manually restarted. Surface in the final message.
+    - Minor (deferred): `createNetTransport()` retained as dead optional path; `fanoutFrames()` per-subscriber queues unbounded; `parseBindConfig()` accepts non-loopback unicast (deploy pins 127.0.0.1). All disclosed in the report.
