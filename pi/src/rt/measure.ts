@@ -1,5 +1,6 @@
 import { Buffer } from "node:buffer";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { fileURLToPath } from "node:url";
 
 /**
  * RT measurement gate — pure go/no-go decision plus a hardware-free command
@@ -71,7 +72,22 @@ export function decideRtGate(
 
 /** v1 gate artifact contract, consumed by C1's TX backend. */
 export const RT_GATE_SCHEMA_VERSION = 1;
+/** Package-relative documentation path; use `resolveGateArtifactPath()` for I/O. */
 export const RT_GATE_ARTIFACT_PATH = "pi/gate/rt-result.json";
+/** Optional environment override for the artifact path (tests, bench setups). */
+export const RT_GATE_ARTIFACT_PATH_ENV = "PI_RT_GATE_ARTIFACT_PATH";
+
+/**
+ * Absolute default gate artifact path, anchored to the `pi/` package rather
+ * than the caller's cwd, so the writer and reader agree no matter where the
+ * service or test process was launched. An injected/explicit env path is used
+ * verbatim; callers may also pass `artifactPath` / `gatePath` directly.
+ */
+export function resolveGateArtifactPath(env: NodeJS.ProcessEnv = process.env): string {
+	const override = env[RT_GATE_ARTIFACT_PATH_ENV];
+	if (override) return override;
+	return fileURLToPath(new URL("../../gate/rt-result.json", import.meta.url));
+}
 
 export interface RtGateArtifactPayload {
 	schemaVersion: number;
@@ -314,7 +330,7 @@ export async function runRtMeasurement(
 	);
 	const artifact: RtGateArtifact = { ...body, signature };
 	await writer.write(
-		options.artifactPath ?? RT_GATE_ARTIFACT_PATH,
+		options.artifactPath ?? resolveGateArtifactPath(env),
 		`${JSON.stringify(artifact, null, 2)}\n`,
 	);
 	return { artifact, decision };

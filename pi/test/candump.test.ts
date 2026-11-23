@@ -115,4 +115,38 @@ describe("candump transport wired through the shared reader", () => {
 		expect(fake.calls().length).toBe(2);
 		expect(fake.killCount()).toBe(2);
 	});
+
+	it("reconnects after a clean child exit with no spawn error", async () => {
+		// The child ends its stdout normally (no error seam) but its `exit`
+		// event fired: today the reader returns and stops seeing CAN forever.
+		const fake = fakeCandump([
+			[
+				{ kind: "line", line: "can0 3FD#01" },
+				{ kind: "exit", code: 0 },
+			],
+			[
+				{ kind: "line", line: "can0 2B9#AA" },
+				{ kind: "exit", code: 0 },
+			],
+		]);
+		const frames: CanFrame[] = [];
+		let finalError: unknown;
+		try {
+			for await (const frame of createCanReader("can0", {
+				transport: createCandumpTransportFactory({ processFactory: fake.factory }),
+				now: () => 12,
+				sleep: noSleep,
+				maxReconnects: 1,
+			})) {
+				frames.push(frame);
+			}
+		} catch (error) {
+			// The reader rethrows once its reconnect budget is exhausted; that
+			// is expected here and proves clean exits were reconnectable.
+			finalError = error;
+		}
+		expect(frames.map((frame) => frame.id)).toEqual([0x3fd, 0x2b9]);
+		expect(fake.calls().length).toBe(2);
+		expect(String(finalError)).toMatch(/candump exited unexpectedly/);
+	});
 });

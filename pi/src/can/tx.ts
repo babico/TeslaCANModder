@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { isCanTxEnabled } from "../index.js";
-import { isGateOpen, RT_GATE_ARTIFACT_PATH, type RtGateArtifact } from "../rt/measure.js";
+import { isGateOpen, resolveGateArtifactPath, type RtGateArtifact } from "../rt/measure.js";
 
 /**
  * Gated Linux CAN TX backend.
@@ -49,7 +49,7 @@ export interface GatedTxOptions {
 	artifact?: RtGateArtifact | undefined;
 	/** HMAC key; defaults to `env.PI_RT_GATE_KEY`. */
 	gateKey?: string;
-	/** Artifact path; defaults to `pi/gate/rt-result.json`. */
+	/** Artifact path; defaults to the absolute `pi/gate/rt-result.json` resolved by `resolveGateArtifactPath()`. */
 	gatePath?: string;
 	/** Artifact loader; defaults to `readGateArtifact`. */
 	readArtifact?: GateArtifactReader;
@@ -125,7 +125,7 @@ export function createGatedTx(options: GatedTxOptions = {}): CanTxBackend {
 	const transport = options.transport;
 	const gateCheck = options.isGateOpenFn ?? isGateOpen;
 	const gateKey = options.gateKey ?? env.PI_RT_GATE_KEY ?? "";
-	const gatePath = options.gatePath ?? RT_GATE_ARTIFACT_PATH;
+	const gatePath = options.gatePath ?? resolveGateArtifactPath(env);
 	const load = options.readArtifact ?? readGateArtifact;
 
 	function gateOpen(): boolean {

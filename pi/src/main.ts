@@ -31,7 +31,8 @@ export const DEFAULT_BIND_HOST = "127.0.0.1";
 export const DEFAULT_BIND_PORT = 8090;
 export const DEFAULT_CAPTURE_DIR = "/var/lib/teslacanmodder/captures";
 
-const WILDCARD_HOSTS = new Set(["", "*", "0.0.0.0", "::", "[::]"]);
+/** Only literal loopback spellings are allowed; no wildcard or unicast bind. */
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1"]);
 
 export interface BindConfig {
 	host: string;
@@ -42,7 +43,7 @@ export interface BindConfig {
 export function parseBindConfig(env: NodeJS.ProcessEnv = process.env): BindConfig {
 	const host = env.TCM_BIND_HOST ?? DEFAULT_BIND_HOST;
 	const rawPort = env.TCM_BIND_PORT ?? String(DEFAULT_BIND_PORT);
-	if (WILDCARD_HOSTS.has(host) || host.includes("*")) {
+	if (!LOOPBACK_HOSTS.has(host)) {
 		throw new Error(`invalid TCM_BIND_HOST bind configuration: "${host}" is not loopback`);
 	}
 	if (!/^\d+$/.test(rawPort)) {
@@ -64,10 +65,19 @@ export function parseIfaces(env: NodeJS.ProcessEnv = process.env): string[] {
 	return getCanTransport(env) === "vcan" ? ["vcan0"] : ["can0"];
 }
 
+/** Per-subscriber queue limit. Oldest frames are dropped past this bound. */
+export const FANOUT_QUEUE_LIMIT = 256;
+
 /**
  * Broadcast one source to `count` independent consumers. Backpressure-free by
  * design: each subscriber has its own queue, so a slow recorder cannot stall
  * the bridge's status snapshot. A shared pump starts on first consumption.
+ *
+ * Each queue is bounded at `FANOUT_QUEUE_LIMIT` (256) frames: a subscriber that
+ * stops draining its queue (e.g. a wedged recorder) drops the OLDEST buffered
+ * frames, keeping the newest state snapshot. Drops are per-subscriber and
+ * never block or delay the other consumers; the bridge's live view and the
+ * recorder feed stay independent. Drops are not yet exported as a metric.
  */
 export function fanoutFrames(
 	source: AsyncIterable<CanFrame>,
@@ -85,6 +95,7 @@ export function fanoutFrames(
 		try {
 			for await (const frame of source) {
 				for (const sub of subscribers) {
+					if (sub.queue.length >= FANOUT_QUEUE_LIMIT) sub.queue.shift(); // drop oldest
 					sub.queue.push(frame);
 					sub.wake?.();
 					sub.wake = undefined;

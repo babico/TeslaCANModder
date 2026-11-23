@@ -21,12 +21,20 @@ import {
  * `socketcan.ts`; that path is unshipped and never used by the service.
  */
 
+/** Status reported by the child's `exit` event (`code` is null when signalled). */
+export interface CandumpExit {
+	code: number | null;
+	signal: NodeJS.Signals | null;
+}
+
 /** Minimal surface of a spawned `candump` child that the transport needs. */
 export interface CandumpProcess {
 	stdout: AsyncIterable<Buffer | string>;
 	kill?(): void;
 	/** Returns a deferred spawn/stream error so the reader can reconnect. */
 	error?(): Error | undefined;
+	/** Returns the exit status once `exit` fires, undefined while still running. */
+	exit?(): CandumpExit | undefined;
 }
 
 /** Injected process seam. Receives the command and argv separately. */
@@ -100,18 +108,23 @@ function frameToCanBytes(frame: CanFrame): Uint8Array {
 	return raw;
 }
 
-/** Real process factory. Spawn errors are captured and surfaced to the reader. */
+/** Real process factory. Spawn errors and exit status are surfaced to the reader. */
 export const spawnCandumpProcess: CandumpProcessFactory = (command, args) => {
 	const child = spawn(command, [...args], { stdio: ["ignore", "pipe", "pipe"] });
 	let spawnError: Error | undefined;
+	let exitStatus: CandumpExit | undefined;
 	child.on("error", (error: Error) => {
 		spawnError = error;
 		child.stdout?.destroy();
+	});
+	child.on("exit", (code, signal) => {
+		exitStatus = { code, signal };
 	});
 	return {
 		stdout: child.stdout as AsyncIterable<Buffer>,
 		kill: () => child.kill(),
 		error: () => spawnError,
+		exit: () => exitStatus,
 	};
 };
 
@@ -155,6 +168,17 @@ export function createCandumpTransport(
 				if (tail) yield tail;
 				const error = process.error?.();
 				if (error) throw error;
+				// A clean stdout end is NOT a healthy steady state: when the
+				// child has exited (even with code 0) the reader must see an
+				// error so createCanReader() reconnects instead of silently
+				// going blind. A stream that merely ends with no exit event
+				// remains a clean end for injected/fake transports.
+				const exit = process.exit?.();
+				if (exit) {
+					throw new Error(
+						`candump exited unexpectedly (code=${exit.code ?? "null"}, signal=${exit.signal ?? "none"})`,
+					);
+				}
 			} finally {
 				process.kill?.();
 				if (active === process) active = undefined;

@@ -52,6 +52,35 @@ describe("bind configuration", () => {
 			expect(() => parseBindConfig(env)).toThrow();
 		}
 	});
+
+	it("accepts only the three loopback host spellings", () => {
+		for (const host of ["127.0.0.1", "localhost", "::1"]) {
+			expect(parseBindConfig({ TCM_BIND_HOST: host })).toEqual({
+				host,
+				port: 8090,
+			});
+		}
+	});
+
+	it("rejects every non-loopback host, including wildcards and lookalikes", () => {
+		for (const host of [
+			"",
+			"*",
+			"0.0.0.0",
+			"::",
+			"[::]",
+			"192.168.1.10",
+			"10.0.0.5",
+			"example.com",
+			"localhost.evil.test",
+			"127.0.0.2",
+			"::ffff:127.0.0.1",
+			"[::1]",
+			"127.0.0.1:*",
+		]) {
+			expect(() => parseBindConfig({ TCM_BIND_HOST: host })).toThrow(/bind/i);
+		}
+	});
 });
 
 describe("frame fanout", () => {
@@ -65,6 +94,34 @@ describe("frame fanout", () => {
 		const [left, right] = await Promise.all([collect(a), collect(b)]);
 		expect(left).toEqual(FRAMES);
 		expect(right).toEqual(FRAMES);
+	});
+
+	it("caps each subscriber queue at 256 frames (drop oldest) without affecting peers", async () => {
+		const TOTAL = 300;
+		const LIMIT = 256;
+		const all = Array.from(
+			{ length: TOTAL },
+			(_, index): CanFrame => ({
+				id: index,
+				dlc: 0,
+				data: new Uint8Array(0),
+				bus: 0,
+				rxMs: index,
+			}),
+		);
+		const [stalled, active] = fanoutFrames(fakeReader(all), 2);
+
+		// Only the active consumer is drained while the pump runs; the other
+		// queue must saturate at LIMIT instead of growing without bound.
+		const received: CanFrame[] = [];
+		for await (const frame of active) received.push(frame);
+		expect(received).toEqual(all);
+
+		const delayed: CanFrame[] = [];
+		for await (const frame of stalled) delayed.push(frame);
+		expect(delayed.length).toBe(LIMIT);
+		expect(delayed[0]!.rxMs).toBe(TOTAL - LIMIT);
+		expect(delayed.at(-1)!.rxMs).toBe(TOTAL - 1);
 	});
 });
 

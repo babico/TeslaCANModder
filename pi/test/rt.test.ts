@@ -1,5 +1,8 @@
 import { existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { isAbsolute } from "node:path";
 import { describe, expect, it } from "@jest/globals";
+import * as measure from "../src/rt/measure.js";
 import {
 	decideRtGate,
 	isGateOpen,
@@ -15,6 +18,18 @@ import {
 	type RtGateArtifactPayload,
 	type RtMeasurements,
 } from "../src/rt/measure.js";
+
+/** Look up the path resolver dynamically so the RED test stays runnable. */
+const resolveGateArtifactPath = (
+	measure as unknown as {
+		resolveGateArtifactPath?: (env?: NodeJS.ProcessEnv) => string;
+	}
+).resolveGateArtifactPath;
+
+const envForMeasurement = (): NodeJS.ProcessEnv => ({
+	PI_RT_MEASURE: "1",
+	PI_RT_GATE_KEY: "test-key",
+});
 
 /** Known-passing measurements; tests override one field at a time. */
 const PASSING: RtMeasurements = {
@@ -225,14 +240,16 @@ describe("RT measurement command skeleton (no hardware)", () => {
 		const writer = new MemoryWriter();
 		const result = await runRtMeasurement({
 			enable: true,
-			env: { PI_RT_MEASURE: "1", PI_RT_GATE_KEY: "test-key" },
+			env: envForMeasurement(),
 			runner: fakeRunner,
 			writer,
 			now: () => "2026-11-23T01:02:03.000Z",
 		});
 
-		expect([...writer.files.keys()]).toEqual([RT_GATE_ARTIFACT_PATH]);
-		const artifact = JSON.parse(writer.files.get(RT_GATE_ARTIFACT_PATH)!) as RtGateArtifact;
+		const expectedPath =
+			resolveGateArtifactPath?.(envForMeasurement()) ?? RT_GATE_ARTIFACT_PATH;
+		expect([...writer.files.keys()]).toEqual([expectedPath]);
+		const artifact = JSON.parse(writer.files.get(expectedPath)!) as RtGateArtifact;
 		expect(artifact.measurements).toEqual(PASSING);
 		expect(artifact.verdict.pass).toBe(true);
 		expect(artifact.generatedAt).toBe("2026-11-23T01:02:03.000Z");
@@ -243,5 +260,30 @@ describe("RT measurement command skeleton (no hardware)", () => {
 
 	it("no rt-result.json artifact exists in this task", () => {
 		expect(existsSync(new URL("../gate/rt-result.json", import.meta.url))).toBe(false);
+	});
+});
+
+describe("gate artifact path resolution", () => {
+	it("defaults to an absolute path rooted at the pi/ package", () => {
+		expect(typeof resolveGateArtifactPath).toBe("function");
+		const path = resolveGateArtifactPath!({});
+		expect(isAbsolute(path)).toBe(true);
+		expect(path.replace(/\\/g, "/")).toMatch(/\/pi\/gate\/rt-result\.json$/);
+	});
+
+	it("returns the same path from a different working directory", () => {
+		const expected = resolveGateArtifactPath!({});
+		const original = process.cwd();
+		try {
+			process.chdir(tmpdir());
+			expect(resolveGateArtifactPath!({})).toBe(expected);
+		} finally {
+			process.chdir(original);
+		}
+	});
+
+	it("honors an explicit environment override for tests", () => {
+		const custom = "/tmp/custom-rt-result.json";
+		expect(resolveGateArtifactPath!({ PI_RT_GATE_ARTIFACT_PATH: custom })).toBe(custom);
 	});
 });

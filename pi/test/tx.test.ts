@@ -1,5 +1,7 @@
 import { existsSync } from "node:fs";
+import { isAbsolute } from "node:path";
 import { describe, expect, it, jest } from "@jest/globals";
+import * as measure from "../src/rt/measure.js";
 import {
 	RT_GATE_SCHEMA_VERSION,
 	RT_THRESHOLDS,
@@ -52,6 +54,12 @@ function signedArtifact(key = "test-key"): RtGateArtifact {
 }
 
 const OPEN_ENV = { PI_CAN_TX: "1", PI_RT_GATE_KEY: "test-key" } as NodeJS.ProcessEnv;
+
+const resolveGateArtifactPath = (
+	measure as unknown as {
+		resolveGateArtifactPath?: (env?: NodeJS.ProcessEnv) => string;
+	}
+).resolveGateArtifactPath;
 
 /** Fake transport that records every encoded frame handed to it. */
 function fakeTransport(): TxTransport & { sent: Uint8Array[] } {
@@ -163,6 +171,34 @@ describe("hard gate — TX unreachable unless BOTH flag and artifact are valid",
 		expect(readGateArtifact(new URL("../gate/rt-result.json", import.meta.url).pathname)).toBe(
 			undefined,
 		);
+	});
+
+	it("loads the pi-rooted absolute gate path by default; env and injected paths still win", () => {
+		expect(typeof resolveGateArtifactPath).toBe("function");
+		const paths: string[] = [];
+		const readArtifact = (path: string) => {
+			paths.push(path);
+			return undefined;
+		};
+
+		createGatedTx({ env: OPEN_ENV, transport: fakeTransport(), readArtifact });
+		expect(paths[0]).toBe(resolveGateArtifactPath!(OPEN_ENV));
+		expect(isAbsolute(paths[0]!)).toBe(true);
+
+		createGatedTx({
+			env: { ...OPEN_ENV, PI_RT_GATE_ARTIFACT_PATH: "/tmp/rt.json" },
+			transport: fakeTransport(),
+			readArtifact,
+		});
+		expect(paths.at(-1)).toBe("/tmp/rt.json");
+
+		createGatedTx({
+			env: OPEN_ENV,
+			gatePath: "/custom/rt.json",
+			transport: fakeTransport(),
+			readArtifact,
+		});
+		expect(paths.at(-1)).toBe("/custom/rt.json");
 	});
 
 	it("tampered artifact: send is a no-op", async () => {

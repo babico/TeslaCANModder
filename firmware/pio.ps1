@@ -74,9 +74,15 @@ function Resolve-PlatformIOArgs([string[]]$rawArgs) {
   return ,$normalized.ToArray()
 }
 
-$projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$firmwareRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+# Map the REPO root, not firmware/. A subst of firmware/ puts its parent at
+# "above drive root", so test suites reading ../docs/... (native
+# test_native_mqtt_contract) fail to find the docs on the substituted drive.
+$projectRoot = Split-Path -Parent $firmwareRoot
 $asciiWorkspace = Use-AsciiWorkspace $projectRoot
 $shortProjectRoot = Get-ShortPath $asciiWorkspace.Path
+$shortFirmwareRoot = Join-Path $shortProjectRoot "firmware"
 $platformioArgs = Resolve-PlatformIOArgs $Args
 $isTestCommand = $platformioArgs.Count -gt 0 -and $platformioArgs[0] -eq "test"
 $platformioExe = Join-Path $env:USERPROFILE ".platformio\penv\Scripts\platformio.exe"
@@ -88,10 +94,10 @@ if (-not (Test-Path $platformioExe)) {
 # Keep this project independent from any broken global PlatformIO package cache.
 # The wrapper also prefers an ASCII workspace path because the AVR toolchain can
 # fail under Unicode Windows paths during archive creation.
-$env:PLATFORMIO_CORE_DIR = Join-Path $shortProjectRoot ".pio-home"
+$env:PLATFORMIO_CORE_DIR = Join-Path $shortFirmwareRoot ".pio-home"
 $env:PLATFORMIO_SETTING_ENABLE_TELEMETRY = "No"
 
-Push-Location $shortProjectRoot
+Push-Location $shortFirmwareRoot
 $exitCode = 0
 try {
   if ($isTestCommand) {
