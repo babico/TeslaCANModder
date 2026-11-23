@@ -17,10 +17,12 @@ storage; this repo only ships the portal config and the `tcm-can` unit.
 - Our client must be built with a `/tcm/` base path so its assets resolve under the prefix
   (UNVERIFIED until built on a real Pi). The A3 bridge routes `/health`, `/status`,
   `/api/status`, and `POST /api/command`; it does not yet serve static assets.
-- **Runtime entrypoint is not implemented yet.** A1–A4 expose libraries only; the unit's
-  `ExecStart` target `pi/dist/main.js` is a deployment contract, not a runnable binary. Do not
-  enable the unit on hardware until that entrypoint exists and honours `TCM_BIND_HOST` /
-  `TCM_BIND_PORT`.
+- **Runtime entrypoint exists but is UNVERIFIED on hardware.** `pi/src/main.ts` composes the
+  read path into the bridge + JSONL recorder and is built by `npm run build:pi` into
+  `pi/dist/main.js` — the unit's `ExecStart` target. It honours `TCM_BIND_HOST` / `TCM_BIND_PORT`
+  and rejects wildcard binds. Build it before enabling the unit (step 2).
+- **Production read path is `candump -L can0` from can-utils**, spawned by `pi/src/can/candump.ts`.
+  The old `CAN_GATEWAY_*` TCP client is OPTIONAL, unshipped and never used by the service.
 - No Pi, CAN hardware, or bench capture was available: all runtime claims here are UNVERIFIED.
 
 ## Loopback enforcement
@@ -38,13 +40,19 @@ The token-bearing A3 bridge must never be reachable from the LAN:
 
 Run these on the Pi as root, from a checkout at `/opt/teslacanmodder`.
 
-1. Install prerequisites: `nginx`, Node.js 22+, and `gettext-base` (for `envsubst`).
-2. Build the client with base path `/tcm/` and prepare the Pi workspace:
+1. Install prerequisites: `nginx`, Node.js 22+, `gettext-base` (for `envsubst`) and `can-utils`
+   (provides `candump`, the production read path). Bring `can0` up listen-only per
+   `docs/guides/pi-can-bringup.md` before enabling the service.
+2. Build the Pi entrypoint and the client with base path `/tcm/`, then prepare the workspace:
 
     ```bash
     npm ci
+    npm run build:pi
     npm run build -w @teslacanmodder/client
     ```
+
+    `npm run build:pi` emits `pi/dist/main.js`; `tsc` uses `pi/tsconfig.build.json` (the test
+    tsconfig stays `noEmit`). Without this step the unit's `ExecStart` points at a missing file.
 
 3. Create the service user and a root-owned token file (A3 fails closed when the token is empty):
 
@@ -132,6 +140,7 @@ systemctl status tcm-can
 systemctl status <sentry-usb-unit>
 systemctl is-active nginx
 ss -ltnp | grep -E ':(80|8090)\b'   # 8090 must show 127.0.0.1 only
+pgrep -af 'candump -L can0'         # read-path child process alive
 curl -fsS http://127.0.0.1:8090/health
 curl -fsS http://127.0.0.1/tcm/health
 curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1/   # Sentry UI
@@ -142,6 +151,7 @@ Sentry UI. A tokenless request to `/tcm/api/command` must return HTTP 401 from t
 
 ## Safety
 
-CAN TX stays disabled. This deployment only reaches the A3 read-only listener (`status`, `ping`);
-no injection command is exposed. Enabling TX requires the B3 RT measurement gate and the CAN
-review checklist — neither is satisfied here.
+CAN TX stays disabled. `pi/src/main.ts` never imports the gated TX backend, never reads the RT
+gate artifact and never opens a TX socket; this deployment only reaches the A3 read-only listener
+(`status`, `ping`), so no injection command is exposed. Enabling TX requires the B3 RT measurement
+gate and the CAN review checklist — neither is satisfied here.

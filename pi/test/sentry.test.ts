@@ -100,6 +100,18 @@ describe("Sentry USB drive-data connector (read-only)", () => {
 		}
 	});
 
+	it("does not link a record to itself", () => {
+		const self = { id: "self", driveId: "self" };
+		const links = correlateClipsToDrives(
+			{ records: [self] },
+			{
+				driveIdKey: "id",
+				clipDriveKey: "driveId",
+			},
+		);
+		expect(links).toEqual([]);
+	});
+
 	it("never writes to Sentry storage", () => {
 		const dir = tempDir();
 		try {

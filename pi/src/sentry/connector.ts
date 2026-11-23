@@ -167,7 +167,7 @@ export function correlateClipsToDrives(
 			const ref = clip[clipKey];
 			if (!isJoinKey(ref) || seenClips.has(clip)) continue;
 			const drive = drivesById.get(ref);
-			if (!drive) continue;
+			if (!drive || clip === drive) continue; // never emit a self-link
 			seenClips.add(clip);
 			links.push({ clip, drive, via: clipKey });
 		}

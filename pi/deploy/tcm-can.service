@@ -10,9 +10,13 @@ User=tcmcan
 Group=tcmcan
 WorkingDirectory=/opt/teslacanmodder/pi
 Environment=NODE_ENV=production
+# Read path: the entrypoint spawns `candump -L can0` (can-utils) behind an
+# injectable process factory. The optional TCP gateway client is NOT used.
 Environment=CAN_TRANSPORT=socketcan
+Environment=TCM_CAN_IFACES=can0
+Environment=TCM_CAPTURE_DIR=/var/lib/teslacanmodder/captures
 # A3 review residual: enforce loopback at deploy time, never a wildcard bind.
-# The runtime entrypoint must honour these two variables.
+# src/main.ts parses these and rejects wildcard hosts / invalid ports.
 Environment=TCM_BIND_HOST=127.0.0.1
 Environment=TCM_BIND_PORT=8090
 # A3 bridge reads TCM_BRIDGE_TOKEN from this root-owned, mode-0640 env file.

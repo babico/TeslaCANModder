@@ -11,6 +11,7 @@
 	],
 	"scripts": {
 		"audit:ci": "node scripts/npm-audit-actionable.cjs --severity=moderate",
+		"build:pi": "npm run build -w @teslacanmodder/pi",
 		"build:protocol": "npm run build -w @teslacanmodder/protocol",
 		"format:check": "prettier --check .",
 		"format": "prettier --write .",

@@ -16,14 +16,10 @@ export interface PiServerOptions {
 	 */
 	transport?: CanTransport;
 	/**
-	 * Listener for routes not owned by the skeleton. A3 mounts its
-	 * authenticated command bridge here.
-	 */
-	fallback?: RequestListener;
-	/**
-	 * A3 authenticated command bridge. Mounted after `/health` and before the
-	 * generic fallback, so `/status`, `/api/status`, and `POST /api/command`
-	 * are owned by the bridge while the public health probe stays unchanged.
+	 * A3 authenticated command bridge. Mounted after `/health`; it owns
+	 * `/status`, `/api/status`, and `POST /api/command`, while the public
+	 * health probe stays served by this skeleton. This is the only extension
+	 * seam — there is no separate generic fallback listener.
 	 */
 	bridge?: RequestListener;
 }
@@ -43,10 +39,10 @@ export function isCanTxEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
 	return env.PI_CAN_TX === "1";
 }
 
-/** Minimal health endpoint. A3 mounts the authenticated bridge via `options.fallback`. */
+/** Minimal health endpoint. A3 mounts the authenticated bridge via `options.bridge`. */
 export function createPiServer(options: PiServerOptions = {}): Server {
 	const transport = options.transport ?? getCanTransport();
-	const { bridge, fallback } = options;
+	const { bridge } = options;
 
 	const server = createServer((request: IncomingMessage, response: ServerResponse) => {
 		if (request.method === "GET" && request.url === "/health") {
@@ -57,11 +53,6 @@ export function createPiServer(options: PiServerOptions = {}): Server {
 
 		if (bridge) {
 			bridge(request, response);
-			return;
-		}
-
-		if (fallback) {
-			fallback(request, response);
 			return;
 		}
 

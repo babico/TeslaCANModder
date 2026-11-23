@@ -33,7 +33,11 @@ export interface WireFrame {
 }
 
 export interface CanReaderOptions {
-	/** Override the raw frame source. Defaults to the node:net SocketCAN gateway client. */
+	/**
+	 * Override the raw frame source. Defaults to the OPTIONAL TCP gateway client
+	 * for backward compatibility; production composes the `candump` factory
+	 * from `candump.ts` instead.
+	 */
 	transport?: TransportFactory;
 	/** Clock used for `rxMs`. Defaults to `Date.now`. */
 	now?: () => number;
@@ -57,9 +61,12 @@ const CAN_ERR_FLAG = 0x20000000;
 const CAN_ANY_FLAGS = CAN_EFF_FLAG | CAN_RTR_FLAG | CAN_ERR_FLAG;
 const EMPTY = new Uint8Array(0);
 
-/** Map can0/can1/can2 to bus 0/1/2. Unknown interfaces are rejected. */
+/**
+ * Map can0/can1/can2 (and their vcanN loopback aliases used by the `vcan`
+ * backend) to bus 0/1/2. Unknown interfaces are rejected.
+ */
 export function busFromIface(iface: string): BusId {
-	const match = /^can([012])$/.exec(iface);
+	const match = /^v?can([012])$/.exec(iface);
 	if (!match) {
 		throw new Error(`unsupported CAN interface "${iface}" (expected can0, can1, or can2)`);
 	}
@@ -112,16 +119,38 @@ function concatBytes(left: Uint8Array, right: Uint8Array): Uint8Array {
 	return merged;
 }
 
+/** Parse `CAN_GATEWAY_PORT` strictly: integer 1..65535, fail fast on anything else. */
+export function parseGatewayPort(env: NodeJS.ProcessEnv = process.env): number {
+	const raw = env.CAN_GATEWAY_PORT ?? "3290";
+	if (!/^\d+$/.test(raw)) {
+		throw new Error(`invalid CAN_GATEWAY_PORT "${raw}": expected an integer in 1..65535`);
+	}
+	const port = Number(raw);
+	if (!Number.isInteger(port) || port < 1 || port > 65535) {
+		throw new Error(`invalid CAN_GATEWAY_PORT "${raw}": expected an integer in 1..65535`);
+	}
+	return port;
+}
+
 /**
- * Production transport. Reads raw can_frame structs from a local gateway that
- * streams one SocketCAN interface per TCP port (base `CAN_GATEWAY_PORT`, plus
- * bus index). A future native `socketcan` binding can replace this seam without
- * touching the parser. UNVERIFIED without Pi/vcan hardware.
+ * OPTIONAL, UNSHIPPED TCP gateway client. Reads raw can_frame structs from a
+ * local gateway that streams one SocketCAN interface per TCP port (base
+ * `CAN_GATEWAY_PORT`, plus bus index). No such gateway ships in this repo and
+ * the production service uses the `candump` transport instead (`candump.ts`).
+ * Kept only as an injectable seam for bench experiments; never call this "the
+ * SocketCAN read path". Bad port configuration fails fast at construction.
  */
-export function createNetTransport(iface: string, _backend: CanTransport): FrameTransport {
+export function createNetTransport(
+	iface: string,
+	_backend: CanTransport,
+	env: NodeJS.ProcessEnv = process.env,
+): FrameTransport {
 	const bus = busFromIface(iface);
-	const host = process.env.CAN_GATEWAY_HOST ?? "127.0.0.1";
-	const basePort = Number.parseInt(process.env.CAN_GATEWAY_PORT ?? "3290", 10);
+	const host = env.CAN_GATEWAY_HOST ?? "127.0.0.1";
+	const basePort = parseGatewayPort(env);
+	if (basePort + bus > 65535) {
+		throw new Error(`invalid CAN_GATEWAY_PORT: base ${basePort} + bus ${bus} exceeds 65535`);
+	}
 	let active: Socket | undefined;
 
 	return {
@@ -160,10 +189,12 @@ export function createCanReader(
 
 	async function* iterate(): AsyncGenerator<CanFrame> {
 		let reconnects = 0;
+		// Hoisted outside the reconnect loop: a TCP/candump stream can split a
+		// frame across a process/link bounce, so partial bytes survive reconnects.
+		let carry = EMPTY;
 		while (true) {
 			const transport = factory(iface, backend);
 			try {
-				let carry = EMPTY;
 				for await (const chunk of transport.frames()) {
 					if (chunk.length === 0) continue;
 					const merged = carry.length === 0 ? chunk : concatBytes(carry, chunk);

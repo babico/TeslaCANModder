@@ -143,7 +143,8 @@ object below is a schema example, not a real result:
 - No board, CAN adapter, kernel or capture was available: no timing number in
   this document is a measurement. All hardware claims are **UNVERIFIED**.
 - This task implements the decision function, signing/verification and the
-  command skeleton only. It does not implement TX, a real `child_process`
-  runner, or an on-board entrypoint.
+  command skeleton only. It does not implement TX or a real `child_process`
+  runner. The on-board entrypoint (`pi/src/main.ts`) now exists but mounts only
+  the read path — it never reads this artifact and never opens a TX socket.
 - `cyclictest` passing on `vcan` is not bench proof. Only the exact board with
   the real adapter counts.

@@ -5,6 +5,7 @@
 	"type": "module",
 	"description": "TeslaCANModder Raspberry Pi service — SocketCAN reader, command bridge, and recorder",
 	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
 		"test": "node --experimental-vm-modules ../node_modules/jest/bin/jest.js --config jest.config.js"
 	},
 	"devDependencies": {

@@ -163,6 +163,10 @@ export function verifyGateArtifact(
  */
 export function isGateOpen(artifact: RtGateArtifact, key: string): boolean {
 	if (!verifyGateArtifact(artifact, key)) return false;
+	// The gate is only meaningful for the binding 1-hour measurement. A signed
+	// artifact with a shorter (or invalid) duration must never unlock TX.
+	const durationMin = artifact.method?.durationMin;
+	if (!Number.isFinite(durationMin) || durationMin < 60) return false;
 	if (!artifact.verdict?.pass) return false;
 	const measurements = artifact.measurements;
 	if (!measurements || typeof measurements !== "object") return false;

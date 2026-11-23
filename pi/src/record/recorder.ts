@@ -34,6 +34,24 @@ export interface Recorder {
 	stop(): Promise<void>;
 }
 
+/**
+ * Reject path separators, parent traversal, NUL and empty names before joining
+ * with the capture directory. Provenance is never derived from the file name;
+ * it stays in the first JSONL line written by `createRecorder()`.
+ */
+export function sanitizeFileName(name: string): string {
+	if (
+		!name ||
+		name.includes("/") ||
+		name.includes("\\") ||
+		name.includes("..") ||
+		name.includes("\0")
+	) {
+		throw new Error(`unsafe recorder filename: ${name}`);
+	}
+	return name;
+}
+
 function frameLine(frame: CanFrame): string {
 	return JSON.stringify({
 		t: "frame",
@@ -64,7 +82,9 @@ export function createRecorder(dir: string, options: RecorderOptions = {}): Reco
 		firmware: options.provenance?.firmware ?? "unknown",
 		date: options.provenance?.date ?? now().toISOString(),
 	};
-	const fileName = options.fileName ?? `capture-${provenance.date.replace(/[:.]/g, "-")}.jsonl`;
+	const fileName = sanitizeFileName(
+		options.fileName ?? `capture-${provenance.date.replace(/[:.]/g, "-")}.jsonl`,
+	);
 	const path = join(dir, fileName);
 
 	if (!options.stream) mkdirSync(dir, { recursive: true });

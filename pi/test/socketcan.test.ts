@@ -6,7 +6,9 @@ import {
 	createCanReader,
 	frameToWire,
 	frameToWireJson,
+	createNetTransport,
 	parseCanFrame,
+	parseGatewayPort,
 } from "../src/can/socketcan.js";
 import { canFrameBytes, createFakeFactory } from "./support/fakeSocket.js";
 
@@ -105,6 +107,12 @@ describe("socketcan frame parsing", () => {
 		}
 	});
 
+	it("accepts vcanN loopback aliases used by the vcan backend", () => {
+		expect(busFromIface("vcan0")).toBe(0);
+		expect(busFromIface("vcan2")).toBe(2);
+		expect(() => busFromIface("vcan3")).toThrow(/can0/i);
+	});
+
 	it("rejects interfaces outside can0..can2", () => {
 		expect(() => busFromIface("can3")).toThrow(/can0/i);
 		expect(() => busFromIface("eth0")).toThrow(/can0/i);
@@ -184,6 +192,54 @@ describe("socketcan frame parsing", () => {
 		}
 		expect(count).toBe(1);
 		expect(fake.backends()).toEqual(["vcan"]);
+	});
+});
+
+describe("optional TCP gateway validation", () => {
+	it("parses a valid CAN_GATEWAY_PORT and rejects non-integers out of 1..65535", () => {
+		expect(parseGatewayPort({ CAN_GATEWAY_PORT: "3290" })).toBe(3290);
+		expect(parseGatewayPort({})).toBe(3290); // documented default
+		for (const value of ["0", "65536", "-1", "80x", "3.5", " 12"]) {
+			expect(() => parseGatewayPort({ CAN_GATEWAY_PORT: value })).toThrow(/port/i);
+		}
+	});
+
+	it("fails fast at construction on a bad port or a port+bus overflow", () => {
+		expect(() => createNetTransport("can0", "socketcan", { CAN_GATEWAY_PORT: "0" })).toThrow(
+			/port/i,
+		);
+		expect(() =>
+			createNetTransport("can2", "socketcan", { CAN_GATEWAY_PORT: "65534" }),
+		).toThrow(/port/i);
+	});
+});
+
+describe("reader reassembly across a reconnect", () => {
+	it("keeps a partial frame across a transport error (carry hoisted outside the loop)", async () => {
+		const a = canFrameBytes(0x3fd, 1, [0x11]);
+		const b = canFrameBytes(0x2b9, 2, [0x22, 0x33]);
+		const joined = new Uint8Array(32);
+		joined.set(a, 0);
+		joined.set(b, 16);
+		const fake = createFakeFactory([
+			[
+				{ kind: "chunk", bytes: joined.subarray(0, 20) }, // A + 4 bytes of B
+				{ kind: "error", error: new Error("link bounced") },
+			],
+			[{ kind: "chunk", bytes: joined.subarray(20) }], // remainder of B
+		]);
+		const frames: CanFrame[] = [];
+		for await (const frame of createCanReader("can0", {
+			transport: fake.factory,
+			now: () => 7,
+			sleep: noSleep,
+		})) {
+			frames.push(frame);
+		}
+		expect(frames).toEqual([
+			{ id: 0x3fd, dlc: 1, data: new Uint8Array([0x11]), bus: 0, rxMs: 7 },
+			{ id: 0x2b9, dlc: 2, data: new Uint8Array([0x22, 0x33]), bus: 0, rxMs: 7 },
+		]);
 	});
 });
 

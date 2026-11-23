@@ -94,6 +94,18 @@ describe("Pi deployment portal", () => {
 		expect(unit).toMatch(/EnvironmentFile=.*tcm-can\.env/m);
 	});
 
+	it("runs the real candump read path and feeds the entrypoint its config", () => {
+		expect(unit).toMatch(/Environment\s*=\s*CAN_TRANSPORT=socketcan/m);
+		expect(unit).toMatch(/Environment\s*=\s*TCM_CAN_IFACES=can0/m);
+		expect(unit).toMatch(/Environment\s*=\s*TCM_CAPTURE_DIR=\/var\/lib\/teslacanmodder/m);
+	});
+
+	it("clears the Connection header on the keepalive / upstream", () => {
+		const root = locationBody(nginx, /location\s+\/\s*\{/);
+		expect(root).toMatch(/proxy_http_version\s+1\.1;/);
+		expect(root).toMatch(/proxy_set_header\s+Connection\s+"";/);
+	});
+
 	it("rejects wildcard binds in deployed config and detects them in bad fixtures", () => {
 		expect(wildcardBinds(nginx)).toEqual([]);
 		expect(wildcardBinds(unit)).toEqual([]);

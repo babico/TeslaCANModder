@@ -181,6 +181,25 @@ describe("gate open for TX", () => {
 		const broken = { ...brokenBody, signature: signPayload(brokenBody, "test-key", "k") };
 		expect(isGateOpen(broken, "test-key")).toBe(false);
 	});
+
+	it("requires a measurement duration of at least 60 minutes", () => {
+		const shortBody = payload({
+			method: {
+				cyclictestArgs: "--mlockall --priority=80",
+				loadGenerator: "stress-ng",
+				durationMin: 30,
+				probe: "rt-can-test",
+			},
+		});
+		const short = { ...shortBody, signature: signPayload(shortBody, "test-key", "k") };
+		expect(isGateOpen(short, "test-key")).toBe(false);
+
+		const nanBody = payload({
+			method: { ...payload().method, durationMin: Number.NaN },
+		});
+		const nan = { ...nanBody, signature: signPayload(nanBody, "test-key", "k") };
+		expect(isGateOpen(nan, "test-key")).toBe(false);
+	});
 });
 
 describe("RT measurement command skeleton (no hardware)", () => {

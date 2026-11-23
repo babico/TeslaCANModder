@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { Writable } from "node:stream";
 import { describe, expect, it } from "@jest/globals";
 import type { CanFrame } from "../src/can/socketcan.js";
-import { createRecorder } from "../src/record/recorder.js";
+import { createRecorder, sanitizeFileName } from "../src/record/recorder.js";
 
 /** Injected A2 frames — no hardware, no SocketCAN, no TX. */
 const FRAMES: CanFrame[] = [
@@ -86,6 +86,26 @@ describe("CAN capture recorder", () => {
 		expect(header.firmware).toBe("unknown");
 		expect(header.bus).toEqual([0, 1, 2]);
 		expect(header.date).toBe("2026-01-02T03:04:05.000Z");
+	});
+
+	it("sanitizes caller-supplied file names and keeps the provenance header intact", async () => {
+		expect(sanitizeFileName("capture-2026-11-23.jsonl")).toBe("capture-2026-11-23.jsonl");
+		for (const bad of ["../escape.jsonl", "a\\b.jsonl", "a..b.jsonl", "/etc/x", ""]) {
+			expect(() => sanitizeFileName(bad)).toThrow(/unsafe|filename/i);
+		}
+
+		const { stream, chunks } = collectingStream();
+		const recorder = createRecorder(join(tmpdir(), "unused"), {
+			stream,
+			fileName: "capture-safe.jsonl",
+			provenance: { vehicle: "VIN-9" },
+		});
+		await recorder.write(FRAMES[0]);
+		await recorder.stop();
+		expect(recorder.path).toBe(join(tmpdir(), "unused", "capture-safe.jsonl"));
+		const header = JSON.parse(chunks()[0]) as Record<string, unknown>;
+		expect(header.vehicle).toBe("VIN-9");
+		expect(header.date).toEqual(expect.any(String));
 	});
 
 	it("rejects on a stream error and keeps the error listener attached", async () => {

@@ -30,6 +30,10 @@ client/coverage/
 # Auto-generated docs bundle (regenerated on every prestart/prebuild/pretest)
 client/src/generated/
 
+# Pi workspace build artifacts (emitted by `npm run build:pi`)
+pi/dist/
+pi/coverage/
+
 # Shared package build artifacts
 packages/*/dist/
 packages/*/coverage/

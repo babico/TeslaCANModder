@@ -244,7 +244,35 @@ describe("reachability — only through an injected gate + transport", () => {
 		});
 		expect(backend.enabled).toBe(true);
 		expect(await backend.send("chill", CACHED)).toBe(true);
-		expect(gate).toHaveBeenCalledTimes(1);
+		// Gate is checked at construction and re-checked inside send().
+		expect(gate).toHaveBeenCalledTimes(2);
+		expect(transport.sent).toHaveLength(1);
+	});
+
+	it("re-checks the gate per send: a gate that closes blocks the next frame", async () => {
+		let open = true;
+		const gate = jest.fn<() => boolean>(() => open);
+		const transport = fakeTransport();
+		const backend = createGatedTx({
+			env: OPEN_ENV,
+			artifact: signedArtifact(),
+			isGateOpenFn: gate,
+			transport,
+		});
+		expect(await backend.send("chill", CACHED)).toBe(true);
+		open = false;
+		expect(await backend.send("chill", CACHED)).toBe(false);
+		expect(transport.sent).toHaveLength(1);
+		expect(gate).toHaveBeenCalledTimes(3);
+	});
+
+	it("re-checks the PI_CAN_TX flag per send", async () => {
+		const env = { ...OPEN_ENV };
+		const transport = fakeTransport();
+		const backend = createGatedTx({ env, artifact: signedArtifact(), transport });
+		expect(await backend.send("chill", CACHED)).toBe(true);
+		env.PI_CAN_TX = "0";
+		expect(await backend.send("chill", CACHED)).toBe(false);
 		expect(transport.sent).toHaveLength(1);
 	});
 
@@ -259,7 +287,7 @@ describe("reachability — only through an injected gate + transport", () => {
 		});
 		expect(backend.enabled).toBe(false);
 		expect(await backend.send("chill", CACHED)).toBe(false);
-		expect(gate).toHaveBeenCalledTimes(1);
+		expect(gate).toHaveBeenCalledTimes(2);
 		expect(transport.sent).toHaveLength(0);
 	});
 });

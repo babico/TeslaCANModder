@@ -37,9 +37,9 @@ describe("pi workspace scaffold", () => {
 		expect(await response.json()).toEqual({ ok: true, transport: "socketcan" });
 	});
 
-	it("mounts the fallback listener for A3's bridge", async () => {
+	it("mounts the A3 bridge listener for non-health routes", async () => {
 		server = createPiServer({
-			fallback: (_request, response) => {
+			bridge: (_request, response) => {
 				response.writeHead(204);
 				response.end();
 			},

@@ -113,10 +113,12 @@ export function readGateArtifact(path: string): RtGateArtifact | undefined {
 }
 
 /**
- * Construct the gated TX backend. The hard gate is evaluated once, here:
- * `PI_CAN_TX === "1"` AND a valid, passing, self-consistent gate artifact AND
- * an injected transport. Any failure returns an inert backend — `send()` is a
- * no-op that returns false and never touches the transport.
+ * Construct the gated TX backend. `enabled` is a construction-time snapshot,
+ * but the hard gate is RE-EVALUATED on every `send()`: `PI_CAN_TX === "1"` AND
+ * a valid, passing, self-consistent gate artifact AND an injected transport.
+ * A gate or flag that closes after construction blocks subsequent frames — no
+ * cached "open" decision can authorize a transmission. Any failure makes the
+ * `send()` a no-op returning false that never touches the transport.
  */
 export function createGatedTx(options: GatedTxOptions = {}): CanTxBackend {
 	const env = options.env ?? process.env;
@@ -126,18 +128,18 @@ export function createGatedTx(options: GatedTxOptions = {}): CanTxBackend {
 	const gatePath = options.gatePath ?? RT_GATE_ARTIFACT_PATH;
 	const load = options.readArtifact ?? readGateArtifact;
 
-	const enabled =
-		isCanTxEnabled(env) &&
-		transport !== undefined &&
-		(() => {
-			const artifact = "artifact" in options ? options.artifact : load(gatePath);
-			return artifact !== undefined && gateCheck(artifact, gateKey);
-		})();
+	function gateOpen(): boolean {
+		if (!isCanTxEnabled(env) || transport === undefined) return false;
+		const artifact = "artifact" in options ? options.artifact : load(gatePath);
+		return artifact !== undefined && gateCheck(artifact, gateKey);
+	}
+
+	const enabled = gateOpen();
 
 	return {
 		enabled,
 		async send(mode: TxMode, cachedFrame: Uint8Array): Promise<boolean> {
-			if (!enabled) return false;
+			if (!gateOpen()) return false;
 			const frame = buildDriveModeFrame(mode, cachedFrame);
 			if (!frame) return false;
 			await transport!.send(encodeCanFrame(frame));

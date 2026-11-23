@@ -25,8 +25,6 @@ export interface BridgeOptions {
 	token?: string;
 	/** Read-only A2 CAN reader. Never used for TX. */
 	reader: AsyncIterable<CanFrame>;
-	/** Reserved for callers that need an explicit command wait budget. */
-	timeoutMs?: number;
 }
 
 /**
@@ -150,9 +148,10 @@ function dispatchCommand(cmd: string, tracker: StatusTracker): { status: number;
 
 /**
  * Build the request listener mounted by `createPiServer()` as its `bridge`.
- * `/health` is handled here only for standalone use; the Pi server serves its
- * own `/health` first. The listener binds no socket of its own (loopback bind
- * is the caller's decision).
+ * MOUNTED-ONLY: this listener binds no socket, applies no timeout and owns no
+ * server lifecycle. The caller (`main.ts`) composes it into `createPiServer()`
+ * and performs the loopback bind. `/health` is handled here only for standalone
+ * use; the Pi server serves its own `/health` first.
  */
 export function createBridgeListener(options: BridgeOptions): RequestListener {
 	const token = options.token ?? process.env.TCM_BRIDGE_TOKEN ?? "";
@@ -168,11 +167,6 @@ export function createBridgeListener(options: BridgeOptions): RequestListener {
 				}
 
 				const url = req.url ?? "/";
-
-				if (req.method === "GET" && url === "/health") {
-					sendJson(res, 200, { ok: true, mode: "pi-command-bridge" });
-					return;
-				}
 
 				if (req.method === "GET" && (url === "/status" || url === "/api/status")) {
 					if (!isAuthorized(req, token)) {
